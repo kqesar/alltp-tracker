@@ -503,6 +503,89 @@ export function importDr(checkout, version = DR_VERSION) {
 }
 
 /**
+ * District's pools apart (src/door-rando/owr/districts.json), which the
+ * entrance assistant reads to offer each entrance its own district's
+ * targets without loading the fork's world: each `special: 'district'`
+ * pool of `modes` in order (EntranceShuffle2.py:2566-2726), the world each
+ * entrance it names stands in as create_regions makes it (its parent
+ * region's type, which link_entrances_new reads into LW_Entrances and
+ * DW_Entrances, :75-82), and combine_linked_drop_map (:2912), by which a
+ * hole takes its door's world (:143-144).
+ * @param {{ connections: Record<string, Record<string, { line: number, value: unknown }>>, regions: { type: string, exits: string[] }[] }} world
+ * @param {(file: string) => string} read
+ * @param {Record<string, unknown>} head
+ */
+function writeOwrDistricts(world, read, head) {
+  const file = "source/overworld/EntranceShuffle2.py";
+  // The merge this file ports: the linked drops, Skull Woods' over them
+  const combined =
+    read(file)
+      .split("\n")
+      .indexOf(
+        "combine_linked_drop_map = {**linked_drop_map, **sw_linked_drop_map}",
+      ) + 1;
+  if (combined === 0) fail(`${file}: combine_linked_drop_map moved`);
+  const tables = world.connections[file] ?? fail(`${file}: no tables`);
+  const table = (/** @type {string} */ name) =>
+    tables[name] ?? fail(`${file}: no ${name}`);
+  const modes =
+    /** @type {Record<string, { pools?: Record<string, { special?: string, condition?: string, entrances?: string[], drops?: string[] }> }>} */ (
+      table("modes").value
+    );
+  const pools = Object.entries(modes.district?.pools ?? {}).filter(
+    ([, pool]) => pool.special === "district",
+  );
+  if (pools.length === 0) fail(`${file}: District has no district pool`);
+  const linked = {
+    .../** @type {Record<string, string>} */ (table("linked_drop_map").value),
+    .../** @type {Record<string, string>} */ (
+      table("sw_linked_drop_map").value
+    ),
+  };
+  const typeOf = new Map(
+    world.regions.flatMap((region) =>
+      region.exits.map((exit) => [exit, region.type]),
+    ),
+  );
+  /** @type {Record<string, string>} */
+  const worlds = {};
+  for (const [, pool] of pools)
+    for (const name of [
+      ...(pool.entrances ?? []),
+      ...(pool.drops ?? []).map(
+        (drop) => linked[drop] ?? fail(`${file}: no door for ${drop}`),
+      ),
+    ]) {
+      const type = typeOf.get(name);
+      if (type !== "lw" && type !== "dw")
+        fail(`${file}: ${name} stands in no light or dark world region`);
+      worlds[name] = type;
+    }
+  writeLines(
+    join(OWR_WORLD, "districts.json"),
+    {
+      ...head,
+      source: {
+        combine_linked_drop_map: `${file}:${combined}`,
+        linked_drop_map: `${file}:${table("linked_drop_map").line}`,
+        modes: `${file}:${table("modes").line}`,
+        sw_linked_drop_map: `${file}:${table("sw_linked_drop_map").line}`,
+      },
+    },
+    {
+      districts: pools.map(([name, pool]) => ({
+        condition: pool.condition,
+        drops: pool.drops ?? [],
+        entrances: pool.entrances ?? [],
+        name,
+      })),
+      linkedDrops: linked,
+      worlds,
+    },
+  );
+}
+
+/**
  * The Overworld fork (`--owr`): its world beside DR's, in
  * src/door-rando/owr/. Its pots, enemy drops and shops are DR's own (the
  * fork merged DR's PotShuffle.py and EnemyList.py data): the import stops if
@@ -549,6 +632,7 @@ function mainOwr(checkout) {
     { generated, upstream },
     world.connections,
   );
+  writeOwrDistricts(world, read, { generated, upstream });
   // Stage B: its rules, in DR's translation under the fork's dialect
   const {
     bombShop,

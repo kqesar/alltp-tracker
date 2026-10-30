@@ -6,6 +6,7 @@ import {
   type OwrPoolSettings,
   type OwrShuffle,
   owrCombineMap,
+  owrDistrictsOf,
   owrEntrancePool,
   owrShuffled,
   owrSwapPartners,
@@ -424,5 +425,70 @@ describe("the Overworld Randomizer's Swapped pairs (connect_swap)", () => {
       partners(notes),
     );
     expect(owrEntrancePool("district", settings).derived).toBeUndefined();
+  });
+});
+
+describe("the Overworld Randomizer's District pools", () => {
+  const id = (name: string) => drEntranceOf(name).id;
+  const settings = (tilesSwapped: boolean | undefined) => ({
+    bombShopStart: tilesSwapped,
+    shuffleLinks: false,
+    shuffleTavern: true,
+    tilesSwapped,
+    towersTraded: tilesSwapped,
+  });
+  // An explicit undefined is Mixed's "not known"
+  const offered = (name: string, tilesSwapped: boolean | undefined) =>
+    owrEntrancePool("district", settings(tilesSwapped))
+      .targetsOf.get(id(name))
+      ?.map((target) => target.name);
+
+  it("puts every entrance in one district of its world, the pyramid's on the ledge where 0x1b swaps", () => {
+    const all = vanillaEntrances(false).pool;
+    for (const swapped of [false, true]) {
+      const districts = owrDistrictsOf(swapped);
+      expect([...districts.keys()].sort()).toEqual([...all].sort());
+    }
+    // Kakariko's doors and holes are Kakariko's; the Dark World's village
+    // its own district
+    expect(owrDistrictsOf(false).get("Kakariko Shop")).toBe("kakariko");
+    expect(owrDistrictsOf(false).get("Kakariko Well Drop")).toBe("kakariko");
+    expect(owrDistrictsOf(false).get("Chest Game")).toBe(
+      "northwest_dark_world",
+    );
+    // relocate_pyramid_entrances (:2034-2055): its door and hole stand on
+    // the castle's ledge in the Inverted world
+    expect(owrDistrictsOf(false).get("Pyramid Entrance")).toBe(
+      "east_dark_world",
+    );
+    expect(owrDistrictsOf(true).get("Pyramid Entrance")).toBe("central_hyrule");
+    expect(owrDistrictsOf(true).get("Pyramid Hole")).toBe("central_hyrule");
+  });
+
+  it("offers each entrance its district's own targets alone, the rest of the pool as it was", () => {
+    // Kakariko's shop: Kakariko's doors' targets, no dungeon of elsewhere
+    const shop = offered("Kakariko Shop", false) ?? [];
+    expect(shop).toContain("Blinds Hideout");
+    expect(shop).toContain("Kakariko Well Exit");
+    expect(shop).not.toContain("Ice Palace Exit");
+    expect(shop).not.toContain("Chest Game");
+    // A hole the district's holes' drops
+    expect(offered("Kakariko Well Drop", false)).toEqual([
+      "Bat Cave (right)",
+      "Kakariko Well (top)",
+    ]);
+    // The towers' exits trade in Inverted (is_atgt_swapped)
+    expect(offered("Ganons Tower", true)).toContain("Agahnims Tower Exit");
+    expect(offered("Ganons Tower", false)).toContain("Ganons Tower Exit");
+    // Under Mixed the worlds are not known: every door's target
+    const wide = offered("Kakariko Shop", undefined) ?? [];
+    expect(wide).toContain("Ice Palace Exit");
+    expect(wide.length).toBeGreaterThan(shop.length);
+    // Swapped is never narrowed
+    expect(
+      owrEntrancePool("swapped", settings(false)).targetsOf.get(
+        id("Kakariko Shop"),
+      ),
+    ).toContainEqual(expect.objectContaining({ name: "Ice Palace Exit" }));
   });
 });

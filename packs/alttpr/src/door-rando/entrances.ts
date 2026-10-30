@@ -23,6 +23,7 @@ import {
   TARGETS,
 } from "../entrances";
 import { locationId } from "../location";
+import districtData from "./owr/districts.json" with { type: "json" };
 import entranceData from "./world/entrances.json" with { type: "json" };
 
 /**
@@ -468,6 +469,13 @@ export interface OwrPoolSettings {
    * undefined (or absent) while not known.
    */
   readonly towersTraded?: boolean | undefined;
+  /**
+   * is_tile_swapped of every screen, without Mixed (BaseClasses.py:331-
+   * 332): Inverted's true, Open's false; undefined (or absent) under
+   * Mixed, whose flips move regions between the worlds, which District's
+   * pools read (owrDistrictsOf).
+   */
+  readonly tilesSwapped?: boolean | undefined;
 }
 
 /**
@@ -504,11 +512,96 @@ export function owrEntrancePool(
 ): DrEntrancePool {
   const moved = owrShuffled(settings);
   const pool = poolOf(shuffle, false, moved, new Set());
-  if (shuffle !== "swapped") return pool;
-  return {
-    ...pool,
-    derived: (noted) => owrSwapPartners(noted, moved, settings.towersTraded),
-  };
+  if (shuffle === "swapped")
+    return {
+      ...pool,
+      derived: (noted) => owrSwapPartners(noted, moved, settings.towersTraded),
+    };
+  const swapped = settings.tilesSwapped;
+  return swapped === undefined
+    ? pool
+    : { ...pool, targetsOf: districtTargets(moved, swapped) };
+}
+
+/** A District pool of `modes`, as the importer writes it. */
+interface OwrDistrict {
+  readonly name: string;
+  readonly condition: string;
+  readonly entrances: readonly string[];
+  readonly drops: readonly string[];
+}
+
+const DISTRICTS: readonly OwrDistrict[] = districtData.districts;
+const DISTRICT_WORLDS: Readonly<Record<string, string>> = districtData.worlds;
+const LINKED_DROPS: Readonly<Record<string, string>> = districtData.linkedDrops;
+
+/** The pyramid's door, on the castle's ledge once its screen swaps. */
+const PYRAMID_DOOR = "Pyramid Entrance";
+
+/**
+ * Each entrance's District pool, by DR's names, in a world without Mixed:
+ * the `district` pool naming it whose condition is the world it stands in
+ * (special_shuffle 'district', EntranceShuffle2.py:139-146): a door's its
+ * parent region's (LW_Entrances, DW_Entrances, :75-82; Mixed's flips move
+ * regions, update_world_regions, OverworldShuffle.py:1216-1221, so none is
+ * read then), the pyramid's door on the castle's ledge where screen 0x1b
+ * is swapped (relocate_pyramid_entrances, :2034-2055, run by link_overworld
+ * before link_entrances_new, OverworldShuffle.py:181, Main.py:181-190), a
+ * hole its door's (combine_linked_drop_map, :144). The fork's lists name
+ * each entrance in one pool of each world, so the first holding it is its
+ * own.
+ * @param swapped - is_tile_swapped of every screen: Inverted's
+ */
+export function owrDistrictsOf(swapped: boolean): ReadonlyMap<string, string> {
+  const worldOf = (door: string) =>
+    door === PYRAMID_DOOR && swapped ? "lw" : DISTRICT_WORLDS[door];
+  const found = new Map<string, string>();
+  for (const district of DISTRICTS) {
+    const world = district.condition === "lightworld" ? "lw" : "dw";
+    const members = [
+      ...district.entrances.filter((door) => worldOf(door) === world),
+      ...district.drops.filter(
+        (hole) => worldOf(LINKED_DROPS[hole] ?? "") === world,
+      ),
+    ];
+    for (const name of members)
+      if (!found.has(name)) found.set(name, district.name);
+  }
+  return found;
+}
+
+/**
+ * What each entrance a District shuffle moves may lead to: its own
+ * district's targets alone. Each district's pool shuffles its entrances
+ * among their own combine_map targets (find_entrances_and_exits, :1946-
+ * 1955, then do_main_shuffle, :147), and every entrance is placed so
+ * (`undefined: error`, :158-159): a hole one of the district's holes'
+ * drops (keep_drops_together off, do_holes_and_linked_drops :532-540), a
+ * door one of its doors' targets (its start house, blacksmith and bomb
+ * shop among its own entrances, :300-319, :459-475, :655-728).
+ */
+function districtTargets(
+  moved: ReadonlySet<string>,
+  swapped: boolean,
+): ReadonlyMap<string, readonly EntranceTarget[]> {
+  const districtOf = owrDistrictsOf(swapped);
+  const combine = owrCombineMap(swapped);
+  const members = new Map<string, string[]>();
+  for (const name of moved) {
+    const district = districtOf.get(name);
+    if (district === undefined) throw new RangeError(`No district: ${name}`);
+    const key = `${district} ${DROP_MAP[name] !== undefined}`;
+    members.set(key, [...(members.get(key) ?? []), name]);
+  }
+  const targetsOf = new Map<string, readonly EntranceTarget[]>();
+  for (const names of members.values()) {
+    const targets = names.flatMap((name) => {
+      const target = combine.get(name);
+      return target === undefined ? [] : [drTargetOf(target)];
+    });
+    for (const name of names) targetsOf.set(drEntranceOf(name).id, targets);
+  }
+  return targetsOf;
 }
 
 /** The towers' doors, which trade exits once both screens swap. */

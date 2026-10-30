@@ -377,12 +377,25 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
     for (const name of shuffled) {
       const { log, notes, entrances } = logOf(name);
       const screens = owrScreensOf(OWR_DATA, "open", notes);
+      // District's pools read the worlds the entrances stand in, known
+      // without Mixed
+      const mixed = flag(log.meta.ow_mixed);
       const pool = owrEntrancePool(shuffleOf(log), {
         ...poolOf(log.meta),
         bombShopStart: screens.swapped(0x2c),
+        tilesSwapped: mixed ? undefined : log.meta.mode === "inverted",
       });
       const ways = log.Entrances.filter((link) => link.direction !== "exit");
       expect(ways).toHaveLength(140);
+      // An unmixed District seed's pickers offer each entrance its own
+      // district's targets alone: far fewer than the fork's 129 doors' and
+      // 12 holes'
+      const widest = Math.max(
+        ...[...pool.targetsOf.values()].map((targets) => targets.length),
+      );
+      if (shuffleOf(log) === "district" && !mixed)
+        expect(widest, name).toBeLessThan(40);
+      else expect(widest, name).toBeGreaterThan(100);
       const kept: string[] = [];
       for (const link of ways) {
         const offered = pool.targetsOf.get(drEntranceOf(link.entrance).id);

@@ -1607,7 +1607,11 @@ overworld flag the game sets, the screen's byte at `$7EF280` and the mask,
 as `MultiClient.py:978-987` reads it, and where the fork's own world map
 draws it, the 4096-pixel world's x and y of `ow_loc_prize_table`, or the
 screen's middle where it has none, as `Rom.py:1494-1501` falls back; the
-Good Bee Cave's statue has no screen, so no flag and no place). Its pots, enemy drops and shops
+Good Bee Cave's statue has no screen, so no flag and no place); and
+`districts.json`, District's pools apart for the entrance assistant (each
+`special: 'district'` pool of `modes` in order, the world each entrance it
+names stands in as `create_regions` makes it, `combine_linked_drop_map`).
+Its pots, enemy drops and shops
 are DR 1.5.8's exactly, so `locations.json` serves both (the import stops if
 they part). `src/door-rando/owr-data.spec.ts` holds the data: every region
 and door, every table's names, every exit linked but those the fork links in
@@ -1722,7 +1726,18 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   flips screens), and so are its ROM tables (`EntranceData`, `exit_ids`):
   a note, the app's pool (`owrEntrancePool`, a hole any hole's drop, a door
   any door's target) and autotracking read an OWR seed as a DR one
-  (`src/door-rando/entrances.spec.ts`). `notedConnections` links the
+  (`src/door-rando/entrances.spec.ts`). District's pool narrows each
+  entrance to its own district's targets where the worlds are known (no
+  Mixed, `tilesSwapped`): each `district` pool shuffles its entrances
+  among their own `combine_map` targets (`:139-147`,
+  `find_entrances_and_exits` `:1946-1955`) and places them all, an
+  entrance's pool being the one naming it whose condition is the world it
+  stands in (`owrDistrictsOf`: its parent region's type, `:75-82`, the
+  pyramid's door on the castle's ledge once 0x1b swaps,
+  `relocate_pyramid_entrances` `:2034-2055`, a hole its door's,
+  `combine_linked_drop_map` `:144`); under Mixed, whose flips move regions
+  between the worlds, it offers any door's target as before. Both District
+  seeds' logs hold every entrance to its district (`test/owr-playthrough.spec.ts`). `notedConnections` links the
   overworld as noted (above), what the shuffle keeps through
   `linkOwrEntrances`, each noted door as connect_two_way and
   connect_entrance do (`:2083-2155`), the pyramid's from either place
