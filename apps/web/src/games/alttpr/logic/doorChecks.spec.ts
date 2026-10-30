@@ -161,6 +161,35 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())["links-house"]).toBe("available");
   });
 
+  it("fly to an OWR run's moved flute spots only once noted", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      owFluteShuffle: "random",
+      owWhirlpool: true,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    const { setItem } = useGameStore.getState();
+    setItem("flute", true);
+    setItem("fluteactive", 3);
+    setItem("glove", 2);
+    setItem("moonpearl", true);
+    // The Mire wants the flute to the desert and the Titan's Mitt
+    // (Rules.py, vanilla Mire Area access): no spot noted, no flight
+    expect(solutionOf(state()).modelled).toBe(true);
+    expect(checkStates(state())["mire-shed/left"]).toBe("unavailable");
+    useGameStore.getState().noteOverworld({ flute: [0x30] });
+    expect(checkStates(state())["mire-shed/left"]).toBe("available");
+    // Undone, the flight is gone again
+    useGameStore.getState().undo();
+    expect(checkStates(state())["mire-shed/left"]).toBe("unavailable");
+  });
+
   it("draw an OWR run's bonk drops clear of every other marker", async () => {
     const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
     setBonkDrops(BONK_DROPS);

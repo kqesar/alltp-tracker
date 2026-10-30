@@ -999,6 +999,29 @@ describe("the settings in a link (link 4)", () => {
     expect(runOf(unpacked.save).doors).toEqual(doors);
   });
 
+  it("carries an OWR run's overworld notes as they are", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      owFluteShuffle: "random",
+      owWhirlpool: true,
+      randomizer: "owr",
+    };
+    const overworld = {
+      flute: [0x30, 0x18],
+      whirlpools: {
+        "C Whirlpool": "Zora Whirlpool",
+        "Zora Whirlpool": "C Whirlpool",
+      },
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      overworld,
+    });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    expect(JSON.parse(unpacked.save).progress.overworld).toEqual(overworld);
+    expect(runOf(unpacked.save).overworld).toEqual(overworld);
+  });
+
   it("holds every option the tracker has, each once, each setting's own", () => {
     const options = [
       ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),

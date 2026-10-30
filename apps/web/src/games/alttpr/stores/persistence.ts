@@ -9,6 +9,8 @@ import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import {
   DOOR_LOCATION_IDS,
   isDoorSettings,
+  OWR_FLUTE_SCREENS,
+  OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
 import type { ItemState } from "@/games/alttpr/data/items";
 import {
@@ -84,6 +86,12 @@ export type Progress = {
    * kept, notes none: no version needed.
    */
   doors: DoorNotes;
+  /**
+   * An Overworld Randomizer run's shuffled overworld as the player noted it
+   * (`OverworldNotes`): its whirlpools and flute spots. A save without it,
+   * from before it was kept, notes none: no version needed.
+   */
+  overworld: OverworldNotes;
   /**
    * The seed the run is played on: its hash on alttpr.com, as the ROM's
    * header names it, or the one the player started the run from. Null while
@@ -657,6 +665,14 @@ export const validateProgress = (
       );
   }
 
+  if (saved.overworld !== undefined) {
+    if (isOverworldNotes(saved.overworld)) value.overworld = saved.overworld;
+    else
+      errors.push(
+        "overworld must pair the fork's whirlpools and list its flute screens",
+      );
+  }
+
   if (saved.seed !== undefined) {
     if (saved.seed === null || isSeedId(saved.seed)) value.seed = saved.seed;
     else errors.push("seed must be a seed id or null");
@@ -732,6 +748,37 @@ const isIdMap = (value: unknown): boolean =>
     ([from, to]) =>
       ENTRANCE_ID.test(from) && typeof to === "string" && ENTRANCE_ID.test(to),
   );
+
+/**
+ * An Overworld Randomizer run's shuffled overworld as noted (the pack's
+ * `OwrNotes`): each noted whirlpool, by the fork's name, the whirlpool it
+ * leads into (`whirlpools`, both ways), and the screens a flute spot is
+ * noted on (`flute`, at most eight). Each absent when nothing is noted.
+ */
+export type OverworldNotes = {
+  readonly whirlpools?: Readonly<Record<string, string>>;
+  readonly flute?: readonly number[];
+};
+
+/** Whether a saved value is overworld notes of the shape they hold. */
+export const isOverworldNotes = (value: unknown): value is OverworldNotes =>
+  isRecord(value) &&
+  Object.keys(value).every((key) => ["whirlpools", "flute"].includes(key)) &&
+  (value.whirlpools === undefined ||
+    (isRecord(value.whirlpools) &&
+      Object.entries(value.whirlpools).every(
+        ([from, to]) =>
+          from !== to &&
+          (OWR_WHIRLPOOLS as readonly unknown[]).includes(from) &&
+          (OWR_WHIRLPOOLS as readonly unknown[]).includes(to),
+      ))) &&
+  (value.flute === undefined ||
+    (Array.isArray(value.flute) &&
+      value.flute.length <= 8 &&
+      new Set(value.flute).size === value.flute.length &&
+      value.flute.every((screen) =>
+        (OWR_FLUTE_SCREENS as readonly unknown[]).includes(screen),
+      )));
 
 /** Whether a saved value is door notes of the shape `DoorNotes` holds. */
 export const isDoorNotes = (value: unknown): value is DoorNotes =>

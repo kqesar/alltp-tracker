@@ -22,6 +22,7 @@ import {
   FOLLOWERS_NOT_KNOWN,
   GOALS_NOT_KNOWN,
   isDoorSettings,
+  owrNotesOf,
   PRIZES_NOT_KNOWN,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
@@ -423,6 +424,28 @@ describe("a Door Randomizer run's logic", () => {
     ).toBe(true);
   });
 
+  it("models an OWR run's moved flute spots and whirlpools on the notes", () => {
+    const run = with_(DR, {
+      ...OWR,
+      owFluteShuffle: "random",
+      owWhirlpool: true,
+    });
+    expect(unmodelledReasons(run)).toEqual([]);
+    expect(doorLogic(run)).toBe(true);
+    // Nothing noted yet: each shuffle's own, none of it leading anywhere
+    const none = {};
+    expect(owrNotesOf(run, none)).toEqual({ flute: [], whirlpools: {} });
+    expect(owrNotesOf(run, none)).toBe(owrNotesOf(run, none));
+    const noted = { flute: [0x18], whirlpools: { a: "b" } };
+    expect(owrNotesOf(run, noted)).toEqual(noted);
+    // A shuffle off is linked as vanilla; DR has none of them
+    expect(owrNotesOf(with_(DR, OWR), noted)).toEqual({});
+    expect(owrNotesOf(DR, noted)).toBeUndefined();
+    expect(
+      unmodelledReasons(with_(DR, { owWhirlpool: true, randomizer: "dr" })),
+    ).toContain("shuffled whirlpools");
+  });
+
   it("names every cause it cannot model, and models none of them", () => {
     const cases: [Partial<RunSettings>, string][] = [
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
@@ -432,7 +455,6 @@ describe("a Door Randomizer run's logic", () => {
       ],
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
       [{ owMixed: true, randomizer: "owr" }, "a mixed overworld"],
-      [{ owFluteShuffle: "random", randomizer: "owr" }, "shuffled flute spots"],
       // Bombs then need the +10 upgrade, which no cell records
       [{ bombBag: true }, "the bomb bag"],
     ];

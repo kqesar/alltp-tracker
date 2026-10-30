@@ -36,6 +36,8 @@ import {
   type SeedSettingsReading,
   type TakeAny,
 } from "@alltp/pack-alttpr";
+import type { OwrNotes } from "@alltp/pack-alttpr/door-world";
+import type { OverworldNotes } from "@/games/alttpr/stores/persistence";
 
 /** Which of DR's generators wrote the seed: DR itself, or its Overworld fork. */
 export type Randomizer = "dr" | "owr";
@@ -736,8 +738,12 @@ export const doorReasons = (
   }
   if (door.owCrossed !== "none") reasons.push("a crossed overworld");
   if (door.owMixed) reasons.push("a mixed overworld");
-  if (door.owWhirlpool) reasons.push("shuffled whirlpools");
-  if (door.owFluteShuffle !== "vanilla") reasons.push("shuffled flute spots");
+  // Shuffled whirlpools and moved flute spots: an OWR run's world links
+  // them as noted (`owrNotesOf`); DR itself has neither
+  if (door.randomizer !== "owr") {
+    if (door.owWhirlpool) reasons.push("shuffled whirlpools");
+    if (door.owFluteShuffle !== "vanilla") reasons.push("shuffled flute spots");
+  }
   // A prize an item placed elsewhere, a follower's quest a location: the
   // fork's world reads neither (ItemList.py:786, :1740-1745); not known,
   // either may be (DR itself has neither)
@@ -1198,4 +1204,67 @@ export const sameDoorSettings = (
   return (Object.keys(DOOR_OPTIONS) as DoorSetting[]).every(
     (key) => one[key] === two[key],
   );
+};
+
+/**
+ * The Overworld Randomizer's whirlpools, by its name (default_whirlpool_
+ * connections, OverworldShuffle.py:1764-1769): what an overworld note pairs.
+ * Its spec holds the list to the pack's data.
+ */
+export const OWR_WHIRLPOOLS = [
+  "C Whirlpool",
+  "River Bend Whirlpool",
+  "Lake Hylia Whirlpool",
+  "Zora Whirlpool",
+  "Kakariko Pond Whirlpool",
+  "Octoballoon Whirlpool",
+  "Qirn Jump Whirlpool",
+  "Bomber Corner Whirlpool",
+] as const;
+
+/**
+ * The screens a flute spot may stand on (flute_data's light world ids,
+ * FluteShuffle.py:683-726): what an overworld note lists. Its spec holds
+ * the list to the pack's data.
+ */
+export const OWR_FLUTE_SCREENS: readonly number[] = [
+  0x00, 0x02, 0x03, 0x05, 0x07, 0x0a, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+  0x16, 0x17, 0x18, 0x1a, 0x1b, 0x1d, 0x1e, 0x22, 0x25, 0x28, 0x29, 0x2a, 0x2b,
+  0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x32, 0x33, 0x34, 0x35, 0x37, 0x3a, 0x3b, 0x3c,
+  0x3f,
+];
+
+/** Each notes object's reading per shuffle, so a world is built once. */
+const owrNotes = new WeakMap<OverworldNotes, Map<string, OwrNotes>>();
+
+/**
+ * What the fork's world reads of a run's overworld notes (the pack's
+ * `OwrNotes`): for a shuffle the run's settings name, what is noted (none
+ * yet: nothing noted leads anywhere); nothing for a shuffle off, which the
+ * world links as vanilla. Undefined outside an OWR run. The same object
+ * for the same notes and shuffles.
+ */
+export const owrNotesOf = (
+  settings: DoorRunSettings,
+  notes: OverworldNotes,
+): OwrNotes | undefined => {
+  const door = doorOf(settings);
+  if (door?.randomizer !== "owr") return undefined;
+  const whirlpools = door.owWhirlpool;
+  const flute = door.owFluteShuffle !== "vanilla";
+  const key = `${whirlpools}/${flute}`;
+  let byKey = owrNotes.get(notes);
+  if (byKey === undefined) {
+    byKey = new Map();
+    owrNotes.set(notes, byKey);
+  }
+  let found = byKey.get(key);
+  if (found === undefined) {
+    found = {
+      ...(whirlpools ? { whirlpools: notes.whirlpools ?? {} } : {}),
+      ...(flute ? { flute: notes.flute ?? [] } : {}),
+    };
+    byKey.set(key, found);
+  }
+  return found;
 };

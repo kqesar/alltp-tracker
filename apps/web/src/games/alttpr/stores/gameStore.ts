@@ -52,6 +52,10 @@ import {
   knownBossValues,
   stepKnownBoss,
 } from "@/games/alttpr/logic/knownBosses";
+import {
+  type OverworldNotesChange,
+  withOverworldNotes,
+} from "@/games/alttpr/logic/overworldNotes";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
@@ -172,6 +176,13 @@ type GameState = Progress &
      * keeps a coupled door's way back with it.
      */
     noteDoors: (change: DoorNotesChange) => void;
+    /**
+     * Note an Overworld Randomizer run's shuffled overworld
+     * (`OverworldNotes`): whirlpools set or forgotten, each with its way
+     * back, or the flute's spots, as one undo step (none when nothing
+     * changes; `logic/overworldNotes.ts`).
+     */
+    noteOverworld: (change: OverworldNotesChange) => void;
     /**
      * Change settings in the run going, its progress kept (`retune`): what
      * a Mystery run discovers, and the dungeon items, whose counters keep
@@ -298,6 +309,7 @@ export const createProgress = (
       : {}),
   } as ItemState,
   medallions: Array(10).fill(0) as number[],
+  overworld: {},
   presetId: getPreset(presetId).id,
   seed: null,
   settings,
@@ -320,6 +332,7 @@ export const isFreshRun = (progress: Progress): boolean => {
     Object.values(progress.doors).every(
       (notes) => Object.keys(notes ?? {}).length === 0,
     ) &&
+    Object.keys(progress.overworld).length === 0 &&
     Object.entries(fresh.items).every(
       ([id, value]) => progress.items[id] === value,
     )
@@ -361,6 +374,7 @@ const restoreProgress = (
     entrances: saved.entrances ?? base.entrances,
     items,
     medallions: saved.medallions ?? base.medallions,
+    overworld: saved.overworld ?? base.overworld,
     presetId: saved.presetId ?? base.presetId,
     seed: saved.seed === undefined ? base.seed : saved.seed,
     settings,
@@ -406,6 +420,7 @@ const progressOf = (state: GameState): Progress => ({
   entrances: state.entrances,
   items: state.items,
   medallions: state.medallions,
+  overworld: state.overworld,
   presetId: state.presetId,
   seed: state.seed,
   settings: state.settings,
@@ -776,6 +791,13 @@ export const useGameStore = create<GameState>()(
           set((state) => {
             const entrances = withNotes(state.entrances, notes);
             return entrances === null ? state : record(state, { entrances });
+          }),
+        noteOverworld: (change: OverworldNotesChange) =>
+          set((state) => {
+            const overworld = withOverworldNotes(state.overworld, change);
+            return overworld === state.overworld
+              ? state
+              : record(state, { overworld });
           }),
         past: [],
         pauseTimer: (at = Date.now()) =>

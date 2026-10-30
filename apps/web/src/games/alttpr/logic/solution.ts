@@ -43,12 +43,14 @@ import {
   trickFiller,
   trickState,
 } from "@alltp/pack-alttpr";
+import type { OwrNotes } from "@alltp/pack-alttpr/door-world";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
 import {
   doorLocationsOf,
   doorPoolSettingsOf,
   doorShuffleOf,
   doorShuffleSettingsOf,
+  owrNotesOf,
   type Randomizer,
 } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
@@ -78,6 +80,7 @@ import {
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type {
   DoorNotes,
+  OverworldNotes,
   Prefs,
   Progress,
 } from "@/games/alttpr/stores/persistence";
@@ -133,7 +136,7 @@ export type Inputs = Pick<
   Progress,
   "items" | "medallions" | "settings" | "smallKeys"
 > &
-  Partial<Pick<Progress, "checked" | "entrances" | "doors">> &
+  Partial<Pick<Progress, "checked" | "entrances" | "doors" | "overworld">> &
   Partial<Pick<Prefs, "tricks">>;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
@@ -385,12 +388,16 @@ const NO_NOTES: Readonly<Record<string, string>> = {};
 /** No door noted yet, likewise. */
 const NO_DOORS: DoorNotes = {};
 
+/** Nothing of the overworld noted yet, likewise. */
+const NO_OVERWORLD: OverworldNotes = {};
+
 let last:
   | {
       crossed?: CrossedSolver;
       door?: DoorSolver;
       events: string;
       inputs: Inputs;
+      overworld?: OwrNotes;
       solution: Solution;
     }
   | undefined;
@@ -421,6 +428,10 @@ export const solutionOf = (state: Inputs): Solution => {
     : undefined;
   const doors =
     doorsShuffled === undefined ? undefined : (state.doors ?? NO_DOORS);
+  // The overworld noted, in an OWR run whose whirlpools or flute spots move
+  const overworld = doorLogic(state.settings)
+    ? owrNotesOf(state.settings, state.overworld ?? NO_OVERWORLD)
+    : undefined;
   if (
     last !== undefined &&
     last.events === events &&
@@ -428,6 +439,7 @@ export const solutionOf = (state: Inputs): Solution => {
     last.door === door &&
     last.inputs.entrances === entrances &&
     last.inputs.doors === doors &&
+    last.overworld === overworld &&
     last.inputs.items === state.items &&
     last.inputs.medallions === state.medallions &&
     last.inputs.settings === state.settings &&
@@ -488,6 +500,7 @@ export const solutionOf = (state: Inputs): Solution => {
             doorsShuffled === undefined || doors === undefined
               ? undefined
               : { notes: doors, settings: doorsShuffled },
+            overworld,
           ),
           solver: door,
         };
@@ -523,6 +536,7 @@ export const solutionOf = (state: Inputs): Solution => {
     crossed,
     door,
     events,
+    ...(overworld === undefined ? {} : { overworld }),
     inputs: {
       ...(entrances === undefined ? {} : { entrances }),
       ...(doors === undefined ? {} : { doors }),

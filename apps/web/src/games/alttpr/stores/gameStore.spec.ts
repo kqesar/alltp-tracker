@@ -1060,6 +1060,41 @@ describe("GameStore", () => {
     });
   });
 
+  describe("an OWR run's overworld notes", () => {
+    const store = () => useGameStore.getState();
+
+    it("are one undo step each, saved with the run, none in a new one", () => {
+      store().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        owWhirlpool: true,
+        randomizer: "owr",
+      });
+      const past = store().past.length;
+      store().noteOverworld({
+        whirlpools: { "C Whirlpool": "Zora Whirlpool" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      expect(isFreshRun(store())).toBe(false);
+      // The same again records nothing
+      store().noteOverworld({
+        whirlpools: { "Zora Whirlpool": "C Whirlpool" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      const file = JSON.parse(store().exportState());
+      expect(file.progress.overworld.whirlpools["Zora Whirlpool"]).toBe(
+        "C Whirlpool",
+      );
+      store().undo();
+      expect(store().overworld).toEqual({});
+      store().reset();
+      expect(store().overworld).toEqual({});
+      importSave(JSON.stringify(file));
+      expect(store().overworld.whirlpools?.["C Whirlpool"]).toBe(
+        "Zora Whirlpool",
+      );
+    });
+  });
+
   describe("a Mystery run's settings", () => {
     const store = () => useGameStore.getState();
 

@@ -18,6 +18,7 @@ import {
   drRegionId,
   drWorld,
   KEY_ITEMS,
+  type OwrNotes,
 } from "@alltp/pack-alttpr/door-world";
 import {
   type OwnWorldRun,
@@ -44,6 +45,7 @@ type Built = WeakMap<
     added: Added;
     doors?: DrNotedDoors;
     entrances?: DrNotedEntrances;
+    overworld?: OwrNotes;
     world: DrWorld;
   }
 >;
@@ -81,12 +83,14 @@ const worldOf = (
   added: Added,
   entrances?: DrNotedEntrances,
   doors?: DrNotedDoors,
+  overworld?: OwrNotes,
 ): DrWorld => {
   const found = built.get(settings);
   if (
     found?.added === added &&
     sameEntrances(found.entrances, entrances) &&
-    sameDoors(found.doors, doors)
+    sameDoors(found.doors, doors) &&
+    found.overworld === overworld
   )
     return found.world;
   const world = drWorld(settings, {
@@ -94,12 +98,14 @@ const worldOf = (
     dropsAndPots: added,
     ...(entrances === undefined ? {} : { entrances }),
     ...(doors === undefined ? {} : { doors }),
+    ...(overworld === undefined ? {} : { overworld }),
     unrecorded: UNRECORDED,
   });
   built.set(settings, {
     added,
     ...(doors === undefined ? {} : { doors }),
     ...(entrances === undefined ? {} : { entrances }),
+    ...(overworld === undefined ? {} : { overworld }),
     world,
   });
   return world;
@@ -117,6 +123,8 @@ export interface DoorSolver extends OwnWorldSolver {
     state: State,
     entrances?: DrNotedEntrances,
     doors?: DrNotedDoors,
+    /** An OWR run's whirlpools and flute spots as noted (`owrNotesOf`). */
+    overworld?: OwrNotes,
   ): DoorRun;
   /**
    * Where a region of DR's stands (a DR location's, by DR's name): maybe
@@ -142,7 +150,10 @@ export const doorSolverOf = (data: DrData): DoorSolver => {
       const id = drRegionId(name, data);
       return id === undefined ? "maybe" : solution.region(id);
     },
-    solve: (settings, added, state, entrances, doors) =>
-      solveIn(worldOf(data, built, settings, added, entrances, doors), state),
+    solve: (settings, added, state, entrances, doors, overworld) =>
+      solveIn(
+        worldOf(data, built, settings, added, entrances, doors, overworld),
+        state,
+      ),
   };
 };
