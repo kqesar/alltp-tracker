@@ -1215,8 +1215,23 @@ DR analyses the key doors of each layout it generated, which the notes
 tell only in part: a key door asks every key of its dungeon or `maybe`
 (strict-safe), the vanilla count in `basic` and the count the player noted
 in a pool (`shuffle_small_key_doors` moves it, `DoorShuffle.py:2139-2145`),
-`maybe` until noted. Porting the analysis to a fully noted dungeon is left
-for later. `doorNotesFromSpoiler` reads a DR JSON spoiler's `Doors`, `Lobbies`
+`maybe` until noted. That stays so in this port, even on a dungeon whose
+every door is noted (the owner's decision of 2026-10-30): DR's analysis
+(`KeyDoorShuffle.py`, `analyze_dungeon`) reads the whole layout it built
+and where its keys may lie, which a player knows only once every door,
+kind and lobby of the dungeon is noted, and porting it onto notes is a
+step of its own. Strict-safe costs precision only: a key door reads
+`maybe` where DR's analysis may say yes with fewer keys (the door contract
+lists each, all `yes` once every key is held), and never `yes` where DR
+does not. The door kinds read the widest of DR's settings, as neither
+`door_type_mode` nor `trap_door_mode` is a run setting: `kindShuffled`
+takes every kind any `door_type_mode` may give or take (original, big,
+all, chaos) and the trap mode as `oneway` (`doorShuffleSettingsOf` in the
+app: a boss's trap door may open too). A door that a narrower setting
+keeps vanilla then asks for a kind note, `maybe` until noted, which is
+sound: the world never assumes a door vanilla that the seed may have
+changed. Door notes are the player's alone: the app imports no spoiler
+into them. `doorNotesFromSpoiler` reads a DR JSON spoiler's `Doors`, `Lobbies`
 and `DoorTypes` as the notes of a player who walked every door (every other
 door that may change kind plain: DR lists every kind it gives).
 `doors.spec.ts` holds the model, `shuffled.spec.ts` the world (a world noted
