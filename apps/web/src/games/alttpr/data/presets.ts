@@ -410,8 +410,9 @@ export const entrancesKnown = (settings: RunSettings): boolean =>
  * entrance shuffle the pack does not port (Insanity) and the Inverted
  * world's shuffled entrances; for a Door Randomizer seed, what its port
  * leaves out (`doorReasons`), its glitched logics (the pack ports
- * alttpr.com's, not DR's) and its shuffled entrances past DR's Crosskeys
- * (`doorCrossed`). The pack ports vt's logics without shuffled entrances
+ * alttpr.com's, not DR's), its shuffled entrances past DR's Crosskeys
+ * (`doorCrossed`), and, with its entrances vanilla, what keeps it out of
+ * DR's own world (`doorBorrowed`). The pack ports vt's logics without shuffled entrances
  * and the entrance randomizer's NoGlitches for `crossedLogic`, whatever an
  * alttpr.com run's Glitches. Empty when the run is modelled. The one place
  * the cause is told, for the note over the map.
@@ -429,7 +430,10 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   const { entranceShuffle: shuffle, mode } = settings;
   // Not known yet: any shuffle, or none (`LogicNote` says to set it)
   if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
-  if (shuffle === "none") return reasons;
+  if (shuffle === "none") {
+    if (reasons.length === 0) reasons.push(...doorBorrowed(settings));
+    return reasons;
+  }
   // Glitches are no cause: alttpr.com hands any shuffled seed to the
   // entrance randomizer as NoGlitches (`entranceRandomized`)
   if (portedShuffleOf(settings) === undefined)
@@ -452,6 +456,25 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     else reasons.push("shuffled bosses behind Crossworld entrances");
   }
   return reasons;
+};
+
+/**
+ * Why a Door Randomizer run with vanilla entrances that DR's own world
+ * does not hold is not modelled: alttpr.com's v31 is no stand-in, its
+ * rules differing from DR's where DR asks more (an enemy room's kills,
+ * Ganons Tower's Tile Room's powder, DR's key analysis over DR's own fill:
+ * Rules.py:906-, the pack's README). Its Overworld fork, whose rules are
+ * its own, and a boss shuffle, whose slots DR's world reads as their own
+ * bosses. A Mystery run whose settings are not all known keeps v31 read
+ * between two logics, as the owner decided (2026-10-30): none for it.
+ */
+const doorBorrowed = (settings: RunSettings): string[] => {
+  if (!isDoorRun(settings) || doorLogic(settings)) return [];
+  if (settings.randomizer === "owr")
+    return ["the Overworld Randomizer's own rules"];
+  if (!isHidden(settings, "bossShuffle") && bossShuffleOf(settings) !== "none")
+    return ["shuffled bosses in a Door Randomizer seed"];
+  return [];
 };
 
 /**

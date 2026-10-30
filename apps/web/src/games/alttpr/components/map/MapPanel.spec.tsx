@@ -164,10 +164,19 @@ describe("MapPanel", () => {
       "Door Randomizer seed: the logic is DR's own (1.5.6).",
     );
 
-    // Its Overworld fork borrows v31 still
+    // Its Overworld fork's rules are its own: not modelled
     act(() =>
       useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
     );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the Overworld Randomizer's own rules.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    // A Mystery run's hidden settings borrow v31, between two logics
+    act(() => {
+      useGameStore.getState().updateDoorSettings({ randomizer: "dr" });
+      useGameStore.getState().hideSetting("goal");
+    });
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
       "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
     );

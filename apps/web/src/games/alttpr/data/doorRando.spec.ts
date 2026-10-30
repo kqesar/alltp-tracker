@@ -48,17 +48,37 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorNotes(getPreset("open").settings, "door")).toEqual([]);
   });
 
-  it("borrows v31 where DR's world does not reach, and says it borrows it", () => {
+  it("names what keeps a run out of DR's world, v31's rules being no stand-in", () => {
+    // v31 asks less than DR in places (kill rooms, Ganons Tower's Tile
+    // Room's powder, DR's key analysis): a yes there would be unsound
+    const cases: [Partial<RunSettings>, string][] = [
+      [{ randomizer: "owr" }, "the Overworld Randomizer's own rules"],
+      [{ bossShuffle: "full" }, "shuffled bosses in a Door Randomizer seed"],
+      [{ bossShuffle: "simple" }, "shuffled bosses in a Door Randomizer seed"],
+    ];
+    for (const [change, reason] of cases) {
+      const run = with_(DR, change);
+      expect(doorLogic(run), reason).toBe(false);
+      expect(unmodelledReasons(run), reason).toEqual([reason]);
+    }
+    // An alttpr.com run's boss shuffle is vt's own
+    expect(
+      unmodelledReasons(
+        with_(getPreset("open").settings, { bossShuffle: "full" }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("borrows v31 for a Mystery run whose settings are not all known, and says so", () => {
     for (const change of [
-      { randomizer: "owr" },
-      { bossShuffle: "full" },
       { hidden: ["goal"] },
+      { bossShuffle: "full", hidden: ["bossShuffle"] },
     ] as const) {
       const run = with_(DR, change);
       expect(doorLogic(run), JSON.stringify(change)).toBe(false);
       expect(logicModelled(run), JSON.stringify(change)).toBe(true);
     }
-    expect(doorNotes(with_(DR, { randomizer: "owr" }), "borrowed")).toEqual([
+    expect(doorNotes(with_(DR, { hidden: ["goal"] }), "borrowed")).toEqual([
       "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
     ]);
     expect(

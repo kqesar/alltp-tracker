@@ -401,9 +401,9 @@ export type DoorLogicKind = "crossed" | "door" | "borrowed";
  * What a DR run's logic rests on, when the tracker models it: DR's own
  * world (`door`: vanilla doors and entrances, doorLogic), the entrance
  * randomizer's crossed logic for DR's Crosskeys (until DR's own entrance
- * pools are ported), or alttpr.com's v31 for the rest (its Overworld
- * fork, a boss shuffle, a Mystery run), its new locations then shown as
- * maybe.
+ * pools are ported), or alttpr.com's v31 for a Mystery run whose settings
+ * are not all known (its Overworld fork and a boss shuffle are not
+ * modelled: `unmodelledReasons`), its new locations then shown as maybe.
  * @param kind - The world the run is solved in
  */
 export const doorNotes = (
