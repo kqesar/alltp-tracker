@@ -301,13 +301,19 @@ export const presets: Preset[] = [
     // Link's House and the Tavern's back are left unset: race seeds differ
     // (avianart's Crosskeys metas of 2026 shuffle neither on 1.5.7 and
     // 1.5.8, both on some 1.5.6 ones), so each may be moved and leads
-    // nowhere until noted, never somewhere it may not
+    // nowhere until noted, never somewhere it may not. No bomb bag: every
+    // Crosskeys meta and log recorded says so (five SahasrahBot Crosskeys
+    // races' "Bombbag: No", test/dr-entrance-spoilers/; avianart's race
+    // uv7P2Luey and its "crosskeys" preset's 7E8eFbBNH and oVvBJQPnb,
+    // generated 2026-10-30, `bombbag` 0; Hyrule Town Hall's patch reads no
+    // bag, test/dr-seeds/)
     description:
       "Crosskeys on the Door Randomizer: Crossworld entrances, keysanity, doors vanilla.",
     id: "door-crosskeys",
     name: "DR Crosskeys",
     settings: {
       ...baseSettings,
+      bombBag: false,
       dungeonItems: "full",
       entranceShuffle: "crossed",
       randomizer: "dr",

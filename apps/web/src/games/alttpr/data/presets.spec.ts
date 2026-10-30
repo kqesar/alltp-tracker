@@ -45,10 +45,11 @@ describe("presets", () => {
         .map((preset) => preset.id),
     ).toEqual([]);
     // A DR seed's bomb bag not known reads as on, its upgrade not known:
-    // modelled (drSettingsOf)
+    // modelled (drSettingsOf); DR Crosskeys races have none
     for (const id of ["door-randomizer", "door-crosskeys"])
       expect(unmodelledReasons(getPreset(id).settings), id).toEqual([]);
     expect(getPreset("door-randomizer").settings.bombBag).toBeUndefined();
+    expect(getPreset("door-crosskeys").settings.bombBag).toBe(false);
     expect(unmodelledReasons(getPreset("mystery").settings)).toEqual([
       HIDDEN_ENTRANCES,
     ]);

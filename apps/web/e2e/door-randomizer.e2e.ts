@@ -188,9 +188,10 @@ test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async 
   await expect(
     dialog.getByRole("combobox", { name: "Link's House" }),
   ).toHaveValue("?");
-  await dialog
-    .getByRole("combobox", { name: "Bomb bag" })
-    .selectOption("false");
+  // Crosskeys races roll no bomb bag
+  await expect(dialog.getByRole("combobox", { name: "Bomb bag" })).toHaveValue(
+    "false",
+  );
   await auditPage(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
 

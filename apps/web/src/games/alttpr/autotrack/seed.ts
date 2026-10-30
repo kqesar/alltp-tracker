@@ -243,10 +243,18 @@ const likeness = (preset: RunSettings, settings: RunSettings) =>
  */
 const presetFor = (settings: RunSettings, currentId: string): string => {
   // A Door Randomizer seed's run type is one of DR's, an alttpr.com seed's
-  // one of alttpr.com's
-  const family = presets.filter(
+  // one of alttpr.com's; among DR's, the one of its entrances first (DR
+  // Crosskeys' race settings, its bomb bag, never outweigh a vanilla world)
+  const kin = presets.filter(
     (preset) => isDoorRun(preset.settings) === isDoorRun(settings),
   );
+  const sameWorld = kin.filter(
+    (preset) =>
+      !isDoorRun(settings) ||
+      (preset.settings.entranceShuffle ?? "none") ===
+        (settings.entranceShuffle ?? "none"),
+  );
+  const family = sameWorld.length > 0 ? sameWorld : kin;
   const current = getPreset(currentId);
   let best = family.includes(current) ? current : (family[0] ?? current);
   let score = likeness(best.settings, settings);
