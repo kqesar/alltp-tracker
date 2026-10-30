@@ -1,0 +1,36 @@
+{
+  "code": [
+    {
+      "line": 17,
+      "name": "testInvertedBombRulesAreComplete"
+    },
+    {
+      "line": 30,
+      "name": "testInvalidEntrancesAreNotUsed"
+    },
+    {
+      "line": 36,
+      "name": "testInvalidEntrances"
+    }
+  ],
+  "file": "test/inverted/TestInvertedBombRules.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "inverted",
+    "overrideBombCheck": true,
+    "source": "test/inverted/TestInverted.py:5@1ada5b5",
+    "suite": "inverted"
+  },
+  "suite": "inverted",
+  "tests": [],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

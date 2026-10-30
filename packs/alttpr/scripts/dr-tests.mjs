@@ -34,7 +34,7 @@ import {
 
 /**
  * @typedef {import("./python.mjs").Statement} Statement
- * @typedef {{ suite: string, mode: string, logic: string, keyLogic: string, startingRegions?: Record<string, string[]>, extra: string[], source: string }} Harness
+ * @typedef {{ suite: string, mode: string, logic: string, keyLogic: string, startingRegions?: Record<string, string[]>, overrideBombCheck?: boolean, extra: string[], source: string }} Harness
  */
 
 /** DR's test suites, and the base class each file's class derives from. */
@@ -76,6 +76,27 @@ function harnessOf(suite, harness, commit) {
   const setUp = methods.find((m) => m.text === "def setUp(self)");
   if (setUp === undefined) throw new Error(`${file}@${commit}: no setUp`);
   const [first, ...rest] = setUp.body;
+  // The Overworld fork's harness: one cached world per logic and mode
+  // (owr:test/TestBase.py make_logic_test_world, over its
+  // build_vanilla_world, which overrides the bomb check and names the
+  // medallions Ether and Quake), its dungeon tests starting in today's
+  // regions themselves (no STARTING_REGION_MAP)
+  const cached =
+    /^self\.world = make_logic_test_world\(logic='(\w+)', mode='(\w+)'\)$/.exec(
+      first?.text ?? "",
+    );
+  if (cached !== null)
+    return {
+      extra: rest
+        .map((s) => s.text)
+        .filter((text) => text !== "self.starting_regions = []"),
+      keyLogic: KEY_LOGIC,
+      logic: cached[1] ?? "noglitches",
+      mode: cached[2] ?? "open",
+      overrideBombCheck: true,
+      source: `${file}:${setUp.line}@${commit.slice(0, 7)}`,
+      suite,
+    };
   const built =
     /^self\.world = build_vanilla_world\((?:mode='(\w+)', logic='(\w+)')?\)$/.exec(
       first?.text ?? "",
@@ -249,11 +270,12 @@ function poolOf(read, harness) {
     const times = Number(/\* (\d+)/.exec(text)?.[1] ?? "1");
     keys.push(...Array(times).fill(name));
   }
-  const prizes = assigned(
-    harness("test/TestBase.py"),
-    "PRIZES",
-    "test/TestBase.py",
-  );
+  const testBase = harness("test/TestBase.py");
+  // DR's harness lists the prizes as PRIZES; the Overworld fork's adds
+  // them in build_vanilla_world (owr:test/TestBase.py:132-134)
+  const prizes = /^PRIZES = /m.test(testBase)
+    ? assigned(testBase, "PRIZES", "test/TestBase.py")
+    : prizesAdded(testBase);
   return {
     dungeonItems: { items: keys, source: "Dungeons.py:16-28" },
     prizes: {
@@ -263,6 +285,27 @@ function poolOf(read, harness) {
     progression,
   };
 }
+
+/**
+ * The prizes build_vanilla_world adds to the pool, and their line: the one
+ * `world.itempool.extend(ItemFactory([…], 1))` listing 'Green Pendant'.
+ * @param {string} source - test/TestBase.py
+ */
+function prizesAdded(source) {
+  const m =
+    /world\.itempool\.extend\(ItemFactory\(\s*(\[[^\]]*'Green Pendant'[^\]]*\])/.exec(
+      source,
+    );
+  if (m === null) throw new Error("test/TestBase.py: no prizes added");
+  return {
+    line: source.slice(0, m.index).split("\n").length,
+    value: /** @type {string[]} */ (pythonLiteralOf(m[1] ?? "")),
+  };
+}
+
+/** A Python literal's value. @param {string} text */
+const pythonLiteralOf = (text) =>
+  caseValue(pythonExpression(text), new Map(), "test/TestBase.py");
 
 /**
  * The line of `text` in `source`.
@@ -468,6 +511,30 @@ export function vanillaKeyLogicOf(read) {
  *   test files of each suite, and the suite's yaml files
  */
 export function importDrTests(read, harness, commit, files) {
+  const { fixtures, pool } = testFixturesOf(read, harness, commit, files);
+  return {
+    fixtures,
+    pool,
+    staticKeyLogic: staticKeyLogicTestsOf(read, [
+      ...pool.progression.flatMap((p) => p.items),
+      ...pool.dungeonItems.items,
+      ...pool.prizes.items,
+    ]),
+    suite: suiteOf(read, files.suite),
+    vanillaKeyLogic: vanillaKeyLogicOf(read),
+  };
+}
+
+/**
+ * The suites' fixtures and the pool they draw from, alone: what the
+ * Overworld fork's tests give (its key layouts' validator and static key
+ * tests read its screens, KeyDoorShuffle.py, and are not held).
+ * @param {(file: string) => string} read
+ * @param {(file: string) => string} harness
+ * @param {string} commit
+ * @param {{ tests: Record<string, readonly string[]> }} files
+ */
+export function testFixturesOf(read, harness, commit, files) {
   const fixtures = Object.entries(files.tests).flatMap(([suite, names]) => {
     const harnessData = harnessOf(suite, harness, commit);
     return names.map((name) => {
@@ -494,18 +561,7 @@ export function importDrTests(read, harness, commit, files) {
       };
     });
   });
-  const pool = poolOf(read, harness);
-  return {
-    fixtures,
-    pool,
-    staticKeyLogic: staticKeyLogicTestsOf(read, [
-      ...pool.progression.flatMap((p) => p.items),
-      ...pool.dungeonItems.items,
-      ...pool.prizes.items,
-    ]),
-    suite: suiteOf(read, files.suite),
-    vanillaKeyLogic: vanillaKeyLogicOf(read),
-  };
+  return { fixtures, pool: poolOf(read, harness) };
 }
 
 /**

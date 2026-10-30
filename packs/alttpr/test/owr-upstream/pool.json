@@ -1,0 +1,178 @@
+{
+  "dungeonItems": {
+    "items": [
+      "Small Key (Escape)",
+      "Big Key (Eastern Palace)",
+      "Big Key (Desert Palace)",
+      "Small Key (Desert Palace)",
+      "Big Key (Tower of Hera)",
+      "Small Key (Tower of Hera)",
+      "Big Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Small Key (Palace of Darkness)",
+      "Big Key (Thieves Town)",
+      "Small Key (Thieves Town)",
+      "Big Key (Skull Woods)",
+      "Small Key (Skull Woods)",
+      "Small Key (Skull Woods)",
+      "Small Key (Skull Woods)",
+      "Big Key (Swamp Palace)",
+      "Small Key (Swamp Palace)",
+      "Big Key (Ice Palace)",
+      "Small Key (Ice Palace)",
+      "Small Key (Ice Palace)",
+      "Big Key (Misery Mire)",
+      "Small Key (Misery Mire)",
+      "Small Key (Misery Mire)",
+      "Small Key (Misery Mire)",
+      "Big Key (Turtle Rock)",
+      "Small Key (Turtle Rock)",
+      "Small Key (Turtle Rock)",
+      "Small Key (Turtle Rock)",
+      "Small Key (Turtle Rock)",
+      "Small Key (Agahnims Tower)",
+      "Small Key (Agahnims Tower)",
+      "Big Key (Ganons Tower)",
+      "Small Key (Ganons Tower)",
+      "Small Key (Ganons Tower)",
+      "Small Key (Ganons Tower)",
+      "Small Key (Ganons Tower)"
+    ],
+    "source": "Dungeons.py:16-28"
+  },
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "prizes": {
+    "items": [
+      "Green Pendant",
+      "Red Pendant",
+      "Blue Pendant",
+      "Beat Agahnim 1",
+      "Beat Agahnim 2",
+      "Crystal 1",
+      "Crystal 2",
+      "Crystal 3",
+      "Crystal 4",
+      "Crystal 5",
+      "Crystal 6",
+      "Crystal 7"
+    ],
+    "source": "test/TestBase.py:120"
+  },
+  "progression": [
+    {
+      "items": [
+        "Bombos",
+        "Book of Mudora",
+        "Cane of Somaria",
+        "Ether",
+        "Fire Rod",
+        "Flippers",
+        "Ocarina",
+        "Hammer",
+        "Hookshot",
+        "Ice Rod",
+        "Lamp",
+        "Cape",
+        "Magic Powder",
+        "Mushroom",
+        "Pegasus Boots",
+        "Quake",
+        "Shovel",
+        "Bug Catching Net",
+        "Cane of Byrna",
+        "Blue Boomerang",
+        "Red Boomerang"
+      ],
+      "source": "ItemList.py:24"
+    },
+    {
+      "items": ["Progressive Glove", "Progressive Glove"],
+      "source": "ItemList.py:26"
+    },
+    {
+      "items": ["Magic Mirror", "Moon Pearl"],
+      "source": "ItemList.py:1152"
+    },
+    {
+      "items": [
+        "Magic Upgrade (1/2)",
+        "Sanctuary Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Boss Heart Container",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart",
+        "Piece of Heart"
+      ],
+      "source": "ItemList.py:32"
+    },
+    {
+      "items": ["Bottle", "Bottle", "Bottle", "Bottle"],
+      "source": "ItemList.py:56"
+    },
+    {
+      "items": [
+        "Progressive Shield",
+        "Progressive Shield",
+        "Progressive Shield"
+      ],
+      "source": "ItemList.py:58"
+    },
+    {
+      "items": ["Progressive Armor", "Progressive Armor"],
+      "source": "ItemList.py:60"
+    },
+    {
+      "items": [
+        "Progressive Sword",
+        "Progressive Sword",
+        "Progressive Sword",
+        "Progressive Sword"
+      ],
+      "source": "ItemList.py:63"
+    },
+    {
+      "items": ["Progressive Bow", "Progressive Bow"],
+      "source": "ItemList.py:1187"
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

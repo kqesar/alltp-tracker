@@ -25,8 +25,9 @@
 // run its own rules even on a vanilla overworld), at the release
 // upstream.json pins (doorRandomizer.overworld): src/door-rando/owr/, its
 // regions, doors and tables, and what it adds to the overworld (screens,
-// edges, flute spots, bonk drops). Never edit those files by hand: run
-// this script again.
+// edges, flute spots, bonk drops), its rules, and its own tests under
+// test/owr-upstream/. Never edit those files by hand: run this script
+// again.
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -34,7 +35,12 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { constant, member, readSprites } from "./dr-enemies.mjs";
 import { importDrRules, importStaticKeyLogic } from "./dr-rules.mjs";
-import { harnessFile, importDrTests, SUITES } from "./dr-tests.mjs";
+import {
+  harnessFile,
+  importDrTests,
+  SUITES,
+  testFixturesOf,
+} from "./dr-tests.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
 import { assigned, expression, literal, tokens } from "./python.mjs";
@@ -576,6 +582,49 @@ function mainOwr(checkout) {
   );
   process.stdout.write(
     `rules: ${Object.keys(tables.entrances).length} entrances, ${Object.keys(tables.locations).length} locations, ${Object.keys(tables.helpers).length} helpers, ${unported.length} unported\n`,
+  );
+  // Stage C: its own tests, with its own harness (the release's
+  // test/TestBase.py: no harness commit apart)
+  const pack = resolve(HERE, "..");
+  /** @param {string} dir @param {RegExp} pattern */
+  const filesIn = (dir, pattern) =>
+    readdirSync(join(checkout, dir), { recursive: true })
+      .map(String)
+      .filter((name) => pattern.test(name))
+      .sort();
+  const tests = testFixturesOf(read, read, upstream.commit, {
+    tests: Object.fromEntries(
+      Object.entries(SUITES).map(([suite, base]) => [
+        suite,
+        filesIn(`test/${suite}`, /^Test\w+\.py$/).filter(
+          (name) => name !== `${base}.py`,
+        ),
+      ]),
+    ),
+  });
+  const out = join(pack, "test/owr-upstream");
+  /** @type {[string, unknown][]} */
+  const fixtures = [
+    ...tests.fixtures.map(
+      (fixture) =>
+        /** @type {[string, unknown]} */ ([
+          join(out, fixture.suite, `${basename(fixture.file, ".py")}.json`),
+          { generated, upstream, ...fixture },
+        ]),
+    ),
+    [join(out, "pool.json"), { generated, upstream, ...tests.pool }],
+  ];
+  for (const [file, data] of fixtures) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, `${JSON.stringify(data, null, 1)}\n`);
+  }
+  execFileSync(join(pack, "../../node_modules/.bin/biome"), [
+    "check",
+    "--write",
+    ...fixtures.map(([file]) => file),
+  ]);
+  process.stdout.write(
+    `tests: ${tests.fixtures.length} files, ${tests.fixtures.reduce((n, f) => n + f.tests.reduce((m, t) => m + /** @type {unknown[]} */ (t.cases).length, 0), 0)} cases\n`,
   );
   const overworld =
     world.overworld ?? fail("the fork's overworld was not read");

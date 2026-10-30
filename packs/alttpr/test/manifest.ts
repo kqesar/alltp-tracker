@@ -49,6 +49,8 @@ export interface Manifest {
       readonly importer: string;
       readonly license: string;
       readonly repo: string;
+      /** Its own tests, imported as fixtures under test/owr-upstream/. */
+      readonly tests: readonly ManifestEntry[];
       readonly version: string;
       readonly why: string;
     };

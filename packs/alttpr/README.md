@@ -1585,6 +1585,18 @@ listed in `unported`, the same code as DR's at the fork's lines, and its
 own `ow_terrain_rules` (water edges: flippers, and the pearl by where the
 edge leads), which the world ports. `owr-rules.spec.ts` holds all of it.
 
+**Its own tests** (`test/owr-upstream/`, the same run, `testFixturesOf` in
+`dr-tests.mjs`): the fork keeps DR's suites, re-aimed at its world, in a
+harness of its own (its `test/TestBase.py` at the release:
+`make_logic_test_world`, one cached world per logic and mode, the bomb check
+overridden, the medallions Ether and Quake; the dungeon tests start in
+today's regions), so the fixtures record `overrideBombCheck` and no harness
+commit apart; 2,898 cases in 29 files (`test/owr-fixtures.spec.ts` counts
+them). Its key layouts' validator and static key tests read its screens and
+are not imported. Each file is listed in `upstream.json`
+(`doorRandomizer.overworld.tests`), `pending` until the fork's world holds
+it.
+
 ## The entrance randomizer's tables
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
