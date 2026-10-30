@@ -1134,8 +1134,9 @@ describe("doorFromSeed", () => {
       owLayout: "vanilla",
       owMixed: true,
       owWhirlpool: false,
-      // A pottery mode the tracker has no option for keeps the run's
-      pottery: "keys",
+      // A pottery mode the tracker has no option for: cave and key pots,
+      // never the run's (another seed's)
+      pottery: "cavekeys",
       prizeShuffle: "wild",
       randomizer: "owr",
       shuffleFollowers: true,
@@ -1161,12 +1162,15 @@ describe("doorFromSeed", () => {
       keyLogic: "static",
       randomizer: "dr",
     });
-    // Partial is DR's default: left out; a name it does not know keeps the run's
+    // Partial is DR's default: left out; a name it does not know reads as
+    // strict, which asks the most, never the run's (another seed's)
     expect(doorFromSeed(exact({ keyLogic: "partial" }, false), {})).toEqual({
       randomizer: "dr",
     });
     expect(
-      doorFromSeed(exact({ keyLogic: "newer" }, false), { keyLogic: "strict" }),
+      doorFromSeed(exact({ keyLogic: "newer" }, false), {
+        keyLogic: "dangerous",
+      }),
     ).toEqual({ keyLogic: "strict", randomizer: "dr" });
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, false), {}),
@@ -1174,6 +1178,61 @@ describe("doorFromSeed", () => {
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, true), {}),
     ).toEqual({ doorEntrances: "district", randomizer: "owr" });
+  });
+
+  it("lays none of an earlier run's settings on a seed", () => {
+    // An OWR Mixed District run with its bonk drops, then a DR Crosskeys
+    // seed loaded from its meta (bench seeds c0PDd2qiJ, toInhuUYy)
+    const owr: RunSettings = {
+      ...DR,
+      ...OWR,
+      bonkDrops: true,
+      doorEntrances: "district",
+      owMixed: true,
+      prizeShuffle: "wild",
+      randomizer: "owr",
+      shuffleFollowers: true,
+      shuffleLinks: false,
+    };
+    const crosskeys = {
+      doorExact: {
+        doorShuffle: "vanilla",
+        dropShuffle: "none",
+        enemyShuffle: "none",
+        keyLogic: "partial",
+        pottery: "none",
+        shopsanity: false,
+        shuffleLinks: false,
+        shuffleTavern: false,
+        takeAny: "none",
+      },
+      entrances: { known: true, value: "crossed" },
+      randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    expect(doorFromSeed(crosskeys, owr)).toEqual({
+      doorVersion: "1.5.8",
+      randomizer: "dr",
+      shuffleLinks: false,
+      shuffleTavern: false,
+    });
+    // A DR ROM read on that run keeps none of the fork's either
+    const rom = {
+      door: { version: { known: false, why: "unrecognized" } },
+      randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    const read = doorFromSeed(rom, owr) ?? {};
+    for (const key of [
+      "bonkDrops",
+      "customGoals",
+      "doorEntrances",
+      "owMixed",
+      "owrVersion",
+      "prizeShuffle",
+      "shuffleFollowers",
+    ] as const)
+      expect(read, key).not.toHaveProperty(key);
+    // Its own hand-set settings a ROM states none of stay
+    expect(read).toMatchObject({ shuffleLinks: false });
   });
 
   it("takes a spoiler's bomb bag, pot shuffle, boss items and pyramid", () => {
@@ -1238,8 +1297,8 @@ describe("doorFromSeed", () => {
     expect(unmodelledReasons({ ...DR, bombBag: true })).toEqual([]);
     expect(drSettingsOf({ ...DR, bombBag: undefined }).bombBag).toBe(true);
     expect(drSettingsOf({ ...DR, bombBag: false }).bombBag).toBe(false);
+    // Not named: DR's default, never the run's (another seed's)
     expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
-      potShuffle: true,
       randomizer: "dr",
     });
   });

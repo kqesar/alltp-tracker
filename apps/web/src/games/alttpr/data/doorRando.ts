@@ -1111,11 +1111,43 @@ const POTS_BEYOND_CAVES: readonly PotteryMode[] = [
 const kept = <T extends string>(value: T, of: readonly T[], or: T): T =>
   of.includes(value) ? value : or;
 
+/** The settings only the Overworld fork has, District among its shuffles. */
+const OWR_ONLY = [
+  "owrVersion",
+  "owLayout",
+  "owCrossed",
+  "owMixed",
+  "owWhirlpool",
+  "owFluteShuffle",
+  "bonkDrops",
+  "prizeShuffle",
+  "shuffleFollowers",
+  "customGoals",
+] as const satisfies readonly DoorSetting[];
+
+/**
+ * The run's own settings a ROM reading keeps where the ROM states none:
+ * the fork's dropped on a seed of DR itself, which has none of them.
+ */
+const ownOf = (
+  run: DoorRunSettings,
+  generator: Randomizer,
+): DoorRunSettings => {
+  if (generator === "owr") return run;
+  const own: DoorRunSettings = { ...run };
+  for (const key of OWR_ONLY) delete own[key];
+  if (own.doorEntrances === "district") delete own.doorEntrances;
+  return own;
+};
+
 /**
  * What a seed says of a run's Door Randomizer settings: none for an
  * alttpr.com seed; for a DR seed, the generator (from the title, which Race
  * Mode reads too) and each setting its ROM states (never in a race), the
- * run's own where it does not. Where the ROM tells a kind but not its mode
+ * run's own where it does not, but for the fork's alone on a seed of DR
+ * itself; a spoiler's meta names the whole seed, so none of the run's is
+ * laid on it (another seed's, a run loaded before). Where the ROM tells a
+ * kind but not its mode
  * (doors shuffled, pots beyond the caves, take-any caves, a crossed
  * overworld, flute spots moved), the run's mode stands if it is of that
  * kind, else the one of it the logic cannot read as asking less (What I
@@ -1135,11 +1167,12 @@ export const doorFromSeed = (
   const version = doorVersionOf(
     seed.door?.version.known ? seed.door.version.value : randomizer.version,
   );
+  const generator: Randomizer = randomizer.overworld ? "owr" : "dr";
   const own: DoorSettings = {
     ...DOOR_DEFAULTS,
-    ...run,
+    ...(seed.doorExact === undefined ? ownOf(run, generator) : {}),
     ...(version === undefined ? {} : { doorVersion: version }),
-    randomizer: randomizer.overworld ? "owr" : "dr",
+    randomizer: generator,
   };
   // The fork's release: a spoiler's meta's, else its ROM table's text
   const owrVersion = owrVersionOf(
@@ -1154,12 +1187,12 @@ export const doorFromSeed = (
   // where it is an option the tracker has
   const exact = seed.doorExact;
   if (exact !== undefined) {
-    const option = <K extends DoorSetting>(key: K, value: unknown) =>
+    const isOption = (key: DoorSetting, value: unknown) =>
       (DOOR_OPTIONS[key] as readonly (readonly [unknown, string])[]).some(
         ([known]) => known === value,
-      )
-        ? (value as DoorSettings[K])
-        : own[key];
+      );
+    const option = <K extends DoorSetting>(key: K, value: unknown) =>
+      isOption(key, value) ? (value as DoorSettings[K]) : own[key];
     // An OWR shuffle the meta names with a value the tracker does not know:
     // not known, never the run's own (an older fork's word, a newer one's)
     const named = <K extends DoorSetting>(key: K, value: unknown) =>
@@ -1184,8 +1217,15 @@ export const doorFromSeed = (
       keyLogic:
         exact.keyLogic === undefined
           ? own.keyLogic
-          : option("keyLogic", exact.keyLogic),
-      pottery: option("pottery", exact.pottery),
+          : isOption("keyLogic", exact.keyLogic)
+            ? (exact.keyLogic as DoorKeyLogic)
+            : // One it does not know: strict, which asks the most keys
+              "strict",
+      // A pottery mode it does not know: cave and key pots, whose Lite and
+      // Lean caves shuffle (as a ROM's pots beyond the caves read)
+      pottery: isOption("pottery", exact.pottery)
+        ? (exact.pottery as PotteryMode)
+        : "cavekeys",
       shopsanity: exact.shopsanity,
       takeAny: option("takeAny", exact.takeAny),
       ...(exact.bombBag === undefined ? {} : { bombBag: exact.bombBag }),
