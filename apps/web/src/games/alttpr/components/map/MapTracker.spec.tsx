@@ -6,6 +6,7 @@ import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
 import { setBonkDrops } from "@/games/alttpr/data/doorRando";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { useTooltipStore } from "@/stores/tooltipStore";
 
 const LOCATION_MARKERS = MARKERS.filter((marker) => !marker.dungeon);
 
@@ -69,6 +70,13 @@ describe("MapTracker", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getAllByTestId(/^marker-bonk-/)).toHaveLength(32);
+    // Named on hover, as a chest is
+    await userEvent.hover(tree);
+    expect(useTooltipStore.getState().target).toMatchObject({
+      kind: "text",
+      title: "Bonk drop: Pyramid Tree",
+    });
+    await userEvent.unhover(tree);
     await userEvent.click(tree);
     expect(useGameStore.getState().checked["pyramid-tree"]).toBe(true);
     expect(tree).toHaveAttribute("aria-pressed", "true");

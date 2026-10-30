@@ -64,6 +64,11 @@
    square by its shape as well as by its name */
 .bonk {
   border-radius: 50%;
+  /* The chest's square tile clipped round shows little at 24 px: a ring
+     draws the shape */
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.85),
+    0 0 0 2.5px rgb(255 255 255 / 0.9);
 }
 
 .dungeon {
