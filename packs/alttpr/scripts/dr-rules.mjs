@@ -16,7 +16,7 @@
 //   `crystal`, by spot, for the world to restrict a region's own exits to its
 //   copy instead.
 // - `not state.has('Trench 1 Filled')`: true. The player may leave the
-//   switch alone, so the dry path stays open (Rules.py:414-416, 430); listed
+//   switch alone, so the dry path stays open (Rules.py:417-419, 430); listed
 //   in `negatedEvents`.
 // - `world.get_region(R).dungeon.bosses[level].can_defeat` and the boss's
 //   `.name == …`: the vanilla boss of that slot (Dungeons.py).
@@ -151,7 +151,7 @@ const WORLD = {
     partitioned: setting("partitionedDoors"),
     vanilla: setting("vanillaDoors"),
   },
-  // Main.py:174: in progress, never set by a seed
+  // Main.py:104: in progress, never set by a seed
   free_lamp_cone: FALSE,
   goal: {
     completionist: setting("completionistGoal"),
@@ -623,14 +623,14 @@ function doorNamed(expr, scope) {
  * @returns {Rule | undefined}
  */
 function doorExpression(ctx, expr, scope) {
-  // is_trapped('X') (Rules.py:371-372)
+  // is_trapped('X') (Rules.py:374-375)
   if (
     expr.t === "call" &&
     expr.fn.t === "name" &&
     expr.fn.name === "is_trapped"
   )
     return doorFlag(ctx, stringOf(expr.args[0], scope), "trapped");
-  // bomb_escape_rule(): whether Uncle holds the bombs (Rules.py:1522-1524),
+  // bomb_escape_rule(): whether Uncle holds the bombs (Rules.py:1526-1528),
   // a placement
   if (
     expr.t === "call" &&
@@ -685,7 +685,7 @@ function doorExpression(ctx, expr, scope) {
       return expr.op === "==" ? rule : negate(rule);
     }
   }
-  // state.can_flute, the method not called (Rules.py:1982): a bound method
+  // state.can_flute, the method not called (Rules.py:1986): a bound method
   // is truthy in Python, so the rule holds; ported as written
   if (
     expr.t === "attr" &&
@@ -718,7 +718,7 @@ function assign(_ctx, value, scope) {
     const name = stringOf(value.args[0], scope);
     return typeOf.has(name) ? spotOfLocation(name) : NONE;
   }
-  // What the escape's kill rooms read (Rules.py:1539-1541), which the
+  // What the escape's kill rooms read (Rules.py:1543-1545), which the
   // block hook ports: the sewers' builder, the room map, the stats
   for (let at = value; at.t === "attr" || at.t === "index"; at = at.of)
     if (["dungeon_layouts", "data_tables"].includes(worldAttribute(at) ?? ""))
@@ -751,7 +751,7 @@ function list(_ctx, expr, scope) {
     if (region !== undefined)
       return (locationsOf.get(region) ?? []).map(spotOfLocation);
   }
-  // pot_rules' blocks: the pots of a large block (Rules.py:951, a list
+  // pot_rules' blocks: the pots of a large block (Rules.py:954, a list
   // comprehension the reader leaves; read here from the pots' data)
   if (
     expr.t === "name" &&
@@ -805,7 +805,7 @@ function locationExpression(expr, scope) {
 
 /**
  * What the enemy logic reads of the state, through DR's methods
- * (EnemyLogic.py:386-450).
+ * (EnemyLogic.py:396-460).
  * @param {Context} ctx
  * @returns {import("./dr-enemies.mjs").Lib}
  */
@@ -821,7 +821,7 @@ function enemyLib(ctx) {
       ),
     has: (item, count = 1) => holding(ctx, item, count),
     normalArrows: () => canShootArrows(ctx),
-    // can_shoot_silver_arrows (EnemyLogic.py:437-445): retro's silvers
+    // can_shoot_silver_arrows (EnemyLogic.py:447-455): retro's silvers
     // need arrows bought
     silverArrows: () =>
       any(
@@ -897,10 +897,10 @@ function statement({ apply, call, ctx, line, name, scope, walk }) {
 let enemies;
 
 /**
- * challenge_room_rules (Rules.py:906-924): each kill room's rule on its
+ * challenge_room_rules (Rules.py:909-927): each kill room's rule on its
  * doors in (not a portal: an entrance flag lets Link in from outside) and
  * on the doors a trap closes, each kill chest's on its chests. With
- * `regions`, the escape's (standard_rules, Rules.py:1542-1561): only those
+ * `regions`, the escape's (standard_rules, Rules.py:1546-1565): only those
  * rooms, and every other location of the sewers gets `escape`.
  * @param {Context} ctx
  * @param {import("./rules-core.mjs").Hook["apply"]} apply
@@ -921,7 +921,7 @@ function challengeRooms(ctx, apply, scope, line, sewers) {
       source: `Rules.py:${at}`,
       sprites: sprites.map((sprite) =>
         sprite.line === 0
-          ? "Rules.py:941-946"
+          ? "Rules.py:944-949"
           : `source/dungeon/EnemyList.py:${sprite.line}`,
       ),
     });
@@ -1000,7 +1000,7 @@ function challengeRooms(ctx, apply, scope, line, sewers) {
 }
 
 /**
- * drop_rules (Rules.py:994-1006): every sprite with a location, the key
+ * drop_rules (Rules.py:997-1009): every sprite with a location, the key
  * drops' (adjust_locations, Regions.py:1170-1176) and the enemy drops'
  * (setup_enemy_locations), its defeat rule.
  * @param {import("./rules-core.mjs").Hook["apply"]} apply
@@ -1020,7 +1020,7 @@ function dropRules(apply, scope, line) {
 }
 
 /**
- * The blocks only DR writes: the escape's kill rooms (Rules.py:1542-1561).
+ * The blocks only DR writes: the escape's kill rooms (Rules.py:1546-1565).
  * @param {Omit<import("./rules-core.mjs").Hook, "name" | "call"> & { statement: import("./python.mjs").Statement }} block
  */
 function block({ apply, ctx, line, scope, statement }) {
@@ -1068,7 +1068,7 @@ let rulesSource = "";
 const locationsOf = new Map();
 
 /**
- * add_conditional_lamps (Rules.py:1302-1373): each dark room's entrances
+ * add_conditional_lamps (Rules.py:1305-1376): each dark room's entrances
  * and locations need the lamp, but in Standard the sewers' (the light cone
  * of sewer_light_cone); under crossed or partitioned doors the sewers are
  * whichever rooms the sewers' builder took, which door shuffle decides
@@ -1410,7 +1410,7 @@ export function importDrRules(read, world, extras) {
     Object.fromEntries(
       [...map.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
     );
-  // The bunny's lists (set_bunny_rules, Rules.py:2035), which the world
+  // The bunny's lists (set_bunny_rules, Rules.py:2039), which the world
   // ports: two local to the function, two of the module
   const bunny = body(rulesSource, "set_bunny_rules", "Rules.py");
   const bunnySource = rulesSource.slice(bunny.start + 1, bunny.end);

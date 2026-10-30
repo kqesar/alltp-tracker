@@ -217,7 +217,7 @@ export function importDr(checkout) {
   };
 
   // ---- Pots: vanilla_pots, a list of Pot(x, y, item, room, flags) a
-  // supertile (PotShuffle.py:24), BaseClasses.py:3049 for the arguments.
+  // supertile (PotShuffle.py:24), BaseClasses.py:3090 for the arguments.
   /** @type {Map<number, { content: string, region: string, block: boolean, line: number }[]>} */
   const potsByRoom = new Map();
   for (const { key, value, line } of dictOf(pots, "vanilla_pots", POTS)) {
@@ -256,7 +256,7 @@ export function importDr(checkout) {
   };
   // Rooms a shuffled boss rewrites the sprites of before locations are made
   // (Bossmizer.py:126-142, boss_room_remove_data at 208-211), and Thieves'
-  // Town's basement, whose maiden a moved Blind deletes (Bossmizer.py:181-184)
+  // Town's basement, whose maiden a moved Blind deletes (Bossmizer.py:183-186)
   const bossRooms = new Set(
     Object.keys(
       /** @type {Record<string, unknown>} */ (

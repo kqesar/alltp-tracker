@@ -1047,17 +1047,17 @@ from the run's `doorVersion`, which a seed read tells (the ROM's version
 text or title, a spoiler's meta).
 
 **The ROM.** DR names its seeds `DR` and its version's first three digits,
-then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1452-1456`); OWR
+then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1503-1507`); OWR
 `OR` and the same digits (OWR `Rom.py:1843-1848`), or a site's tag
 (`probes.ts`, `seedRomOf`). The race flag is vt's pair at the same address
-(`Rom.py:1113`, `1483-1484`; Mystery.py always asks for a race,
+(`Rom.py:1156`, `1552-1553`; Mystery.py always asks for a race,
 `Mystery.py:70`), so the probe and its fail-closed answer are the same. The
 SRAM the decoders read is vt's for every range (the two patches'
 `%assertSRAM` lists differ only where DR moved `DungeonLocationsChecked`,
 which no decoder reads, and dropped the absorbed keys), and so are bank
 $30's settings tables. DR writes no seed type (no `0x180210` in its
 `Rom.py`), so a DR seed's logic is unrecognized, never NoGlitches; its own
-"ganon" goal writes `GanonVulnerableMode` $03 (`Rom.py:1164-1175`), read
+"ganon" goal writes `GanonVulnerableMode` $03 (`Rom.py:1207-1218`), read
 as Ganon. Outside Race Mode, `seed-settings.ts` reads its own tables:
 `DRMode` (vanilla, basic, or partitioned or crossed, which it does not tell
 apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
@@ -1208,9 +1208,9 @@ keys go, never what a door asks). `analysis.spec.ts` holds it to
 it checks but three of Ganons Tower's, where the port asks a key more and
 DR's own adjustment outdates the validator. `keys.ts` attaches the rules
 as `add_key_logic_rules` does: each key door of the analysis asks partial
-logic's number (the worst case capped, `Rules.py:2411-2441`; `strict`
+logic's number (the worst case capped, `Rules.py:2416-2447`; `strict`
 logic with wild keys every chest key, `dangerous` logic the worst case
-uncapped, `eval_small_key_door_main`, `:2393-2395`); what a
+uncapped, `eval_small_key_door_main`, `:2399-2400`); what a
 placement grants beside it (the key in the one location behind a door,
 the big key behind it) is `maybe`; with the keys in their dungeons a door
 short of its number is `maybe`, never `no` (a key may lie inside), with
@@ -1228,7 +1228,7 @@ portals may be unknown), nor in a run whose pots or enemy drops join the
 dungeons beyond their keys (`dungeonPotsAndDrops`: pottery beyond the keys
 and caves, every enemy's drops), whose locations DR's analysis counts and
 the port's does not (`adjust_locations` runs before `link_doors`,
-`Main.py:234`, `:286`): there a key door asks every key of its dungeon, or
+`Main.py:164`, `:216`): there a key door asks every key of its dungeon, or
 `maybe`. `key-model.spec.ts` holds the model to DR's fill (Open, Standard,
 Inverted): over random states and placements of the dungeons' keys the fill may make, the model
 never says yes where playing the placement out with DR's own rule for it
@@ -1303,8 +1303,9 @@ seed of that logic (`DR_660701088`) to its playthrough.
 
 **Real seeds** (`test/dr-playthrough.spec.ts`): the playthrough of each
 recorded spoiler race (`test/dr-spoilers/`, below; built by 1.5.6-u to
-1.5.8-u, whose playthrough and sweep code is 1.5.6's) is a contract.
-`create_playthrough` (`Main.py:673-774` at 1.5.6) lists the items the seed needs by
+1.5.8-u, whose playthrough and sweep code does not change from 1.5.6 to
+1.5.8) is a contract.
+`create_playthrough` (`Main.py:677-778` at 1.5.8) lists the items the seed needs by
 sphere, each reached by DR's logic with the spheres before it, the keys
 kept in their dungeons collected as its sweep reaches them; so each
 location of a sphere is `yes` with the items of the spheres before it held,
@@ -2584,15 +2585,15 @@ are made in the specs by editing a fixture's parsed document, never stored.
 
 `parseSpoiler` hands a Door Randomizer log (and its Overworld fork's) to
 `src/spoiler/dr.ts`, which reads what DR 1.5.8 writes (`Spoiler`,
-`BaseClasses.py:2497-2985` at the commit `doorRandomizer` pins) in either form:
+`BaseClasses.py:2497-3026` at the commit `doorRandomizer` pins) in either form:
 
 | | Text (`to_file`) | JSON (`to_json`) |
 | --- | --- | --- |
 | Who hands it out | DR's command line (`DR_<seed>_Spoiler.txt`); SahasrahBot posts it for a spoiler race | DR's `--jsonout`; avianart's Download Spoiler (`alttprcustom - DR__<hash>_Spoiler.txt`, `JSON.stringify(spoiler, null, 4)`) and its permalink API (`{ response: { spoiler, hash } }`) |
 | Told by | its first line, `ALttP Dungeon Randomizer Version <v>  -  Seed: <n>` (`ALttP Overworld Randomizer  -  Seed:` for the fork) | a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`), its file name, or a `meta` with `door_shuffle` or `versions` |
-| Settings | one `Label:   value` line each (`meta_to_file`, `:2746-2840`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
-| Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2623-2712`), kept as `area` |
-| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:797-799`) |
+| Settings | one `Label:   value` line each (`meta_to_file`, `:2754-2848`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
+| Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2627-2716`), kept as `area` |
+| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`) |
 
 Both are turned into the JSON's shape (`textDocument` for the text) and read by
 `readLog` with the `DR` shape:
@@ -2609,7 +2610,7 @@ Both are turned into the JSON's shape (`textDocument` for the text) and read by
   that is empty (`resources/app/meta/lang/en.json`), so both forms write them
   alike.
 - **Seed.** DR's ROM title is `DR<3 digits>_<team>_<player>_<seed:09>`, cut to 21
-  bytes (`Rom.py:1453-1455`), and autotracking records what follows the
+  bytes (`Rom.py:1504-1506`), and autotracking records what follows the
   version as the run's seed (`seedRomOf`). `titleSeedOf` writes the log's
   `meta.seed` (or the first line's) the same way, `1_1_660701088`: that is
   `log.seed` (`content`). Without it, avianart's hash, from the file's name or
@@ -2617,7 +2618,7 @@ Both are turned into the JSON's shape (`textDocument` for the text) and read by
   link keeps that hash until autotracking reads the ROM.
 - **`extra.door`** (`DoorSpoilerFacts`): the version, whether it is the fork's,
   the title's seed, avianart's hash and the title screen's code (`Hash: Bow,
-  …`, `hashes_to_file`, `:2842-2867`). The run does not read that code, so it
+  …`, `hashes_to_file`, `:2850-2875`). The run does not read that code, so it
   is shown, not compared.
 - **Settings.** `meta` goes through the seed import's `doorMetaReading`, the
   reading an avianart permalink gets, so a log and a seed started from avianart

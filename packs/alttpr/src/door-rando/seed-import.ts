@@ -2,7 +2,7 @@
 // them, without generating anything (the study of 2026-10-29, "Spoiler"):
 // - avianart.games: a permalink's JSON (`api.php?action=permlink&hash=`,
 //   which any origin may read) holds the seed's spoiler `meta`, DR's
-//   settings by name (DR 1.5.6 BaseClasses.py:2556-2620, `meta`);
+//   settings by name (DR 1.5.8 BaseClasses.py:2560-2624, `meta`);
 // - Hyrule Town Hall: a seed's patch (`/seed/DR_<uuid>.bps`, any origin
 //   too), whose bytes written over the settings' tables are the ROM's: the
 //   ROM decoder reads them (autotrack/seed-settings.ts) as it reads a game.
@@ -231,7 +231,7 @@ export const avianartReading = (
 
 /**
  * A DR seed's settings from its spoiler's `meta`, one player's, each value
- * as DR writes it (BaseClasses.py:2556-2620): an avianart permalink's, or a
+ * as DR writes it (BaseClasses.py:2560-2624): an avianart permalink's, or a
  * spoiler log's (spoiler/dr.ts, which takes player 1's of a JSON's and
  * reads a text log's lines into the same names). Null when it holds no DR
  * version or one of the settings that decide a DR run.

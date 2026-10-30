@@ -79,7 +79,7 @@ function atomsOf(settings: Settings) {
     return state;
   };
   // The big keys' forbidden spots (bk_restricted, forbid_item,
-  // Rules.py:2362-2364)
+  // Rules.py:2366-2368)
   const forbidden = new Set(
     [...logic.values()].flatMap((l) =>
       [...l.bkRestricted].map((loc) => `${loc.name}/${l.dungeon}`),
@@ -96,7 +96,7 @@ function atomsOf(settings: Settings) {
 
 /**
  * DR's partial rule for a known placement (eval_small_key_door_partial_main,
- * Rules.py:2411-2441): the worst case capped, or an alternative its
+ * Rules.py:2416-2447): the worst case capped, or an alternative its
  * placement grants; never `maybe`.
  */
 const truthOf =

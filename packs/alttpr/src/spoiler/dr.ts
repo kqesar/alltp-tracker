@@ -1,10 +1,10 @@
 // The Door Randomizer's spoiler log, and its Overworld fork's, at the
 // release upstream.json pins (`doorRandomizer`). DR writes it two ways, from
-// one `Spoiler` (BaseClasses.py:2497-2985 at DR 1.5.6):
-// - text: `meta_to_file` (:2746-2840: the version and seed, then one
+// one `Spoiler` (BaseClasses.py:2497-3026 at DR 1.5.8):
+// - text: `meta_to_file` (:2754-2848: the version and seed, then one
 //   `Label:   value` line a setting), the title screen's code inserted
-//   third (`hashes_to_file`, :2842-2867), then `to_file` (:2869-2933) and
-//   `playthrough_to_file` (:2949-2983): sections under a `Name:` line, the
+//   third (`hashes_to_file`, :2850-2875), then `to_file` (:2877-2990) and
+//   `playthrough_to_file` (:2992-3024): sections under a `Name:` line, the
 //   locations flat (`name: item`), the shops (`Name [Shop]` and an indented
 //   `item — price` each), the spheres as `n: { … }`. Names go through
 //   BabelFish, whose English table is empty (resources/app/meta/lang/en.json
@@ -171,7 +171,7 @@ const PLAYTHROUGH = z.record(
   z.union([z.array(z.string()), z.record(z.string(), z.string())]),
 );
 
-/** `Red Potion — 150`: the name, a dash, the price (BaseClasses.py:2681). */
+/** `Red Potion — 150`: the name, a dash, the price (BaseClasses.py:2685). */
 const SHOP_ITEM = /^(.+) — (\d+)$/;
 
 const STRINGS = z.array(z.string());
@@ -243,7 +243,7 @@ const flatMeta = (meta: Doc): Doc =>
   );
 
 /**
- * The text log's settings, by label -> DR's `meta` name. DR 1.5.6 and its
+ * The text log's settings, by label -> DR's `meta` name. DR 1.5.8 and its
  * Overworld fork label a few alike settings in another case or words
  * (OWR 0.8.0.0 BaseClasses.py:3328-3453), so labels are matched in lower
  * case.
@@ -441,7 +441,7 @@ export const avianartHashInName = (fileName: string): string | null =>
 /**
  * The seed as DR's ROM title names it after the version: `<team>_<player>_`
  * and the seed, nine digits at least, the whole title cut to 21 bytes
- * (Rom.py:1453-1455): what autotracking records as a DR run's seed.
+ * (Rom.py:1504-1506): what autotracking records as a DR run's seed.
  */
 export const titleSeedOf = (seed: unknown): string | null => {
   const digits =

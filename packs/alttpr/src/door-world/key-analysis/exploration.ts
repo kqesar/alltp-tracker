@@ -1,7 +1,7 @@
 // DR's walk through a dungeon for its key analysis: ExplorationState
 // (DungeonGenerator.py:784-1089) on the paths KeyDoorShuffle.py takes
 // (key_checks, add_all_doors_check_keys, open_a_door, expand_key_state,
-// KeyDoorShuffle.py:1016-1041, :1179-1186). It follows doors, never item
+// KeyDoorShuffle.py:1017-1042, :1180-1187). It follows doors, never item
 // rules: a small key door waits in `smallDoors` until opened, a big key
 // door in `bigDoors`, a door an event opens in `eventDoors`; the crystal
 // state rides each door as DR's does. Lists keep DR's order, which its
@@ -21,7 +21,7 @@ export interface ExplorableDoor {
   readonly crystal: Crystal;
 }
 
-/** flooded_keys (BaseClasses.py:2982-2985) and its reverse (Regions.py:1338). */
+/** flooded_keys (BaseClasses.py:3023-3026) and its reverse (Regions.py:1338). */
 const FLOODED_KEYS: Readonly<Record<string, string>> = {
   "Trench 1 Switch": "Swamp Palace - Trench 1 Pot Key",
   "Trench 2 Switch": "Swamp Palace - Trench 2 Pot Key",
@@ -183,7 +183,7 @@ export class ExplorationState {
 }
 
 /**
- * expand_key_state (KeyDoorShuffle.py:1179-1186): walk every door that is
+ * expand_key_state (KeyDoorShuffle.py:1180-1187): walk every door that is
  * free to walk, until none is left.
  */
 export function expandKeyState(
@@ -208,7 +208,7 @@ export function expandKeyState(
 }
 
 /**
- * open_a_door (KeyDoorShuffle.py:1016-1041), the special big key doors
+ * open_a_door (KeyDoorShuffle.py:1017-1042), the special big key doors
  * get_special_big_key_doors names for the mode: a big key door opens every
  * big key door waiting; a small key door opens itself and, but across a
  * spiral stair, its other side.

@@ -29,7 +29,7 @@ const DR_TEXT =
   "ALttP Dungeon Randomizer Version 1.5.6-u  -  Seed: 660701088\n\nHash: Powder, Key, Bottle, Compass, Pearl";
 const OWR_TEXT =
   "ALttP Overworld Randomizer  -  Seed: 660701088\n\nDoor Version:                      1.5.6";
-// DR's Spoiler.to_json: json.dumps of its lists first (BaseClasses.py:2718-2725)
+// DR's Spoiler.to_json: json.dumps of its lists first (BaseClasses.py:2722-2729)
 const DR_JSON =
   '{"Entrances": [], "Doors": [{"player": 1, "entrance": "Hyrule Castle Lobby W"';
 

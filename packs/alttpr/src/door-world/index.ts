@@ -3,11 +3,11 @@
 // scripts/dr-rules.mjs into door-rando/world/rules.json), compiled for the
 // engine. Read from aerinon/ALttPDoorRandomizer at the release
 // upstream.json pins (doorRandomizer). What the translation leaves to the
-// world, it ports here: the save-and-quit points (Rules.py:194-201, the
+// world, it ports here: the save-and-quit points (Rules.py:197-204, the
 // Menu every exit of which DR reaches), the flute and mirror exits DR makes
 // in code (OverworldShuffle.py:31-73), the bomb shop's case
-// (set_big_bomb_rules, Rules.py:1610), the bunny's paths (set_bunny_rules,
-// Rules.py:2035, bunny.ts) and what the derived settings read of the
+// (set_big_bomb_rules, Rules.py:1614), the bunny's paths (set_bunny_rules,
+// Rules.py:2039, bunny.ts) and what the derived settings read of the
 // connections (light and dark world, Regions.py:1113; the swamp patch,
 // EntranceShuffle2.py:141-143; the doors' flags, Doors.py), the crystal
 // switches' states (crystal.ts) and the keys of DR's key analysis
@@ -134,8 +134,8 @@ export interface DrWorldOptions {
    * adjust_locations adds to their regions (Regions.py:1165-1232): each in
    * its DR region with its rules, pot_rules' and drop_rules' (Rules.py:
    * 949-1007) as the translation reads them by name (the two pots of the
-   * Dark Lake Hylia ledge's spike cave its loop names, :970-975, are no pots
-   * of DR's at 1.5.6: `get_location_unsafe` finds none). Key drops are in
+   * Dark Lake Hylia ledge's spike cave its loop names, :973-978, are no pots
+   * of DR's at 1.5.8: `get_location_unsafe` finds none). Key drops are in
    * the world already.
    */
   readonly dropsAndPots?: readonly {
@@ -303,7 +303,7 @@ function exitsOf(
 }
 
 /**
- * set_big_bomb_rules / set_inverted_big_bomb_rules (Rules.py:1610, :1842):
+ * set_big_bomb_rules / set_inverted_big_bomb_rules (Rules.py:1614, :1846):
  * the Pyramid Fairy's rule gains the case of the door the Big Bomb Shop is
  * entered by, its region's first entrance.
  */
@@ -398,7 +398,7 @@ export const DR_DEFAULTS: Settings = {
   // Pots or enemy drops of the dungeons beyond their keys (pottery beyond
   // keys and caves, the drops of every enemy): adjust_locations adds them
   // to the dungeons before DR's key analysis counts their locations
-  // (Main.py:234 before link_doors at :286), which the port's analysis does
+  // (Main.py:164 before link_doors at :216), which the port's analysis does
   // not, so their key doors ask every key of the dungeon (strict-safe)
   dungeonPotsAndDrops: false,
   ganonHuntGoal: false,
@@ -551,7 +551,7 @@ const REGION_BY_ID = new Map(DR_REGIONS.map((r) => [r.id, r]));
 /**
  * The flood switches DR does not sweep while their trench's pot key is
  * unchecked (_do_not_flood_the_keys, BaseClasses.py:1074-1084,
- * flooded_keys :2982-2985): the event asks the key's location reached too.
+ * flooded_keys :3023-3026): the event asks the key's location reached too.
  */
 const FLOODED_KEYS: Readonly<Record<string, string>> = {
   "Trench 1 Switch": "Swamp Palace - Trench 1 Pot Key",
@@ -562,7 +562,7 @@ const FLOODED_KEYS: Readonly<Record<string, string>> = {
 const MURAHDAHLA = "Murahdahla";
 
 /**
- * restrict_boss_items (Rules.py:807-822): each prize and boss of a dungeon
+ * restrict_boss_items (Rules.py:810-825): each prize and boss of a dungeon
  * that has a prize, and Agahnim 2, behind the dungeon's compass and map
  * (Agahnim 1 too once doors shuffle, which this world does not). Maps and
  * compasses kept in their dungeons are not recorded: the rule is then
@@ -597,7 +597,7 @@ function addBossItemRules(
 }
 
 /**
- * Mire's spikes' key pot (Rules.py:527-530): where pot shuffle lands it on
+ * Mire's spikes' key pot (Rules.py:530-533): where pot shuffle lands it on
  * the spikes, it takes the spike chest's rule; where it lands is unknown,
  * so the rule or maybe.
  */
@@ -625,7 +625,7 @@ const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
 
 /**
  * DR's key analysis of the vanilla world for a run's settings
- * (key-analysis/, vanilla_key_logic, DoorShuffle.py:222-309), once per
+ * (key-analysis/, vanilla_key_logic, DoorShuffle.py:226-313), once per
  * mode and the settings it reads.
  */
 export function drKeyLogic(settings: Settings): ReadonlyMap<string, KeyLogic> {
@@ -779,7 +779,7 @@ export function drWorld(
   const added = new Map<string, string[]>();
   if (all.triforceHuntGoal === true || all.trinityGoal === true) {
     added.set("Hyrule Castle Courtyard", [MURAHDAHLA]);
-    // Rules.py:69
+    // Rules.py:72
     locations.set(
       MURAHDAHLA,
       "count(triforcePiece, powerStar) >= setting(treasureHunt)",

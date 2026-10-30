@@ -4,7 +4,7 @@
 // link_entrances_new on its vanilla path (source/overworld/
 // EntranceShuffle2.py:45-88, do_vanilla_connections :162-176 at 1.5.8, the
 // Inverted swaps :64-78) and link_doors_prep's vanilla doors
-// (DoorShuffle.py:56-129, connect_portal :735-748).
+// (DoorShuffle.py:60-133, connect_portal :739-752).
 import {
   DOOR_NAMED,
   DR_DOORS,
@@ -178,10 +178,10 @@ function linkEntrances(
 const DARK_SANCTUARY_EXIT = "Dark Sanctuary Hint Exit";
 
 /**
- * link_doors_prep with vanilla doors (DoorShuffle.py:56-129), door
+ * link_doors_prep with vanilla doors (DoorShuffle.py:60-133), door
  * intensity 1 as DR's tests build it: the logical connections, the
  * interior doors, the pits and warps, then the portals, then every vanilla
- * door table. The Sanctuary Mirror Route is removed (:80-86).
+ * door table. The Sanctuary Mirror Route is removed (:84-90).
  */
 function linkDoors(c: Map<string, string>): void {
   const simple = (name: string) => {
@@ -199,7 +199,7 @@ function linkDoors(c: Map<string, string>): void {
   doors("open_edges");
   doors("straight_staircases");
   doors("ladders");
-  // connect_portal (:735-748): the lobby's door out to the portal region,
+  // connect_portal (:739-752): the lobby's door out to the portal region,
   // the portal region's way in to the lobby
   const portalMap = tableOf<readonly [string, string, string]>(
     "DoorShuffle.py",

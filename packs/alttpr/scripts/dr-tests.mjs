@@ -301,7 +301,7 @@ function suiteOf(read, files) {
 }
 
 /**
- * KeyDoorShuffle.py's validate_vanilla_key_logic (:1919-2093), which no
+ * KeyDoorShuffle.py's validate_vanilla_key_logic (:2019-2193), which no
  * code calls: per dungeon, each door rule it expects (val_rule: the small
  * key number, allow_small and its location, the alternate number and big
  * key locations) and the big key restrictions it asserts, with the modes

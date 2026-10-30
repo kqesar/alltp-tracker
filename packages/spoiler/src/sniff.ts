@@ -29,8 +29,8 @@ const MAP_RANDO =
 const ALTTPR_JSON = /^\{\s*(?:"meta"\s*:|"logic"\s*:\s*\d+\s*,\s*"patch"\s*:)/;
 const ALTTPR_NAME = /^alttpr - /i;
 // The Door Randomizer's text log opens with its meta_to_file line, its
-// Overworld fork's with its own (DR 1.5.6 BaseClasses.py:2753, OWR 0.8.0.0
-// :3335). Its JSON (Spoiler.to_json, :2714) leads with the entrance and door
+// Overworld fork's with its own (DR 1.5.8 BaseClasses.py:2761, OWR 0.8.0.0
+// :3335). Its JSON (Spoiler.to_json, :2718) leads with the entrance and door
 // lists, which may run past any head, so a JSON one is told by the keys only
 // DR writes, or by the name a site saves it under: avianart's Download
 // Spoiler (`alttprcustom - DR__<hash>_Spoiler.txt`) or DR's own output

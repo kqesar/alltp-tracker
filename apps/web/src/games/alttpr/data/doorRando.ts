@@ -70,7 +70,7 @@ export type FluteShuffle = "vanilla" | "balanced" | "random";
 /**
  * DR's restricted boss items (`--restrict_boss_items`, args.json): any but
  * none puts each prize, boss and Agahnim 2 behind its dungeon's map and
- * compass (Rules.py:806-822).
+ * compass (Rules.py:809-825).
  */
 export type RestrictBossItems = "none" | "mapcompass" | "dungeon";
 
@@ -114,7 +114,7 @@ export type DoorRunSettings = {
    * The settings DR's rules read that no ROM table states: the bomb bag
    * (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
    * BaseClasses.py:1208-1209), the legacy pot shuffle (`--shufflepots`:
-   * Mire's spikes' key pot may move onto the spikes, Rules.py:527-530), the
+   * Mire's spikes' key pot may move onto the spikes, Rules.py:530-533), the
    * boss items and the pyramid hole. A spoiler's meta names them; a run
    * read from its ROM alone holds DR's defaults until the player sets them.
    */

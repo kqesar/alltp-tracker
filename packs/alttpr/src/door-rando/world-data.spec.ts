@@ -37,7 +37,7 @@ const OVERWORLD = "OverworldShuffle.py";
  * to a region, two exits both ways, or an exit to another exit's region.
  * link_overworld (OverworldShuffle.py:5-20), link_entrances_new's vanilla
  * path (EntranceShuffle2.py:45-88, do_vanilla_connections :162-170) and
- * link_doors_prep (DoorShuffle.py:56-129).
+ * link_doors_prep (DoorShuffle.py:60-133).
  */
 const LINKS: readonly [string, string, "region" | "twoWay" | "oneWay"][] = [
   [OVERWORLD, "mandatory_connections", "region"],
@@ -169,14 +169,14 @@ describe("the Door Randomizer's world data (import-dr, stage A)", () => {
       }
     }
     // Portals: the lobby's door out, and the entrance in (connect_portal,
-    // DoorShuffle.py:735-748)
+    // DoorShuffle.py:739-752)
     for (const portal of portals) linked.add(portal.door);
     for (const [, [, , enter]] of pairs(
       DOOR_SHUFFLE,
       "portal_map",
     ) as unknown as [string, [string, string, string]][])
       linked.add(enter);
-    // A door its controller's link connects (connect_two_way, DoorShuffle.py:443-448)
+    // A door its controller's link connects (connect_two_way, DoorShuffle.py:447-452)
     for (const door of doors) if ("controller" in door) linked.add(door.name);
     // A one-way door's far side leads nowhere back: Sanctuary's from the
     // sewers, each boss room's door
@@ -190,9 +190,9 @@ describe("the Door Randomizer's world data (import-dr, stage A)", () => {
       // do_vanilla_connections links it by name (EntranceShuffle2.py:162-165)
       "Chris Houlihan Room Exit",
       // Inverted's sanctuary: inverted_default_connections, read by
-      // do_vanilla_connect's pools (EntranceShuffle2.py:1067)
+      // do_vanilla_connect's pools (EntranceShuffle2.py:1073)
       "Dark Sanctuary Hint Exit",
-      // Removed from the world below door intensity 3 (DoorShuffle.py:80-86)
+      // Removed from the world below door intensity 3 (DoorShuffle.py:84-90)
       "Sanctuary Mirror Route",
     ]);
     expect(farSides.size).toBe(13);

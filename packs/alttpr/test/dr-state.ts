@@ -54,7 +54,7 @@ const READ_BY_NONE = /^(Never in logic|(Map|Compass) \(.+\))$/;
 export function collect(names: readonly string[]): State {
   const state: Record<string, number> = {
     heartContainer: 3,
-    // build_vanilla_world: required_medallions Ether, Quake (TestBase.py:59)
+    // build_vanilla_world: required_medallions Ether, Quake (TestBase.py:60)
     ...medallionFacts({ mire: "ether", turtleRock: "quake" }),
   };
   const add = (id: string) => {
@@ -124,7 +124,7 @@ export function itemsOf(
 }
 
 /**
- * build_vanilla_world's settings (test/TestBase.py:27-33 at the harness
+ * build_vanilla_world's settings (test/TestBase.py:27-34 at the harness
  * commit): the CLI's defaults, vanilla doors and entrances, intensity 1,
  * the Ganon goal, seven crystals each.
  */

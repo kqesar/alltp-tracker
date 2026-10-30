@@ -242,7 +242,7 @@ describe("the Door Randomizer's world (door-world)", () => {
 
   it("reads each key holding as DR's add_key_logic_rules does", () => {
     // Agahnim's Tower: the Room 03 stairs ask one key (validate_vanilla_key_
-    // logic, KeyDoorShuffle.py:1979-1983), every key of the tower four
+    // logic, KeyDoorShuffle.py:2079-2083), every key of the tower four
     const maze = drLocationId("Castle Tower - Dark Maze");
     const held = { heartContainer: 3, lamp: 1, sword: 1 };
     const at = (more: Settings, keys: number, options = {}) =>
@@ -309,7 +309,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("lets a bunny through a region of both worlds by a way from Link's own", () => {
-    // get_rule_to_add (Rules.py:2079-2161): a cave the bunny reaches on
+    // get_rule_to_add (Rules.py:2083-2165): a cave the bunny reaches on
     // Link's side, through a cave of both, the way in from Link's world's
     // own region and its rule; a blocked door is no way
     const exits = [
@@ -344,7 +344,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       "open",
     );
     // can_reach(entrance) and the path's rules, its own among them
-    // (path_to_access_rule, Rules.py:2065-2066)
+    // (path_to_access_rule, Rules.py:2069-2070)
     expect(exits[0]?.req).toBe(
       "((moonPearl) | ((reach(eastDeathMountainBottom)) & (hammer) & (hammer)))",
     );
@@ -385,7 +385,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       solveFacts(world, { heartContainer: 3, ...state }).location(
         drLocationId(name),
       );
-    // Uncle S&Q (Rules.py:1503): his item from the start
+    // Uncle S&Q (Rules.py:1507): his item from the start
     expect(at({}, "Link's Uncle")).toBe("yes");
     // A weapon, or Uncle's bombs (unknown): maybe
     expect(at({}, "Secret Passage")).toBe("maybe");
@@ -446,7 +446,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   it("asks a door its worst case under dangerous key logic, partial's number capped", () => {
     // Ganons Tower's Double Switch EN and its kin: worst case 7, small_key_num
     // 6 (create_rule); dangerous reads eval_small_key_door_main, uncapped
-    // (Rules.py:2393-2395), partial caps it (:2422-2424)
+    // (Rules.py:2399-2400), partial caps it (:2428-2430)
     const wild = { ...settings("open"), wildBigKeys: true, wildKeys: true };
     const firesnake = drLocationId("Ganons Tower - Firesnake Room");
     const at = (more: Settings, keys: number) =>
@@ -518,11 +518,11 @@ describe("the Door Randomizer's world (door-world)", () => {
     const at = (name: string, state: State) =>
       solveFacts(world, state).location(drLocationId(name));
     expect([at(pot, all), at(drop, all)]).toEqual(["yes", "yes"]);
-    // pot_rules: the bombs or the boots (Rules.py:967-969); a bunny in the
+    // pot_rules: the bombs or the boots (Rules.py:970-972); a bunny in the
     // dark world gets no pot (set_bunny_rules)
     expect(at(pot, { ...all, bombUpgrade: 0, pegasusBoots: 0 })).toBe("yes");
     expect(at(pot, { ...all, moonPearl: 0 })).not.toBe("yes");
-    // In the dark (Rules.py:1310), and drop_rules: the enemy's defeat,
+    // In the dark (Rules.py:1313), and drop_rules: the enemy's defeat,
     // the bombs without a bomb bag (can_use_bombs) or a weapon
     expect(at(drop, { heartContainer: 3 })).toBe("no");
     expect(at(drop, { heartContainer: 3, lamp: 1 })).toBe("yes");

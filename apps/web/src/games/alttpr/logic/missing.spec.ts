@@ -539,7 +539,7 @@ describe("a Door Randomizer run", () => {
     ).toEqual(["agahnim-2", "ganon"]);
   });
 
-  it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:70-71)", async () => {
+  it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:73-74)", async () => {
     const { solver } = await import("@/games/alttpr/logic/doorWorld");
     setDoorSolver(solver);
     // Every cell at its top, every dungeon beaten for its crystal

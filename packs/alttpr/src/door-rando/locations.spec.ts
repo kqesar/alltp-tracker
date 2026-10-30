@@ -54,7 +54,7 @@ describe("DR_LOCATIONS", () => {
   });
 
   it("counts every kind as DR's source does", () => {
-    // Read independently of the importer, in DR 1.5.6:
+    // Read independently of the importer, in DR 1.5.8 (as at 1.5.6):
     // - key_drop_data (PotShuffle.py:1001-1035): 14 'Drop' and 19 'Pot';
     // - vanilla_pots (PotShuffle.py:24-858): 832 Pot( calls, 19 of them a
     //   PotItem.Key and 1 a PotItem.Hole, which are no pot locations;

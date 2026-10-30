@@ -225,7 +225,7 @@ function readDungeons(source) {
     });
   }
   // Each dungeon's prize location (dungeon_table, DungeonInfo's eighth
-  // argument), which restrict_boss_items reads (Rules.py:807-822)
+  // argument), which restrict_boss_items reads (Rules.py:810-825)
   const table = /^dungeon_table = \{$/m.exec(source);
   if (table === null) fail(`${DUNGEONS}: no dungeon_table`);
   const tableLine = source.slice(0, table.index).split("\n").length;

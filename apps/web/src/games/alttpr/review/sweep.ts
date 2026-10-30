@@ -520,7 +520,7 @@ export function* sweepRun(
     key.startsWith("check:"),
   );
   // DR's key rules rest on how the seed holds its keys (strict logic only
-  // with wild keys, Rules.py:2345-2347; the analysis reads the shuffles):
+  // with wild keys, Rules.py:2349-2351; the analysis reads the shuffles):
   // its own settings, the log's keys counted, never keysanity's
   const doorSettings =
     door !== undefined && doorLogic(run.settings)

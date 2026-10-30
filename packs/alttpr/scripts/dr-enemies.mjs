@@ -4,8 +4,8 @@
 // from source/enemizer/EnemyLogic.py over the data it reads: the vanilla
 // sprites and the stats of each kind (source/dungeon/EnemyList.py), and the
 // damage table (source/enemizer/damage_table.yaml, read with js-yaml). DR's
-// Rules.py builds these rules in code (challenge_room_rules :906,
-// get_challenge_rule :927, drop_rules :994), so they are computed here, as
+// Rules.py builds these rules in code (challenge_room_rules :909,
+// get_challenge_rule :930, drop_rules :997), so they are computed here, as
 // the code computes them, and handed to the walk as rules.
 //
 // EnemyLogic's rules are RuleFactory's (source/logic/Rule.py:91-147): a
@@ -271,7 +271,7 @@ const DAMAGE_COST = {
   Somaria: 0.5,
 };
 
-/** -1 incinerated, -2 blobbed, -3 fairied (EnemyLogic.py:524) */
+/** -1 incinerated, -2 blobbed, -3 fairied (EnemyLogic.py:534) */
 const SPECIAL_CLASSES = { 249: -3, 250: -2, 253: -1 };
 
 /**
@@ -303,7 +303,7 @@ export function enemyLogic(data, lib) {
   const hasBeamSword = () =>
     disj([has("Master Sword"), has("Tempered Sword"), has("Golden Sword")]);
   const hasBluntWeapon = () => disj([hasSword(), has("Hammer")]);
-  // 'Red_Boomerang' as written (EnemyLogic.py:419): no item bears it
+  // 'Red_Boomerang' as written (EnemyLogic.py:429): no item bears it
   const hasBoomerang = () =>
     disj([has("Blue Boomerang"), has("Red_Boomerang")]);
   const hasClass2 = () => disj([hasBeamSword(), has("Hammer")]);
@@ -380,7 +380,7 @@ export function enemyLogic(data, lib) {
   };
 
   /**
-   * number_of_hits (EnemyLogic.py:495-521).
+   * number_of_hits (EnemyLogic.py:505-531).
    * @param {string} source
    * @param {number[]} subClasses
    * @param {Sprite} sprite
@@ -419,7 +419,7 @@ export function enemyLogic(data, lib) {
   };
 
   /**
-   * enemy_vulnerability (EnemyLogic.py:453-492): each damage type's hits,
+   * enemy_vulnerability (EnemyLogic.py:463-502): each damage type's hits,
    * the nonzero ones only, in the order set.
    * @param {Sprite} sprite
    * @param {Where} side
@@ -506,7 +506,7 @@ export function enemyLogic(data, lib) {
   };
 
   /**
-   * needed_resources (EnemyLogic.py:215-216).
+   * needed_resources (EnemyLogic.py:225-226).
    * @param {string} type
    * @param {Map<string, number>[]} vlns
    */
@@ -517,7 +517,7 @@ export function enemyLogic(data, lib) {
     }, 0);
 
   /**
-   * find_possible_rules (EnemyLogic.py:150-212): the clears, by the set of
+   * find_possible_rules (EnemyLogic.py:160-222): the clears, by the set of
    * enemies each kills (its indexes, as a key), in the order DR makes them.
    * @param {Map<string, number>[]} vlns
    * @param {Record<string, number>} used
@@ -549,7 +549,7 @@ export function enemyLogic(data, lib) {
       if (type === "Stun") add(set, buzzblob(), {});
       if (type === "Master" && !blunt.has(key)) add(set, hasClass2(), {});
       // As written: Boomerang's clear is the hookshot, Hookshot's the
-      // boomerang (EnemyLogic.py:162-165)
+      // boomerang (EnemyLogic.py:172-175)
       if (type === "Boomerang") add(set, has("Hookshot"), {});
       else if (type === "Hookshot") add(set, hasBoomerang(), {});
     }
@@ -594,7 +594,7 @@ export function enemyLogic(data, lib) {
         return low < 0 ? low : f;
       };
       // An if/elif chain: a type whose own test fails falls to the last
-      // branch, the medallions' (EnemyLogic.py:186-211)
+      // branch, the medallions' (EnemyLogic.py:196-221)
       if (type === "Powder" && Math.ceil(hits / 16) * 8 + magic <= 160)
         add(set, powder(flagOr(hits + magic * 2)), res);
       else if (type === "Somaria" && Math.ceil(hits / 64) * 8 + magic <= 160)
@@ -787,8 +787,8 @@ export function enemyRules(data, lib, sides) {
     data.spritesByRoom.get(room) ?? fail(`${ENEMIES}: no sprites in ${room}`);
 
   /**
-   * get_challenge_rule (Rules.py:927-938) with stalfos_spawn_exception
-   * (:941-946): the room's listed sprites, but those ignored for a kill
+   * get_challenge_rule (Rules.py:930-941) with stalfos_spawn_exception
+   * (:944-949): the room's listed sprites, but those ignored for a kill
    * room, defeated together.
    * @param {number} room
    * @param {readonly number[]} enemyList
@@ -841,9 +841,9 @@ export function enemyRules(data, lib, sides) {
   };
 
   /**
-   * drop_rules (Rules.py:994-1006) for the drop of sprite `index` of `room`
+   * drop_rules (Rules.py:997-1009) for the drop of sprite `index` of `room`
    * in `region`, its location `name`: defeat_rule_single, then
-   * special_rules_for_region (EnemyLogic.py:238-283) where the table names
+   * special_rules_for_region (EnemyLogic.py:248-293) where the table names
    * the region.
    * @param {number} room
    * @param {number} index
@@ -869,7 +869,7 @@ export function enemyRules(data, lib, sides) {
   const hasBoomerang = () => finalRule(logic.hasBoomerang());
   const hookshot = () => lib.has("Hookshot");
   /**
-   * special_rules_for_region (EnemyLogic.py:238-283).
+   * special_rules_for_region (EnemyLogic.py:248-293).
    * @param {string} region
    * @param {string} name
    * @param {Rule} rule
@@ -884,7 +884,7 @@ export function enemyRules(data, lib, sides) {
         ? all(rule, extra)
         : rule;
     if (region === "Swamp Waterway") {
-      // The medallions, each with a sword (EnemyLogic.py:240-243)
+      // The medallions, each with a sword (EnemyLogic.py:250-253)
       const sword = finalRule(
         disj(
           [

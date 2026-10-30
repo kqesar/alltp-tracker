@@ -63,11 +63,11 @@ function rom<const Id extends string>(
 export const SEED_SETTINGS_RANGES = [
   // The Door Randomizer's own table, $A7:8000 (ROM 0x138000): "DR", then
   // DRMode, a word: 0 vanilla doors, 1 basic, 2 partitioned or crossed (DR
-  // 1.5.6 Rom.py:629, 656); DRFlags, a word (doorrando.asm:16-37 at the DR
-  // base patch, aerinon/z3randomizer d0f4651; DoorShuffle.py:3651-3664:
+  // 1.5.8 Rom.py:629, 656); DRFlags, a word (doorrando.asm:16-37 at the DR
+  // base patch, aerinon/z3randomizer d0f4651; DoorShuffle.py:3655-3668:
   // Hide_Total $0100 for a Mystery seed, Rom.py:676-679, EnemyDropIndicator
   // $0800 when the drops of every enemy are shuffled, 588-589); and at
-  // $A7:8010 DRVersionInfo, the version as text ("1.5.6-u", Rom.py:1458).
+  // $A7:8010 DRVersionInfo, the version as text ("1.5.6-u", Rom.py:1509).
   // An alttpr.com ROM holds something else here: read for a DR title only.
   rom(
     "door-settings",
@@ -312,7 +312,7 @@ export interface SeedSettingsReading {
 /**
  * A DR seed's settings by the names DR's command line gives them
  * (resources/app/cli/args.json), as its spoiler's `meta` writes them
- * (BaseClasses.py:2556-2620 at 1.5.6): only those the tracker keeps.
+ * (BaseClasses.py:2560-2624 at 1.5.8): only those the tracker keeps.
  */
 export interface DoorExactSettings {
   readonly doorShuffle: "vanilla" | "basic" | "partitioned" | "crossed";
@@ -322,8 +322,9 @@ export interface DoorExactSettings {
   readonly takeAny: string;
   readonly enemyShuffle: string;
   /**
-   * Its key logic (`key_logic_algorithm`, BaseClasses.py:2576), as named:
-   * DR 1.5.6's dangerous, partial or strict, an unstable build's static.
+   * Its key logic (`key_logic_algorithm`, BaseClasses.py:2580), as named:
+   * dangerous, partial, strict, or the static of 1.5.7 on (and of some
+   * unstable 1.5.6 builds).
    */
   readonly keyLogic?: string;
   /** Its entrance shuffle, when alttpr.com has none of that name. */
@@ -331,8 +332,8 @@ export interface DoorExactSettings {
   /**
    * The settings its rules read that no ROM table states, each where `meta`
    * names it: `bombbag` (can_use_bombs, BaseClasses.py:1208-1209),
-   * `potshuffle` (Mire's spikes' key pot, Rules.py:527-530),
-   * `restricted_boss_items` (none, mapcompass or dungeon: Rules.py:806-822)
+   * `potshuffle` (Mire's spikes' key pot, Rules.py:530-533),
+   * `restricted_boss_items` (none, mapcompass or dungeon: Rules.py:809-825)
    * and `open_pyramid` (auto, yes or no: is_pyramid_open, BaseClasses.py:
    * 299-311).
    */
@@ -567,7 +568,7 @@ function seedRom(memory: MemoryView): SeedRom | null {
 }
 
 /**
- * GanonVulnerableMode as the Door Randomizer writes it (Rom.py:1164-1175):
+ * GanonVulnerableMode as the Door Randomizer writes it (Rom.py:1207-1218):
  * its own "ganon" goal asks for the crystals and Agahnim 2 ($03), which the
  * tracker's Ganon goal is; "crystals" and "trinity" write $04, as vt's
  * ganon and fast_ganon do, trinity with Triforce pieces besides (1109-1110),
@@ -620,7 +621,7 @@ const DOOR_MODES: Readonly<Record<number, SeedDoorShuffle>> = {
   2: "shuffled",
 };
 
-/** DRFlags' bits (DoorShuffle.py:3651-3664). */
+/** DRFlags' bits (DoorShuffle.py:3655-3668). */
 const DR_FLAGS = { enemyDrops: 0x0800, hideTotal: 0x0100 } as const;
 
 /** MultiClientFlagsROM's bits (Rom.py:731-736). */

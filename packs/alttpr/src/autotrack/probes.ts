@@ -21,7 +21,7 @@ export const SEED_TITLE_PREFIX = "VT ";
 /**
  * The title the Door Randomizer writes at ROM 0x7FC0: "DR", the first three
  * digits of its version ("156" for 1.5.6), "_", the team, "_", the player,
- * "_", the seed, cut to 21 bytes (DR 1.5.6 Rom.py:1452-1456). Its Overworld
+ * "_", the seed, cut to 21 bytes (DR 1.5.8 Rom.py:1503-1507). Its Overworld
  * fork writes "OR" and the same digits of the Door Randomizer version it is
  * built on (OWR 0.8.0.0 Rom.py:1843, 1848), or a generation tag of up to
  * three characters a site names (1836-1840).
@@ -173,8 +173,8 @@ export const ALTTPR_GAME_CHECK: GameCheck = {
  * (tables.asm:1000-1001). The front end writes the pair as $01 $00 for a
  * race seed and $00 $01 otherwise (vt app/Rom.php:908-920); the base
  * patch's default is $00 $01. The Door Randomizer writes the same pair at
- * the same place: $00 $01 for every seed (DR 1.5.6 Rom.py:1113), $01 $00
- * for a race (patch_race_rom, 1483-1484), which its Mystery.py always asks
+ * the same place: $00 $01 for every seed (DR 1.5.8 Rom.py:1156), $01 $00
+ * for a race (patch_race_rom, 1552-1553), which its Mystery.py always asks
  * for (Mystery.py:70); its Overworld fork too (OWR 0.8.0.0 Rom.py:1231,
  * 1879-1880). Its base patch keeps the flag where vt's does
  * (aerinon/z3randomizer d0f4651, tables.asm: TournamentSeed at $B0:8213).

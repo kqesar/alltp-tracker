@@ -1,11 +1,11 @@
 // DR's key analysis of a dungeon (analyze_dungeon, KeyDoorShuffle.py:
-// 267-351) and vanilla_key_logic's adjustments (DoorShuffle.py:276-309):
+// 267-351) and vanilla_key_logic's adjustments (DoorShuffle.py:280-313):
 // for each key door some counter waits at, the counter that has spent the
-// most keys elsewhere and still gains from it (find_best_counter, :724-734)
-// gives its rule (create_rule, :842-858; create_worst_case_rule, :861-863),
-// the alternatives a placement may grant (check_for_self_lock_key, :866-874;
-// bk_restricted_rules, :971-992), then the swap of a big key alternative
-// that asks more (:340-346). The fill's own constraints
+// most keys elsewhere and still gains from it (find_best_counter, :728-738)
+// gives its rule (create_rule, :846-862; create_worst_case_rule, :865-867),
+// the alternatives a placement may grant (check_for_self_lock_key, :870-878;
+// bk_restricted_rules, :975-996), then the swap of a big key alternative
+// that asks more (:344-350). The fill's own constraints
 // (create_exhaustive_placement_rules, sm_restricted, the placement rules)
 // are left out: they decide where DR puts keys, never what a door asks.
 
@@ -29,7 +29,7 @@ import {
   keyWorld,
 } from "./dungeon";
 
-/** A door's key rule (DoorRules, KeyDoorShuffle.py:89-102). */
+/** A door's key rule (DoorRules, KeyDoorShuffle.py:90-103). */
 export interface DoorRule {
   /** small_key_num: the number partial logic caps the worst case at. */
   smallKeyNum: number;
@@ -85,7 +85,7 @@ interface PartialCounter {
   importantLocation: boolean;
 }
 
-/** available_chest_small_keys (KeyDoorShuffle.py:942-950). */
+/** available_chest_small_keys (KeyDoorShuffle.py:943-951). */
 function availableChestSmallKeys(
   counter: KeyCounter,
   layout: KeyLayout,
@@ -97,7 +97,7 @@ function availableChestSmallKeys(
   return Math.min(count, layout.maxChests);
 }
 
-/** find_next_counter (KeyDoorShuffle.py:816-826). */
+/** find_next_counter (KeyDoorShuffle.py:817-827). */
 function findNextCounter(
   door: KDoor,
   old: KeyCounter,
@@ -119,7 +119,7 @@ function findNextCounter(
   );
 }
 
-/** create_odd_key_counter (KeyDoorShuffle.py:1817-1831): what a door adds. */
+/** create_odd_key_counter (KeyDoorShuffle.py:1917-1931): what a door adds. */
 function createOddKeyCounter(
   door: KDoor,
   parent: KeyCounter,
@@ -152,14 +152,14 @@ function createOddKeyCounter(
   };
 }
 
-/** empty_counter (KeyDoorShuffle.py:626-629). */
+/** empty_counter (KeyDoorShuffle.py:627-630). */
 const emptyCounter = (c: PartialCounter): boolean =>
   c.keyOnlyLocations.size === 0 &&
   c.freeLocations.size === 0 &&
   c.childDoors.size === 0 &&
   !c.importantLocation;
 
-/** unique_child_door (KeyDoorShuffle.py:677-684). */
+/** unique_child_door (KeyDoorShuffle.py:678-685). */
 function uniqueChildDoor(child: KDoor, counter: KeyCounter): boolean {
   const known = (d: KDoor | null) =>
     d !== null && (counter.childDoors.has(d) || counter.openDoors.has(d));
@@ -167,7 +167,7 @@ function uniqueChildDoor(child: KDoor, counter: KeyCounter): boolean {
   return !(child.bigKey && counter.bigKeyOpened);
 }
 
-/** relative_empty_counter (KeyDoorShuffle.py:632-649): nothing new in it. */
+/** relative_empty_counter (KeyDoorShuffle.py:633-650): nothing new in it. */
 function relativeEmptyCounter(
   odd: PartialCounter,
   counter: KeyCounter,
@@ -188,7 +188,7 @@ const countLocations = (c: KeyCounter): number =>
   c.importantLocations.size;
 
 /**
- * find_best_counter (KeyDoorShuffle.py:724-734): of every counter without
+ * find_best_counter (KeyDoorShuffle.py:725-735): of every counter without
  * the door open (without the big key, if asked) that still gains from it,
  * the one that spent the most keys, then reaches the most; the first of
  * equals in the counters' order.
@@ -222,7 +222,7 @@ function findBestCounter(
   return best;
 }
 
-/** create_rule (KeyDoorShuffle.py:842-858). */
+/** create_rule (KeyDoorShuffle.py:843-859). */
 function createRule(
   counter: KeyCounter,
   prev: KeyCounter,
@@ -245,7 +245,7 @@ function createRule(
 }
 
 /**
- * open_all_counter (KeyDoorShuffle.py:895-914): every door a key may open,
+ * open_all_counter (KeyDoorShuffle.py:896-915): every door a key may open,
  * but `door` and its other side, opened until none is left.
  */
 function openAllCounter(
@@ -273,7 +273,7 @@ function openAllCounter(
 }
 
 /**
- * open_some_counter (KeyDoorShuffle.py:917-935): every small key door but
+ * open_some_counter (KeyDoorShuffle.py:918-936): every small key door but
  * the ignored ones, opened until none is left.
  */
 function openSomeCounter(
@@ -293,7 +293,7 @@ function openSomeCounter(
   }
 }
 
-/** find_inverted_counter (KeyDoorShuffle.py:877-892): what only `door` leads to. */
+/** find_inverted_counter (KeyDoorShuffle.py:878-893): what only `door` leads to. */
 function findInvertedCounter(
   door: KDoor,
   parent: KeyCounter,
@@ -317,7 +317,7 @@ function findInvertedCounter(
 }
 
 /**
- * check_for_self_lock_key (KeyDoorShuffle.py:866-874): a door behind
+ * check_for_self_lock_key (KeyDoorShuffle.py:867-875): a door behind
  * which one location lies, nothing else, may hold its own key.
  */
 function checkForSelfLockKey(
@@ -328,7 +328,7 @@ function checkForSelfLockKey(
 ): void {
   if (layout.world.settings.accessibility === "locations") return;
   const counter = findInvertedCounter(door, parent, layout);
-  // self_lock_possible (:938-939), then one free location exactly
+  // self_lock_possible (:939-940), then one free location exactly
   if (
     counter.freeLocations.size !== 1 ||
     counter.keyOnlyLocations.size !== 0 ||
@@ -341,7 +341,7 @@ function checkForSelfLockKey(
 }
 
 /**
- * bk_restricted_rules (KeyDoorShuffle.py:971-992): fewer keys where the
+ * bk_restricted_rules (KeyDoorShuffle.py:972-993): fewer keys where the
  * big key lies behind the door and the door is reached without it.
  */
 function bkRestrictedRules(
@@ -370,7 +370,7 @@ function bkRestrictedRules(
   if (!door.bigKey) rule.lockNum = best.usedKeys + 1;
 }
 
-/** exist_relevant_big_doors (KeyDoorShuffle.py:1085-1097). */
+/** exist_relevant_big_doors (KeyDoorShuffle.py:1086-1098). */
 function existRelevantBigDoors(
   counter: KeyCounter,
   layout: KeyLayout,
@@ -388,7 +388,7 @@ function existRelevantBigDoors(
   );
 }
 
-/** count_unique_small_doors (KeyDoorShuffle.py:1073-1082). */
+/** count_unique_small_doors (KeyDoorShuffle.py:1074-1083). */
 function countUniqueSmallChildDoors(
   counter: KeyCounter,
   layout: KeyLayout,
@@ -405,7 +405,7 @@ function countUniqueSmallChildDoors(
   return count;
 }
 
-/** find_bk_locked_sections (KeyDoorShuffle.py:596-623). */
+/** find_bk_locked_sections (KeyDoorShuffle.py:597-624). */
 function findBkLockedSections(
   logic: KeyLogic,
   allChests: Set<KLocation>,
@@ -435,13 +435,13 @@ function findBkLockedSections(
         logic.bkRestricted.add(loc);
 }
 
-/** find_big_key_locked_locations (KeyDoorShuffle.py:1171-1176). */
+/** find_big_key_locked_locations (KeyDoorShuffle.py:1172-1177). */
 const BIG_KEY_LOCKED: ReadonlySet<string> = new Set([
   "Thieves' Town - Blind's Cell",
   "Hyrule Castle - Zelda's Chest",
 ]);
 
-/** analyze_dungeon (KeyDoorShuffle.py:267-351), its door rules. */
+/** analyze_dungeon (KeyDoorShuffle.py:268-352), its door rules. */
 export function analyzeDungeon(layout: KeyLayout): KeyLogic {
   const logic: KeyLogic = {
     bkChests: new Set(),
@@ -538,7 +538,7 @@ export function analyzeDungeon(layout: KeyLayout): KeyLogic {
 }
 
 /**
- * vanilla_key_logic (DoorShuffle.py:222-309): every dungeon's layout on
+ * vanilla_key_logic (DoorShuffle.py:226-313): every dungeon's layout on
  * its vanilla key doors, analyzed, then the adjustments DR makes by hand.
  */
 export function vanillaKeyLogic(
@@ -571,7 +571,7 @@ export function vanillaKeyLogic(
     podFront.worstCase = 1;
     podFront.smallKeyNum = 1;
   }
-  // Mire's blue barriers: two keys from either state (:294-303, 312-316)
+  // Mire's blue barriers: two keys from either state (:298-307, 312-316)
   const mire = logics.get("Misery Mire");
   for (const door of ALTERNATIVE_CRYSTAL_DOORS)
     mire?.doorRules.set(door, {

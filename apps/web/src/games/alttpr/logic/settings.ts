@@ -237,8 +237,8 @@ export const pyramidOpen = (run: RunSettings): boolean => {
  * drops join the dungeons beyond their keys (the key analysis then left
  * out), the bomb bag, the legacy pot shuffle, the boss items behind map and
  * compass, the pyramid hole (`pyramidOpen`), a triforce hunt, a ganonhunt:
- * Ganon (Rules.py:70-71) and
- * Murahdahla (:69) ask the pieces the goal asks, which the state holds as
+ * Ganon (Rules.py:73-74) and
+ * Murahdahla (:72) ask the pieces the goal asks, which the state holds as
  * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
  * The same run settings always give the same object, so the world compiled
  * for it can be kept.

@@ -379,7 +379,7 @@ describe("a Door Randomizer run", () => {
       store().applyPreset("door-randomizer");
     });
     // Agahnim's Tower's dark maze: one key past its first door
-    // (validate_vanilla_key_logic, KeyDoorShuffle.py:1979-1983)
+    // (validate_vanilla_key_logic, KeyDoorShuffle.py:2079-2083)
     give({ agahnim: 0, cape: true, lantern: true, sword: 1 });
     const maze = "castle-tower/dark-maze";
     expect(solutionOf(store()).tris[maze]).toBe("maybe");

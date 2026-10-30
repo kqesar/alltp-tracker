@@ -12,8 +12,8 @@
 // are all race seeds'. A spoiler race is the one whose log is public: its
 // racetime.gg room's bot (SahasrahBot, "Mudora") posts it as the race starts,
 // as `…/seeds/<uuid>/DR_<seed>_Spoiler_<code>.json` (its own JSON), and DR's
-// own text log, the file DR writes (`DR_<seed>_Spoiler.txt`, Main.py:428-432
-// at DR 1.5.6), lies in the same folder. This script reads the room's chat
+// own text log, the file DR writes (`DR_<seed>_Spoiler.txt`, Main.py:147,
+// 360-383 at DR 1.5.8), lies in the same folder. This script reads the room's chat
 // log for that address, fetches DR's text beside it and keeps:
 // - the first line (version, seed) and the header's settings, but `User
 //   Notes` (free text a person wrote);

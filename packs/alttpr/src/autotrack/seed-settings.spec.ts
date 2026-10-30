@@ -314,7 +314,7 @@ describe("decodeSeedSettings", () => {
   });
 });
 
-// A Door Randomizer ROM, at the PC offsets DR 1.5.6 writes (Rom.py) and its
+// A Door Randomizer ROM, at the PC offsets DR 1.5.8 writes (Rom.py) and its
 // base patch lays out (aerinon/z3randomizer d0f4651): the title, then its
 // own table, "DR" and DRMode, DRFlags, DRVersionInfo; the standing items'
 // table; the Overworld fork's.
@@ -327,7 +327,7 @@ const DR = {
   owMode: 0x15_0002, // OWR Rom.py:676
   owVersion: 0x15_0010, // OWR Rom.py:1854
   standingMask: 0x14_2a55, // Rom.py:738
-  version: 0x13_8010, // Rom.py:1458
+  version: 0x13_8010, // Rom.py:1509
 } as const;
 
 /** Text written into an image at a PC offset. */
@@ -454,7 +454,7 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
   it("reads DR's goals, its own Ganon goal included", () => {
     const goal = (writes: Readonly<Record<number, number>>) =>
       shown(decode(doorImage("DR156_1_1_1", writes)).goal);
-    // Rom.py:1164-1175
+    // Rom.py:1207-1218
     expect(goal({ [OFFSET.ganonVulnerable]: 0x03 })).toBe("ganon");
     expect(goal({ [OFFSET.ganonVulnerable]: 0x04 })).toBe("ganon");
     expect(goal({ [OFFSET.ganonVulnerable]: 0x04, [PYRAMID]: 0x20 })).toBe(

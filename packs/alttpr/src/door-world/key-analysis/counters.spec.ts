@@ -32,7 +32,7 @@ const OPEN = layouts(settingsOf("open"));
 
 describe("the regions DR's key walk crosses", () => {
   it("strips a name as Python's rstrip does, a set of characters", () => {
-    // _find_portal_for_region finds no portal for these (DoorShuffle.py:348-350)
+    // _find_portal_for_region finds no portal for these (DoorShuffle.py:352-354)
     expect(rstrip("Hyrule Castle West Portal", " Portal")).toBe(
       "Hyrule Castle Wes",
     );

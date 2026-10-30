@@ -531,9 +531,9 @@ describe("a Door Randomizer seed's readout", () => {
       memory.fill(0, at, at + 21);
       for (let i = 0; i < text.length; i++) memory[at + i] = text.charCodeAt(i);
     };
-    write(0x7fc0, title); // Rom.py:1454-1456
+    write(0x7fc0, title); // Rom.py:1505-1507
     write(0x13_8000, "DR"); // doorrando.asm:15
-    write(0x13_8010, version); // Rom.py:1458
+    write(0x13_8010, version); // Rom.py:1509
     return memory;
   };
   const rows = (memory: Uint8Array, race = false) =>

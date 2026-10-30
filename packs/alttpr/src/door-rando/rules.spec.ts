@@ -112,7 +112,7 @@ describe("the Door Randomizer's rules (import-dr, stage B)", () => {
         expect(sprite).toMatch(/^source\/dungeon\/EnemyList\.py:\d+$/);
     }
     // An anti-fairy alone: only the powder makes it a fairy (damage table
-    // row 0x15, as DR 1.5.6 computes it)
+    // row 0x15, as DR computes it)
     expect(kill["GT Tile Room"]?.req).toBe("powder");
     // No stalfos past 40 health: the spawn room asks nothing
     expect(kill["Eastern Stalfos Spawn"]).toMatchObject({
@@ -160,7 +160,7 @@ describe("the Door Randomizer's rules (import-dr, stage B)", () => {
       (rules.doorData as Record<string, { vanilla: boolean }>)
         .doorTrapped_skullTorchRoomWS,
     ).toMatchObject({ vanilla: false });
-    // Rules.py:1982 reads state.can_flute uncalled, true in Python
+    // Rules.py:1986 reads state.can_flute uncalled, true in Python
     expect(rules.uncalledMethods).toEqual(["can_flute"]);
     // A vanilla boss slot, Ice variants beside
     expect(entrances["GT Ice Armos NE"]?.req).toBe("@drDefeatArmosKnights");

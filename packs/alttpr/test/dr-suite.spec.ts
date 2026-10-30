@@ -6,7 +6,7 @@
 // and the seed's placements found where reached, the location stays out of
 // reach. So an item the fill may not place is never `yes` here
 // (`false ⇒ not yes`), but where the fill only forbids the item: a big key
-// in its dungeon's bk_restricted locations (forbid_item, Rules.py:2362-2364),
+// in its dungeon's bk_restricted locations (forbid_item, Rules.py:2366-2368),
 // which the port's analysis names too. Where it may place, the pack's
 // answer is counted, not held: the fill's state holds what was not placed
 // yet, the player's keys are what the player records.

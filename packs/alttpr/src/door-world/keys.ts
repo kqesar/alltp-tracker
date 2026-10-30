@@ -1,18 +1,18 @@
 // The keys of the Door Randomizer's world. DR's key rules come from its
 // analysis of each dungeon (key-analysis/, KeyDoorShuffle.py), attached by
-// add_key_logic_rules (Rules.py:2343-2381): each key door the analysis
+// add_key_logic_rules (Rules.py:2347-2385): each key door the analysis
 // names asks its own number of keys, partial logic's figure by default
-// (eval_small_key_door_partial_main, :2411-2441: the worst case capped at
+// (eval_small_key_door_partial_main, :2416-2447: the worst case capped at
 // `small_key_num`), `dangerous` logic's the worst case uncapped
-// (eval_small_key_door_main, :2393-2395), `strict` logic every key of the
-// chests once keys are wild (:2444-2451). What a door asks beside
+// (eval_small_key_door_main, :2399-2400), `strict` logic every key of the
+// chests once keys are wild (:2450-2457). What a door asks beside
 // that number rests on where an item lies (a key in the one location
 // behind the door, the big key behind it): the tracker does not know, so
 // it is `maybe`. With the keys in their dungeons, a door short of its
 // number is `maybe`, never `no` (a key may lie inside); with wild keys,
 // what the player recorded decides. The big key doors and chests ask the
 // big key (bk_doors, bk_chests); Misery Mire's blue barriers take their
-// alternative of two keys (DoorShuffle.py:293-303). On other connections
+// alternative of two keys (DoorShuffle.py:297-307). On other connections
 // than the vanilla ones the analysis is not run (a dungeon's portals may be
 // unknown): there a key door asks every key of its dungeon, or `maybe`,
 // never more `yes` than any of DR's rules.
@@ -54,7 +54,7 @@ export const KEY_ITEMS: readonly string[] = Object.values(DR_KEY_CODES).flatMap(
 
 /**
  * Small key doors that are no key doors with vanilla doors
- * (unmark_ugly_smalls, DoorShuffle.py:472-476).
+ * (unmark_ugly_smalls, DoorShuffle.py:476-480).
  */
 export const UGLY_SMALLS: ReadonlySet<string> = new Set([
   "Eastern Hint Tile Blocked Path SE",
@@ -78,7 +78,7 @@ export const specialBigKeyDoors = (mode: DrMode): ReadonlySet<string> =>
 
 /**
  * The locations a big key opens (find_big_chest_locations,
- * find_big_key_locked_locations, KeyDoorShuffle.py:1163-1175).
+ * find_big_key_locked_locations, KeyDoorShuffle.py:1164-1176).
  */
 const isBigChest = (name: string): boolean =>
   name.includes("Big Chest") ||
@@ -87,7 +87,7 @@ const isBigChest = (name: string): boolean =>
 
 /**
  * Misery Mire's blue barriers that two keys open from either crystal state
- * (create_alternative_door_rules, DoorShuffle.py:293-303, 312-316).
+ * (create_alternative_door_rules, DoorShuffle.py:297-307, 312-316).
  */
 export const ALTERNATIVE_CRYSTAL_DOORS: ReadonlySet<string> = new Set([
   "Mire Hub Upper Blue Barrier",
@@ -185,8 +185,8 @@ export interface WorldKeys {
  *   kept in its dungeon, or one not recorded, reads `maybe` until held, as
  *   a small key below its number does (it may lie inside), never `no`
  * @param dangerous - key_logic_algorithm `dangerous`: a door asks its worst
- *   case uncapped (eval_small_key_door_main, Rules.py:2393-2395), which
- *   partial logic caps at `small_key_num` (:2422-2424)
+ *   case uncapped (eval_small_key_door_main, Rules.py:2399-2400), which
+ *   partial logic caps at `small_key_num` (:2428-2430)
  */
 export function worldKeys(
   holding: KeyHolding,
@@ -289,8 +289,8 @@ interface KeyExit {
 
 /**
  * Misery Mire's blue barriers from the orange state: DR's code opens them
- * with two keys (eval_alternative_crystal, Rules.py:2352-2354, set by
- * vanilla_key_logic, DoorShuffle.py:294-303), but DR's own key logic seeds
+ * with two keys (eval_alternative_crystal, Rules.py:2356-2358, set by
+ * vanilla_key_logic, DoorShuffle.py:298-307), but DR's own key logic seeds
  * refuse the chests behind them with two keys and more
  * (test/suite/partial_key_logic_2.yaml, strict_key_logic.yaml), a comment
  * there saying the logic "is not yet smart enough". Which DR runs, only
@@ -312,7 +312,7 @@ const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
 })();
 
 /**
- * Adds the key rules (add_key_logic_rules, Rules.py:2343-2381): each key
+ * Adds the key rules (add_key_logic_rules, Rules.py:2347-2385): each key
  * door of a dungeon's analysis and the doors its link carries along ask
  * its rule, each big key door and chest the big key, each of Mire's blue
  * barriers its alternative. Without an analysis (`logic` undefined: other
@@ -333,7 +333,7 @@ export function addKeyRules(
   if (logic !== undefined)
     for (const [dungeon, dungeonLogic] of logic) {
       // Universal keys: every door of the proposal but Standard's escape
-      // asks a key bought (:2376-2380)
+      // asks a key bought (:2380-2384)
       if (keys.holding === "universal") {
         if (mode === "standard" && dungeon === "Hyrule Castle") continue;
         for (const door of dungeonLogic.layout.flatProposal)
@@ -375,7 +375,7 @@ export function addKeyRules(
     }
     if (big(door) || big(controller))
       exit.req = and(exit.req, keys.bigKeyRule(dungeon));
-    // add_rule(…, 'or') (Rules.py:2353-2354)
+    // add_rule(…, 'or') (Rules.py:2357-2358)
     const or2 = alternative.get(exit.name);
     if (or2 !== undefined) exit.req = or(exit.req, or2);
     else if (logic === undefined && ALTERNATIVE_CRYSTAL_DOORS.has(exit.name))

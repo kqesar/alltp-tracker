@@ -89,7 +89,7 @@ describe("checkGame", () => {
   });
 
   it("accepts a Door Randomizer seed and its Overworld fork's, by their titles", () => {
-    // DR 1.5.6 Rom.py:1454: "DR", the version's digits, team, player, seed;
+    // DR 1.5.8 Rom.py:1505: "DR", the version's digits, team, player, seed;
     // a title Hyrule Town Hall served on 2026-10-29 (the study's patch_meta)
     expect(checkGame(header("DR156_1_1_367825107", PATCHED))).toEqual({
       ok: true,
@@ -232,8 +232,8 @@ describe("ALTTPR_RACE_FLAG", () => {
   });
 
   it("reads a Door Randomizer seed's flag where vt's is, failing closed alike", () => {
-    // DR 1.5.6 writes $00 $01 for every seed (Rom.py:1113) and $01 $00 for a
-    // race (patch_race_rom, 1483-1484), at the same 0x180213: the probe is
+    // DR 1.5.8 writes $00 $01 for every seed (Rom.py:1156) and $01 $00 for a
+    // race (patch_race_rom, 1552-1553), at the same 0x180213: the probe is
     // the same, and so is its answer to bytes it cannot trust
     const decode = (...bytes: number[]) =>
       ALTTPR_RACE_FLAG.decode(Uint8Array.from(bytes));

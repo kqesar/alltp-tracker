@@ -90,7 +90,7 @@ describe("a Door Randomizer run's checks", () => {
     )?.id;
     if (takeAny === undefined) throw new Error("no take-any cave's item");
     // Everything held but the hookshot: the fairy cave's pot wants it
-    // (pot_rules, Rules.py:955-957)
+    // (pot_rules, Rules.py:958-960)
     useGameStore.setState({
       items: Object.fromEntries(
         Object.entries(freshItems).map(([id, value]) => [

@@ -1,11 +1,11 @@
 // The bunny's rules of the Door Randomizer's world (set_bunny_rules,
-// Rules.py:2035-2185, No Glitches): where Link is a bunny, a cave the
+// Rules.py:2039-2189, No Glitches): where Link is a bunny, a cave the
 // bunny cannot cross, a door it cannot pass and a location it cannot get
 // take the moon pearl, or a path from a region wholly on Link's own side
-// of the world, each entrance on it passable (get_rule_to_add, :2079-2161).
+// of the world, each entrance on it passable (get_rule_to_add, :2083-2165).
 //
 // Not ported: the doors a bunny cannot pass by their kind in the room's
-// data (dashable, bombable, hidden walls, :2171-2176), which RoomData.py
+// data (dashable, bombable, hidden walls, :2175-2180), which RoomData.py
 // holds and import-dr does not read yet.
 
 import ruleData from "../door-rando/world/rules.json" with { type: "json" };

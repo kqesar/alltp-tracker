@@ -48,9 +48,9 @@ const STALE: Readonly<Record<string, string>> = {
   "val_ganons:2168":
     "GT Hookshot ES: 8 keys and the map chest allowed to hold its own key here, 7 and no allowance in the validator; the counters spend every other GT door first; a location with no allowance cannot be, check_for_self_lock_key sets both or neither (:872-875)",
   "val_ganons:2169":
-    "GT Tile Room EN: 7 here; and vanilla_key_logic adds the Conveyor Star Pits door's big key locations to it (DoorShuffle.py:305-309) after the validator's era",
+    "GT Tile Room EN: 7 here; and vanilla_key_logic adds the Conveyor Star Pits door's big key locations to it (DoorShuffle.py:309-313) after the validator's era",
   "val_ganons:2170":
-    "GT Firesnake Room SW: 8 here; the same adjustment adds the Conveyor Star Pits door's big key locations (DoorShuffle.py:305-307)",
+    "GT Firesnake Room SW: 8 here; the same adjustment adds the Conveyor Star Pits door's big key locations (DoorShuffle.py:309-311)",
 };
 
 /** What the validator asserts of a rule (val_rule, :2182-2192). */
@@ -107,7 +107,7 @@ describe("DR's key analysis", () => {
   });
 
   it("makes vanilla_key_logic's adjustments", () => {
-    // The escape's doors once the drops are forced (DoorShuffle.py:279-288)
+    // The escape's doors once the drops are forced (DoorShuffle.py:283-292)
     expect(
       ruleOf("open", "Hyrule Castle", "Sewers Dark Cross Key Door N").worstCase,
     ).toBe(2);
@@ -119,11 +119,11 @@ describe("DR's key analysis", () => {
         .get("Hyrule Castle")
         ?.doorRules.get("Sewers Dark Cross Key Door N")?.worstCase,
     ).toBe(3);
-    // Palace of Darkness's front door asks one key, not six (:290-293)
+    // Palace of Darkness's front door asks one key, not six (:294-297)
     expect(
       ruleOf("open", "Palace of Darkness", "PoD Middle Cage N"),
     ).toMatchObject({ smallKeyNum: 1, worstCase: 1 });
-    // Mire's blue barriers: two keys from either state (:294-303)
+    // Mire's blue barriers: two keys from either state (:298-307)
     expect(
       ruleOf("inverted", "Misery Mire", "Mire Hub Top Blue Barrier")
         .crystalAlternative,

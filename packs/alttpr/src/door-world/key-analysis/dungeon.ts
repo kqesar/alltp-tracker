@@ -1,11 +1,11 @@
 // What DR's key analysis walks (KeyDoorShuffle.py, DungeonGenerator.py's
 // ExplorationState): each dungeon's regions with their doors, the
 // overworld regions only a dungeon reaches (find_inaccessible_regions,
-// DoorShuffle.py:3398-3433), which the walk crosses through the logical
-// doors DR gives their exits (add_inaccessible_doors, :3490-3512), and the
+// DoorShuffle.py:3402-3437), which the walk crosses through the logical
+// doors DR gives their exits (add_inaccessible_doors, :3494-3516), and the
 // regions each dungeon's walk starts from (determine_entrance_list,
-// :1195-1225, and vanilla_key_logic's loop over the builders, :222-275,
-// with find_new_entrances, :1259-1296). Read from aerinon/
+// :1199-1229, and vanilla_key_logic's loop over the builders, :226-279,
+// with find_new_entrances, :1263-1300). Read from aerinon/
 // ALttPDoorRandomizer at the release upstream.json pins (doorRandomizer).
 // Only DR's own data feeds it: the regions, doors and connections of
 // src/door-rando/world/, never an item rule (the analysis ignores them).
@@ -42,7 +42,7 @@ export const DR_DUNGEON_ORDER: readonly string[] = [
   "Ganons Tower",
 ];
 
-/** The vanilla small key doors (default_small_key_doors, DoorShuffle.py:4347-4435). */
+/** The vanilla small key doors (default_small_key_doors, DoorShuffle.py:4351-4439). */
 export const DEFAULT_SMALL_KEY_DOORS: Readonly<
   Record<string, readonly (string | readonly [string, string])[]>
 > = {
@@ -184,7 +184,7 @@ const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
 
 /**
  * The portals link_doors_prep marks as destinations with vanilla
- * entrances (DoorShuffle.py:96-105), which should_delay_processing reads.
+ * entrances (DoorShuffle.py:100-109), which should_delay_processing reads.
  */
 const destinationPortals = (mode: DrMode): ReadonlySet<string> =>
   new Set([
@@ -303,7 +303,7 @@ function exitsByRegion(mode: DrMode): Map<string, string[]> {
 }
 
 /**
- * find_inaccessible_regions (DoorShuffle.py:3398-3433): the regions out of
+ * find_inaccessible_regions (DoorShuffle.py:3402-3437): the regions out of
  * the dungeons Link cannot walk to from his house or the sanctuary, rules
  * aside, before link_doors_prep links the doors and portals.
  */
@@ -357,7 +357,7 @@ function inaccessibleRegions(
       (r) =>
         r.type !== "dungeon" &&
         !visited.has(r.name) &&
-        // valid_inaccessible_region (:3486-3487)
+        // valid_inaccessible_region (:3490-3491)
         (r.type !== "cave" ||
           ((exits.get(r.name)?.length ?? 0) > 0 &&
             r.name !== "Links House" &&
@@ -421,7 +421,7 @@ function destinations(): Map<string, string> {
       if (twoWays) dest.set(b, a);
     }
   };
-  // connect_two_way and connect_one_way (DoorShuffle.py:423-468): the
+  // connect_two_way and connect_one_way (DoorShuffle.py:427-472): the
   // interior doors, the vanilla door tables
   for (const name of [
     "interior_doors",
@@ -500,7 +500,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
             | undefined)
         : undefined);
     doors.set(d.name, {
-      // unmark_ugly_smalls (DoorShuffle.py:472-476)
+      // unmark_ugly_smalls (DoorShuffle.py:476-480)
       bigKey: d.bigKey === true,
       blocked: d.trapped === true && !DR_PORTALS.some((p) => p.door === d.name),
       controller: null,
@@ -558,7 +558,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
 
 /**
  * Each dungeon's start regions, as vanilla_key_logic finds them
- * (DoorShuffle.py:222-275): determine_entrance_list's entrances Link
+ * (DoorShuffle.py:226-279): determine_entrance_list's entrances Link
  * walks to, then the dungeons in create_dungeons' order, each taking the
  * entrances an earlier one enabled (find_enabled_origins) unless
  * should_delay_processing puts it back in the queue, and enabling those
@@ -581,7 +581,7 @@ function startRegions(
     if (lobby === undefined) throw new RangeError(`No lobby for ${portal}`);
     return lobby.name;
   };
-  // determine_entrance_list (:1195-1225)
+  // determine_entrance_list (:1199-1229)
   const entranceMap = new Map<string, string[]>();
   const potentials = new Map<string, string[]>();
   const connections = new Map<string, string>();
@@ -606,7 +606,7 @@ function startRegions(
           )
         )
           continue;
-        // is_standard_inaccessible (:1228-1229)
+        // is_standard_inaccessible (:1232-1233)
         const stdInaccessible =
           mode === "standard" &&
           STANDARD_STARTS[dungeon] !== undefined &&
@@ -623,7 +623,7 @@ function startRegions(
   }
   const enabled = new Map<string, { region: string; dungeon: string | null }>();
   const dungeonOfRegion = (name: string) => regions.get(name)?.dungeon ?? null;
-  // enable_new_entrances (:1266-1285)
+  // enable_new_entrances (:1270-1289)
   const enable = (region: string, enabler: string) => {
     const newRegion = connections.get(region);
     if (newRegion === undefined) return;
@@ -656,7 +656,7 @@ function startRegions(
   const regionsOf = (dungeon: string) =>
     DR_REGIONS.filter((r) => r.dungeon === dungeon).map((r) => r.name);
   const destinations = destinationPortals(mode);
-  // _find_portal_for_region (:348-350) strips its parent's name with
+  // _find_portal_for_region (:352-354) strips its parent's name with
   // rstrip(' Portal'), a set of characters, not a suffix: "Hyrule Castle
   // West Portal" turns "Hyrule Castle Wes", no portal, as DR finds it
   const portalOfLobby = (lobby: string) => {
@@ -676,7 +676,7 @@ function startRegions(
     dungeon = queue.shift()
   ) {
     const origins = entranceMap.get(dungeon) ?? [];
-    // find_enabled_origins (:1247-1256)
+    // find_enabled_origins (:1251-1260)
     for (const name of regionsOf(dungeon)) {
       const by = enabled.get(name);
       if (by === undefined || origins.includes(name)) continue;
@@ -695,7 +695,7 @@ function startRegions(
       loops++;
       continue;
     }
-    // find_new_entrances (:1259-1263)
+    // find_new_entrances (:1263-1267)
     for (const name of regionsOf(dungeon)) {
       const parent = connections.get(name);
       if (
@@ -704,7 +704,7 @@ function startRegions(
       )
         enable(name, name);
     }
-    // inverted_aga_check (:1288-1296)
+    // inverted_aga_check (:1292-1300)
     if (mode === "inverted") {
       const ledge = potentials.get("Hyrule Castle Ledge");
       if (ledge !== undefined)

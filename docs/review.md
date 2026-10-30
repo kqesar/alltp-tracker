@@ -249,7 +249,7 @@ reads the same way. A run solved in DR's own world (the pack's [Door Randomizer]
 section, `doorLogic`) is swept through that world: `useSweep.ts` loads its chunk first and hands its solver to
 `sweepRun`, which solves each instant there with the log's keys counted where it put them, as for vt, but under
 the seed's own key holding, never keysanity's: DR's key rules depend on it (strict logic applies only to wild
-keys, `Rules.py:2345-2347`, and its key analysis reads the shuffles), where vt's do not. Its waits
+keys, `Rules.py:2349-2351`, and its key analysis reads the shuffles), where vt's do not. Its waits
 are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places;
 a static key logic seed is solved in that world too (its port, `door-world/static.ts`). Its key drops, pots, enemy drops and shop
 items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"

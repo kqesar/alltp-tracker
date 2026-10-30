@@ -120,7 +120,7 @@ describe("a Door Randomizer run's logic", () => {
       dangerousKeyLogic: false,
       strictKeyLogic: false,
     });
-    // Each door at its worst case, uncapped (Rules.py:2393-2395)
+    // Each door at its worst case, uncapped (Rules.py:2399-2400)
     expect(drSettingsOf(with_(DR, { keyLogic: "dangerous" }))).toMatchObject({
       dangerousKeyLogic: true,
       strictKeyLogic: false,

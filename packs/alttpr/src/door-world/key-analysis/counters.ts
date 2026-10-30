@@ -1,8 +1,8 @@
 // DR's key counters (KeyDoorShuffle.py): each set of key doors a player may
 // have opened in a dungeon, with what the walk reaches behind them
-// (create_key_counters, :1672-1721; create_key_counter, :1773-1799), and
+// (create_key_counters, :1772-1821; create_key_counter, :1873-1899), and
 // the lookups the analysis makes over them (find_counter, find_max_counter,
-// can_open_door_by_counter, :1752-1900). A counter's id is DR's: the big
+// can_open_door_by_counter, :1852-2000). A counter's id is DR's: the big
 // key's bit, then a bit for each door of the flattened proposal.
 import { DR_DUNGEONS } from "../data";
 import { KEY_DROPS, specialBigKeyDoors } from "../keys";
@@ -21,7 +21,7 @@ import {
   openADoor,
 } from "./exploration";
 
-/** A key counter (KeyCounter, KeyDoorShuffle.py:213-230). */
+/** A key counter (KeyCounter, KeyDoorShuffle.py:214-231). */
 export interface KeyCounter {
   readonly freeLocations: ReadonlySet<KLocation>;
   readonly keyOnlyLocations: ReadonlySet<KLocation>;
@@ -100,7 +100,7 @@ const blindBossUnavailable = (
   (!found.some((x) => x.name === "Suspicious Maiden") ||
     !found.some((x) => x.name === "Attic Cracked Floor"));
 
-/** count_free_locations (KeyDoorShuffle.py:1142-1148). */
+/** count_free_locations (KeyDoorShuffle.py:1143-1149). */
 const countFreeLocations = (found: readonly KLocation[]): number =>
   found.filter(
     (loc) =>
@@ -119,7 +119,7 @@ const countExcludeBigChest = (found: readonly KLocation[]): number =>
       !blindBossUnavailable(loc, found),
   ).length;
 
-/** count_unique_sm_doors (KeyDoorShuffle.py:1053-1058). */
+/** count_unique_sm_doors (KeyDoorShuffle.py:1054-1059). */
 export function countUniqueSmallDoors(doors: Iterable<KDoor>): number {
   const unique = new Set<KDoor>();
   for (const d of doors)
@@ -132,7 +132,7 @@ export function countUniqueSmallDoors(doors: Iterable<KDoor>): number {
   return unique.size;
 }
 
-/** counter_id (KeyDoorShuffle.py:1900-1906), prize relevance aside. */
+/** counter_id (KeyDoorShuffle.py:2000-2006), prize relevance aside. */
 export function counterId(
   opened: ReadonlySet<KDoor>,
   bigKey: boolean,
@@ -144,7 +144,7 @@ export function counterId(
   );
 }
 
-/** cid (KeyDoorShuffle.py:1909-1911). */
+/** cid (KeyDoorShuffle.py:2009-2011). */
 export const cid = (counter: KeyCounter, layout: KeyLayout): string =>
   counterId(counter.openDoors, counter.bigKeyOpened, layout);
 
@@ -152,7 +152,7 @@ export const cid = (counter: KeyCounter, layout: KeyLayout): string =>
 const isForcedSmall = (loc: KLocation, dungeon: string): boolean =>
   loc.forced !== null && !loc.forced.big && loc.forced.dungeon === dungeon;
 
-/** create_key_counter (KeyDoorShuffle.py:1773-1799). */
+/** create_key_counter (KeyDoorShuffle.py:1873-1899). */
 function createKeyCounter(
   state: ExplorationState,
   layout: KeyLayout,
@@ -186,7 +186,7 @@ function createKeyCounter(
   };
 }
 
-/** cnt_avail_small_locations (KeyDoorShuffle.py:1636-1644). */
+/** cnt_avail_small_locations (KeyDoorShuffle.py:1736-1744). */
 function availableSmallLocations(
   free: number,
   keyOnly: number,
@@ -208,7 +208,7 @@ function availableSmallLocations(
   return state.keyLocations;
 }
 
-/** can_open_door (KeyDoorShuffle.py:1734-1749). */
+/** can_open_door (KeyDoorShuffle.py:1834-1849). */
 function canOpenDoor(
   door: KDoor,
   state: ExplorationState,
@@ -224,7 +224,7 @@ function canOpenDoor(
     return availableSmallLocations(ttl, keyOnly, state, layout) > 0;
   }
   if (door.bigKey) {
-    // cnt_avail_big_locations (:1658-1661), used_locations never raised
+    // cnt_avail_big_locations (:1758-1761), used_locations never raised
     const big = layout.world.settings.bigKeyShuffle
       ? state.bigKeySpecial
         ? 0
@@ -237,7 +237,7 @@ function canOpenDoor(
   return true;
 }
 
-/** cnt_avail_small_locations_by_ctr (KeyDoorShuffle.py:1647-1655). */
+/** cnt_avail_small_locations_by_ctr (KeyDoorShuffle.py:1747-1755). */
 function availableSmallByCounter(
   free: number,
   counter: KeyCounter,
@@ -255,7 +255,7 @@ function availableSmallByCounter(
   return layout.maxChests + keyOnly - counter.usedKeys;
 }
 
-/** can_open_door_by_counter (KeyDoorShuffle.py:1752-1770). */
+/** can_open_door_by_counter (KeyDoorShuffle.py:1852-1870). */
 export function canOpenDoorByCounter(
   door: KDoor,
   counter: KeyCounter,
@@ -270,7 +270,7 @@ export function canOpenDoorByCounter(
     if (counter.bigKeyOpened) return false;
     if (layout.bigKeySpecial)
       return [...counter.otherLocations].some(isForcedBigKey);
-    // cnt_avail_big_locations_by_ctr (:1664-1669)
+    // cnt_avail_big_locations_by_ctr (:1764-1769)
     if (layout.world.settings.bigKeyShuffle) return true;
     const used = Math.max(0, counter.usedKeys - counter.keyOnlyLocations.size);
     return Math.max(0, ttl - used) > 0;
@@ -279,7 +279,7 @@ export function canOpenDoorByCounter(
 }
 
 /**
- * create_key_counters (KeyDoorShuffle.py:1672-1721): from the start
+ * create_key_counters (KeyDoorShuffle.py:1772-1821): from the start
  * regions, the walk opens each key door it waits at that some key may
  * open, breadth first, a counter for each new set of doors opened.
  */
@@ -325,7 +325,7 @@ function createKeyCounters(layout: KeyLayout): void {
 }
 
 /**
- * find_counter_hint (KeyDoorShuffle.py:1880-1888): the counter of these
+ * find_counter_hint (KeyDoorShuffle.py:1980-1988): the counter of these
  * doors, else of these doors and the big key.
  */
 export function findCounterHint(
@@ -339,7 +339,7 @@ export function findCounterHint(
 }
 
 /**
- * find_counter (KeyDoorShuffle.py:1861-1877): as find_counter_hint, else
+ * find_counter (KeyDoorShuffle.py:1961-1977): as find_counter_hint, else
  * with each door's other side opened too; none is DR's error.
  */
 export function findCounter(
@@ -363,7 +363,7 @@ export function findCounter(
   );
 }
 
-/** find_max_counter (KeyDoorShuffle.py:1891-1897). */
+/** find_max_counter (KeyDoorShuffle.py:1991-1997). */
 export function findMaxCounter(layout: KeyLayout): KeyCounter {
   const max = findCounterHint(layout.foundDoors, false, layout);
   if (max === undefined) throw new RangeError("Max Counter is none");
@@ -375,7 +375,7 @@ export function findMaxCounter(layout: KeyLayout): KeyCounter {
 
 /**
  * A dungeon's key layout and its counters (build_key_layout,
- * KeyDoorShuffle.py:233-241, then create_key_counters), on the vanilla
+ * KeyDoorShuffle.py:234-242, then create_key_counters), on the vanilla
  * small key doors.
  */
 export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {

@@ -17,24 +17,24 @@ const WHY = {
   bombs:
     "bombs kill the room's enemies: can_use_bombs holds without the bomb bag (BaseClasses.py:1208)",
   bunny:
-    "no Moon Pearl: a dark world dungeon's location asks it (set_bunny_rules, Rules.py:2191-2196)",
+    "no Moon Pearl: a dark world dungeon's location asks it (set_bunny_rules, Rules.py:2195-2200)",
   byrna:
     "the Cane of Byrna kills Mire 2's wizzrobes with the pool's magic (the kill room's rule, EnemyLogic.py)",
   events:
     "TestDungeon never sweeps events: the Convenient Block or Maiden Unmasked is no item of the case",
   iceberg:
-    "no water exit lands on Ice Palace's iceberg: the ledge drop or the bomb jump, which No Glitches forbids (Rules.py:1284)",
+    "no water exit lands on Ice Palace's iceberg: the ledge drop or the bomb jump, which No Glitches forbids (Rules.py:1287)",
   keys: "DR's own key rule (its partial analysis, KeyDoorShuffle.py) counts the dungeon's drop keys, which TestDungeon never sweeps: the case holds fewer keys than the door asks",
   mirror:
-    "with the swamp unpatched, Swamp's moat asks the mirror (Rules.py:85-86)",
+    "with the swamp unpatched, Swamp's moat asks the mirror (Rules.py:88-89)",
   mirrorEvents:
-    "Swamp's moat asks the mirror (Rules.py:85-86), its trenches the flood events TestDungeon never sweeps",
+    "Swamp's moat asks the mirror (Rules.py:88-89), its trenches the flood events TestDungeon never sweeps",
   overworld:
     "the harness's Menu reaches the overworld (save-and-quit exits), whence the pool reaches another way in",
   tileRoom:
     "the tile room's anti-fairy dies to the powder only (damage table row 0x15, EnemyLogic.py)",
   wizzrobes:
-    "Mire 2's wizzrobes: the fire rod needs magic for 9 shots, the ice rod kills none (Rules.py:1402 kill room)",
+    "Mire 2's wizzrobes: the fire rod needs magic for 9 shots, the ice rod kills none (Rules.py:1405 kill room)",
 } as const;
 
 /**

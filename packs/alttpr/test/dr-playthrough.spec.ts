@@ -1,9 +1,10 @@
 // The Door Randomizer's world held to real seeds: the playthrough of each
 // spoiler race DR wrote (test/dr-spoilers/, recorded by
 // scripts/record-dr-spoilers.mjs; DR 1.5.7-u for ten, 1.5.8-u and 1.5.6-u
-// for one each, whose playthrough code is 1.5.6's). DR builds it in
-// create_playthrough (Main.py:673-774 at DR 1.5.6): the spheres of the
-// items the seed needs, each location of sphere k reached by DR's own logic
+// for one each, whose playthrough code is the same from 1.5.6 to 1.5.8).
+// DR builds it in create_playthrough (Main.py:677-778 at DR 1.5.8): the
+// spheres of the items the seed needs, each location of sphere k reached
+// by DR's own logic
 // with the items of the spheres before it, the dungeons' keys in their
 // dungeons collected as DR's sweep reaches them (sweep_for_events(key_only=
 // True), BaseClasses.py:1051-1066). So a location of sphere k is `yes` here with the items of the
@@ -45,9 +46,9 @@ const REVIEWED: Readonly<
   Record<string, { readonly why: string; readonly at: Record<string, string> }>
 > = {
   // Misery Mire's blue barriers open to two keys only where DR knows which
-  // keys lie behind them (DoorShuffle.py:294-303, Rules.py:2352-2354): the
+  // keys lie behind them (DoorShuffle.py:298-307, Rules.py:2356-2358): the
   // world says maybe (keys.ts). Thieves' Town's big chest: its key door's
-  // rule rests on where a key lies (AllowSmall, Rules.py:2425-2440)
+  // rule rests on where a key lies (AllowSmall, Rules.py:2431-2446)
   "DR_278438665_Spoiler.txt": {
     at: {
       "7:Misery Mire - Map Chest": "maybe",
@@ -156,7 +157,7 @@ function walk(name: string): {
 /**
  * The locations of a later sphere a log's playthrough says yes to too
  * early, each `sphere:location as of sphere`. create_playthrough's final
- * spheres (Main.py:747-764) are first-reachable sets: sphere k holds the
+ * spheres (Main.py:751-768) are first-reachable sets: sphere k holds the
  * required locations that DR's state reaches after the spheres before it,
  * where that state is their items and, swept at each step, the keys at
  * reachable event locations, only those kept in their dungeons

@@ -1,8 +1,8 @@
 // What the Door Randomizer's Standard world adds in code (standard_rules,
-// Rules.py:1502-1580): the save-and-quit to Uncle (:1503-1504), and the
+// Rules.py:1506-1584): the save-and-quit to Uncle (:1507-1508), and the
 // way back from Zelda's cell to the throne room, whose rules gate taking
-// her out (find_rules_for_zelda_delivery, :1583-1607, set on the throne
-// room's tapestry and on her drop-off, :1569-1572).
+// her out (find_rules_for_zelda_delivery, :1587-1611, set on the throne
+// room's tapestry and on her drop-off, :1573-1576).
 import { regionNamed } from "./data";
 import { and } from "./text";
 
@@ -61,7 +61,7 @@ export function zeldaPath(
 
 /**
  * Sets the throne room's tapestry and Zelda's drop-off to her being
- * carried and the path's rules (Rules.py:1569-1572): set, not added, so
+ * carried and the path's rules (Rules.py:1573-1576): set, not added, so
  * the rules they had go.
  */
 export function addZeldaPath(
