@@ -1,5 +1,6 @@
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import { OWR_FLIP_SCREENS, owrFlipGroups } from "../door-rando/owr-flips";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
@@ -23,7 +24,6 @@ import {
   OWR_DEFAULTS,
   type OwrPossibleLinks,
   owrDynamicEvents,
-  owrFlipGroups,
   owrMovedExits,
   owrNotesComplete,
   owrNotesFromSpoiler,
@@ -380,7 +380,7 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
   });
 
   it("flips Mixed's screens in their groups, the sanctuary's never with vanilla entrances", () => {
-    const groups = owrFlipGroups(OWR_DATA, {
+    const groups = owrFlipGroups({
       crossed: false,
       mode: "open",
       shuffle: "vanilla",
@@ -399,9 +399,19 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
     expect(of(0x28)?.screens).toEqual([0x28, 0x29]);
     expect(of(0x2c)).toEqual({ canFlip: true, screens: [0x2c] });
     expect(groups.flatMap((g) => g.screens)).toHaveLength(42);
+    // The screens are the fork's own, the light world's and 0x80, 0x81
+    expect(OWR_FLIP_SCREENS).toEqual(
+      [
+        ...new Set(
+          Object.values(overworld?.tiles ?? {}).filter(
+            (s) => s < 0x40 || s >= 0x80,
+          ),
+        ),
+      ].sort((a, b) => a - b),
+    );
     // Crossed, the edges' and special screens stand apart; shuffled
     // whirlpools free theirs; Lite's sanctuary flips but in Inverted
-    const crossed = owrFlipGroups(OWR_DATA, {
+    const crossed = owrFlipGroups({
       crossed: true,
       mode: "open",
       shuffle: "lite",
@@ -415,7 +425,7 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
       screens: [0x13, 0x14],
     });
     expect(
-      owrFlipGroups(OWR_DATA, {
+      owrFlipGroups({
         crossed: true,
         mode: "inverted",
         shuffle: "lite",

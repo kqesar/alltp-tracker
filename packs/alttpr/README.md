@@ -1712,7 +1712,7 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   (`OwrScreens`): each screen's own flip and `is_tile_swapped` (Inverted
   unless Mixed flipped it back, `BaseClasses.py:331-332`), a dark world
   screen its light twin's, a large screen's other ids never flipped
-  (`:1002-1005`). Screens flip in groups (`owrFlipGroups`, a port of
+  (`:1002-1005`). Screens flip in groups (`owrFlipGroups` of `src/door-rando/owr-flips.ts`, which the app reads too, a port of
   `define_tile_groups`, `:971-1056`, for a vanilla layout and no
   customizer): a note on one screen tells its group, and a group that may
   not flip (the sanctuary's while its save point must stay, `can_shuffle_
