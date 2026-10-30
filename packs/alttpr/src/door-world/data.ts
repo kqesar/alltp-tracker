@@ -83,13 +83,14 @@ export interface DrPortal {
 
 /** rules.json, the translation of Rules.py and Bosses.py. */
 export interface DrRules {
+  /** set_big_bomb_rules' cases; none in OWR, whose big bomb is an event. */
   readonly bombShop: {
     readonly spot: string;
     readonly cases: readonly {
       readonly doors: readonly string[];
       readonly req: string;
     }[];
-  };
+  } | null;
   readonly derived: Readonly<
     Record<string, { readonly kind: string; readonly region?: string }>
   >;
@@ -104,6 +105,38 @@ export interface DrRules {
   readonly helpers: Readonly<Record<string, { readonly req: string }>>;
   readonly locations: Readonly<Record<string, DrSpotRule>>;
   readonly newItems: readonly string[];
+}
+
+/** An edge of an overworld screen (OWEdges.py create_owedges). */
+export interface OwrEdge {
+  readonly name: string;
+  readonly screen: number;
+  readonly direction: string;
+  readonly terrain: "land" | "water";
+  /** The same edge of the other world's screen (parallel_links). */
+  readonly parallel?: string;
+  readonly source: string;
+}
+
+/** What the Overworld Randomizer adds to the world (overworld.json). */
+export interface OwrOverworld {
+  /** Each overworld region's screen (OWTileRegions). */
+  readonly tiles: Readonly<Record<string, number>>;
+  readonly edges: readonly OwrEdge[];
+  /** Each flute spot's regions as its screen stands or flipped, its slot. */
+  readonly flute: Readonly<
+    Record<
+      string,
+      { readonly regions: readonly [string, string]; readonly slot: number }
+    >
+  >;
+  readonly bonk: readonly {
+    readonly name: string;
+    readonly region: string;
+    readonly aga: boolean;
+    readonly flag?: { readonly screen: number; readonly mask: number };
+    readonly source: string;
+  }[];
 }
 
 type Table = { readonly line: number; readonly value: unknown };
@@ -127,6 +160,8 @@ const FILES: Readonly<Record<string, string>> = {
 export interface DrData {
   /** Whose release: DR's, or the Overworld Randomizer's on its own DR. */
   readonly flavor: "dr" | "owr";
+  /** The Overworld Randomizer's screens, edges and flute spots. */
+  readonly overworld?: OwrOverworld;
   readonly regions: readonly DrRegion[];
   readonly dungeons: readonly DrDungeon[];
   readonly doors: readonly DrDoor[];
@@ -159,6 +194,7 @@ export function drDataOf(
     readonly doors: unknown;
     readonly rules: unknown;
     readonly tables: readonly unknown[];
+    readonly overworld?: unknown;
   },
 ): DrData {
   const { regions, dungeons } = source.regions as {
@@ -192,6 +228,9 @@ export function drDataOf(
     doors,
     dungeons,
     flavor,
+    ...(source.overworld === undefined
+      ? {}
+      : { overworld: source.overworld as OwrOverworld }),
     pairsOf: (file, name) => {
       const { value } = tableNamed(file, name);
       return (

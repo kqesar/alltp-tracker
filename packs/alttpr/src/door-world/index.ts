@@ -76,6 +76,15 @@ import {
   worldKeys,
 } from "./keys";
 import {
+  isTileSwapped,
+  OWR_DEFAULTS,
+  owrDynamicEvents,
+  owrDynamicFacts,
+  owrMovedExits,
+  owrSettings,
+  owrTerrainRules,
+} from "./overworld";
+import {
   addShuffledDoorRules,
   isShut,
   roomDungeons,
@@ -91,7 +100,7 @@ import {
   type TurtleRockCase,
   turtleRockCase,
 } from "./static";
-import { and, maybeOf, or, readFact } from "./text";
+import { and, maybeOf, or, readFact, readFacts } from "./text";
 
 export type {
   DrConnections,
@@ -251,13 +260,13 @@ interface Readers {
 
 const readersOf = perData((data): Readers => {
   const { events, helpers } = data.rules;
-  const eventRead = new RegExp(`\\b(${Object.keys(events).join("|")})\\b`, "g");
+  // The events, and OWR's events made in code (overworld.ts)
+  const facts = [...Object.keys(events), ...owrDynamicFacts(data)];
+  const eventRead = new RegExp(`\\b(${facts.join("|")})\\b`, "g");
   // The facts a rule reads, each read at maybe too while what gives it is
   // reached at maybe only (facts.ts): the events, the crystal reads
   const factsRead = (req: string): string =>
-    req
-      .replace(eventRead, (event) => readFact(event))
-      .replace(CRYSTAL_READ, (read) => readFact(read));
+    readFacts(req, eventRead).replace(CRYSTAL_READ, (read) => readFact(read));
   const exitRule = (req: string): string =>
     unknownCountRequirement(
       factsRead(req).replace(REACH, (_, id) => readFact(factOf(id))),
@@ -320,6 +329,7 @@ function exitsOf(
 ): DrExit[] {
   const found: DrExit[] = [];
   const { doors } = options;
+  const moved = owrMovedExits(data, mode);
   for (const region of data.regions) {
     for (const name of region.exits) {
       const to = connections.get(name);
@@ -333,7 +343,7 @@ function exitsOf(
           : isShut(door, doors, lobbies));
       found.push({
         ...(blocked ? { blocked } : {}),
-        from: region.name,
+        from: moved.get(name) ?? region.name,
         name,
         req: data.rules.entrances[name]?.req ?? "true",
         to,
@@ -364,6 +374,8 @@ function addBombShopRule(
   mode: DrMode,
   version: number,
 ): void {
+  // OWR's big bomb is an event of its own (the Pyramid Crack's): no case
+  if (data.rules.bombShop === null) return;
   const door = exits.find((e) => e.to === "Big Bomb Shop")?.name;
   const inverted = mode === "inverted";
   const { cases, spot } = data.rules.bombShop;
@@ -571,15 +583,16 @@ function graph(
   /** A location's rule: each crystal read the reach of its node. */
   const locationRule = (req: string) =>
     unknownCountRequirement(
-      req
-        .replace(eventRead, (event) => readFact(event))
-        .replace(CRYSTAL_READ, (_, colour: string, id: string) => {
+      readFacts(req, eventRead).replace(
+        CRYSTAL_READ,
+        (_, colour: string, id: string) => {
           const region = data.regionById.get(id);
           const s = colour === "Blue" ? "blue" : "orange";
           return region !== undefined && nodes.statesOf(region).includes(s)
             ? `reach(${nodes.nodeOf(region, s)})`
             : "false";
-        }),
+        },
+      ),
     );
   const probes = new Map<string, string[]>();
   for (const name of options.probes ?? []) {
@@ -936,8 +949,12 @@ export function drWorld(
 ): DrWorld {
   const data = options.data ?? DR_DATA;
   const { exitRule, helpersReach, loadedRules } = readersOf(data);
-  const all = { ...DR_DEFAULTS, ...settings };
-  const mode = drModeOf(all);
+  const owr = data.flavor === "owr";
+  const mode = drModeOf({ ...DR_DEFAULTS, ...settings });
+  // OWR's rules read the screens' flips and its own options beside DR's
+  const all = owr
+    ? { ...DR_DEFAULTS, ...OWR_DEFAULTS, ...owrSettings(mode), ...settings }
+    : { ...DR_DEFAULTS, ...settings };
   const version = Number(all.drVersion);
   const { doors } = options;
   const noted =
@@ -984,6 +1001,14 @@ export function drWorld(
       "count(triforcePiece, powerStar) >= setting(treasureHunt)",
     );
   }
+  // OWR's farms and the flute's activation (create_farm_locations,
+  // ItemList.py:256-266, :640-700): locations whose events DR sweeps
+  const dynamic = owr ? owrDynamicEvents(data, all) : [];
+  for (const { name, region, req } of dynamic) {
+    const at = data.regionNamed(region).name;
+    added.set(at, [...(added.get(at) ?? []), name]);
+    locations.set(name, req);
+  }
   for (const { name, region } of options.dropsAndPots ?? []) {
     if (locations.has(name)) continue;
     // Throws for a region DR's world does not have
@@ -1002,6 +1027,7 @@ export function drWorld(
       locations.set(name, req.replace(item, rule));
   }
   const marked = markWorlds(data, exits);
+  if (owr) owrTerrainRules(data, exits, marked, mode);
   const derived = {
     ...derivedSettings(data, connections, marked, mode),
     ...(doors === undefined || dungeonOfRoom === undefined
@@ -1098,7 +1124,17 @@ export function drWorld(
   }
   if (isStatic) addStaticKeyRules(data, exits, locations, keys, mode, trCase);
   addBombShopRule(data, exits, mode, version);
-  const bunny = addBunnyRules(data, exits, locations, marked, mode, added);
+  const bunny = addBunnyRules(
+    data,
+    exits,
+    locations,
+    marked,
+    mode,
+    added,
+    owr && isTileSwapped(mode, 0x03)
+      ? ["Death Mountain Return Cave (right)"]
+      : [],
+  );
   const bunnyBodies = [...bunny.values()];
 
   // The events: each a fact once its location is reached. A flood switch
@@ -1149,6 +1185,12 @@ export function drWorld(
       return sweep && id !== undefined ? [{ item, location: id }] : [];
     },
   );
+  const dynamicFacts = sweep
+    ? dynamic.flatMap(({ fact, name }) => {
+        const id = locationIds.get(name);
+        return id === undefined ? [] : [{ item: fact, location: id }];
+      })
+    : [];
   const drops = sweep
     ? keys.forcedDrops.flatMap((d) => {
         const id = locationIds.get(d.location);
@@ -1157,6 +1199,7 @@ export function drWorld(
     : [];
   const facts = [
     ...events,
+    ...dynamicFacts,
     ...drops,
     ...(sweep ? potFacts : []),
     ...crystalFacts,
@@ -1187,9 +1230,11 @@ export function drWorld(
         ...(options.items ?? []),
         ...data.rules.newItems,
         ...Object.keys(data.rules.events),
+        ...owrDynamicFacts(data),
         ...KEY_ITEMS,
         ...[
           ...Object.keys(data.rules.events),
+          ...owrDynamicFacts(data),
           ...keyDropsOf(data).map((d) => d.fact),
           ...crystalItems,
           ...facts.map((f) => f.item),

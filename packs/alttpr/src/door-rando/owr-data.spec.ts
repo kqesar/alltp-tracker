@@ -245,13 +245,19 @@ describe("the Overworld Randomizer's world data (import-dr --owr)", () => {
   it("gives each flute spot its region as the screen stands or flipped", () => {
     const flute = overworld.flute as unknown as Record<
       string,
-      [string, string]
+      { regions: [string, string]; slot: number }
     >;
     expect(Object.keys(flute)).toHaveLength(40);
-    for (const [screen, [light, dark]] of Object.entries(flute)) {
+    for (const [screen, { regions, slot }] of Object.entries(flute)) {
+      const [light, dark] = regions;
       expect(regionNamed.get(light)?.type, screen).toBe("lw");
       expect(regionNamed.get(dark)?.type, screen).toBe("dw");
+      expect(slot, screen).toBeGreaterThanOrEqual(0);
     }
+    // The slots order the spots (sort_flute_spots, FluteShuffle.py:657):
+    // the Desert ledge's is 0x38, below its screen's
+    expect(flute["48"]?.slot).toBe(0x38);
+    expect(flute["3"]?.slot).toBe(0x0b);
     // The vanilla spots (FluteShuffle.py default_flute_connections)
     expect(
       table("source/overworld/FluteShuffle.py", "default_flute_connections")

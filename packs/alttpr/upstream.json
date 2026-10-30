@@ -21,87 +21,87 @@
         {
           "file": "test/dungeons/TestAgahnimsTower.py",
           "fixture": "test/owr-upstream/dungeons/TestAgahnimsTower.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestDarkPalace.py",
           "fixture": "test/owr-upstream/dungeons/TestDarkPalace.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestDesertPalace.py",
           "fixture": "test/owr-upstream/dungeons/TestDesertPalace.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestEasternPalace.py",
           "fixture": "test/owr-upstream/dungeons/TestEasternPalace.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestGanonsTower.py",
           "fixture": "test/owr-upstream/dungeons/TestGanonsTower.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestIcePalace.py",
           "fixture": "test/owr-upstream/dungeons/TestIcePalace.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestMiseryMire.py",
           "fixture": "test/owr-upstream/dungeons/TestMiseryMire.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestSkullWoods.py",
           "fixture": "test/owr-upstream/dungeons/TestSkullWoods.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestSwampPalace.py",
           "fixture": "test/owr-upstream/dungeons/TestSwampPalace.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestThievesTown.py",
           "fixture": "test/owr-upstream/dungeons/TestThievesTown.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/dungeons/TestTowerOfHera.py",
           "fixture": "test/owr-upstream/dungeons/TestTowerOfHera.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedBombRules.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedBombRules.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedDarkWorld.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedDarkWorld.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedDeathMountain.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedDeathMountain.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedEntrances.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedEntrances.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedLightWorld.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedLightWorld.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted/TestInvertedTurtleRock.py",
           "fixture": "test/owr-upstream/inverted/TestInvertedTurtleRock.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/inverted_owg/TestDarkWorld.py",
@@ -146,22 +146,22 @@
         {
           "file": "test/vanilla/TestDarkWorld.py",
           "fixture": "test/owr-upstream/vanilla/TestDarkWorld.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/vanilla/TestDeathMountain.py",
           "fixture": "test/owr-upstream/vanilla/TestDeathMountain.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/vanilla/TestEntrances.py",
           "fixture": "test/owr-upstream/vanilla/TestEntrances.json",
-          "status": "pending"
+          "status": "ported"
         },
         {
           "file": "test/vanilla/TestLightWorld.py",
           "fixture": "test/owr-upstream/vanilla/TestLightWorld.json",
-          "status": "pending"
+          "status": "ported"
         }
       ],
       "version": "0.8.0.2",

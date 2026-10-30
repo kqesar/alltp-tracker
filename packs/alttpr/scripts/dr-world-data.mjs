@@ -975,8 +975,9 @@ const EDGE_NAMES = {
  * - `edges`: each screen edge create_owedges makes (name, screen,
  *   direction, terrain; layout bytes left out) and its parallel in the
  *   other world (parallel_links);
- * - `flute`: each flute spot's screen and its region as the screen stands
- *   or flipped (FluteShuffle.py flute_data: the rest of a row is layout);
+ * - `flute`: each flute spot's screen, its region as the screen stands or
+ *   flipped and its slot, which orders the spots (FluteShuffle.py
+ *   flute_data: the rest of a row is layout);
  * - `bonk`: the bonk drops (Regions.py bonk_prize_table): the region, the
  *   overworld flag (screen, mask: MultiClient.py:978-987 reads
  *   SAVEDATA_START + 0x280 + screen) and whether Agahnim must fall first.
@@ -1058,14 +1059,16 @@ function readOverworld(read) {
       Object.entries(
         /** @type {Record<string, unknown[]>} */ (flute.value),
       ).map(([screen, row]) => {
-        const [regions] = row;
+        const [regions, slot] = row;
         if (
           !Array.isArray(regions) ||
           regions.length !== 2 ||
-          regions.some((r) => typeof r !== "string")
+          regions.some((r) => typeof r !== "string") ||
+          typeof slot !== "number"
         )
           fail(`${FLUTE}:${flute.line}: flute_data's ${screen}`);
-        return [screen, regions];
+        // The slot orders the spots (sort_flute_spots, :655-657)
+        return [screen, { regions, slot }];
       }),
     ),
     source: {

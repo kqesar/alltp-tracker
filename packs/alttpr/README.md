@@ -1557,8 +1557,8 @@ screen's `ow_connections` as it stands and flipped, the edges'
 spots), and `overworld.json`: each overworld region's screen
 (`OWTileRegions`), each screen edge with its direction, terrain and parallel
 in the other world (`create_owedges`, `parallel_links`), each flute spot's
-region as its screen stands or flipped (`flute_data`, the layout bytes left
-out) and the 42 bonk drops (`bonk_prize_table`: region, whether Agahnim must
+region as its screen stands or flipped and its slot, which orders the
+spots (`flute_data`, the layout bytes left out) and the 42 bonk drops (`bonk_prize_table`: region, whether Agahnim must
 fall first, and the overworld flag the game sets, the screen's byte at
 `$7EF280` and the mask, as `MultiClient.py:978-987` reads it; the Good Bee
 Cave's statue has no screen, so no flag). Its pots, enemy drops and shops
@@ -1582,7 +1582,9 @@ is the activated flute alone (its activation an event at Kakariko),
 `has_beaten_aga` waits for Zelda in Standard, `can_collect_bonkdrops`.
 `world.is_tile_swapped(screen)` is the setting `tileSwapped_<screen>`,
 which the world gives (every screen in Inverted, its flip in Mixed);
-`is_atgt_swapped` and `is_bombshop_start` are screens too. Its events come
+`is_atgt_swapped` and `is_bombshop_start` are screens too.
+`set_defeat_dungeon_boss_rule`'s own addition (Thieves' Town's Blind asks
+the maiden unmasked, `Rules.py:161-165`) is read from its body. Its events come
 from `location_events` (`Regions.py`), each boss kill an event of its own
 (`beatBoss_…`, which the dungeons goal counts); `dynamicEvents` lists those
 the world adds at locations of its own: the flute's activation and the
@@ -1603,7 +1605,57 @@ commit apart; 2,898 cases in 29 files (`test/owr-fixtures.spec.ts` counts
 them). Its key layouts' validator and static key tests read its screens and
 are not imported. Each file is listed in `upstream.json`
 (`doorRandomizer.overworld.tests`), `pending` until the fork's world holds
-it.
+it: the vanilla, Inverted and dungeon suites are `ported`; the glitched
+ones (`owg`, `inverted_owg`) stay `pending`, glitched logic being no
+model of the pack's.
+
+**Its world, built** (`src/door-world/` on `OWR_DATA`, `owr-data.ts`, a
+module of its own so only an OWR run loads its JSON): `drWorld(settings,
+{ data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
+fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
+
+- `link_overworld` (`OverworldShuffle.py:21-584`): the mandatory
+  connections, the save-and-quit points by the screens they stand on
+  (Link's House or the Bomb Shop, Sanctuary or the Dark Chapel, the pyramid
+  or the castle's ledge), each screen's links as it stands or flipped
+  (`ow_connections`), the whirlpools, every edge with its vanilla partner,
+  the flute spots in slot order (`fluteSpots`, `FluteShuffle.py:36-50,
+  655-657`). Inverted flips every screen, any other mode none
+  (`isTileSwapped`): Mixed's flips are not read yet.
+- `link_entrances_new`'s vanilla path (`EntranceShuffle2.py:48-200`), which
+  has no Inverted swap table: Agahnim's and Ganon's towers trade doors once
+  both screens flip, the pyramid's door and hole stand on the castle's
+  ledge once its screen does (`relocate_pyramid_entrances`,
+  `owrMovedExits`), the Bomb Shop's and Dark Chapel's ways out lead to their
+  own areas where Link starts there. OWR's own entrance shuffles (District,
+  Swapped) are not modelled yet: `notedConnections` refuses an OWR world.
+- `ow_terrain_rules` (`owrTerrainRules`, `Rules.py:1417-1429`), the
+  activated flute (an event at Kakariko while its screen stands, a fact
+  `ocarinaActivated`; in Inverted the recorded flute must be the activated
+  one), the farms of `dynamicEvents` (`owrDynamicEvents`), the screens'
+  settings (`owrSettings`) and the fork's options at their defaults
+  (`OWR_DEFAULTS`: bonk drops unshuffled, the bomb check not overridden: a
+  real run farms or holds its bombs; only the contract overrides it, as the
+  fork's harness does), the Death Mountain Return Cave a bunny cannot cross
+  once its screen flips (`Rules.py:2002-2008`). A count of events (the
+  dungeons goal's ten boss kills) reads each at maybe too (`readFacts`).
+- Bunny rules: DR's port over the fork's lists. The fork walks its paths
+  under a Pareto front of their requirements' atoms
+  (`keep_better_requirement`, `source/logic/AccessRule.py:472-491`), a
+  pruning meant to drop only paths no easier than one kept; the port keeps
+  them, so where the atoms judge exactly the rule is the same, and the
+  vanilla and Inverted suites hold. Its door kinds a bunny cannot pass
+  (`Rules.py:2024-2029`) are not read, as for DR.
+
+`test/owr-contract.spec.ts` holds the ported files in the fork's harness
+(drVersion 157, `overrideBombCheck` as the fixture records it); a case it
+answers otherwise is listed in `test/owr-stale.ts` with why: the dungeon
+suites' 181, the same as DR's for the same reasons at the fork's lines, and
+in Inverted the cases written for vt's Inverted layout (Old Man Cave behind
+Bumper Cave's door, a bomb shop in the light world, the towers' old names)
+or holding the plain Ocarina where the fork asks the activated one (each
+such case is asserted to hold with it). `src/door-world/owr-world.spec.ts`
+holds the links, the flute spots, the screens and the rules above.
 
 ## The entrance randomizer's tables
 

@@ -21,3 +21,28 @@ export const maybeOf = (fact: string): string => `${fact}__maybe`;
 /** A fact as a rule reads it: held, or maybe while reached at maybe. */
 export const readFact = (fact: string): string =>
   `(${fact} | ${maybeOf(fact)} & maybe)`;
+
+/**
+ * A rule's facts as it reads them (readFact): each fact `read` matches,
+ * and a count of facts (OWR's dungeons goal, `count(beatBoss_…) >= 10`)
+ * held at its number, or at maybe with those reached at maybe counted.
+ */
+export function readFacts(req: string, read: RegExp): string {
+  const counted = req.replace(
+    /count\(([^()]*)\) >= (\d+)/g,
+    (whole, args: string, n: string) => {
+      const names = args.split(",").map((a) => a.trim());
+      if (!names.some((name) => new RegExp(`^${read.source}$`).test(name)))
+        return whole;
+      const sure = `count(${names.join(", ")}) >= ${n}`;
+      const unsure = `count(${[...names, ...names.map(maybeOf)].join(", ")}) >= ${n}`;
+      return `\u0000${or(sure, and(unsure, "maybe"))}\u0000`;
+    },
+  );
+  return counted
+    .split("\u0000")
+    .map((part, i) =>
+      i % 2 === 1 ? part : part.replace(read, (fact) => readFact(fact)),
+    )
+    .join("");
+}

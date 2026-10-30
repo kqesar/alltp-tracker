@@ -37,9 +37,12 @@ const PROGRESSIVE: Readonly<Record<string, string>> = {
 };
 
 /** The events a test may hold by name, by the world's id. */
-const EVENTS = new Map(
-  Object.entries(rules.events).map(([id, { item }]) => [item, id]),
-);
+export const eventsOf = (
+  events: Readonly<Record<string, { readonly item: string }>>,
+): ReadonlyMap<string, string> =>
+  new Map(Object.entries(events).map(([id, { item }]) => [item, id]));
+
+const EVENTS = eventsOf(rules.events);
 
 /** Items no rule reads, or none of the pack's state holds. */
 const READ_BY_NONE = /^(Never in logic|(Map|Compass) \(.+\))$/;
@@ -51,7 +54,10 @@ const READ_BY_NONE = /^(Never in logic|(Map|Compass) \(.+\))$/;
  * starting hearts held as heart containers (BaseClasses.py:1171-1179), the
  * medallions the harness asks.
  */
-export function collect(names: readonly string[]): State {
+export function collect(
+  names: readonly string[],
+  events: ReadonlyMap<string, string> = EVENTS,
+): State {
   const state: Record<string, number> = {
     heartContainer: 3,
     // build_vanilla_world: required_medallions Ether, Quake (TestBase.py:60)
@@ -68,7 +74,7 @@ export function collect(names: readonly string[]): State {
     const item = (
       ITEMS as Readonly<Record<string, readonly [string, number?]>>
     )[name];
-    const event = EVENTS.get(name);
+    const event = events.get(name);
     if (PROGRESSIVE[name] !== undefined) add(PROGRESSIVE[name]);
     else if (name.startsWith("Bottle")) add("bottle");
     else if (/^(Boss|Sanctuary) Heart Container$/.test(name))
@@ -92,10 +98,8 @@ export function collect(names: readonly string[]): State {
  * (`self.world.itempool`): the open pool, the dungeons' items and the
  * prizes (pool.json, cited by line).
  */
-export const POOL: readonly string[] = (() => {
-  const pool = JSON.parse(
-    readFileSync(join(PACK_DIR, "test/dr-upstream/pool.json"), "utf8"),
-  ) as {
+export const poolOf = (path: string): readonly string[] => {
+  const pool = JSON.parse(readFileSync(join(PACK_DIR, path), "utf8")) as {
     progression: readonly { items: readonly string[] }[];
     dungeonItems: { items: readonly string[] };
     prizes: { items: readonly string[] };
@@ -105,16 +109,19 @@ export const POOL: readonly string[] = (() => {
     ...pool.dungeonItems.items,
     ...pool.prizes.items,
   ];
-})();
+};
+
+export const POOL: readonly string[] = poolOf("test/dr-upstream/pool.json");
 
 /** The items of a case: those named, or the pool but some, then those. */
 export function itemsOf(
   items: readonly string[],
   allExcept: readonly string[] | undefined,
+  pool: readonly string[] = POOL,
 ): readonly string[] {
   if (allExcept === undefined || allExcept.length === 0) return items;
   return [
-    ...POOL.filter(
+    ...pool.filter(
       (name) =>
         !allExcept.includes(name) &&
         !(name.startsWith("Bottle") && allExcept.includes("AnyBottle")),

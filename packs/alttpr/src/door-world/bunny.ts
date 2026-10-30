@@ -56,6 +56,9 @@ const PEARL = "moonPearl";
  * @param locations - Each location's rule, by name
  * @param added - The locations added to regions beside their own (the
  *   run's pots and drops, Murahdahla), by region
+ * @param moreCaves - Caves a bunny cannot cross beside the list's: OWR's
+ *   Death Mountain Return Cave once its screen flips with vanilla-like
+ *   entrances (owr:Rules.py:2002-2008)
  */
 export function addBunnyRules(
   data: DrData,
@@ -67,6 +70,7 @@ export function addBunnyRules(
   },
   mode: DrMode,
   added: ReadonlyMap<string, readonly string[]> = new Map(),
+  moreCaves: readonly string[] = [],
 ): Map<string, string> {
   /** The rules found, each a helper read by name, in the order found. */
   const helpers = new Map<string, string>();
@@ -126,7 +130,7 @@ export function addBunnyRules(
   };
 
   // The caves a bunny cannot cross (:2163-2169)
-  for (const name of lists.impassableCaves.value) {
+  for (const name of [...lists.impassableCaves.value, ...moreCaves]) {
     if (!isBunny(name)) continue;
     const rule = ruleToAdd(name);
     for (const exit of outOf.get(name) ?? []) add(exit, rule);

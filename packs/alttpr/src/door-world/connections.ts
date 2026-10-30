@@ -23,6 +23,7 @@ import {
   isShuffledDoor,
   portalId,
 } from "./doors";
+import { linkOwrEntrances, linkOwrOverworld } from "./overworld";
 
 /** Where each exit leads, by DR's names: an exit to a region. */
 export type DrConnections = ReadonlyMap<string, string>;
@@ -324,7 +325,8 @@ export const REMOVED_EXITS: ReadonlySet<string> = new Set([
 
 /**
  * The vanilla world's connections for a mode: every exit DR links, by
- * name, to the region it leads to.
+ * name, to the region it leads to; for the Overworld Randomizer's data,
+ * its own overworld and entrances (overworld.ts), the doors as DR's.
  * @param version - The DR release the seed was built by, as its ROM title's
  *   digits (157 for 1.5.7), 156 for 1.5.6 or an older or unknown one
  */
@@ -335,8 +337,13 @@ export function vanillaConnections(
   doors?: DrNotedDoors,
 ): DrConnections {
   const c = new Map<string, string>();
-  linkOverworld(data, c, mode);
-  linkEntrances(data, c, mode, version);
+  if (data.flavor === "owr") {
+    linkOwrOverworld(data, c, mode);
+    linkOwrEntrances(data, c, mode);
+  } else {
+    linkOverworld(data, c, mode);
+    linkEntrances(data, c, mode, version);
+  }
   linkDoors(data, c, doors);
   removeExits(c, doors);
   return c;
@@ -384,6 +391,10 @@ export function notedConnections(
   version = 156,
   doors?: DrNotedDoors,
 ): DrNotedConnections {
+  // OWR's shuffled entrances (its own pools, District and Swapped) are
+  // not modelled yet
+  if (data.flavor === "owr")
+    throw new RangeError("No noted entrances of the Overworld Randomizer");
   const c = new Map<string, string>();
   linkOverworld(data, c, mode);
   const moved = drShuffled(entrances.shuffle, entrances.pool);

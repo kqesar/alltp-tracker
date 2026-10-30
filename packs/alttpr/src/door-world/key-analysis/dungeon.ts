@@ -16,6 +16,7 @@ import {
 } from "../connections";
 import type { DrData, DrMode } from "../data";
 import { keyDropsOf, UGLY_SMALLS } from "../keys";
+import { owrMovedExits } from "../overworld";
 
 /** DR's dungeons, in the order create_dungeons lists them (Dungeons.py:30). */
 export const DR_DUNGEON_ORDER: readonly string[] = [
@@ -297,7 +298,12 @@ export function rstrip(text: string, chars: string): string {
 
 /** The exits of each region, the dynamic ones after the static. */
 function exitsByRegion(data: DrData, mode: DrMode): Map<string, string[]> {
-  const exits = new Map(data.regions.map((r) => [r.name, [...r.exits]]));
+  // OWR's pyramid door and hole on the castle's ledge once its screen flips
+  const moved = owrMovedExits(data, mode);
+  const exits = new Map(
+    data.regions.map((r) => [r.name, r.exits.filter((e) => !moved.has(e))]),
+  );
+  for (const [exit, region] of moved) exits.get(region)?.push(exit);
   for (const exit of dynamicExits(data, mode))
     exits.get(exit.from)?.push(exit.name);
   return exits;
