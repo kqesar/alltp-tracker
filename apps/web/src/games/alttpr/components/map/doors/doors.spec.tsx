@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import DoorsPanel, {
   dataOf,
 } from "@/games/alttpr/components/map/doors/DoorsPanel";
@@ -16,6 +16,12 @@ const run = (change: Partial<RunSettings>) =>
 const store = () => useGameStore.getState();
 
 describe("the Doors tab", () => {
+  // Each release's world data loads on demand (some 1.2 MB each): loaded
+  // once before the tests, so none waits on it under a slow run
+  beforeAll(async () => {
+    await Promise.all([dataOf("dr"), dataOf("owr")]);
+  }, 60_000);
+
   beforeEach(() => {
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
