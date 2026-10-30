@@ -37,6 +37,12 @@ describe("a Door Randomizer run's solve", () => {
       "keysanity, key drops shuffled",
       { ...DR, dropShuffle: "keys", dungeonItems: "full", pottery: "keys" },
     ],
+    // The heaviest world: every pot (lottery) and every enemy's drop
+    // (underworld) joins it, about 1,500 locations more
+    [
+      "every pot and every enemy",
+      { ...DR, dropShuffle: "underworld", pottery: "lottery" },
+    ],
   ])(
     "stays within the budget along a whole game: %s",
     (_name, settings) => {
