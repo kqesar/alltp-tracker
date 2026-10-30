@@ -306,6 +306,42 @@ describe("a Door Randomizer log", () => {
     expect(useReviewStore.getState().review).toBeNull();
   });
 
+  it("says a DR seed's waits are not shown while a setting is not modelled", async () => {
+    // The same seed with its dungeon items in their dungeons and its
+    // enemies shuffled, which DR's world does not model
+    const text = doorSpoilerText(SEED)
+      .replace(
+        "Map shuffle:                     Yes",
+        "Map shuffle:                     No",
+      )
+      .replace(
+        "Compass shuffle:                 Yes",
+        "Compass shuffle:                 No",
+      )
+      .replace(
+        "Small Key shuffle:               wild",
+        "Small Key shuffle:               none",
+      )
+      .replace(
+        "Big Key shuffle:                 Yes",
+        "Big Key shuffle:                 No",
+      )
+      .replace(
+        "Enemy shuffle:                   none",
+        "Enemy shuffle:                   shuffled",
+      );
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED, text));
+    expect(settings.enemyShuffle).toBe("shuffled");
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED, text));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
+      "a mode or a Door or Overworld Randomizer setting it does not model, which the map's note names",
+    );
+  });
+
   it("reads DR's static key logic in DR's world, refusing it no more", async () => {
     // The same seed with its dungeon items kept in their dungeons, which
     // would otherwise be the first thing said (keys wild)
