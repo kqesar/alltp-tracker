@@ -7,6 +7,9 @@ import connectionData from "../door-rando/owr/connections.json" with {
   type: "json",
 };
 import doorData from "../door-rando/owr/doors.json" with { type: "json" };
+import entranceData from "../door-rando/owr/entrances.json" with {
+  type: "json",
+};
 import overworldData from "../door-rando/owr/overworld.json" with {
   type: "json",
 };
@@ -21,5 +24,5 @@ export const OWR_DATA: DrData = drDataOf("owr", {
   overworld: { ...overworldData, bonk: bonkData.drops },
   regions: regionData,
   rules: ruleData,
-  tables: [connectionData],
+  tables: [connectionData, entranceData],
 });

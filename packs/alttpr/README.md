@@ -1593,8 +1593,11 @@ run): `regions.json` and `doors.json` as DR's, `connections.json` with the
 fork's own tables (`OverworldShuffle.py`'s `mandatory_connections`, each
 screen's `ow_connections` as it stands and flipped, the edges'
 `default_connections`, the mirror's, `default_whirlpool_connections`;
-`EntranceShuffle2.py`'s vanilla maps; `FluteShuffle.py`'s eight vanilla
-spots), and `overworld.json`: each overworld region's screen
+`EntranceShuffle2.py`'s mandatory and default connections; `FluteShuffle.py`'s
+eight vanilla spots), `entrances.json` with the tables its entrance pools read
+(`EntranceShuffle2.py`'s vanilla maps and `modes`), apart as DR's
+`world/entrances.json` so the entrance assistant loads them without the
+fork's world, and `overworld.json`: each overworld region's screen
 (`OWTileRegions`), each screen edge with its direction, terrain and parallel
 in the other world (`create_owedges`, `parallel_links`), each flute spot's
 region as its screen stands or flipped and its slot, which orders the
