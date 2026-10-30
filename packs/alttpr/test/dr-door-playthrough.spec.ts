@@ -16,10 +16,8 @@
 //   with the spheres before it, but where the reviewed list says why not,
 //   and no location of a later sphere `yes` too early.
 import { describe, expect, it } from "vitest";
-import { DR_LOCATIONS } from "../src/door-rando/locations";
 import { DR_DATA } from "../src/door-world/dr-data";
 import {
-  type DoorShuffleSettings,
   doorNotesFromSpoiler,
   doorTargets,
   drWorld,
@@ -27,9 +25,16 @@ import {
   kindShuffled,
   lobbyDoors,
 } from "../src/door-world/index";
-import { keyDropsOf } from "../src/door-world/keys";
 import { solveFacts } from "../src/facts";
 import { type Medallion, medallionFacts } from "../src/medallions";
+import {
+  doorLog,
+  doorNotesOf,
+  doorShuffleOf,
+  EVERY_KEY,
+  plain,
+  withoutDoors,
+} from "./dr-doors";
 import {
   early,
   entranceNotesOf,
@@ -50,114 +55,25 @@ const INDEX = JSON.parse(read("index.json")) as {
 
 type Json = Readonly<Record<string, unknown>>;
 
-/** A location's name without the dungeon a crossed log adds (`@ Dungeon`). */
-const plain = (name: string) => name.replace(/ @ [^@]+$/, "");
+/** A log's JSON, its locations named as DR's world names them. */
+const logOf = (json: Json): Log =>
+  doorLog(jsonLog(withoutDoors(json)), DR_DATA);
 
-/** A log's JSON, its door sections aside (jsonLog reads the rest). */
-const withoutDoors = (json: Json): Json => {
-  const { DoorTypes: _types, Doors: _doors, Lobbies: _lobbies, ...rest } = json;
-  return rest;
-};
-
-/**
- * The vanilla drops whose keys a log forces (its dropshuffle and pottery
- * leave them): their keys are the world's facts (keys.ts), which a player
- * does not record, so the walk holds no item for them.
- */
-const forcedDrops = (meta: Log["meta"]): ReadonlySet<string> =>
-  new Set(
-    keyDropsOf(DR_DATA)
-      .filter((d) =>
-        d.pot
-          ? ["none", "cave"].includes(String(meta.pottery ?? "none"))
-          : String(meta.dropshuffle ?? "none") === "none",
-      )
-      .map((d) => d.location),
+/** A log's door notes, its dungeons' keys counted (dr-doors.ts). */
+const notesOf = (json: Json, log: Log) =>
+  doorNotesOf(
+    json,
+    log.meta,
+    DR_DATA,
+    (notes, settings) =>
+      drWorld(settingsOf(log.meta), {
+        data: DR_DATA,
+        doors: { notes, settings },
+      }).roomDungeons,
   );
 
-/** A log's JSON, its locations named as DR's world names them. */
-function logOf(json: Json): Log {
-  const log = jsonLog(withoutDoors(json));
-  const forced = forcedDrops(log.meta);
-  const strip = (section: Readonly<Record<string, string>>) =>
-    Object.fromEntries(
-      Object.entries(section).map(([k, v]) => [
-        plain(k),
-        forced.has(plain(k)) ? "Never in logic" : v,
-      ]),
-    );
-  return {
-    ...log,
-    Locations: strip(log.Locations),
-    playthrough: Object.fromEntries(
-      Object.entries(log.playthrough).map(([k, sphere]) => [
-        k,
-        Array.isArray(sphere)
-          ? sphere
-          : strip(sphere as Record<string, string>),
-      ]),
-    ),
-  };
-}
-
 /** A log's door shuffle. */
-const shuffleOf = (meta: Log["meta"]): DoorShuffleSettings => ({
-  decoupled: flag(meta.decoupledoors),
-  intensity: Number(meta.intensity) as 1 | 2 | 3,
-  shuffle: meta.door_shuffle as DoorShuffleSettings["shuffle"],
-  trapMode: meta.trap_door_mode as DoorShuffleSettings["trapMode"],
-});
-
-/** The dungeons by the word DR's items name them with. */
-const KEY_NAMES: Readonly<Record<string, string>> = {
-  "Agahnims Tower": "Agahnims Tower",
-  "Desert Palace": "Desert Palace",
-  "Eastern Palace": "Eastern Palace",
-  "Ganons Tower": "Ganons Tower",
-  "Hyrule Castle": "Escape",
-  "Ice Palace": "Ice Palace",
-  "Misery Mire": "Misery Mire",
-  "Palace of Darkness": "Palace of Darkness",
-  "Skull Woods": "Skull Woods",
-  "Swamp Palace": "Swamp Palace",
-  "Thieves Town": "Thieves Town",
-  "Tower of Hera": "Tower of Hera",
-  "Turtle Rock": "Turtle Rock",
-};
-
-/**
- * A log's door notes, and each dungeon's small keys as its counter shows
- * them: its chests' (the log's locations) and the forced drops its rooms
- * hold (update_forced_keys, DoorShuffle.py:1039-1050).
- */
-function notesOf(json: Json, log: Log) {
-  const settings = shuffleOf(log.meta);
-  const notes = doorNotesFromSpoiler(json, settings, DR_DATA);
-  const rooms =
-    drWorld(settingsOf(log.meta), { data: DR_DATA, doors: { notes, settings } })
-      .roomDungeons ?? new Map<string, string>();
-  const chests = Object.values(jsonLog(withoutDoors(json)).Locations);
-  const forced = forcedDrops(log.meta);
-  const keys: Record<string, number> = {};
-  for (const [dungeon, word] of Object.entries(KEY_NAMES))
-    keys[dungeon] =
-      chests.filter((item) => item === `Small Key (${word})`).length +
-      keyDropsOf(DR_DATA).filter(
-        (d) =>
-          !d.big &&
-          forced.has(d.location) &&
-          rooms.get(REGION_OF.get(d.location) ?? "") === dungeon,
-      ).length;
-  return { notes: { ...notes, keys }, settings };
-}
-
-/** The region of each DR location (its own and its key drops). */
-const REGION_OF: ReadonlyMap<string, string> = new Map([
-  ...DR_DATA.regions.flatMap((r) =>
-    r.locations.map((l) => [l, r.name] as const),
-  ),
-  ...DR_LOCATIONS.map((l) => [l.name, l.region] as const),
-]);
+const shuffleOf = doorShuffleOf;
 
 /** The world's settings for a log's header. */
 const settingsOf = (meta: Log["meta"]) => ({
@@ -268,12 +184,6 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     "7:Misery Mire - Prize": "maybe",
   },
 };
-
-/** Every key and big key DR's items name, thirty of each small key. */
-const EVERY_KEY = Object.values(KEY_NAMES).flatMap((word) => [
-  ...Array.from({ length: 30 }, () => `Small Key (${word})`),
-  `Big Key (${word})`,
-]);
 
 describe("DR's world on shuffled doors against real seeds", () => {
   const logs = Object.keys(INDEX.logs);
