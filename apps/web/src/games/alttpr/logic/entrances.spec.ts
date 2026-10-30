@@ -186,6 +186,11 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      owMixed: false as boolean,
+      owWhirlpool: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
@@ -209,6 +214,10 @@ describe("the entrance assistant's model", () => {
       "big-bomb-shop",
     );
     expect(ids({ doorEntrances: "district", owMixed: true })).toEqual(
+      expect.arrayContaining(["links-house", "big-bomb-shop"]),
+    );
+    // Mixed not known: it may have flipped it too
+    expect(ids({ doorEntrances: "district", owMixed: undefined })).toEqual(
       expect.arrayContaining(["links-house", "big-bomb-shop"]),
     );
     expect(ids({ doorEntrances: "district" })).not.toContain("tavern-north");

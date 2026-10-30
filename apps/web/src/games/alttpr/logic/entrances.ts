@@ -50,9 +50,12 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   if (door !== undefined) {
     const read = doorPoolSettingsOf(settings);
     // The fork's start house is the Big Bomb Shop where its screen flips
-    // (is_bombshop_start): Inverted's, not known once Mixed may flip it
+    // (is_bombshop_start): Inverted's, not known once Mixed may flip it,
+    // nor while an OWR run's Mixed is not known
     const bombShopStart =
-      settings.owMixed === true ? undefined : read.mode === "inverted";
+      settings.randomizer === "owr" && settings.owMixed !== false
+        ? undefined
+        : read.mode === "inverted";
     const key = JSON.stringify([
       door,
       read,

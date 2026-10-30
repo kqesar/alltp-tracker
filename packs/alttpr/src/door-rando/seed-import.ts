@@ -234,14 +234,23 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   if (!("ow_layout" in meta)) return exact;
   const followers = flagOf(meta.shuffle_followers);
   const customGoals = goalsSet(meta.custom_goals);
+  // Each shuffle the fork's meta writes (BaseClasses.py:3122-3131 at
+  // 0.8.0.2): one it does not name is not known, never off
+  const bonkDrops = flagOf(meta.bonk_drops);
+  const mixed = flagOf(meta.ow_mixed);
+  const whirlpool = flagOf(meta.ow_whirlpool);
   const versions = isRecord(meta.versions) ? meta.versions : {};
   const version = versions.Overworld;
   return {
     ...exact,
     overworld: {
-      bonkDrops: flagOf(meta.bonk_drops) ?? false,
-      crossed: String(meta.ow_crossed ?? "none"),
-      fluteShuffle: String(meta.ow_fluteshuffle ?? "vanilla"),
+      ...(bonkDrops === null ? {} : { bonkDrops }),
+      ...(typeof meta.ow_crossed === "string"
+        ? { crossed: meta.ow_crossed }
+        : {}),
+      ...(typeof meta.ow_fluteshuffle === "string"
+        ? { fluteShuffle: meta.ow_fluteshuffle }
+        : {}),
       // Each moves what the fork's rules read: a prize becomes an item
       // placed elsewhere (ItemList.py:786), a follower's quest a location of
       // its own (ItemList.py:1740-1745, BaseClasses.py:1751). Where meta
@@ -254,11 +263,11 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       // The fork's release, whose rules differ from one to the next
       ...(typeof version === "string" ? { version } : {}),
       layout: String(meta.ow_layout),
-      mixed: flagOf(meta.ow_mixed) ?? false,
+      ...(mixed === null ? {} : { mixed }),
       ...(typeof meta.prizeshuffle === "string"
         ? { prizeShuffle: meta.prizeshuffle }
         : {}),
-      whirlpool: flagOf(meta.ow_whirlpool) ?? false,
+      ...(whirlpool === null ? {} : { whirlpool }),
     },
   };
 };

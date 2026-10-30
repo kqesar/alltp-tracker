@@ -144,6 +144,16 @@ export type DoorRunSettings = {
   takeAny?: TakeAny;
   enemyShuffle?: EnemyShuffle;
   doorEntrances?: DoorEntrances;
+  /**
+   * OWR's overworld shuffles and bonk drops, as the seed states them (a
+   * spoiler's meta names each, a ROM's fork table each kind): unset
+   * (`DOOR_UNSET`), not known, never off. DR itself has none, so a DR run
+   * reads each unset as off; an OWR run's layout, crossed overworld,
+   * Mixed, whirlpools or flute spots unset is a cause of `doorReasons`,
+   * and its bonk drops unset read as shuffled in the fork's world (no bonk
+   * gives farmable bombs, owr:ItemList.py:731-734), their places not
+   * listed.
+   */
   owLayout?: OverworldLayout;
   owCrossed?: OverworldCrossed;
   owMixed?: boolean;
@@ -216,8 +226,9 @@ export type DoorSetting = keyof DoorRunSettings;
  * The DR settings a run may leave unset, which no default stands for: what
  * a ROM may not state and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
- * move, the doors read as decoupled, and the bomb bag and OWR's prize and
- * follower shuffles and custom goals are causes of `doorReasons`.
+ * move, the doors read as decoupled, and the bomb bag, OWR's release, its
+ * overworld shuffles, its prize and follower shuffles and custom goals are
+ * causes of `doorReasons` (OWR's bonk drops read as shuffled).
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
@@ -229,6 +240,12 @@ export const DOOR_UNSET = [
   "bombBag",
   "customGoals",
   "owrVersion",
+  "owLayout",
+  "owCrossed",
+  "owMixed",
+  "owWhirlpool",
+  "owFluteShuffle",
+  "bonkDrops",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -242,18 +259,12 @@ export type DoorSettings = Required<
 
 /** DR's defaults (args.json): what an absent field of a DR run means. */
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
-  bonkDrops: false,
   doorShuffle: "vanilla",
   doorVersion: "1.5.6",
   dropShuffle: "none",
   enemyShuffle: "none",
   keyLogic: "partial",
   openPyramid: "auto",
-  owCrossed: "none",
-  owFluteShuffle: "vanilla",
-  owLayout: "vanilla",
-  owMixed: false,
-  owWhirlpool: false,
   potShuffle: false,
   pottery: "none",
   restrictBossItems: "none",
@@ -766,23 +777,35 @@ export const doorReasons = (
   // rolled, so no reading of its logic holds
   if (door.keyLogic === "static" && keyDropsShuffled(door))
     reasons.push("DR's static key logic with shuffled key drops");
-  if (door.owLayout !== "vanilla") {
+  // An OWR run's overworld not stated: any of its shuffles may be on, so
+  // no vanilla link holds (DR itself has none: unset reads as none)
+  if (
+    door.randomizer === "owr" &&
+    OVERWORLD_SHUFFLES.some((key) => door[key] === undefined)
+  )
+    reasons.push(OVERWORLD_NOT_KNOWN);
+  if (door.owLayout !== undefined && door.owLayout !== "vanilla") {
     reasons.push(
       `the ${doorValueText("owLayout", door.owLayout)} overworld layout`,
     );
   }
   // An OWR run's crossed edges are linked as noted (`owrNotesOf`), Polar's
   // none without Mixed; DR itself crosses none
-  if (door.owCrossed !== "none" && door.randomizer !== "owr")
+  if (
+    door.owCrossed !== undefined &&
+    door.owCrossed !== "none" &&
+    door.randomizer !== "owr"
+  )
     reasons.push("a crossed overworld");
   // An OWR run's flips are linked as noted (`owrNotesOf`); DR has none
-  if (door.owMixed && door.randomizer !== "owr")
+  if (door.owMixed === true && door.randomizer !== "owr")
     reasons.push("a mixed overworld");
   // Shuffled whirlpools and moved flute spots: an OWR run's world links
   // them as noted (`owrNotesOf`); DR itself has neither
   if (door.randomizer !== "owr") {
-    if (door.owWhirlpool) reasons.push("shuffled whirlpools");
-    if (door.owFluteShuffle !== "vanilla") reasons.push("shuffled flute spots");
+    if (door.owWhirlpool === true) reasons.push("shuffled whirlpools");
+    if (door.owFluteShuffle !== undefined && door.owFluteShuffle !== "vanilla")
+      reasons.push("shuffled flute spots");
   }
   // A prize an item placed elsewhere, a follower's quest a location: the
   // fork's world reads neither (ItemList.py:786, :1740-1745); not known,
@@ -807,6 +830,19 @@ export const doorReasons = (
   }
   return reasons;
 };
+
+/** OWR's overworld shuffles: unset in an OWR run, a cause of `doorReasons`. */
+const OVERWORLD_SHUFFLES = [
+  "owLayout",
+  "owCrossed",
+  "owMixed",
+  "owWhirlpool",
+  "owFluteShuffle",
+] as const satisfies readonly DoorSetting[];
+
+/** The cause `doorReasons` gives while an OWR run's overworld is unset. */
+export const OVERWORLD_NOT_KNOWN =
+  "the overworld shuffles not known yet (set them in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's release is unset. */
 export const OWR_VERSION_NOT_KNOWN =
@@ -859,7 +895,7 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
 /** Whether a run shuffles the Overworld Randomizer's bonk drops. */
 export const bonkDropsOf = (settings: DoorRunSettings): boolean => {
   const door = doorOf(settings);
-  return door?.randomizer === "owr" && door.bonkDrops;
+  return door?.randomizer === "owr" && door.bonkDrops === true;
 };
 
 /** What decides a DR run's locations, as the pack takes it. */
@@ -1106,6 +1142,16 @@ export const doorFromSeed = (
       )
         ? (value as DoorSettings[K])
         : own[key];
+    // An OWR shuffle the meta names with a value the tracker does not know:
+    // not known, never the run's own (an older fork's word, a newer one's)
+    const named = <K extends DoorSetting>(key: K, value: unknown) =>
+      value === undefined
+        ? own[key]
+        : (DOOR_OPTIONS[key] as readonly (readonly [unknown, string])[]).some(
+              ([known]) => known === value,
+            )
+          ? (value as DoorSettings[K])
+          : undefined;
     const ow = exact.overworld;
     return withoutDefaults({
       ...own,
@@ -1156,13 +1202,13 @@ export const doorFromSeed = (
       ...(ow === undefined
         ? {}
         : {
-            bonkDrops: ow.bonkDrops,
+            bonkDrops: ow.bonkDrops ?? own.bonkDrops,
             customGoals: ow.customGoals ?? own.customGoals,
-            owCrossed: option("owCrossed", ow.crossed),
-            owFluteShuffle: option("owFluteShuffle", ow.fluteShuffle),
-            owLayout: option("owLayout", ow.layout),
-            owMixed: ow.mixed,
-            owWhirlpool: ow.whirlpool,
+            owCrossed: named("owCrossed", ow.crossed),
+            owFluteShuffle: named("owFluteShuffle", ow.fluteShuffle),
+            owLayout: named("owLayout", ow.layout),
+            owMixed: ow.mixed ?? own.owMixed,
+            owWhirlpool: ow.whirlpool ?? own.owWhirlpool,
             prizeShuffle: option("prizeShuffle", ow.prizeShuffle),
             shuffleFollowers: ow.followers ?? own.shuffleFollowers,
           }),
@@ -1207,12 +1253,20 @@ export const doorFromSeed = (
     door.owWhirlpool = stated(ow.whirlpool, door.owWhirlpool);
     if (crossed !== undefined) {
       door.owCrossed = crossed
-        ? kept(door.owCrossed, ["grouped", "unrestricted"], "unrestricted")
-        : kept(door.owCrossed, ["polar"], "none");
+        ? kept<OverworldCrossed>(
+            door.owCrossed ?? "unrestricted",
+            ["grouped", "unrestricted"],
+            "unrestricted",
+          )
+        : kept<OverworldCrossed>(door.owCrossed ?? "none", ["polar"], "none");
     }
     if (flute !== undefined) {
       door.owFluteShuffle = flute
-        ? kept(door.owFluteShuffle, ["balanced", "random"], "random")
+        ? kept<FluteShuffle>(
+            door.owFluteShuffle ?? "random",
+            ["balanced", "random"],
+            "random",
+          )
         : "vanilla";
     }
     door.shuffleFollowers = stated(ow.followers, door.shuffleFollowers);
@@ -1335,7 +1389,7 @@ export const whirlpoolTargetsOf = (
   const others = OWR_WHIRLPOOLS.filter((other) => other !== name);
   const apart =
     door !== null &&
-    !door.owMixed &&
+    door.owMixed === false &&
     (door.owCrossed === "none" || door.owCrossed === "polar");
   if (!apart) return others;
   const dark = OWR_DARK_WHIRLPOOLS.has(name);
@@ -1382,7 +1436,14 @@ export const forcedWhirlpoolOf = (
   flips?: OverworldNotes["flips"],
 ): string | undefined => {
   const door = doorOf(settings);
-  if (door === null || !door.owWhirlpool) return undefined;
+  // Not known how the overworld is crossed or flipped: no pair is forced
+  if (
+    door === null ||
+    door.owWhirlpool !== true ||
+    door.owMixed === undefined ||
+    door.owCrossed === undefined
+  )
+    return undefined;
   if (door.owMixed && door.owCrossed === "polar")
     return OWR_DARK_WHIRLPOOLS.has(name)
       ? [...OWR_DARK_WHIRLPOOLS].find((other) => other !== name)
@@ -1501,6 +1562,10 @@ export const OWR_CROSSINGS: readonly (readonly [string, string])[] = [
 const crossesEdges = (door: DoorSettings): boolean =>
   door.owCrossed === "grouped" || door.owCrossed === "unrestricted";
 
+/** Whether an OWR run's flute spots are known to be moved. */
+const fluteMoved = (door: DoorSettings): boolean =>
+  door.owFluteShuffle !== undefined && door.owFluteShuffle !== "vanilla";
+
 /**
  * Which of an OWR run's overworld shuffles the player notes (its whirlpools
  * shuffled, its flute spots moved, its edges crossed), or undefined when it
@@ -1518,10 +1583,10 @@ export const overworldShufflesOf = (
   | undefined => {
   const door = doorOf(settings);
   if (door?.randomizer !== "owr") return undefined;
-  const whirlpools = door.owWhirlpool;
-  const flute = door.owFluteShuffle !== "vanilla";
+  const whirlpools = door.owWhirlpool === true;
+  const flute = fluteMoved(door);
   const crossings = crossesEdges(door);
-  const flips = door.owMixed;
+  const flips = door.owMixed === true;
   return whirlpools || flute || crossings || flips
     ? { crossings, flips, flute, whirlpools }
     : undefined;
@@ -1538,7 +1603,7 @@ export const flipGroupsOf = (
   settings: DoorRunSettings & { mode?: string },
 ): readonly OwrFlipGroup[] => {
   const door = doorOf(settings);
-  if (door?.randomizer !== "owr" || !door.owMixed) return [];
+  if (door?.randomizer !== "owr" || door.owMixed !== true) return [];
   return owrFlipGroups({
     crossed: door.owCrossed !== "none",
     mode:
@@ -1548,7 +1613,7 @@ export const flipGroupsOf = (
           ? "standard"
           : "open",
     shuffle: doorShuffleOf(settings) ?? "vanilla",
-    whirlpools: door.owWhirlpool,
+    whirlpools: door.owWhirlpool === true,
   }).filter((group) => group.canFlip);
 };
 
@@ -1568,10 +1633,10 @@ export const owrNotesOf = (
 ): OwrNotes | undefined => {
   const door = doorOf(settings);
   if (door?.randomizer !== "owr") return undefined;
-  const whirlpools = door.owWhirlpool;
-  const flute = door.owFluteShuffle !== "vanilla";
+  const whirlpools = door.owWhirlpool === true;
+  const flute = fluteMoved(door);
   const crossings = crossesEdges(door);
-  const flips = door.owMixed;
+  const flips = door.owMixed === true;
   const polar = door.owCrossed === "polar";
   const key = `${whirlpools}/${flute}/${crossings}/${flips}/${polar}`;
   let byKey = owrNotes.get(notes);
