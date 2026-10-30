@@ -15,6 +15,7 @@ import {
 } from "./doors";
 import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, drLocationId, drWorld, KEY_ITEMS } from "./index";
+import { roomDungeons } from "./shuffle";
 
 type Mode = "open" | "standard";
 
@@ -226,5 +227,30 @@ describe("DR's world on noted doors", () => {
     });
     const all = everything(settingsFromUpstream("open"));
     expect(answers(world, all).get(COMPASS)).toBe("no");
+  });
+
+  it("gives a room joined only to a drop's landing the drop's dungeon", () => {
+    // dungeon_drops (DungeonGenerator.py:4239-4242): Skull Woods is built
+    // from its holes as from a lobby. avianart kxnOoGUE9 (OWR, partitioned)
+    // joins Swamp's map ledge to Skull Pinball alone, @ Skull Woods
+    const rooms = roomDungeons(
+      DR_DATA,
+      [
+        { from: "Skull Pinball", to: "Swamp Map Ledge" },
+        { from: "Swamp Map Ledge", to: "Skull Pinball" },
+      ],
+      new Map(),
+      {
+        notes: {},
+        settings: {
+          decoupled: false,
+          intensity: 3,
+          shuffle: "partitioned",
+          trapMode: "oneway",
+        },
+      },
+    );
+    expect(rooms.get("Swamp Map Ledge")).toBe("Skull Woods");
+    expect(rooms.get("Swamp Lobby")).toBe("Swamp Palace");
   });
 });

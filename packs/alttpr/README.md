@@ -1222,7 +1222,9 @@ a dashable one bombs or the boots, a trap shuts its way out but for
 `trap_door_exceptions` and adds the kill rules `is_trapped` guards. In a
 pool of dungeons a room is the dungeon's whose portal its layout holds
 (`roomDungeons`: the rooms the noted links join to the lobby's, whichever
-way; `update_forced_keys`), so its key doors take that dungeon's keys, its
+way, or to a drop's landing, which DR builds a dungeon from as from a lobby:
+`dungeon_drops`, `DungeonGenerator.py:4239-4242`, the castle's rat path and
+Skull Woods' holes; `update_forced_keys`), so its key doors take that dungeon's keys, its
 big chest that big key, its forced drops hold its keys (the castle's big
 key drop its big key: `worldKeys` gives each its room's dungeon; a boss room never moves:
 DR gives each dungeon its own first, `dungeon_boss_sectors`,
