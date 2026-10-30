@@ -29,6 +29,7 @@ import {
   jsonLog,
   type Log,
   entranceNotesOf as notesOf,
+  notYesWithEveryKey,
   poolOf,
   readFixture,
   settingsFor,
@@ -143,6 +144,8 @@ describe("DR's world on shuffled entrances against real seeds", () => {
       const { checked, notYes } = walk(log, world);
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
+      // Each a key door's, as reviewed: yes once every key is held
+      expect(notYesWithEveryKey(log, world, notYes)).toEqual([]);
     });
 
   for (const name of logs)

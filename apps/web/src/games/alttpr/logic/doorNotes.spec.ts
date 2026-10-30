@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { linkChange, withDoorNotes } from "@/games/alttpr/logic/doorNotes";
+import {
+  linkChange,
+  linkOf,
+  withDoorNotes,
+} from "@/games/alttpr/logic/doorNotes";
 
 describe("door notes", () => {
   it("lays a change on the notes, the same object when nothing moves", () => {
@@ -20,20 +24,31 @@ describe("door notes", () => {
     expect(withDoorNotes({}, { links: { a: null } })).toEqual({});
   });
 
-  it("notes a coupled door's way back, and forgets the links it replaces", () => {
+  it("keeps only what is noted, a coupled door's way back derived", () => {
     const first = withDoorNotes({}, linkChange({}, "a", "b", true));
-    // No kind with it: a kind not noted stays unknown
-    expect(first).toEqual({ links: { a: "b", b: "a" } });
-    // a now leads into c: b's way back is forgotten
+    // No kind with it, and no way back stored: it is derived
+    expect(first).toEqual({ links: { a: "b" } });
+    expect(linkOf(first.links, "b", true)).toBe("a");
+    // Decoupled, the same notes infer nothing (the stored way back of an
+    // earlier coupled reading never turns into an observation)
+    expect(linkOf(first.links, "b", false)).toBeUndefined();
+    // a now leads into c: b's way back goes with the note
     const moved = withDoorNotes(first, linkChange(first, "a", "c", true));
-    expect(moved.links).toEqual({ a: "c", c: "a" });
+    expect(moved.links).toEqual({ a: "c" });
+    expect(linkOf(moved.links, "b", true)).toBeUndefined();
     // d into c: a, which c led back into, leads nowhere known
     const taken = withDoorNotes(moved, linkChange(moved, "d", "c", true));
-    expect(taken.links).toEqual({ c: "d", d: "c" });
-    // Forgotten, both ways
+    expect(taken.links).toEqual({ d: "c" });
+    expect(linkOf(taken.links, "c", true)).toBe("d");
+    // c noted from its own side: the pair it was in goes, c's note stays
+    const back = withDoorNotes(taken, linkChange(taken, "c", "e", true));
+    expect(back.links).toEqual({ c: "e" });
+    // Forgotten from the side derived: the note it rests on goes
     expect(
-      withDoorNotes(taken, linkChange(taken, "d", null, true)).links,
+      withDoorNotes(back, linkChange(back, "e", null, true)).links,
     ).toBeUndefined();
+    // Noting what is already held moves nothing
+    expect(withDoorNotes(back, linkChange(back, "c", "e", true))).toBe(back);
     // A kind noted stays as it is
     expect(
       withDoorNotes(

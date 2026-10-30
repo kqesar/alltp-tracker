@@ -496,6 +496,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   customGoals:false customGoals:true
   dungeonItems:keys
   nearbyItems:false nearbyItems:true
+  owrVersion:0.8.0.2 owrVersion:other
 `
   .trim()
   .split(/\s+/);

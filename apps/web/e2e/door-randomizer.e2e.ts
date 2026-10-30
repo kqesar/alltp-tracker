@@ -58,7 +58,10 @@ test("a Door Randomizer run lists its key pots in DR's logic, checked in place",
   ).toBeChecked();
 });
 
-/** A crossed door shuffle's run, its intensity not known, on the Doors tab. */
+/**
+ * A crossed door shuffle's run, its intensity not known, its doors coupled,
+ * on the Doors tab.
+ */
 const openDoorShuffle = async (page: Page) => {
   const dialog = await openDoorRun(page);
   await dialog
@@ -67,6 +70,10 @@ const openDoorShuffle = async (page: Page) => {
   await expect(
     dialog.getByRole("combobox", { name: "Door intensity" }),
   ).toHaveValue("?");
+  // Not known reads as decoupled: no way back is inferred until set
+  const coupling = dialog.getByRole("combobox", { name: "Decoupled doors" });
+  await expect(coupling).toHaveValue("?");
+  await coupling.selectOption("false");
   await dialog.getByRole("button", { name: "Close" }).first().click();
   await page.getByRole("tab", { name: "Doors" }).click();
   await expect(page.getByTestId("doors-panel")).toBeVisible();
@@ -104,6 +111,8 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   await page.keyboard.press("Enter");
   await expect(kind).toHaveValue("normal");
   await expect(plain).toHaveCount(0);
+  // Focus moves to the summary the button changed, not to the page's start
+  await expect(page.getByTestId("doors-summary")).toBeFocused();
   await page
     .getByRole("spinbutton", { name: "Small keys in Eastern Palace, in all" })
     .fill("2");
@@ -121,6 +130,56 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   await expect(page.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
     "eastern-lobby-bridge-n",
   );
+});
+
+/**
+ * A dungeon picked in a crossed shuffle's Doors tab: its first paint, and
+ * the options it holds then, which time on a loaded machine cannot blur
+ * (about 6,800 when every select showed its targets at once).
+ */
+const DOORS_FIRST_PAINT_MS = 300;
+const DOORS_FIRST_OPTIONS = 1_500;
+
+test("the Doors tab shows a crossed shuffle's biggest dungeon at once", async ({
+  page,
+}) => {
+  await openDoorShuffle(page);
+  // Ganon's Tower: 104 rows, some 6,800 options in all (440 ms to show
+  // them in one render, measured): the options come in a deferred render
+  const timing = await page.evaluate(async () => {
+    const select = document.querySelector<HTMLSelectElement>(
+      '[data-testid="doors-dungeon"]',
+    );
+    if (select === null) throw new Error("no dungeon select");
+    const long: number[] = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) long.push(entry.duration);
+    });
+    observer.observe({ type: "longtask" });
+    const start = performance.now();
+    select.value = "Ganons Tower";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((done) =>
+      requestAnimationFrame(() => setTimeout(done, 0)),
+    );
+    const first = performance.now() - start;
+    const options = document.querySelectorAll(
+      '[data-testid="doors-panel"] option',
+    ).length;
+    await new Promise((done) => setTimeout(done, 1000));
+    observer.disconnect();
+    return { first, longest: Math.max(0, ...long), options };
+  });
+  console.info(
+    `Doors tab, Ganon's Tower: first paint ${timing.first.toFixed(0)} ms, longest task ${timing.longest.toFixed(0)} ms`,
+  );
+  expect(timing.options).toBeLessThan(DOORS_FIRST_OPTIONS);
+  expect(timing.first).toBeLessThan(DOORS_FIRST_PAINT_MS);
+  expect(timing.longest).toBeLessThan(DOORS_FIRST_PAINT_MS);
+  // Every target offered once the deferred render is in
+  await expect(
+    page.getByTestId("door-link-gt-lobby-s").locator("option"),
+  ).not.toHaveCount(1);
 });
 
 for (const width of WIDTHS) {
@@ -301,6 +360,12 @@ const openBonkRun = async (page: Page) => {
       ...saved.state.settings,
       bonkDrops: true,
       customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      owMixed: false,
+      owrVersion: "0.8.0.2",
+      owWhirlpool: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
@@ -377,9 +442,11 @@ const openOverworldRun = async (page: Page, crossed = false, mixed = false) => {
       saved.state.settings = {
         ...saved.state.settings,
         customGoals: false,
-        ...(crossed ? { owCrossed: "grouped" } : {}),
-        ...(mixed ? { owMixed: true } : {}),
+        owCrossed: crossed ? "grouped" : "none",
         owFluteShuffle: "random",
+        owLayout: "vanilla",
+        owMixed: mixed,
+        owrVersion: "0.8.0.2",
         owWhirlpool: true,
         prizeShuffle: "none",
         randomizer: "owr",
@@ -399,6 +466,10 @@ test("an OWR run's whirlpools and flute spots are noted by hand, from the keyboa
   page,
 }) => {
   await openOverworldRun(page);
+  // The note over the map says where the overworld waits
+  await expect(page.getByTestId("logic-note-door")).toContainText(
+    "Its overworld is shuffled (whirlpools and flute spots): the logic follows what you note in the Overworld tab",
+  );
   const pool = page.getByRole("combobox", { name: "C Whirlpool: leads to" });
   await pool.focus();
   await pool.selectOption("Zora Whirlpool");
@@ -428,7 +499,7 @@ test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", asyn
 }) => {
   await openOverworldRun(page, true);
   const pair = page.getByRole("combobox", {
-    name: "Lost Woods SW to Lost Woods Pass NW: world",
+    name: "Lost Woods to Lost Woods Pass (west): world",
   });
   await pair.focus();
   await pair.selectOption("crosses");
@@ -439,7 +510,7 @@ test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", asyn
   await page.reload();
   await expect(
     page.getByRole("combobox", {
-      name: "Lost Woods SW to Lost Woods Pass NW: world",
+      name: "Lost Woods to Lost Woods Pass (west): world",
     }),
   ).toHaveValue("crosses");
 });
@@ -478,7 +549,7 @@ for (const width of WIDTHS) {
       .selectOption("stands");
     await page
       .getByRole("combobox", {
-        name: "Lost Woods SC to Lost Woods Pass NE: world",
+        name: "Lost Woods to Lost Woods Pass (east): world",
       })
       .selectOption("stays");
     await page
@@ -517,6 +588,12 @@ const openOwrEntranceRun = async (
     saved.state.settings = {
       ...saved.state.settings,
       customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      owMixed: false,
+      owrVersion: "0.8.0.2",
+      owWhirlpool: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,

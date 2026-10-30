@@ -54,9 +54,11 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
     // (is_bombshop_start), the towers trade exits where both of theirs do
     // (is_atgt_swapped, which Swapped's pairs read), and District's pools
     // read every screen's world: Inverted's, not known once Mixed may flip
-    // them
+    // them, nor while an OWR run's Mixed is not known
     const inverted =
-      settings.owMixed === true ? undefined : read.mode === "inverted";
+      settings.randomizer === "owr" && settings.owMixed !== false
+        ? undefined
+        : read.mode === "inverted";
     const key = JSON.stringify([door, read, settings.randomizer, inverted]);
     let found = doorPools.get(key);
     if (found === undefined) {

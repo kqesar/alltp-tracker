@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import DoorsPanel, {
@@ -14,6 +14,12 @@ const run = (change: Partial<RunSettings>) =>
     useGameStore.getState().applyRun("door-randomizer", { ...DR, ...change }),
   );
 const store = () => useGameStore.getState();
+/** A door's link select once its targets are in (a deferred render). */
+const linkSelect = async (door: string) => {
+  const select = screen.getByTestId(`door-link-${door}`);
+  await within(select).findByRole("option", { name: "Eastern Cannonball S" });
+  return select;
+};
 
 describe("the Doors tab", () => {
   // Each release's world data loads on demand (some 1.2 MB each): loaded
@@ -73,7 +79,7 @@ describe("the Doors tab", () => {
 
   it("notes where a door leads, both ways, and its kind", async () => {
     const user = userEvent.setup();
-    run({ doorIntensity: "2", doorShuffle: "basic" });
+    run({ decoupledDoors: false, doorIntensity: "2", doorShuffle: "basic" });
     render(<DoorsPanel />);
     expect(screen.getByTestId("doors-summary")).toHaveTextContent(
       /^0 of \d+ doors of Hyrule Castle noted/,
@@ -81,11 +87,11 @@ describe("the Doors tab", () => {
     await user.selectOptions(screen.getByTestId("doors-dungeon"), [
       "Eastern Palace",
     ]);
-    const link = screen.getByTestId("door-link-eastern-lobby-bridge-n");
+    const link = await linkSelect("eastern-lobby-bridge-n");
     expect(link).toHaveAccessibleName("Eastern Lobby Bridge N: leads to");
     await user.selectOptions(link, ["eastern-cannonball-s"]);
+    // The note alone is kept: the way back is derived while coupled
     expect(store().doors.links).toEqual({
-      "eastern-cannonball-s": "eastern-lobby-bridge-n",
       "eastern-lobby-bridge-n": "eastern-cannonball-s",
     });
     expect(screen.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
@@ -97,6 +103,8 @@ describe("the Doors tab", () => {
     // A door whose kind the shuffle may change: not known with its link
     const kind = screen.getByTestId("door-kind-eastern-cannonball-s");
     expect(kind).toHaveValue("");
+    // Its own words, told apart from the link's "? Not known" beside it
+    expect(kind).toHaveDisplayValue("? Kind not known");
     expect(store().doors.kinds).toBeUndefined();
     await user.selectOptions(kind, ["small"]);
     expect(store().doors.kinds?.["eastern-cannonball-s"]).toBe("small");
@@ -109,6 +117,24 @@ describe("the Doors tab", () => {
     );
   });
 
+  it("infers no way back while the coupling is not known", async () => {
+    const user = userEvent.setup();
+    run({ doorIntensity: "2", doorShuffle: "basic" });
+    render(<DoorsPanel />);
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Eastern Palace",
+    ]);
+    await user.selectOptions(await linkSelect("eastern-lobby-bridge-n"), [
+      "eastern-cannonball-s",
+    ]);
+    expect(screen.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+      "",
+    );
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(
+      /^1 of \d+ doors of Eastern Palace noted/,
+    );
+  });
+
   it("notes the kinds of the doors linked plain at once, by keyboard", async () => {
     const user = userEvent.setup();
     run({ doorIntensity: "2", doorShuffle: "basic" });
@@ -118,10 +144,9 @@ describe("the Doors tab", () => {
     ]);
     // Nothing linked: nothing to note plain
     expect(screen.queryByTestId("doors-plain")).toBeNull();
-    await user.selectOptions(
-      screen.getByTestId("door-link-eastern-lobby-bridge-n"),
-      ["eastern-cannonball-s"],
-    );
+    await user.selectOptions(await linkSelect("eastern-lobby-bridge-n"), [
+      "eastern-cannonball-s",
+    ]);
     const plain = screen.getByTestId("doors-plain");
     expect(plain).toHaveAccessibleName(
       "Note the 1 linked door of Eastern Palace plain",
@@ -131,6 +156,8 @@ describe("the Doors tab", () => {
     // The linked door whose kind may change, and no other
     expect(store().doors.kinds).toEqual({ "eastern-cannonball-s": "normal" });
     expect(screen.queryByTestId("doors-plain")).toBeNull();
+    // Focus moves to the summary, not to the page's start
+    expect(screen.getByTestId("doors-summary")).toHaveFocus();
     act(() => store().undo());
     expect(store().doors.kinds).toBeUndefined();
   });
@@ -164,6 +191,39 @@ describe("the Doors tab", () => {
     );
     await user.clear(keys);
     expect(store().doors.keys).toBeUndefined();
+  });
+
+  it("searches a dungeon's doors, saying how many show, and names its lobbies as the tracker does", async () => {
+    const user = userEvent.setup();
+    run({ doorIntensity: "3", doorShuffle: "crossed" });
+    render(<DoorsPanel />);
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Ganons Tower",
+    ]);
+    expect(
+      screen.getByRole("combobox", {
+        name: "Ganon's Tower entrance: opens on",
+      }),
+    ).toBeInTheDocument();
+    const search = screen.getByRole("searchbox", { name: "Search" });
+    await user.type(search, "lobby");
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(
+      /, \d+ shown$/,
+    );
+    await user.clear(search);
+    await user.type(search, "nothing like it");
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(", 0 shown");
+    expect(screen.getByTestId("doors-none")).toHaveTextContent(
+      "No door of Ganon's Tower matches “nothing like it”.",
+    );
+    // No heading left over an empty list
+    expect(screen.queryByRole("heading", { name: "Doors" })).toBeNull();
+    // Another dungeon shows whole
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Eastern Palace",
+    ]);
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("heading", { name: "Doors" })).toBeInTheDocument();
   });
 
   it("asks no lobby below intensity 3, nor keys in basic", async () => {

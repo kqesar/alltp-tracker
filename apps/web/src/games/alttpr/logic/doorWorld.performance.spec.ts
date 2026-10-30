@@ -8,12 +8,16 @@ import { settingsFromUpstream } from "@alltp/pack-alttpr";
 import {
   type DoorShuffleSettings,
   DR_DEFAULTS,
+  doorId,
   doorNotesFromSpoiler,
+  doorTargets,
   drWorld,
   forgetNotedKeyLogic,
+  shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
 import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
 import { beforeAll, describe, expect, it } from "vitest";
+import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import {
   budgetOf,
@@ -34,6 +38,14 @@ const BUDGET_MS = 5;
 
 /** A world compiled with its key analysis, once per settings. */
 const COLD_BUDGET_MS = 400;
+
+/**
+ * A door, entrance or overworld note builds the world again, its key
+ * analysis included, in the click (`worldOf`): 30 to 54 ms measured for a
+ * crossed door shuffle at intensity 3 (step 6), a phone about four times
+ * that, so the budget leaves room for neither to grow unseen.
+ */
+const NOTE_BUDGET_MS = 150;
 
 beforeAll(async () => {
   const { solver } = await import("@/games/alttpr/logic/drSolver");
@@ -81,8 +93,12 @@ describe("a Door Randomizer run's solve", () => {
   );
 });
 
-/** A door note's rebuild of a world whose layouts are noted whole. */
-const NOTE_BUDGET_MS = 80;
+/**
+ * A door note's rebuild of a world whose layouts are noted whole, each
+ * other dungeon's analysis kept: tighter than NOTE_BUDGET_MS, which a
+ * world without analysis meets.
+ */
+const KEPT_NOTE_BUDGET_MS = 80;
 
 describe("a door shuffle's world after a note", () => {
   // Basic and crossed at intensity 2, every door noted (DR's analysis of
@@ -131,11 +147,51 @@ describe("a door shuffle's world after a note", () => {
       console.info(
         `door ${name}: a fully noted world built afresh ${cold.toFixed(1)} ms, after a note in one dungeon ${note.toFixed(1)} ms`,
       );
-      expect(note).toBeLessThan(budgetOf(NOTE_BUDGET_MS));
+      expect(note).toBeLessThan(budgetOf(KEPT_NOTE_BUDGET_MS));
       // Crossed, whose thirteen analyses weigh most, rebuilds in a fraction
       // of a world built afresh (basic's gap is within a busy run's noise)
       if (name === "crossed") expect(note).toBeLessThan(cold * 0.6);
     },
     120_000,
   );
+});
+
+describe("a door-shuffled run's note", () => {
+  it("rebuilds the world within the budget, crossed at intensity 3", () => {
+    const settings: RunSettings = {
+      ...getPreset("door-crosskeys").settings,
+      decoupledDoors: false,
+      doorShuffle: "crossed",
+      shuffleLinks: false,
+      shuffleTavern: false,
+    };
+    const shuffle = doorShuffleSettingsOf(settings);
+    if (shuffle === undefined) throw new Error("no door shuffle");
+    // Every door noted, each into the first door left that it may lead
+    // into: a run at its end, the notes the most
+    const doors = shuffledDoors(shuffle, DR_DATA);
+    const taken = new Set<string>();
+    const links: Record<string, string> = {};
+    for (const door of doors) {
+      if (taken.has(door.name)) continue;
+      const target = doorTargets(door, shuffle, DR_DATA).find(
+        (other) => !taken.has(other.name) && other.name !== door.name,
+      );
+      if (target === undefined) continue;
+      taken.add(door.name).add(target.name);
+      links[doorId(door.name)] = doorId(target.name);
+    }
+    expect(Object.keys(links).length).toBeGreaterThan(200);
+    const inputs = stage(GRID_ITEMS.length / 2, settings);
+    // Each run a new note, as the store makes one: the world rebuilt
+    const note = () =>
+      solutionOf({ ...inputs, doors: { links: { ...links } } });
+    note();
+    const rebuild = fastest(note, 3);
+    expect(note().door).toBeDefined();
+    console.info(
+      `DR crossed doors, intensity 3: ${rebuild.toFixed(1)} ms a note`,
+    );
+    expect(rebuild).toBeLessThan(budgetOf(NOTE_BUDGET_MS));
+  }, 120_000);
 });

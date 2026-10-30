@@ -27,12 +27,10 @@ import {
 } from "../src/door-world/index";
 import { forgetNotedKeyLogic } from "../src/door-world/key-analysis/noted";
 import { solveFacts } from "../src/facts";
-import { type Medallion, medallionFacts } from "../src/medallions";
 import {
   doorLog,
   doorNotesOf,
   doorShuffleOf,
-  EVERY_KEY,
   KEY_NAMES,
   plain,
   withoutDoors,
@@ -43,6 +41,7 @@ import {
   flag,
   jsonLog,
   type Log,
+  notYesWithEveryKey,
   readFixture,
   settingsFor,
   walk,
@@ -232,32 +231,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
       expect(checked).toBeGreaterThan(15);
       expect(notYes).toEqual(REVIEWED[name] ?? {});
       // Each a key door's: yes once every key is held
-      for (const at of Object.keys(notYes)) {
-        const sphere = Number(at.slice(0, at.indexOf(":")));
-        const location = at.slice(at.indexOf(":") + 1);
-        const items = [
-          ...((log.playthrough["0"] as readonly string[]) ?? []),
-          ...Array.from({ length: sphere - 1 }, (_, i) =>
-            Object.values(log.playthrough[i + 1] as Record<string, string>),
-          ).flat(),
-          ...EVERY_KEY,
-        ].filter((item) => item !== "Never in logic");
-        const state = {
-          ...collect(items),
-          ...medallionFacts({
-            mire: String(log.Special["Misery Mire"]).toLowerCase() as Medallion,
-            turtleRock: String(
-              log.Special["Turtle Rock"],
-            ).toLowerCase() as Medallion,
-          }),
-        };
-        expect(
-          solveFacts(world, state).location(
-            world.locationIds.get(location) ?? "",
-          ),
-          at,
-        ).toBe("yes");
-      }
+      expect(notYesWithEveryKey(log, world, notYes)).toEqual([]);
     });
 
   it("runs DR's key analysis on each layout the notes tell whole, below intensity 3 alone", () => {

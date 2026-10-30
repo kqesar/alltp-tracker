@@ -1,7 +1,12 @@
-import type { SeedSettingsReading } from "@alltp/pack-alttpr";
+import {
+  OVERWORLD_RANDOMIZER_VERSION,
+  type SeedSettingsReading,
+} from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
+  bonkDropsOf,
   DOOR_LOCATION_IDS,
+  DOOR_OPTIONS,
   doorEntranceChange,
   doorEntranceModes,
   doorEntranceOf,
@@ -23,8 +28,11 @@ import {
   forcedWhirlpoolOf,
   GOALS_NOT_KNOWN,
   isDoorSettings,
+  OVERWORLD_NOT_KNOWN,
+  OWR_VERSION_NOT_KNOWN,
   overworldShufflesOf,
   owrNotesOf,
+  owrVersionOf,
   PRIZES_NOT_KNOWN,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
@@ -54,9 +62,18 @@ const DR_CROSSKEYS = {
   ...getPreset("door-crosskeys").settings,
   bombBag: false,
 };
-/** An OWR run whose prize and follower shuffles are set: none of either. */
+/**
+ * An OWR run of the fork's pinned release whose overworld, prize and
+ * follower shuffles are set: none of any.
+ */
 const OWR = {
   customGoals: false,
+  owCrossed: "none",
+  owFluteShuffle: "vanilla",
+  owLayout: "vanilla",
+  owMixed: false,
+  owrVersion: "0.8.0.2",
+  owWhirlpool: false,
   prizeShuffle: "none",
   randomizer: "owr",
   shuffleFollowers: false,
@@ -79,6 +96,151 @@ describe("a Door Randomizer run's logic", () => {
       "Door Randomizer seed: the logic is DR's own (1.5.8).",
     ]);
     expect(doorNotes(getPreset("open").settings)).toEqual([]);
+  });
+
+  it("holds an OWR run to the fork's release the pack ports", () => {
+    // 0.8.0.0 and 0.8.0.1 ask the pearl to cross Paradox Cave's top and
+    // Death Mountain Return Cave's right side (owr800:Rules.py:1816-1818),
+    // 0.8.0.2 does not: the world, 0.8.0.2's, would read yes there
+    expect(DOOR_OPTIONS.owrVersion[0][0]).toBe(OVERWORLD_RANDOMIZER_VERSION);
+    expect(owrVersionOf("0.8.0.2-u")).toBe("0.8.0.2");
+    expect(owrVersionOf("0.8.0.0")).toBe("other");
+    expect(owrVersionOf("0.8.0.1-u")).toBe("other");
+    expect(owrVersionOf("0.7.1.0")).toBe("other");
+    expect(owrVersionOf("1.5.7")).toBeUndefined();
+    expect(owrVersionOf(undefined)).toBeUndefined();
+    const older = with_(DR, { ...OWR, owrVersion: "other" });
+    expect(doorLogic(older)).toBe(false);
+    expect(unmodelledReasons(older)).toEqual([
+      "an Overworld Randomizer release other than 0.8.0.2",
+    ]);
+    const unknown = with_(DR, { ...OWR, owrVersion: undefined });
+    expect(doorLogic(unknown)).toBe(false);
+    expect(unmodelledReasons(unknown)).toEqual([OWR_VERSION_NOT_KNOWN]);
+    expect(doorRows(unknown)).toContain("owrVersion");
+    expect(doorRows(DR)).not.toContain("owrVersion");
+    // A spoiler's meta names it (`versions.Overworld`), a ROM its table
+    const meta = (version: string | undefined) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          overworld: {
+            bonkDrops: false,
+            crossed: "none",
+            fluteShuffle: "vanilla",
+            layout: "vanilla",
+            mixed: false,
+            version,
+            whirlpool: false,
+          },
+          pottery: "none",
+          shopsanity: false,
+          takeAny: "none",
+        },
+        randomizer: { kind: "door", overworld: true, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(meta("0.8.0.0"), DR)).toMatchObject({
+      owrVersion: "other",
+    });
+    expect(doorFromSeed(meta("0.8.0.2-u"), DR)).toMatchObject({
+      owrVersion: "0.8.0.2",
+    });
+    expect(doorFromSeed(meta(undefined), DR)?.owrVersion).toBeUndefined();
+    const rom = (overworld: boolean) =>
+      ({
+        door: {
+          overworld: { version: { known: true, value: "0.8.0.0" } },
+          version: { known: false, why: "unrecognized" },
+        },
+        randomizer: { kind: "door", overworld, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(rom(true), DR)).toMatchObject({ owrVersion: "other" });
+    // A DR seed keeps none
+    expect(doorFromSeed(rom(false), DR)?.owrVersion).toBeUndefined();
+  });
+
+  it("reads an OWR run's overworld not stated as not known, never off", () => {
+    // Each of its shuffles unset: any may be on, so nothing vanilla holds
+    for (const key of [
+      "owLayout",
+      "owCrossed",
+      "owMixed",
+      "owWhirlpool",
+      "owFluteShuffle",
+    ] as const) {
+      const run = with_(DR, { ...OWR, [key]: undefined });
+      expect(unmodelledReasons(run), key).toEqual([OVERWORLD_NOT_KNOWN]);
+      expect(doorLogic(run), key).toBe(false);
+      expect(doorValueText(key, run[key]), key).toBe("Not known");
+    }
+    // DR itself has no overworld shuffle: unset reads as none
+    expect(unmodelledReasons(DR)).toEqual([]);
+    // Bonk drops not known: no bonk bomb farm in the fork's world
+    // (owr:ItemList.py:731-734), their places not listed, nothing else held
+    const bonks = with_(DR, OWR);
+    expect(unmodelledReasons(bonks)).toEqual([]);
+    expect(bonkDropsOf(bonks)).toBe(false);
+    expect(drSettingsOf(bonks)).toMatchObject({ bonkDrops: true });
+    expect(drSettingsOf(with_(bonks, { bonkDrops: false }))).toMatchObject({
+      bonkDrops: false,
+    });
+    // A meta that does not name one, or names a value the tracker does not
+    // know: not known, never the run's default
+    const seed = (overworld: Record<string, unknown>) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          overworld: { layout: "vanilla", version: "0.8.0.2", ...overworld },
+          pottery: "none",
+          shopsanity: false,
+          takeAny: "none",
+        },
+        randomizer: { kind: "door", overworld: true, version: "1.5.7" },
+      }) as unknown as SeedSettingsReading;
+    const unnamed = doorFromSeed(seed({}), DR);
+    for (const key of [
+      "owCrossed",
+      "owMixed",
+      "owWhirlpool",
+      "owFluteShuffle",
+      "bonkDrops",
+    ] as const)
+      expect(unnamed?.[key], key).toBeUndefined();
+    expect(unnamed).toMatchObject({ owLayout: "vanilla" });
+    expect(
+      doorFromSeed(seed({ crossed: "sideways", layout: "maze" }), DR),
+    ).not.toHaveProperty("owCrossed");
+    expect(doorFromSeed(seed({ layout: "maze" }), DR)).not.toHaveProperty(
+      "owLayout",
+    );
+    // A ROM whose fork table is not recognized states none of them
+    const unknown = { known: false, why: "unrecognized" };
+    const rom = {
+      door: {
+        overworld: Object.fromEntries(
+          [
+            "bonkDrops",
+            "crossed",
+            "fluteShuffle",
+            "followers",
+            "layout",
+            "mixed",
+            "prizeShuffle",
+            "version",
+            "whirlpool",
+          ].map((key) => [key, unknown]),
+        ),
+        version: unknown,
+      },
+      randomizer: { kind: "door", overworld: true, version: "1.5.7" },
+    } as unknown as SeedSettingsReading;
+    const read = doorFromSeed(rom, DR) ?? {};
+    expect(read.owMixed).toBeUndefined();
+    expect(unmodelledReasons(with_(DR, read))).toContain(OVERWORLD_NOT_KNOWN);
   });
 
   it("takes the Overworld Randomizer's own world for its vanilla overworld", () => {
@@ -108,6 +270,23 @@ describe("a Door Randomizer run's logic", () => {
     expect(owrNotesOf(mixed, { flips: { "44": true } })).toEqual({
       flips: { "44": true },
     });
+    // The map says where the overworld waits for its notes
+    expect(doorNotes(mixed)[1]).toBe(
+      "Its overworld is shuffled (screens flipped by Mixed): the logic follows what you note in the Overworld tab, and what is not noted there leads nowhere.",
+    );
+    expect(
+      doorNotes(
+        with_(DR, {
+          ...OWR,
+          owCrossed: "grouped",
+          owFluteShuffle: "random",
+          owWhirlpool: true,
+        }),
+      )[1],
+    ).toBe(
+      "Its overworld is shuffled (whirlpools, flute spots and edges crossed): the logic follows what you note in the Overworld tab, and what is not noted there leads nowhere.",
+    );
+    expect(doorNotes(with_(DR, OWR))).toHaveLength(1);
     expect(overworldShufflesOf(mixed)).toEqual({
       crossings: false,
       flips: true,
@@ -125,6 +304,8 @@ describe("a Door Randomizer run's logic", () => {
     // Not known (a ROM that cannot tell none from dungeon, a race): never
     // read as none, each named until the player sets it
     expect(unmodelledReasons(with_(DR, { randomizer: "owr" }))).toEqual([
+      OVERWORLD_NOT_KNOWN,
+      OWR_VERSION_NOT_KNOWN,
       PRIZES_NOT_KNOWN,
       FOLLOWERS_NOT_KNOWN,
       GOALS_NOT_KNOWN,
@@ -314,15 +495,26 @@ describe("a Door Randomizer run's logic", () => {
       );
       // Below intensity 3, coupled, entrances vanilla: DR's own analysis
       // once a dungeon is noted whole (the pack's key-analysis/noted.ts)
-      expect(doorNotes(with_(run, { doorIntensity: "2" }))[1]).toBe(
+      const coupled = { decoupledDoors: false, doorIntensity: "2" } as const;
+      expect(doorNotes(with_(run, coupled))[1]).toBe(
         "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when DR's own key analysis counts them.",
+      );
+      // The coupling not known reads as decoupled (no analysis), as the
+      // world reads it
+      expect(doorNotes(with_(run, { doorIntensity: "2" }))[1]).toMatch(
+        /asks every key of its dungeon\.$/,
       );
       expect(
         doorNotes(with_(run, { decoupledDoors: true, doorIntensity: "1" }))[1],
       ).toMatch(/asks every key of its dungeon\.$/);
       expect(
-        doorNotes(with_(run, { doorEntrances: "lite", doorIntensity: "1" }))[1],
+        doorNotes(with_(run, { ...coupled, doorEntrances: "lite" }))[1],
       ).toMatch(/asks every key of its dungeon\.$/);
+      // DR's analysis reads DR's data alone: an OWR door shuffle's key doors
+      // stay strict-safe
+      expect(doorNotes(with_(run, { ...OWR, ...coupled }))[1]).toMatch(
+        /asks every key of its dungeon\.$/,
+      );
     }
     // A boss room never leaves its dungeon (dungeon_boss_sectors): its
     // restricted items stay its dungeon's in a pool too
@@ -343,14 +535,19 @@ describe("a Door Randomizer run's logic", () => {
       "doorIntensity",
       "decoupledDoors",
     ]);
-    // Unset, the intensity reads as 3: every portal's lobby may move
+    // Unset, the intensity reads as 3: every portal's lobby may move; the
+    // coupling as decoupled: no way back is inferred from a door noted
     expect(doorShuffleSettingsOf(basic)).toEqual({
-      decoupled: false,
+      decoupled: true,
       intensity: 3,
       shuffle: "basic",
       trapMode: "oneway",
     });
     expect(doorValueText("doorIntensity", undefined)).toBe("Not known");
+    expect(doorValueText("decoupledDoors", undefined)).toBe("Not known");
+    expect(
+      doorShuffleSettingsOf(with_(basic, { decoupledDoors: false })),
+    ).toMatchObject({ decoupled: false });
     expect(
       doorShuffleSettingsOf(
         with_(DR, {
@@ -849,9 +1046,13 @@ describe("doorFromSeed", () => {
     expect(doorFromSeed(pots, { pottery: "lottery" })).toMatchObject({
       pottery: "lottery",
     });
+    // Not of the kind: cave and key pots, never key pots, which would keep
+    // Lite's and Lean's pottery caves vanilla (EntranceShuffle2.py:
+    // 1064-1066) where cave pots or lottery shuffle them
     expect(doorFromSeed(pots, { pottery: "cave" })).toMatchObject({
-      pottery: "keys",
+      pottery: "cavekeys",
     });
+    expect(doorFromSeed(pots, {})).toMatchObject({ pottery: "cavekeys" });
     const doors = read({ doorShuffle: { known: true, value: "shuffled" } });
     expect(doorFromSeed(doors, { doorShuffle: "partitioned" })).toMatchObject({
       doorShuffle: "partitioned",
@@ -886,6 +1087,10 @@ describe("doorFromSeed", () => {
       owCrossed: "grouped",
       owFluteShuffle: "random",
       owLayout: "wild",
+      // Stated off: kept, an OWR run's overworld having no default
+      owMixed: false,
+      // The fork's table names 0.8.0.0: not the release the pack ports
+      owrVersion: "other",
       owWhirlpool: true,
       randomizer: "owr",
       shuffleFollowers: false,
@@ -980,15 +1185,20 @@ describe("doorFromSeed", () => {
       },
       randomizer: { kind: "door", overworld: true, version: "1.5.8" },
     } as unknown as SeedSettingsReading;
+    // An OWR run's overworld stated off is kept: it has no default
     expect(doorFromSeed(meta, { pottery: "keys" })).toEqual({
+      bonkDrops: false,
       doorEntrances: "lite",
       doorVersion: "1.5.8",
       enemyShuffle: "shuffled",
       owCrossed: "polar",
       owFluteShuffle: "balanced",
+      owLayout: "vanilla",
       owMixed: true,
-      // A pottery mode the tracker has no option for keeps the run's
-      pottery: "keys",
+      owWhirlpool: false,
+      // A pottery mode the tracker has no option for: cave and key pots,
+      // never the run's (another seed's)
+      pottery: "cavekeys",
       prizeShuffle: "wild",
       randomizer: "owr",
       shuffleFollowers: true,
@@ -1014,12 +1224,15 @@ describe("doorFromSeed", () => {
       keyLogic: "static",
       randomizer: "dr",
     });
-    // Partial is DR's default: left out; a name it does not know keeps the run's
+    // Partial is DR's default: left out; a name it does not know reads as
+    // strict, which asks the most, never the run's (another seed's)
     expect(doorFromSeed(exact({ keyLogic: "partial" }, false), {})).toEqual({
       randomizer: "dr",
     });
     expect(
-      doorFromSeed(exact({ keyLogic: "newer" }, false), { keyLogic: "strict" }),
+      doorFromSeed(exact({ keyLogic: "newer" }, false), {
+        keyLogic: "dangerous",
+      }),
     ).toEqual({ keyLogic: "strict", randomizer: "dr" });
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, false), {}),
@@ -1027,6 +1240,63 @@ describe("doorFromSeed", () => {
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, true), {}),
     ).toEqual({ doorEntrances: "district", randomizer: "owr" });
+  });
+
+  it("lays none of an earlier run's settings on a seed", () => {
+    // An OWR Mixed District run with its bonk drops, then a DR Crosskeys
+    // seed loaded from its meta (bench seeds c0PDd2qiJ, toInhuUYy)
+    const owr: RunSettings = {
+      ...DR,
+      ...OWR,
+      bonkDrops: true,
+      doorEntrances: "district",
+      nearbyItems: true,
+      owMixed: true,
+      prizeShuffle: "wild",
+      randomizer: "owr",
+      shuffleFollowers: true,
+      shuffleLinks: false,
+    };
+    const crosskeys = {
+      doorExact: {
+        doorShuffle: "vanilla",
+        dropShuffle: "none",
+        enemyShuffle: "none",
+        keyLogic: "partial",
+        pottery: "none",
+        shopsanity: false,
+        shuffleLinks: false,
+        shuffleTavern: false,
+        takeAny: "none",
+      },
+      entrances: { known: true, value: "crossed" },
+      randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    expect(doorFromSeed(crosskeys, owr)).toEqual({
+      doorVersion: "1.5.8",
+      randomizer: "dr",
+      shuffleLinks: false,
+      shuffleTavern: false,
+    });
+    // A DR ROM read on that run keeps none of the fork's either
+    const rom = {
+      door: { version: { known: false, why: "unrecognized" } },
+      randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    const read = doorFromSeed(rom, owr) ?? {};
+    for (const key of [
+      "bonkDrops",
+      "customGoals",
+      "doorEntrances",
+      "nearbyItems",
+      "owMixed",
+      "owrVersion",
+      "prizeShuffle",
+      "shuffleFollowers",
+    ] as const)
+      expect(read, key).not.toHaveProperty(key);
+    // Its own hand-set settings a ROM states none of stay
+    expect(read).toMatchObject({ shuffleLinks: false });
   });
 
   it("takes a spoiler's bomb bag, pot shuffle, boss items and pyramid", () => {
@@ -1091,8 +1361,8 @@ describe("doorFromSeed", () => {
     expect(unmodelledReasons({ ...DR, bombBag: true })).toEqual([]);
     expect(drSettingsOf({ ...DR, bombBag: undefined }).bombBag).toBe(true);
     expect(drSettingsOf({ ...DR, bombBag: false }).bombBag).toBe(false);
+    // Not named: DR's default, never the run's (another seed's)
     expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
-      potShuffle: true,
       randomizer: "dr",
     });
   });

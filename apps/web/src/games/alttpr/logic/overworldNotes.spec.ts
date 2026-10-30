@@ -17,6 +17,8 @@ import {
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
 import {
+  crossingNamesOf,
+  EDGE_SCREENS,
   FLUTE_REGIONS,
   FLUTE_SCREENS,
   fluteScreenName,
@@ -110,6 +112,44 @@ describe("an OWR run's overworld notes", () => {
     expect(screenNameOf(0x00)).toBe("Lost Woods");
     expect(screenNameOf(0x2c)).toBe("Link's House");
     expect(screenNameOf(0x80)).toBe("Master Sword Meadow");
+  });
+
+  it("names each edge pair by its screens, held to the fork's edges", () => {
+    // Each edge's area stands on the screen the pack's data gives it
+    const edges = new Map(
+      (OWR_DATA.overworld?.edges ?? []).map((e) => [e.name, e.screen]),
+    );
+    for (const edge of OWR_CROSSINGS.flat()) {
+      const area = edge.slice(0, edge.lastIndexOf(" "));
+      expect(EDGE_SCREENS[area], edge).toBe(edges.get(edge));
+    }
+    expect(Object.keys(EDGE_SCREENS).sort()).toEqual(
+      [
+        ...new Set(
+          OWR_CROSSINGS.flat().map((e) => e.slice(0, e.lastIndexOf(" "))),
+        ),
+      ].sort(),
+    );
+    const names = crossingNamesOf(OWR_CROSSINGS);
+    expect(names.size).toBe(67);
+    // One name a pair, none the fork's codes
+    const shown = [...names.values()].map((name) => name.shown);
+    expect(new Set(shown).size).toBe(67);
+    expect(new Set([...names.values()].map((n) => n.label)).size).toBe(67);
+    for (const name of shown) expect(name).not.toMatch(/ [NESW][NESWC]\b/);
+    expect(names.get("Kakariko Fortune ES")).toEqual({
+      label: "Kakariko Fortune Teller to Kakariko Pond (south)",
+      shown: "Kakariko Fortune Teller – Kakariko Pond (south)",
+    });
+    expect(names.get("Lost Woods SC")?.shown).toBe(
+      "Lost Woods – Lost Woods Pass (east)",
+    );
+    expect(names.get("River Bend EC")?.shown).toBe(
+      "River Bend – Potion Shop (middle)",
+    );
+    expect(names.get("Hyrule Castle ES")?.shown).toBe(
+      "Hyrule Castle Courtyard – Sand Dunes",
+    );
   });
 
   it("validates a save's notes by the fork's whirlpools and flute screens", () => {

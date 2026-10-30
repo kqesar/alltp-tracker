@@ -54,7 +54,7 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
   "not-modelled":
     "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a logic other than the run's Glitches, a mode or a Door or Overworld Randomizer setting it does not model, which the map's note names), so when each place came into logic is not shown.",
   overworld:
-    "Whirlpools, flute spots or the overworld's edges were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
+    "Whirlpools, flute spots, the overworld's edges or its screens (Mixed) were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "race-mode":
     "Only places outside dungeons have times in this run (autotracked in Race Mode by an earlier version of the tracker, which did not read a dungeon's chests), so most needed items are matched by the item, not by its place: when each waited is not shown.",
 };

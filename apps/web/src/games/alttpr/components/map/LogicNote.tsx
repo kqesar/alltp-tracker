@@ -11,12 +11,7 @@ import {
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-
-/** "A", "A and B", "A, B and C". */
-const listOf = (items: readonly string[]) =>
-  items.length < 2
-    ? items.join("")
-    : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+import { listOf } from "@/utils/listOf";
 
 /**
  * What the map's states rest on, when not the whole world: with shuffled

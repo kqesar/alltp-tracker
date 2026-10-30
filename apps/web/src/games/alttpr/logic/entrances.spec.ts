@@ -187,6 +187,11 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      owMixed: false as boolean,
+      owWhirlpool: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
@@ -212,6 +217,10 @@ describe("the entrance assistant's model", () => {
     expect(ids({ doorEntrances: "district", owMixed: true })).toEqual(
       expect.arrayContaining(["links-house", "big-bomb-shop"]),
     );
+    // Mixed not known: it may have flipped it too
+    expect(ids({ doorEntrances: "district", owMixed: undefined })).toEqual(
+      expect.arrayContaining(["links-house", "big-bomb-shop"]),
+    );
     expect(ids({ doorEntrances: "district" })).not.toContain("tavern-north");
     // A door seen in the game notes it, as in DR's pool
     if (district === null || district === undefined) throw new Error("no pool");
@@ -230,6 +239,13 @@ describe("the entrance assistant's model", () => {
     expect(targetIds({})).not.toContain("ice-palace-exit");
     expect(targetIds({ mode: "inverted" })).not.toContain("ice-palace-exit");
     expect(targetIds({ owMixed: true })).toContain("ice-palace-exit");
+    // Walking out of Link's House, Mixed possibly flipping its screen: the
+    // door noted as the game shows it (entrance 1 from the door of slot 0)
+    const mixed = poolOf({ ...owr, doorEntrances: "district", owMixed: true });
+    if (mixed === null || mixed === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(mixed, {}, [{ entrance: 1, kind: "door", slot: 0 }]),
+    ).toEqual({ "links-house": "links-house-exit" });
     // DR's own Swapped keeps DR's pool
     expect(
       poolOf({ ...owr, doorEntrances: "swapped", randomizer: "dr" })?.entrances
@@ -341,6 +357,12 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      // Unset, Mixed may flip the towers' screens: their trade not known
+      owMixed: false as boolean,
+      owWhirlpool: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,

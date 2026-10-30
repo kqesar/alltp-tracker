@@ -123,6 +123,8 @@ describe("an Overworld Randomizer seed started from its permalink", () => {
       expect(run).toMatchObject({
         bombBag: false,
         customGoals: false,
+        // The fork's release its meta names (versions.Overworld 0.8.0.2-u)
+        owrVersion: "0.8.0.2",
         prizeShuffle: "none",
         randomizer: "owr",
         shuffleFollowers: false,

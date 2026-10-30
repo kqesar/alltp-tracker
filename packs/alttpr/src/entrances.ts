@@ -294,6 +294,17 @@ const HOLE_OF_SLOT = new Map(
 );
 
 /**
+ * The targets DR and its fork shuffle that the entrance randomizer's pools
+ * never do (the door-rando pools' `DR_EXTRA_TARGETS`): Link's House and
+ * the Tavern's back, entrances 1 and 0x43 of the same exit_ids (dr:
+ * EntranceShuffle2.py:2631, :2707; owr:EntranceShuffle2.py:3222, :3298).
+ * A pool that never offers them drops such a reading (`gameNotes` keeps
+ * only the targets a pool offers), so the entrance randomizer's runs read
+ * as before.
+ */
+const DR_ONLY_TARGETS = ["Links House Exit", "Tavern"];
+
+/**
  * The targets each of the game's entrances is, by id (exit_ids), in the
  * order of TARGETS: one, or a few places whose rooms are alike (the healer
  * fairies', some shops' and the fortune tellers'), which the game loads by
@@ -304,10 +315,10 @@ const TARGETS_OF_ENTRANCE = (() => {
     Record<string, { readonly entrance: number | null }>
   >;
   const found = new Map<number, string[]>();
-  for (const { id, name } of TARGETS) {
+  for (const name of [...TARGETS.map((t) => t.name), ...DR_ONLY_TARGETS]) {
     const entrance = exits[name]?.entrance;
     if (typeof entrance === "number")
-      found.set(entrance, [...(found.get(entrance) ?? []), id]);
+      found.set(entrance, [...(found.get(entrance) ?? []), slug(name)]);
   }
   return found;
 })();

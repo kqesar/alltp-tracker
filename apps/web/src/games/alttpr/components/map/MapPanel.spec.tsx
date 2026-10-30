@@ -202,13 +202,20 @@ describe("MapPanel", () => {
     act(() =>
       useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
     );
-    // Its prizes and followers not known yet: named, never read as none
+    // Its overworld, release, prizes and followers not known yet: named,
+    // never read as none
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: the prize shuffle not known yet (set it in Mode), the follower shuffle not known yet (set it in Mode) and the custom goals not known yet (set them in Mode). Every check shows as maybe.",
+      "Not modelled yet: the overworld shuffles not known yet (set them in Mode), the Overworld Randomizer's release not known yet (set it in Mode), the prize shuffle not known yet (set it in Mode), the follower shuffle not known yet (set it in Mode) and the custom goals not known yet (set them in Mode). Every check shows as maybe.",
     );
     act(() =>
       useGameStore.getState().updateDoorSettings({
         customGoals: false,
+        owCrossed: "none",
+        owFluteShuffle: "vanilla",
+        owLayout: "vanilla",
+        owMixed: false,
+        owrVersion: "0.8.0.2",
+        owWhirlpool: false,
         prizeShuffle: "none",
         shuffleFollowers: false,
       }),

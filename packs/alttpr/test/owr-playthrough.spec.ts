@@ -59,13 +59,10 @@ import {
   towersTradedOf,
 } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
-import { solveFacts } from "../src/facts";
-import { type Medallion, medallionFacts } from "../src/medallions";
 import {
   doorLog,
   doorNotesOf,
   doorShuffleOf,
-  EVERY_KEY,
   plain,
   withoutDoors,
 } from "./dr-doors";
@@ -74,12 +71,13 @@ import {
   flag,
   jsonLog,
   type Log,
+  notYesWithEveryKey,
   poolOf,
   readFixture,
   settingsFor,
   walk,
 } from "./dr-playthrough";
-import { collect, eventsOf } from "./dr-state";
+import { eventsOf } from "./dr-state";
 
 /**
  * The sets, by directory: whether their edges are crossed and their
@@ -206,7 +204,10 @@ const REVIEWED: Readonly<
     {
       readonly why: string;
       readonly at: Record<string, string>;
-      /** Of `at`, what no key opens (Standard's escape), in a door log. */
+      /**
+       * Of `at`, what no key opens: Standard's escape (ESCAPE), Insanity's
+       * past an exit (DECOUPLED).
+       */
       readonly notKeys?: readonly string[];
     }
   >
@@ -331,6 +332,16 @@ const REVIEWED: Readonly<
       "10:Revealing Light": "no",
       "11:Thieves' Town - Prize": "no",
     },
+    notKeys: [
+      "1:Desert Palace - Big Key Chest",
+      "1:Mini Moldorm Cave - Far Right",
+      "4:Palace of Darkness - Big Chest",
+      "5:Palace of Darkness - Prize",
+      "9:Attic Cracked Floor",
+      "9:Suspicious Maiden",
+      "10:Revealing Light",
+      "11:Thieves' Town - Prize",
+    ],
     why: DECOUPLED,
   },
   "owr-entrance-spoilers/avianart-ERKxf6EjS.json": {
@@ -418,14 +429,17 @@ const REVIEWED: Readonly<
       "11:Turtle Rock - Prize": "maybe",
       "12:Desert Palace - Prize": "maybe",
     },
+    notKeys: ["1:Zelda Pickup"],
     why: `${ESCAPE}; Hyrule Castle, Skull Woods, Turtle Rock, Desert Palace: ${STRICT_SAFE}`,
   },
   "owr-standard-spoilers/avianart-0rrVwugI5.json": {
     at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    notKeys: ["1:Hyrule Castle - Map Chest", "1:Zelda Pickup"],
     why: ESCAPE,
   },
   "owr-standard-spoilers/avianart-AjT8OHdZc.json": {
     at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    notKeys: ["1:Hyrule Castle - Map Chest", "1:Zelda Pickup"],
     why: ESCAPE,
   },
   "owr-standard-spoilers/avianart-CK14WlYnG.json": {
@@ -437,6 +451,7 @@ const REVIEWED: Readonly<
       "15:Skull Woods - Prize": "maybe",
       "16:Ice Palace - Prize": "maybe",
     },
+    notKeys: ["1:Zelda Pickup"],
     why: `${ESCAPE}; Hyrule Castle, Ice Palace, Skull Woods: ${STRICT_SAFE}`,
   },
   "owr-standard-spoilers/avianart-mGEeueUjZ.json": {
@@ -445,10 +460,12 @@ const REVIEWED: Readonly<
       "2:Sewers - Secret Room - Middle": "maybe",
       "2:Zelda Drop Off": "maybe",
     },
+    notKeys: ["1:Zelda Pickup"],
     why: `${ESCAPE}; Hyrule Castle: ${STRICT_SAFE}`,
   },
   "owr-standard-spoilers/avianart-mhKQq39uX.json": {
     at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    notKeys: ["1:Hyrule Castle - Map Chest", "1:Zelda Pickup"],
     why: ESCAPE,
   },
 };
@@ -963,9 +980,15 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
     it(`reaches each sphere with the spheres before it (${name})`, () => {
       const read = logOf(name);
       expect(read.farms).toEqual(FARMS[name] ?? []);
-      const { checked, notYes } = walk(read.log, worldOf(read, {}), EVENTS);
+      const world = worldOf(read, {});
+      const { checked, notYes } = walk(read.log, world, EVENTS);
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
+      // Each a key door's, as reviewed: yes once every key is held, but
+      // what the review names no key opens
+      expect(
+        notYesWithEveryKey(read.log, world, notYes, EVENTS).sort(),
+      ).toEqual([...(REVIEWED[name]?.notKeys ?? [])].sort());
     });
 
   for (const name of logs)
@@ -1034,40 +1057,5 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       expect(wrong).toEqual([]);
       if (log.meta.door_shuffle !== "basic")
         expect(checked).toBeGreaterThan(50);
-    });
-
-  for (const name of doorLogs)
-    it(`turns each door log's key door yes once every key is held (${name})`, () => {
-      const read = logOf(name);
-      const { log } = read;
-      const world = worldOf(read, {});
-      const reviewed = REVIEWED[name];
-      for (const at of Object.keys(reviewed?.at ?? {})) {
-        if (reviewed?.notKeys?.includes(at)) continue;
-        const sphere = Number(at.slice(0, at.indexOf(":")));
-        const location = at.slice(at.indexOf(":") + 1);
-        const items = [
-          ...((log.playthrough["0"] as readonly string[]) ?? []),
-          ...Array.from({ length: sphere - 1 }, (_, i) =>
-            Object.values(log.playthrough[i + 1] as Record<string, string>),
-          ).flat(),
-          ...EVERY_KEY,
-        ].filter((item) => item !== "Never in logic");
-        const state = {
-          ...collect(items, EVENTS),
-          ...medallionFacts({
-            mire: String(log.Special["Misery Mire"]).toLowerCase() as Medallion,
-            turtleRock: String(
-              log.Special["Turtle Rock"],
-            ).toLowerCase() as Medallion,
-          }),
-        };
-        expect(
-          solveFacts(world, state).location(
-            world.locationIds.get(location) ?? "",
-          ),
-          at,
-        ).toBe("yes");
-      }
     });
 });

@@ -91,6 +91,7 @@ import {
 } from "./overworld";
 import {
   addShuffledDoorRules,
+  bunnyTrapped,
   bunnyWall,
   isShut,
   roomDungeons,
@@ -1407,6 +1408,7 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
       ].includes(owrShuffleOf(all))
         ? ["Death Mountain Return Cave (right)"]
         : [],
+    trappedOf: (name) => bunnyTrapped(data, name, doors),
     wallOf: (name) => bunnyWall(data, name, doors),
   });
   const bunnyBodies = [...bunny.values()];

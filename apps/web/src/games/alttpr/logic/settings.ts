@@ -275,7 +275,10 @@ export const drSettingsOf = (run: RunSettings): Settings => {
     owr && door.doorVersion !== "1.5.6"
       ? "1.5.7"
       : (door?.doorVersion ?? "1.5.6");
-  const bonkDrops = owr && door.bonkDrops;
+  // Not known reads as shuffled: no bonk then gives farmable bombs
+  // (owr:ItemList.py:731-734), which shuffled drops take away, and the
+  // drops' own places stay unlisted (`bonkDropsOf`)
+  const bonkDrops = owr && door.bonkDrops !== false;
   // The fork's entrance shuffle its rules and groups read (`shuffle_<mode>`,
   // OWR_DEFAULTS)
   const entrances = owr ? doorShuffleOf(run) : undefined;

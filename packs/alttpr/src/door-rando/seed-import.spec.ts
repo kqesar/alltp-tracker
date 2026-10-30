@@ -128,6 +128,8 @@ describe("avianartReading", () => {
     expect(reading?.doorExact?.overworld).toMatchObject({
       followers: false,
       prizeShuffle: "none",
+      // The fork's own release, whose rules the app holds a run to
+      version: "0.8.0.2-u",
     });
     // A seed that moves them (the same meta, as the fork writes it)
     const { meta } = json.response.spoiler;
@@ -155,6 +157,15 @@ describe("avianartReading", () => {
     )?.doorExact?.overworld;
     expect(without).not.toHaveProperty("followers");
     expect(without).not.toHaveProperty("prizeShuffle");
+    // No `versions`: the fork's release not known
+    const unversioned = { ...meta };
+    delete unversioned.versions;
+    expect(
+      avianartReading(
+        { response: { spoiler: { meta: unversioned } } },
+        "4kxBlrWuP",
+      )?.doorExact?.overworld,
+    ).not.toHaveProperty("version");
   });
 
   it("reads OWR's dungeon items placed nearby as outside their dungeons, and says so", () => {

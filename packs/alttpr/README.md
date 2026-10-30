@@ -1001,13 +1001,14 @@ map shows (the old man's sword is marked on the grid when found).
 
 About half of the alttpr races of 2025-2026 ran on seeds of aerinon's Door
 Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
-(the study of 2026-10-29). The pack reads them in phases; this one holds
-the vanilla-door part: the ROMs, their settings, and the locations DR adds.
+(the study of 2026-10-29). The pack holds the ROMs, their settings, the
+locations DR adds, its door shuffle and entrance pools, and the fork's
+overworld shuffles.
 Its logic is DR's own: DR's world, rules, enemy logic and tests are
 imported as data (below), the world is built from them with DR's key
 analysis (`KeyDoorShuffle.py`) and held to DR's tests and to real seeds'
-playthroughs; the app solves a DR run with vanilla doors and entrances in
-it, through the package's `./door-world` export (the builder) and
+playthroughs; the app solves a DR run in it, its doors and entrances
+vanilla or as noted, through the package's `./door-world` export (the builder) and
 `./door-world/dr` (DR's own data, `DR_DATA`), which only its lazy chunks
 import (`apps/web/src/games/alttpr/logic/doorWorld.ts`, `drSolver.ts`),
 named on demand (`ondemand-`) so the site's service worker caches them only
@@ -1387,7 +1388,10 @@ shared with the entrance randomizer's world). `bunny.ts` ports
 `set_bunny_rules`, the walls a bunny cannot pass included (`doors_to_check`,
 `Rules.py:2196-2201`: a normal or interior door whose kind in its room is
 dashable, bombable or hidden, `bunnyWall`): the room's kind, or under a door
-shuffle that may change it the noted one, `maybe` until noted. Each rule it
+shuffle that may change it the noted one, `maybe` until noted, and the
+doors it cannot pass once trapped (`bunny_impassible_if_trapped`,
+`Rules.py:2191-2194`, `bunnyTrapped`), read the same way: the seed's trap,
+which a trap shuffle sets, the noted kind where it may. Each rule it
 finds is a helper of the world's own (`@bunny<n>`, compiled once and
 memoized like DR's helpers), as DR's paths share the rules they capture
 (`path + [entrance.access_rule]`): written out as text, a dungeon whose
@@ -1494,8 +1498,9 @@ vanilla drop holds (the escape's) stands for the item wherever a rule reads
 it. A fact whose location is reached at `maybe` only is read at `maybe`
 (`<fact>__maybe`, `src/facts.ts`), so what hangs on a `maybe` key door is
 `maybe`, never `no`. Standard is held to no upstream test (DR's tests build
-Open and Inverted only), nor to a seed yet: every recorded spoiler race is
-Open.
+Open and Inverted only), nor to a race: every recorded spoiler race is
+Open; the door set's avianart seeds hold three Standard ones
+(`test/dr-door-spoilers/`).
 
 **The static key logic** (`src/door-world/static.ts`, `key_logic_algorithm`
 static, DR's from 1.5.7 and some unstable 1.5.6 builds' before): the
@@ -1546,7 +1551,8 @@ shuffles entrances and has a playthrough (five Crosskeys races, DR 1.4.8 and
 1.4.8.1, `test/dr-entrance-spoilers/`, below) and an avianart.games Crosskeys
 seed of DR 1.5.8 generated for it (no 1.5.x race's spoiler is public).
 Crossed is the shuffle raced on DR; Swapped is raced on the Overworld fork
-(avianart's swapkeys rolls OWR), which the tracker does not model. The pool
+(avianart's swapkeys rolls OWR), held in the fork's world by its own seeds
+(`test/owr-entrance-spoilers/`, below). The pool
 (`drEntrancePool`) offers each door the log moved with the target it took,
 and keeps no door DR moved. The answers that are not `yes` are each a key
 door read strict-safe (a dungeon whose portals the walk does not all reach:
@@ -1699,9 +1705,11 @@ model of the pack's.
 
 **Its world, built** (`src/door-world/` on `OWR_DATA`, `owr-data.ts`, the
 pack's `./door-world/owr` entry, so only an OWR run loads its JSON: the
-app solves an OWR run there with its overworld, doors and entrances
-vanilla, in the Open or Inverted world, its bonk drops among the world's
-locations while shuffled): `drWorld(settings,
+app solves an OWR run there, in the Open, Inverted or Standard world, its
+doors vanilla or noted, its entrances vanilla or of any of the fork's
+shuffles as noted, its
+whirlpools, flute spots, crossed edges and Mixed flips as noted, its bonk
+drops among the world's locations while shuffled): `drWorld(settings,
 { data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
 fork links or rules otherwise (`overworld.ts`), its layout vanilla:
 
@@ -1934,8 +1942,15 @@ owr-mixed`) holds four seeds whose screens Mixed flipped: Open
 (`4yKJq5H2E`) and Open with its whirlpools shuffled (`t8B3wJpHK`), each
 flip noted from `Maps`' swaps `data` (`test/owr-mixed.spec.ts` holds its
 shape: a light screen with its dark twin). The world crosses exactly the
-edges the non-crossed ones list from their flips alone, and all twelve
-logs hold both walks with no exception but the prize-pack farms (with no
+edges the non-crossed ones list from their flips alone. The entrance set
+(`test/owr-entrance-spoilers/`, `record-dr-spoilers owr-entrances`) holds
+four Open seeds of the fork's own entrance shuffles, two District
+(`p5dYMs8jC`, Mixed too, and `qzj33CUOO`) and two Swapped (`sLcpC6Z45`,
+`sbuwNOmVF`), the Tavern's back shuffled, Link's House kept, every entrance
+noted from the log's `Entrances`; their reviewed answers (`REVIEWED`) are
+key doors read strict-safe, each turning yes once its dungeon's keys are
+held. All sixteen logs hold both walks with no exception but the prize-pack farms
+and those reviewed answers (with no
 flip read, `mPEeiQvu1` fails both walks; with the regions' types left
 unflipped, its sphere walk). Before the key analysis ran on the noted
 world, the Inverted one's Turtle Rock prize read maybe: its back ledges
@@ -2224,7 +2239,9 @@ entrance), a few hundred bytes: the session's chunk never loads `er.json`.
 `linksOf` (in `src/entrances.ts`, loaded with the entrance tables) names the
 facts: the entrance's id, and its target's, or a few alike that the game
 loads by one entrance (the healer fairies, some shops, the fortune
-tellers). Memory keeps only the last door each way: a door taken while the
+tellers), and Link's House and the Tavern's back, which only DR's and
+its fork's pools shuffle (entrances 1 and 0x43; another pool drops them).
+Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 
 ### Its rules

@@ -374,12 +374,21 @@ export interface DoorExactSettings {
   readonly doorIntensity?: number;
   readonly decoupledDoors?: boolean;
   readonly overworld?: {
+    /**
+     * The fork's own release (`versions.Overworld`, "0.8.0.2-u"), where
+     * `meta` names it.
+     */
+    readonly version?: string;
     readonly layout: string;
-    readonly crossed: string;
-    readonly mixed: boolean;
-    readonly whirlpool: boolean;
-    readonly fluteShuffle: string;
-    readonly bonkDrops: boolean;
+    /**
+     * Its crossed overworld, Mixed, whirlpools, flute spots and bonk drops,
+     * where `meta` names them: never assumed off.
+     */
+    readonly crossed?: string;
+    readonly mixed?: boolean;
+    readonly whirlpool?: boolean;
+    readonly fluteShuffle?: string;
+    readonly bonkDrops?: boolean;
     /**
      * OWR's prize shuffle (`prizeshuffle`: none, dungeon, nearby, wild) and
      * its followers shuffled (`shuffle_followers`), where `meta` names them:

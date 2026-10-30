@@ -630,6 +630,18 @@ describe("where the game shows Link went", () => {
     }
   });
 
+  it("names Link's House and the Tavern's back, which DR's pools shuffle", () => {
+    // Entrances 1 and 0x43 (exit_ids, dr:EntranceShuffle2.py:2631, :2707):
+    // a DR or OWR run's door into either, read off the game
+    for (const [entrance, target] of [
+      [0x01, "links-house-exit"],
+      [0x43, "tavern"],
+    ] as const)
+      expect(
+        linksOf([{ entrance, kind: "door", slot: 0 }])[0]?.targets,
+      ).toEqual([target]);
+  });
+
   it("names nothing for a slot or an entrance the tables do not know", () => {
     expect(
       linksOf([

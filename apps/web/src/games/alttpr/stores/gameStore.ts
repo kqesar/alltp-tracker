@@ -175,14 +175,15 @@ type GameState = Progress &
      * Note a Door Randomizer run's doors (`DoorNotes`): each entry of the
      * change set, or forgotten (`null`), as one undo step (none when nothing
      * changes). Its pieces come whole from `logic/doorNotes.ts`, which
-     * keeps a coupled door's way back with it.
+     * keeps only what the player noted (a coupled door's way back is
+     * derived, `linkOf`).
      */
     noteDoors: (change: DoorNotesChange) => void;
     /**
      * Note an Overworld Randomizer run's shuffled overworld
      * (`OverworldNotes`): whirlpools set or forgotten, each with its way
-     * back, or the flute's spots, as one undo step (none when nothing
-     * changes; `logic/overworldNotes.ts`).
+     * back, the flute's spots, edge crossings or Mixed flips, as one undo
+     * step (none when nothing changes; `logic/overworldNotes.ts`).
      */
     noteOverworld: (change: OverworldNotesChange) => void;
     /**
@@ -460,10 +461,11 @@ const dated = (
 
 /**
  * The bombs a run's capacity becomes when its bomb bag turns known on or
- * stops being so; undefined when it stays. Turned on, they are none
- * (BAG_BOMBS): a run's 10 to start with would say the bag found, which
- * autotracking reads again outside Race Mode. Turned off, none read back as
- * the 10 every other run starts with.
+ * stops being so; undefined when it stays. Turned on, the +10 upgrades
+ * recorded beyond the 10 every other run starts with, each a bag
+ * (BAG_BOMBS: a +5 is none in a bag seed), so none for those 10 alone,
+ * which would say the bag found (autotracking reads it again outside Race
+ * Mode). Turned off, none read back as the 10 every other run starts with.
  */
 const bagBombs = (
   progress: Progress,
@@ -471,8 +473,17 @@ const bagBombs = (
 ): number | undefined => {
   const bag = isBagRun(settings);
   if (bag === isBagRun(progress.settings)) return undefined;
-  if (bag) return BAG_BOMBS.start;
   const start = CAPACITIES.bombcapacity?.start ?? 0;
+  if (bag) {
+    const upgrades = Number(progress.items.bombcapacity ?? 0) - start;
+    return Math.min(
+      BAG_BOMBS.top,
+      Math.max(
+        BAG_BOMBS.start,
+        Math.floor(upgrades / BAG_BOMBS.step) * BAG_BOMBS.step,
+      ),
+    );
+  }
   return Math.max(start, Number(progress.items.bombcapacity ?? 0));
 };
 
@@ -975,10 +986,17 @@ export const useGameStore = create<GameState>()(
           // instead of discarding the whole save.
           return {
             ...current,
-            ...restoreProgress(
-              current,
-              validateProgress(saved, current.settings).value,
-            ),
+            ...restoreProgress(current, {
+              // The notes a save does not hold are the saved run's: none,
+              // never this tab's (an older version's tab writes no door,
+              // entrance or overworld notes, and its New game must not
+              // keep this run's for the next seed)
+              doors: {},
+              entrances: {},
+              overworld: {},
+              seed: null,
+              ...validateProgress(saved, current.settings).value,
+            }),
             ...restorePrefs(current, saved as Partial<Prefs>),
             // The run was replaced from outside (first load, another tab):
             // undoing would now rewind someone else's changes.

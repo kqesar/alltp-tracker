@@ -88,11 +88,12 @@ export type Hidden =
    */
   | "not-modelled"
   /**
-   * The log is a Door Randomizer's, but its run is not solved in DR's own
-   * world (an OWR seed, shuffled bosses: alttpr.com's v31 stands in, which
-   * would say "in logic" from rules the seed was not made with), or an item
-   * it needed lay at one of DR's places (a key drop, a pot, an enemy drop, a
-   * shop item), which the run keeps no time for.
+   * The log is a Door Randomizer's, but its run is not solved in DR's or
+   * its fork's own world (an OWR seed that world does not hold, shuffled
+   * bosses: alttpr.com's v31 would say "in logic" from rules the seed was
+   * not made with), or an item it needed lay at one of DR's places (a key
+   * drop, a pot, an enemy drop, a bonk drop, a shop item), which the run
+   * keeps no time for.
    */
   | "door-logic"
   /**
@@ -101,8 +102,9 @@ export type Hidden =
    */
   | "doors"
   /**
-   * The log is an Overworld Randomizer's whose whirlpools or flute spots
-   * were shuffled: the run does not time where each led.
+   * The log is an Overworld Randomizer's whose whirlpools, flute spots,
+   * crossed edges or Mixed flips were shuffled: the run does not time where
+   * each led.
    */
   | "overworld"
   /**

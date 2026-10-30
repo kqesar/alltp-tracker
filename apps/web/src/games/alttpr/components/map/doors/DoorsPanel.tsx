@@ -18,12 +18,14 @@ import {
   memo,
   use,
   useContext,
+  useDeferredValue,
   useId,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
-import { linkChange } from "@/games/alttpr/logic/doorNotes";
+import { linkChange, linkOf } from "@/games/alttpr/logic/doorNotes";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** DR's door names have no world of their own: one line each. */
@@ -102,7 +104,7 @@ const KindSelect = ({ door, label }: { door: string; label: string }) => {
       }
       value={kind ?? ""}
     >
-      <option value="">? Kind</option>
+      <option value="">? Kind not known</option>
       {KIND_WORDS.map(([value, words]) => (
         <option key={value} value={value}>
           {words}
@@ -124,17 +126,29 @@ const DoorRow = memo(
     targets: readonly Door[];
   }) => {
     const id = doorId(door.name);
-    const target = useGameStore((state) => state.doors.links?.[id]);
+    const coupled = !settings.decoupled;
+    const target = useGameStore((state) =>
+      linkOf(state.doors.links, id, coupled),
+    );
     const noteDoors = useGameStore((state) => state.noteDoors);
     const data = useDoorData();
+    // A crossed shuffle offers a door of Ganon's Tower some 70 targets, a
+    // dungeon thousands in all (440 ms to show it, measured): a row first
+    // shows the target noted alone, its other options in a render React
+    // defers, so a dungeon picked shows at once
+    const full = useDeferredValue(true, false);
     const byDungeon = useMemo(() => {
+      if (!full) return [];
       const groups = new Map<string, Door[]>();
       for (const other of targets) {
         const dungeon = homeDungeonOf(other, data) ?? "";
         groups.set(dungeon, [...(groups.get(dungeon) ?? []), other]);
       }
       return [...groups];
-    }, [targets, data]);
+    }, [full, targets, data]);
+    const noted = full
+      ? undefined
+      : targets.find((other) => doorId(other.name) === target);
     return (
       <li className="door-row" data-testid={`door-row-${id}`}>
         <span className="door-row__name">{door.name}</span>
@@ -149,13 +163,16 @@ const DoorRow = memo(
                 useGameStore.getState().doors,
                 id,
                 value === "" ? null : value,
-                !settings.decoupled,
+                coupled,
               ),
             );
           }}
           value={target ?? ""}
         >
           <option value="">? Not known</option>
+          {noted !== undefined && (
+            <option value={doorId(noted.name)}>{noted.name}</option>
+          )}
           {byDungeon.map(([dungeon, doors]) => (
             <optgroup key={dungeon} label={dungeonText(dungeon)}>
               {doors.map((other) => (
@@ -194,10 +211,11 @@ const LobbyRow = ({
   );
   return (
     <li className="door-row door-row--lobby" data-testid={`door-lobby-${id}`}>
-      <span className="door-row__name">{portal} entrance</span>
+      <span className="door-row__name">{dungeonText(portal)} entrance</span>
       <select
-        aria-label={`${portal} entrance: opens on`}
+        aria-label={`${dungeonText(portal)} entrance: opens on`}
         className="checks__input door-row__link"
+        data-testid={`door-lobby-link-${id}`}
         onChange={(event) => {
           const value = event.currentTarget.value;
           noteDoors({ lobbies: { [id]: value === "" ? null : value } });
@@ -281,6 +299,7 @@ const DoorsOf = ({ data }: { data: DrData }) => {
   const selectId = useId();
   const searchId = useId();
   const headingId = useId();
+  const summary = useRef<HTMLParagraphElement>(null);
   const relinked = useMemo(
     () =>
       settings === undefined
@@ -315,8 +334,12 @@ const DoorsOf = ({ data }: { data: DrData }) => {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (door: Door) =>
     words.every((word) => door.name.toLowerCase().includes(word));
+  const shownDoors = relinked.filter(matches);
+  const shownRooms = kindOnly.filter(matches);
+  const shown = shownDoors.length + shownRooms.length;
   const linked = relinked.filter(
-    (door) => notes.links?.[doorId(door.name)] !== undefined,
+    (door) =>
+      linkOf(notes.links, doorId(door.name), !settings.decoupled) !== undefined,
   ).length;
   const unknownKinds = [...relinked, ...kindOnly].filter(
     (door) =>
@@ -342,7 +365,11 @@ const DoorsOf = ({ data }: { data: DrData }) => {
             className="checks__input"
             data-testid="doors-dungeon"
             id={selectId}
-            onChange={(event) => setDungeon(event.currentTarget.value)}
+            onChange={(event) => {
+              setDungeon(event.currentTarget.value);
+              // A search is a dungeon's: the next one shows whole
+              setQuery("");
+            }}
             value={dungeon}
           >
             {DUNGEONS.map((name) => (
@@ -368,12 +395,20 @@ const DoorsOf = ({ data }: { data: DrData }) => {
       <p
         className="entrances__summary"
         data-testid="doors-summary"
+        ref={summary}
         role="status"
+        tabIndex={-1}
       >
         {linked} of {relinked.length} doors of {dungeonText(dungeon)} noted,{" "}
         {unknownKinds.length} {unknownKinds.length === 1 ? "kind" : "kinds"} not
         known
+        {words.length > 0 && `, ${shown} shown`}
       </p>
+      {words.length > 0 && shown === 0 && (
+        <p className="entrances__hint" data-testid="doors-none">
+          No door of {dungeonText(dungeon)} matches “{query.trim()}”.
+        </p>
+      )}
       <p className="entrances__hint">
         Note each door by hand as you go through it: the tracker never reads a
         door, a room or a transition. A door not noted leads nowhere, and a door
@@ -383,13 +418,16 @@ const DoorsOf = ({ data }: { data: DrData }) => {
         <button
           className="doors__plain"
           data-testid="doors-plain"
-          onClick={() =>
+          onClick={() => {
             noteDoors({
               kinds: Object.fromEntries(
                 unknownLinked.map((door) => [doorId(door.name), "normal"]),
               ),
-            })
-          }
+            });
+            // The button goes with the kinds it noted: focus moves to the
+            // summary they change, never to the page's start (WCAG 2.4.3)
+            summary.current?.focus();
+          }}
           type="button"
         >
           Note the {unknownLinked.length} linked{" "}
@@ -416,28 +454,30 @@ const DoorsOf = ({ data }: { data: DrData }) => {
           </ul>
         </section>
       )}
-      <section
-        aria-labelledby={`${headingId}-doors`}
-        className="entrances__world"
-      >
-        <h3
-          className="entrances__heading page-background"
-          id={`${headingId}-doors`}
+      {shownDoors.length > 0 && (
+        <section
+          aria-labelledby={`${headingId}-doors`}
+          className="entrances__world"
         >
-          Doors
-        </h3>
-        <ul className="entrances__list">
-          {relinked.filter(matches).map((door) => (
-            <DoorRow
-              door={door}
-              key={door.name}
-              settings={settings}
-              targets={targets.get(door.name) ?? []}
-            />
-          ))}
-        </ul>
-      </section>
-      {kindOnly.length > 0 && (
+          <h3
+            className="entrances__heading page-background"
+            id={`${headingId}-doors`}
+          >
+            Doors
+          </h3>
+          <ul className="entrances__list">
+            {shownDoors.map((door) => (
+              <DoorRow
+                door={door}
+                key={door.name}
+                settings={settings}
+                targets={targets.get(door.name) ?? []}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+      {shownRooms.length > 0 && (
         <section
           aria-labelledby={`${headingId}-rooms`}
           className="entrances__world"
@@ -449,7 +489,7 @@ const DoorsOf = ({ data }: { data: DrData }) => {
             Doors inside rooms
           </h3>
           <ul className="entrances__list">
-            {kindOnly.filter(matches).map((door) => (
+            {shownRooms.map((door) => (
               <li
                 className="door-row door-row--kind"
                 data-testid={`door-row-${doorId(door.name)}`}
