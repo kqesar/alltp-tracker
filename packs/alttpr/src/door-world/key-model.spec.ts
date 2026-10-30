@@ -328,7 +328,9 @@ describe("the key model's soundness", () => {
       fc.assert(property, { numRuns: runs, seed: 7 });
       // Not vacuous: the model said yes where only its keys could
       expect([...seen]).toEqual(["raised"]);
-    });
+      // A property run takes ~5 s alone and 4x that under coverage on a busy
+      // machine: past the pack's hung-test timeout, not hung
+    }, 90_000);
 
   it("finds a model that takes a placement's alternative for granted unsound", () => {
     // AllowSmall and the big key's Lock read as sure: a key the tracker
