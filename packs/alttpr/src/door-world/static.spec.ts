@@ -13,7 +13,9 @@ import {
   drWorld,
   turtleRockAccess,
 } from "./index";
+import { worldKeys } from "./keys";
 import {
+  addStaticKeyRules,
   STATIC_KEY_LOGIC,
   staticKeyLogic,
   type TurtleRockCase,
@@ -147,6 +149,36 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
     const chomps = tr("big-chest", 158, "TR Chain Chomps SW");
     expect([chomps.lockNum, chomps.alternateSmallKey]).toEqual([2, 2]);
     expect(chomps.alternateBigKeyLoc.size).toBe(3);
+    // No way in found (Standard before 1.5.7): the table's numbers
+    const none = staticKeyLogic(OPEN, null, 156);
+    expect(ruleOf(none, "Turtle Rock", "TR Hub NW").worstCase).toBe(4);
+    expect(
+      ruleOf(none, "Turtle Rock", "TR Chain Chomps Down Stairs").worstCase,
+    ).toBe(4);
+  });
+
+  it("refuses a table it cannot lay on the world", () => {
+    // A door of the table no layout holds (apply_key_rule_specs raises)
+    const gt = OPEN.get("Ganons Tower");
+    if (gt === undefined) throw new RangeError("No Ganons Tower");
+    expect(() =>
+      staticKeyLogic(new Map([["Ganons Tower", gt]]), "front", 158),
+    ).toThrow(/is not a small key door/);
+    const keys = worldKeys("dungeon", { drops: false, pots: false });
+    expect(() => addStaticKeyRules([], new Map(), keys, "open", null)).toThrow(
+      /No location/,
+    );
+    const located = new Map(
+      [
+        "Hyrule Castle - Boomerang Chest",
+        "Hyrule Castle - Zelda's Chest",
+        "Desert Palace - Boss",
+        "Desert Palace - Prize",
+      ].map((name) => [name, "true"]),
+    );
+    expect(() => addStaticKeyRules([], located, keys, "open", null)).toThrow(
+      /No exit/,
+    );
   });
 
   it("gives its chests their rules, keys of the chests alone", () => {

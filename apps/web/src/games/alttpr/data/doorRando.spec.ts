@@ -110,6 +110,12 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorNotes(DR_CROSSKEYS, "crossed")[0]).toBe(
       "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
     );
+    // Its DR places, which that logic knows nothing of
+    expect(
+      doorNotes(with_(DR_CROSSKEYS, { dropShuffle: "keys" }), "crossed")[1],
+    ).toBe(
+      "Its key drops, pots, enemy drops and shop items show as maybe until then.",
+    );
   });
 
   it("reads strict, dangerous and static key logic", () => {
