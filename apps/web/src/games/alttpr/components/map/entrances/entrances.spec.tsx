@@ -207,6 +207,32 @@ describe("the entrance assistant", () => {
     }
   });
 
+  it("names an OWR run's shuffle it does not model by the fork's own words", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      randomizer: "owr" as const,
+    };
+    for (const [change, words] of [
+      [
+        { doorEntrances: "lite" as const },
+        "The Overworld Randomizer's Lite entrance shuffle is not modelled yet: the tracker lists its District and Swapped entrances",
+      ],
+      [
+        { entranceShuffle: "crossed" as const },
+        "The Overworld Randomizer's Crossed entrance shuffle is not modelled yet",
+      ],
+    ] as const) {
+      act(() =>
+        useGameStore
+          .getState()
+          .applyRun("door-randomizer", { ...owr, ...change }),
+      );
+      const view = render(<EntrancesPanel />);
+      expect(screen.getByTestId("entrances-panel")).toHaveTextContent(words);
+      view.unmount();
+    }
+  });
+
   it("notes a Simple run's dungeon whole from one of its doors, in the list and the picker", async () => {
     const user = userEvent.setup();
     act(() => {

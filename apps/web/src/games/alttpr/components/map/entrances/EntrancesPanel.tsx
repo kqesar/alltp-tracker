@@ -1,5 +1,6 @@
 import type { OverworldEntrance } from "@alltp/pack-alttpr";
 import { memo, useId, useState } from "react";
+import { doorEntranceText } from "@/games/alttpr/data/doorRando";
 import { ENTRANCE_LABELS } from "@/games/alttpr/data/presets";
 import { poolOf, targetById, targetText } from "@/games/alttpr/logic/entrances";
 import { useEntrancePicker } from "@/games/alttpr/stores/entrancePickerStore";
@@ -54,9 +55,23 @@ const EntrancesPanel = () => {
   const noted = useGameStore((state) => Object.keys(state.entrances).length);
   const shuffle = useGameStore((state) => state.settings.entranceShuffle);
   const mode = useGameStore((state) => state.settings.mode);
+  // An OWR run's shuffle the fork builds its own way, in DR's words
+  const forkShuffle = useGameStore((state) =>
+    state.settings.randomizer === "owr"
+      ? doorEntranceText(state.settings)
+      : null,
+  );
   const [query, setQuery] = useState("");
   const searchId = useId();
   const headingId = useId();
+  if (pool === null && forkShuffle !== null) {
+    return (
+      <p className="logic-note" data-testid="entrances-panel">
+        The Overworld Randomizer's {forkShuffle} entrance shuffle is not
+        modelled yet: the tracker lists its District and Swapped entrances.
+      </p>
+    );
+  }
   if (pool === null) {
     return (
       <p className="logic-note" data-testid="entrances-panel">
