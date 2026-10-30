@@ -1634,8 +1634,11 @@ it: the vanilla, Inverted and dungeon suites are `ported`; the glitched
 ones (`owg`, `inverted_owg`) stay `pending`, glitched logic being no
 model of the pack's.
 
-**Its world, built** (`src/door-world/` on `OWR_DATA`, `owr-data.ts`, a
-module of its own so only an OWR run loads its JSON): `drWorld(settings,
+**Its world, built** (`src/door-world/` on `OWR_DATA`, `owr-data.ts`, the
+pack's `./door-world/owr` entry, so only an OWR run loads its JSON: the
+app solves an OWR run there with its overworld, doors and entrances
+vanilla, in the Open or Inverted world, its bonk drops among the world's
+locations while shuffled): `drWorld(settings,
 { data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
 fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
 

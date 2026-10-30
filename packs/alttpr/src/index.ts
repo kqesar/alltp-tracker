@@ -191,6 +191,7 @@ export {
   drKeysAdded,
   drLocationsOf,
   NO_SCREEN,
+  OVERWORLD_RANDOMIZER_VERSION,
   type PotteryMode,
   type TakeAny,
 } from "./door-rando/locations";

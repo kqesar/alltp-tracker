@@ -29,8 +29,9 @@ const ON_DEMAND = /^assets\/(vosk[.-]|smz3\/|review-|ondemand-)/;
 
 /**
  * Whether a chunk holds code only some runs load: the Door Randomizer's
- * world (logic/doorWorld.ts) or the Overworld Randomizer's bonk drops (the
- * pack's `./bonk` entry, hooks/useBonkDrops.ts).
+ * world (logic/doorWorld.ts), the Overworld Randomizer's (its data, the
+ * pack's door-rando/owr/) or its bonk drops (the pack's `./bonk` entry,
+ * hooks/useBonkDrops.ts).
  */
 const doorWorldChunk = (chunk: {
   facadeModuleId: string | null;
@@ -38,7 +39,13 @@ const doorWorldChunk = (chunk: {
 }) =>
   chunk.facadeModuleId?.endsWith("/logic/doorWorld.ts") === true ||
   chunk.facadeModuleId?.endsWith("/door-rando/bonk.ts") === true ||
-  chunk.moduleIds.some((id) => id.includes("/door-world/"));
+  chunk.moduleIds.some(
+    (id) =>
+      id.includes("/door-world/") ||
+      // The fork's data but the bonk drops' names, which every ALttPR
+      // player's locations hold (saves and links read them)
+      (id.includes("/door-rando/owr/") && !id.endsWith("/bonk-names.json")),
+  );
 
 const withoutSiteOnlyFiles = (): Plugin => ({
   apply: "build",
@@ -96,6 +103,11 @@ export default defineConfig(({ mode }) => {
             // A region of DR's world alone (packs/alttpr/src/door-world/)
             marker: "Swamp Trench 1 Approach Dry",
             what: "The Door Randomizer's world",
+          },
+          {
+            // A screen edge's source in the fork's own data (owr/overworld.json)
+            marker: "OWEdges.py:42",
+            what: "The Overworld Randomizer's world",
           },
           {
             // A bonk drop's place on the fork's map (owr/bonk.json alone)

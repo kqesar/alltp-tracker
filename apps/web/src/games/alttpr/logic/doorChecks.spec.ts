@@ -131,6 +131,30 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())["pyramid-tree"]).toBe("opened");
   });
 
+  it("follow the Overworld Randomizer's own rules once its world is loaded", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bonkDrops: true,
+      randomizer: "owr",
+    });
+    const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
+    setBonkDrops(BONK_DROPS);
+    // DR's own world is no stand-in: maybe until the fork's is loaded
+    const { solver: dr } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(dr);
+    expect(solutionOf(state()).modelled).toBe(false);
+    expect(checkStates(state())["lost-woods-hideout-tree"]).toBe("possible");
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    // A bonk drop asks the boots, or a sword and Quake (BaseClasses.py:1245)
+    expect(checkStates(state())["lost-woods-hideout-tree"]).toBe("unavailable");
+    useGameStore.getState().setItem("boots", true);
+    expect(checkStates(state())["lost-woods-hideout-tree"]).toBe("available");
+    // And the run's other checks are the fork's world's too
+    expect(checkStates(state())["links-house"]).toBe("available");
+  });
+
   it("draw an OWR run's bonk drops clear of every other marker", async () => {
     const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
     setBonkDrops(BONK_DROPS);

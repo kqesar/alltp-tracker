@@ -62,11 +62,37 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorNotes(getPreset("open").settings)).toEqual([]);
   });
 
+  it("takes the Overworld Randomizer's own world for its vanilla overworld", () => {
+    for (const mode of ["open", "inverted"] as const) {
+      const run = with_(DR, { bonkDrops: true, mode, randomizer: "owr" });
+      expect(unmodelledReasons(run), mode).toEqual([]);
+      expect(doorLogic(run), mode).toBe(true);
+      expect(doorNotes(run)).toEqual([
+        "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
+      ]);
+    }
+    // What the fork's world does not model yet stays named
+    expect(
+      unmodelledReasons(with_(DR, { owMixed: true, randomizer: "owr" })),
+    ).toEqual(["a mixed overworld"]);
+  });
+
   it("names what keeps a run out of DR's world, v31's rules being no stand-in", () => {
     // v31 asks less than DR in places (kill rooms, Ganons Tower's Tile
     // Room's powder, DR's key analysis): a yes there would be unsound
     const cases: [Partial<RunSettings>, string][] = [
-      [{ randomizer: "owr" }, "the Overworld Randomizer's own rules"],
+      [
+        { mode: "standard", randomizer: "owr" },
+        "the Overworld Randomizer's Standard world",
+      ],
+      [
+        { entranceShuffle: "crossed", randomizer: "owr" },
+        "the Overworld Randomizer's entrance shuffles",
+      ],
+      [
+        { doorShuffle: "basic", randomizer: "owr" },
+        "a door shuffle in an Overworld Randomizer seed",
+      ],
       [{ bossShuffle: "full" }, "shuffled bosses in a Door Randomizer seed"],
       [{ bossShuffle: "simple" }, "shuffled bosses in a Door Randomizer seed"],
     ];

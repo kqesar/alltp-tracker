@@ -265,7 +265,7 @@ const openBonkRun = async (page: Page) => {
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
 
-test("an OWR run's bonk drops are drawn and checked, loaded on demand", async ({
+test("an OWR run is solved in the fork's own world, its bonk drops drawn and checked", async ({
   page,
 }) => {
   const bonk = page.waitForResponse(/ondemand-bonk-/);
@@ -278,11 +278,24 @@ test("an OWR run's bonk drops are drawn and checked, loaded on demand", async ({
   await tree.focus();
   await page.keyboard.press("Enter");
   await expect(tree).toHaveAttribute("aria-pressed", "true");
+  // Solved in the fork's own world, loaded on demand
+  await expect(page.getByTestId("logic-note-door")).toHaveText(
+    /Overworld Randomizer seed: the logic is the fork's own \(0\.8\.0\.2, on DR 1\.5\.7\)\./,
+  );
   await page.getByTestId("map-view-tab-checks").click();
   await page.getByTestId("checks-filter-opened").check();
   await expect(
     page.getByTestId("check-row-pyramid-tree").getByRole("checkbox"),
   ).toBeChecked();
+  // A bonk drop asks the boots (or a sword and Quake)
+  await page.getByTestId("checks-filter-unavailable").check();
+  const hideout = page.getByTestId("check-row-lost-woods-hideout-tree");
+  await expect(hideout).toContainText("out of logic", { ignoreCase: true });
+  await page.getByTestId("item-boots").click();
+  await expect(hideout).not.toContainText("out of logic", {
+    ignoreCase: true,
+  });
+  await expect(hideout).toContainText("available", { ignoreCase: true });
   await auditPage(page, ".mapspan");
 });
 

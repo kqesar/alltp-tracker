@@ -3,10 +3,14 @@
 // door-world/), its rules, crystal switches and key analysis, built for the
 // run's settings. Loaded on demand for such a run (hooks/useDoorLogic.ts),
 // with DR's rules and region graph: no other run downloads them, so
-// whatever reads that world goes through this module.
+// whatever reads that world goes through this module. An Overworld
+// Randomizer run is solved in the same world built on the fork's own data
+// (logic/owrWorld.ts, `doorSolverOf`).
 
 import type { Settings, State, Tri } from "@alltp/engine";
 import {
+  DR_DATA,
+  type DrData,
   type DrNotedDoors,
   type DrNotedEntrances,
   type DrWorld,
@@ -33,7 +37,7 @@ const UNRECORDED = ["bigKeyH2"];
 /** A run's pots and enemy drops, each in its DR region. */
 type Added = readonly { readonly name: string; readonly region: string }[];
 
-const built = new WeakMap<
+type Built = WeakMap<
   Settings,
   {
     added: Added;
@@ -41,7 +45,7 @@ const built = new WeakMap<
     entrances?: DrNotedEntrances;
     world: DrWorld;
   }
->();
+>;
 
 /** Whether two runs' noted doors are the same notes of the same shuffle. */
 const sameDoors = (a?: DrNotedDoors, b?: DrNotedDoors) =>
@@ -70,6 +74,8 @@ const sameEntrances = (a?: DrNotedEntrances, b?: DrNotedEntrances) =>
  * other's.
  */
 const worldOf = (
+  data: DrData,
+  built: Built,
   settings: Settings,
   added: Added,
   entrances?: DrNotedEntrances,
@@ -83,6 +89,7 @@ const worldOf = (
   )
     return found.world;
   const world = drWorld(settings, {
+    data,
     dropsAndPots: added,
     ...(entrances === undefined ? {} : { entrances }),
     ...(doors === undefined ? {} : { doors }),
@@ -117,17 +124,27 @@ export interface DoorSolver extends OwnWorldSolver {
   region(run: DoorRun, name: string): Tri;
 }
 
-export const solver: DoorSolver = {
-  // Every key held beside vt's pool: DR's dungeons hold more (their drops)
-  ...ownWorldSolver(() =>
-    Object.fromEntries(
-      KEY_ITEMS.map((item) => [item, item.startsWith("big") ? 1 : 99]),
+/**
+ * The solver of runs in DR's world built on `data`: DR's own, or the
+ * Overworld Randomizer's (logic/owrWorld.ts), each world kept per settings.
+ */
+export const doorSolverOf = (data: DrData): DoorSolver => {
+  const built: Built = new WeakMap();
+  return {
+    // Every key held beside vt's pool: DR's dungeons hold more (their drops)
+    ...ownWorldSolver(() =>
+      Object.fromEntries(
+        KEY_ITEMS.map((item) => [item, item.startsWith("big") ? 1 : 99]),
+      ),
     ),
-  ),
-  region: ({ solution }, name) => {
-    const id = drRegionId(name);
-    return id === undefined ? "maybe" : solution.region(id);
-  },
-  solve: (settings, added, state, entrances, doors) =>
-    solveIn(worldOf(settings, added, entrances, doors), state),
+    region: ({ solution }, name) => {
+      const id = drRegionId(name, data);
+      return id === undefined ? "maybe" : solution.region(id);
+    },
+    solve: (settings, added, state, entrances, doors) =>
+      solveIn(worldOf(data, built, settings, added, entrances, doors), state),
+  };
 };
+
+/** The solver of Door Randomizer runs, in DR's own world. */
+export const solver: DoorSolver = doorSolverOf(DR_DATA);

@@ -25,4 +25,21 @@ describe("useDoorLogic", () => {
     expect(solution).toMatchObject({ modelled: true });
     expect(solution.door).toBeDefined();
   });
+
+  it("loads the Overworld Randomizer's world for its runs, and solves them there", async () => {
+    const { rerender } = renderHook(() => useDoorLogic());
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().updateDoorSettings({ randomizer: "owr" });
+    });
+    rerender();
+    await waitFor(() => expect(doorSolverLoaded("owr")).toBe(true));
+    const solution = solutionOf(useGameStore.getState());
+    expect(solution).toMatchObject({ modelled: true });
+    // The fork's own world: its farms are locations of it
+    // (create_farm_locations, ItemList.py:640-700), never of DR's
+    expect(
+      solution.door?.world.locationIds.has("Kakariko Village Bush Drop"),
+    ).toBe(true);
+  });
 });

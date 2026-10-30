@@ -240,6 +240,8 @@ export const pyramidOpen = (run: RunSettings): boolean => {
  * Ganon (Rules.py:73-74) and
  * Murahdahla (:72) ask the pieces the goal asks, which the state holds as
  * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
+ * An Overworld Randomizer run adds its bonk drops and reads DR 1.5.7's
+ * world, the base of the fork's release the pack reads (0.8.0.2).
  * The same run settings always give the same object, so the world compiled
  * for it can be kept.
  * @param run - A DR run's settings
@@ -254,8 +256,13 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const potShuffle = door?.potShuffle ?? false;
   const bossItems = door?.restrictBossItems ?? "none";
   const pyramid = pyramidOpen(run);
-  const version = door?.doorVersion ?? "1.5.6";
+  const owr = door?.randomizer === "owr";
+  // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7
+  const version = owr ? "1.5.7" : (door?.doorVersion ?? "1.5.6");
+  const bonkDrops = owr && door.bonkDrops;
   const key = [
+    owr,
+    bonkDrops,
     pottery,
     drops,
     keyLogic,
@@ -277,6 +284,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
     found = {
       ...settings,
       bombBag,
+      // OWR's bonk drops shuffled (shuffle_bonk_drops), its rules' own
+      ...(owr ? { bonkDrops } : {}),
       // key_logic_algorithm: dangerous asks each door's worst case
       dangerousKeyLogic: keyLogic === "dangerous",
       dropShuffle: drops !== "none",

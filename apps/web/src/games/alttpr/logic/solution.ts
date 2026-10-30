@@ -49,6 +49,7 @@ import {
   doorPoolSettingsOf,
   doorShuffleOf,
   doorShuffleSettingsOf,
+  type Randomizer,
 } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
@@ -295,18 +296,29 @@ export const setCrossedSolver = (solver: CrossedSolver): void => {
   useGameStore.setState({});
 };
 
-/** The solver of Door Randomizer runs, once its chunk is loaded. */
-let door: DoorSolver | undefined;
+/**
+ * The solvers of Door Randomizer runs, once their chunk is loaded: DR's
+ * own world, and the Overworld Randomizer's, built on the fork's data.
+ */
+const doorSolvers: Partial<Record<Randomizer, DoorSolver>> = {};
 
-/** Whether the solver of Door Randomizer runs is loaded. */
-export const doorSolverLoaded = (): boolean => door !== undefined;
+/** Which solver a run is solved by: its generator's. */
+const doorFlavorOf = (run: RunSettings): Randomizer =>
+  run.randomizer === "owr" ? "owr" : "dr";
+
+/** Whether the solver of a run's generator (DR's by default) is loaded. */
+export const doorSolverLoaded = (randomizer: Randomizer = "dr"): boolean =>
+  doorSolvers[randomizer] !== undefined;
 
 /**
- * Takes up the solver of Door Randomizer runs (useDoorLogic): the store is
+ * Takes up the solver of a generator's runs (useDoorLogic): the store is
  * set again as it was, so every selector solves the run anew.
  */
-export const setDoorSolver = (solver: DoorSolver): void => {
-  door = solver;
+export const setDoorSolver = (
+  solver: DoorSolver,
+  randomizer: Randomizer = "dr",
+): void => {
+  doorSolvers[randomizer] = solver;
   useGameStore.setState({});
 };
 
@@ -347,16 +359,20 @@ const keysOf = (inputs: Inputs): Partial<Record<DungeonId, number>> =>
 const added = new WeakMap<readonly DrLocation[], DrLocation[]>();
 
 /**
- * The pots and enemy drops of a DR run, which DR's world adds to their
- * regions (key drops are in it already, shop items too): the same list for
- * the same locations, so the world built for it is kept.
+ * The pots and enemy drops of a DR run, and an OWR run's bonk drops, which
+ * DR's world adds to their regions with their rules (key drops are in it
+ * already, shop items too): the same list for the same locations, so the
+ * world built for it is kept.
  */
 export const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
   const { locations } = doorLocationsOf(run);
   let found = added.get(locations);
   if (found === undefined) {
     found = locations.filter(
-      (location) => location.kind === "pot" || location.kind === "enemyDrop",
+      (location) =>
+        location.kind === "pot" ||
+        location.kind === "enemyDrop" ||
+        location.kind === "bonk",
     );
     added.set(locations, found);
   }
@@ -389,6 +405,7 @@ let last:
  */
 export const solutionOf = (state: Inputs): Solution => {
   const events = eventsOf(state);
+  const door = doorSolvers[doorFlavorOf(state.settings)];
   // The entrances noted, in a run whose world reads them: the entrance
   // randomizer's, or DR's where it shuffled them
   const doorShuffle = doorLogic(state.settings)

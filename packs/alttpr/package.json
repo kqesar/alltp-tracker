@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./bonk": "./src/door-rando/bonk.ts",
     "./door-world": "./src/door-world/index.ts",
+    "./door-world/owr": "./src/door-world/owr-data.ts",
     "./spoiler": "./src/spoiler/parse.ts"
   },
   "scripts": {

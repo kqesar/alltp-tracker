@@ -6,6 +6,7 @@
 import type { AlttprSpoilerLog } from "@alltp/pack-alttpr";
 import { useEffect, useState } from "react";
 import { doorLogic } from "@/games/alttpr/data/presets";
+import { loadDoorSolver } from "@/games/alttpr/hooks/useDoorLogic";
 import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
 import type {
   ReviewComparison,
@@ -84,9 +85,7 @@ export const useSweep = (
     };
     // A run solved in DR's own world is swept there: its chunk first
     if (doorLogic(run.settings))
-      void import("@/games/alttpr/logic/doorWorld").then(({ solver }) =>
-        start(solver),
-      );
+      void loadDoorSolver(run.settings).then((solver) => start(solver));
     else start();
     return () => {
       stopped = true;

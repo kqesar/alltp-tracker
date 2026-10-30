@@ -189,14 +189,19 @@ describe("MapPanel", () => {
       "Door Randomizer seed: the logic is DR's own (1.5.8).",
     );
 
-    // Its Overworld fork's rules are its own: not modelled
+    // Its Overworld fork: the fork's own world, but where it is not held
     act(() =>
       useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
     );
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
+    );
+    act(() => useGameStore.getState().updateDoorSettings({ owMixed: true }));
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: the Overworld Randomizer's own rules.",
+      "Not modelled yet: a mixed overworld.",
     );
     expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    act(() => useGameStore.getState().updateDoorSettings({ owMixed: false }));
     // A Mystery run's hidden settings: not modelled until set, never v31's
     act(() => {
       useGameStore.getState().updateDoorSettings({ randomizer: "dr" });

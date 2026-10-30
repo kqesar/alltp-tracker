@@ -118,6 +118,9 @@ const REGIONS: Readonly<
 /** A bonk drop's screen when no screen holds it (a cave's). */
 export const NO_SCREEN = -1;
 
+/** The Overworld Randomizer release the pack's OWR data was read from. */
+export const OVERWORLD_RANDOMIZER_VERSION: string = bonkNames.upstream.version;
+
 /**
  * The ids of the Overworld Randomizer's bonk drops (owr:Regions.py
  * bonk_prize_table), in its order: what a save or a link may hold of them.

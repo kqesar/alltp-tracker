@@ -30,6 +30,7 @@ import {
   drKeysAdded,
   drLocationsOf,
   NO_SCREEN,
+  OVERWORLD_RANDOMIZER_VERSION,
   type PotteryMode,
   type SeedSetting,
   type SeedSettingsReading,
@@ -695,7 +696,9 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
   return [
-    `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
+    door.randomizer === "owr"
+      ? `Overworld Randomizer seed: the logic is the fork's own (${OVERWORLD_RANDOMIZER_VERSION}, on DR 1.5.7).`
+      : `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
     ...(door.doorShuffle === "vanilla"
       ? []
       : [
