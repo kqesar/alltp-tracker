@@ -16,10 +16,23 @@ import {
 import { drSettingsOf } from "@/games/alttpr/logic/settings";
 import unrestricted from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-0DsyCwK23.json?raw";
 import grouped from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-o4mamwuKZ.json?raw";
+import lite from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-1IAKwFudE.json?raw";
+import liteInverted from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-4cwdgebPq.json?raw";
+import full from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-89uvVx2xg.json?raw";
+import insanity from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-DLSrm8B0f.json?raw";
+import dungeonsSimple from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-ERKxf6EjS.json?raw";
+import lean from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-jRN0n0tst.json?raw";
+import simple from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-jUsfGyWR1.json?raw";
+import crossedEdges from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-kL7bNLknt.json?raw";
 import districtMixed from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-p5dYMs8jC.json?raw";
 import district from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-qzj33CUOO.json?raw";
 import swappedKeys from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-sbuwNOmVF.json?raw";
 import swapped from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-sLcpC6Z45.json?raw";
+import dungeonsFull from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-tZeE1P1Du.json?raw";
+import crossedMixed from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-uegcykSHR.json?raw";
+import crossedInverted from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-waofX3504.json?raw";
+import crossed from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-xq1iZJVwM.json?raw";
+import restricted from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-zXFy19ljb.json?raw";
 import mixedGrouped from "../../../../../../packs/alttpr/test/owr-mixed-spoilers/avianart-4yKJq5H2E.json?raw";
 import mixedInverted from "../../../../../../packs/alttpr/test/owr-mixed-spoilers/avianart-6DIwXjzG5.json?raw";
 import mixed from "../../../../../../packs/alttpr/test/owr-mixed-spoilers/avianart-mPEeiQvu1.json?raw";
@@ -34,6 +47,19 @@ const SEEDS = [
   ["sLcpC6Z45", swapped, false, false],
   ["qzj33CUOO", district, false, false],
   ["p5dYMs8jC", districtMixed, false, false],
+  ["xq1iZJVwM", crossed, false, false],
+  ["uegcykSHR", crossedMixed, false, false],
+  ["kL7bNLknt", crossedEdges, false, false],
+  ["waofX3504", crossedInverted, true, false],
+  ["1IAKwFudE", lite, false, false],
+  ["4cwdgebPq", liteInverted, true, false],
+  ["jRN0n0tst", lean, false, false],
+  ["jUsfGyWR1", simple, false, false],
+  ["zXFy19ljb", restricted, false, false],
+  ["89uvVx2xg", full, false, false],
+  ["DLSrm8B0f", insanity, false, false],
+  ["ERKxf6EjS", dungeonsSimple, false, false],
+  ["tZeE1P1Du", dungeonsFull, false, false],
   ["2cWVkb9pK", open, false, false],
   ["rcEzGOnFN", invertedBonks, true, true],
   ["nir3EmS5u", inverted, true, false],

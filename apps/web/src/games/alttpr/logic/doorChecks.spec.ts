@@ -359,6 +359,42 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
   });
 
+  it("reads an OWR Lite or Insanity run's world on the entrances noted", async () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    } as const;
+    useGameStore
+      .getState()
+      .applyRun("door-randomizer", { ...owr, doorEntrances: "lite" });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    // Lite moves the hideout's hole (its drops pool, owr:EntranceShuffle2.py:
+    // 2239-2244): nowhere until noted
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteEntrance("lost-woods-hideout-drop", "lost-woods-hideout-top");
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    // Insanity: the hole one way, its cave's way out not noted
+    useGameStore
+      .getState()
+      .applyRun("door-randomizer", { ...owr, entranceShuffle: "insanity" });
+    expect(solutionOf(state()).modelled).toBe(true);
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteEntrance("lost-woods-hideout-drop", "lost-woods-hideout-top");
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+  });
+
   it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,

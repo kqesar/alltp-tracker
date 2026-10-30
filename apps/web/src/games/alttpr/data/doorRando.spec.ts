@@ -146,10 +146,6 @@ describe("a Door Randomizer run's logic", () => {
         "the Overworld Randomizer's Standard world",
       ],
       [
-        { entranceShuffle: "crossed", ...OWR },
-        "the Overworld Randomizer's entrance shuffles",
-      ],
-      [
         { doorShuffle: "basic", ...OWR },
         "a door shuffle in an Overworld Randomizer seed",
       ],
@@ -224,27 +220,32 @@ describe("a Door Randomizer run's logic", () => {
       expect(entrancesKnown(run)).toBe(true);
     }
     expect(doorShuffleOf(with_(DR, { doorEntrances: "lite" }))).toBe("lite");
-    // The fork's own District and Swapped, in its own world (EntranceShuffle2
-    // .py:2566-2743); its other shuffles, whose pools it builds its own
-    // way, not
-    for (const shuffle of ["district", "swapped"] as const) {
-      const run = with_(DR, { ...OWR, doorEntrances: shuffle });
-      expect(doorShuffleOf(run)).toBe(shuffle);
+    // Every shuffle of the fork, District among them, in its own world, by
+    // its own pools (EntranceShuffle2.py `modes`, :2158-2768); alttpr.com's
+    // names by `entranceShuffle`, the fork's others by `doorEntrances`
+    for (const change of [
+      { doorEntrances: "district" },
+      { doorEntrances: "swapped" },
+      { doorEntrances: "lite" },
+      { doorEntrances: "lean" },
+      { doorEntrances: "dungeonssimple" },
+      { doorEntrances: "dungeonsfull" },
+      { entranceShuffle: "simple" },
+      { entranceShuffle: "restricted" },
+      { entranceShuffle: "full" },
+      { entranceShuffle: "crossed" },
+      { entranceShuffle: "insanity" },
+      { entranceShuffle: "crossed", mode: "inverted" },
+    ] as const) {
+      const run = with_(DR, { ...OWR, ...change });
+      expect(doorShuffleOf(run)).toBe(
+        "doorEntrances" in change
+          ? change.doorEntrances
+          : change.entranceShuffle,
+      );
       expect(doorLogic(run)).toBe(true);
       expect(unmodelledReasons(run)).toEqual([]);
       expect(entrancesKnown(run)).toBe(true);
-    }
-    for (const change of [
-      { doorEntrances: "lite" as const },
-      { entranceShuffle: "crossed" as const },
-    ]) {
-      const run = with_(DR, { ...OWR, ...change });
-      expect(doorShuffleOf(run)).toBeUndefined();
-      expect(doorLogic(run)).toBe(false);
-      expect(entrancesKnown(run)).toBe(false);
-      expect(unmodelledReasons(run)).toContain(
-        "the Overworld Randomizer's entrance shuffles",
-      );
     }
     // District is the fork's alone
     expect(doorShuffleOf(with_(DR, { doorEntrances: "district" }))).toBe(

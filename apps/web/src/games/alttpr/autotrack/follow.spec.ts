@@ -849,32 +849,40 @@ describe("the doors Link goes through", () => {
     );
   });
 
-  it("notes a door of an OWR District run as of DR's, in Race Mode never", async () => {
-    // The fork's ROM tables are DR's (the pack's entrances.spec.ts)
-    const owr = () => {
-      store().applyRun("door-randomizer", {
-        ...getPreset("door-randomizer").settings,
-        doorEntrances: "district",
-        randomizer: "owr",
-      });
-      return {
-        follower: createFollower(),
-        memory: seedMemory({ race: false }),
+  it.each([
+    ["District", { doorEntrances: "district" }, "Light Hype Fairy"],
+    ["Crossed", { entranceShuffle: "crossed" }, "Light Hype Fairy"],
+    // Lite keeps the take-any caves where take_any is not fixed
+    ["Lite", { doorEntrances: "lite" }, "Chicken House"],
+  ] as const)(
+    "notes a door of an OWR %s run as of DR's, in Race Mode never",
+    async (_, change, door) => {
+      // The fork's ROM tables are DR's (the pack's entrances.spec.ts)
+      const owr = () => {
+        store().applyRun("door-randomizer", {
+          ...getPreset("door-randomizer").settings,
+          ...change,
+          randomizer: "owr",
+        });
+        return {
+          follower: createFollower(),
+          memory: seedMemory({ race: false }),
+        };
       };
-    };
-    const raced = owr();
-    goIn(raced.memory, "Light Hype Fairy", "Blinds Hideout");
-    raced.follower.read(readingOf(raced.memory, { race: true }));
-    await settle();
-    expect(notes()).toEqual({});
-    const { follower, memory } = owr();
-    follower.read(
-      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
-    );
-    await vi.waitFor(() =>
-      expect(notes()).toEqual({ "light-hype-fairy": "blinds-hideout" }),
-    );
-  });
+      const raced = owr();
+      goIn(raced.memory, door, "Blinds Hideout");
+      raced.follower.read(readingOf(raced.memory, { race: true }));
+      await settle();
+      expect(notes()).toEqual({});
+      const { follower, memory } = owr();
+      follower.read(readingOf(goIn(memory, door, "Blinds Hideout")));
+      await vi.waitFor(() =>
+        expect(notes()).toEqual({
+          [door.toLowerCase().replaceAll(" ", "-")]: "blinds-hideout",
+        }),
+      );
+    },
+  );
 
   it("notes nothing in Race Mode, or in a run whose entrances stay put", async () => {
     const raced = crosskeys();

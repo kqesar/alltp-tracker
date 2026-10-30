@@ -273,7 +273,7 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       : (door?.doorVersion ?? "1.5.6");
   const bonkDrops = owr && door.bonkDrops;
   // The fork's entrance shuffle its rules and groups read (`shuffle_<mode>`,
-  // OWR_DEFAULTS): District or Swapped, the ones its world holds
+  // OWR_DEFAULTS)
   const entrances = owr ? doorShuffleOf(run) : undefined;
   const key = [
     owr,
