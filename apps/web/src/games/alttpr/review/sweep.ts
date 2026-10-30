@@ -7,11 +7,12 @@
 // keysanity solves them: the seed's own key logic, not the board's guess.
 // A Door Randomizer run solved in DR's own world (doorLogic) is replayed
 // through that world (logic/doorWorld.ts, handed in by useSweep.ts once its
-// chunk is loaded), with the same keys.
+// chunk is loaded), the log's keys counted, but under the seed's own key
+// holding: DR's key rules depend on it, vt's do not.
 // Pure: `sweepRun` is a generator that yields after each solve, so the page
 // runs it in slices (useSweep.ts).
 
-import type { Settings, Tri } from "@alltp/engine";
+import type { Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   type AlttprSpoilerLog,
@@ -358,17 +359,6 @@ const PRIZE_OF = new Map<string, Prize>(
 );
 
 const keysKnown = new WeakMap<AlttprSettings, AlttprSettings>();
-const doorKeysKnown = new WeakMap<Settings, Settings>();
-
-/** withKeysKnown for DR's world: its settings with the keys tracked. */
-const withDoorKeysKnown = (settings: Settings): Settings => {
-  let known = doorKeysKnown.get(settings);
-  if (known === undefined) {
-    known = { ...settings, wildBigKeys: true, wildKeys: true };
-    doorKeysKnown.set(settings, known);
-  }
-  return known;
-};
 
 /**
  * A run's settings with its small and big keys tracked, as keysanity
@@ -529,9 +519,12 @@ export function* sweepRun(
   const dated = Object.keys(run.timeline).some((key) =>
     key.startsWith("check:"),
   );
+  // DR's key rules rest on how the seed holds its keys (strict logic only
+  // with wild keys, Rules.py:2345-2347; the analysis reads the shuffles):
+  // its own settings, the log's keys counted, never keysanity's
   const doorSettings =
     door !== undefined && doorLogic(run.settings)
-      ? withDoorKeysKnown(drSettingsOf(run.settings))
+      ? drSettingsOf(run.settings)
       : undefined;
   const solveAt = (input: TrackerInput): Readonly<Record<string, Tri>> => {
     if (door === undefined || doorSettings === undefined)

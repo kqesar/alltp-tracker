@@ -247,7 +247,9 @@ readings instead:
 A Door Randomizer log (DR's own text or JSON, [read by the pack](../packs/alttpr/README.md#the-door-randomizers-logs))
 reads the same way. A run solved in DR's own world (the pack's [Door Randomizer](../packs/alttpr/README.md#the-door-randomizer)
 section, `doorLogic`) is swept through that world: `useSweep.ts` loads its chunk first and hands its solver to
-`sweepRun`, which solves each instant there with the log's keys counted where it put them, as for vt. Its waits
+`sweepRun`, which solves each instant there with the log's keys counted where it put them, as for vt, but under
+the seed's own key holding, never keysanity's: DR's key rules depend on it (strict logic applies only to wild
+keys, `Rules.py:2345-2347`, and its key analysis reads the shuffles), where vt's do not. Its waits
 are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places;
 a static key logic seed's are as a logic the tracker does not model (`not-modelled`). Its key drops, pots, enemy drops and shop
 items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"

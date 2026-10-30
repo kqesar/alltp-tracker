@@ -221,6 +221,29 @@ describe("the waits of a run in DR's own world", () => {
     expect(late.map((wait) => wait.location)).toEqual([]);
   });
 
+  it("sweeps a seed with its own key holding, never keysanity's", async () => {
+    // Strict key logic reads its own rule only with wild keys (Rules.py:
+    // 2345-2347): this seed's keys stay in their dungeons, so its doors ask
+    // partial's number, and a strict run of it waits as a partial one
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const endMs = (plan.length + 3) * 120_000;
+    const waitsOf = (keyLogic: "partial" | "strict") => {
+      play(inDungeon);
+      useGameStore.setState({
+        items: { ...store().items, agahnim: 1 },
+        settings: { ...store().settings, keyLogic },
+      });
+      const played = playedRun(inDungeon, plan, run());
+      const comparison = compareReview(inDungeon, played);
+      expect(hiddenReason(inDungeon, played, comparison)).toBeNull();
+      return drain(sweepRun(inDungeon, played, comparison, endMs, solver))
+        .waits;
+    };
+    const partial = waitsOf("partial");
+    expect(partial.length).toBeGreaterThan(0);
+    expect(waitsOf("strict")).toEqual(partial);
+  });
+
   it("hides them where an item it needed lay at one of DR's places", () => {
     play(drops);
     useGameStore.setState({
