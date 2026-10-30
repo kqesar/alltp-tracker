@@ -671,7 +671,9 @@ export function drWorld(
   }
   for (const { name, region } of options.dropsAndPots ?? []) {
     if (locations.has(name)) continue;
-    added.set(regionNamed(region).name, [...(added.get(region) ?? []), name]);
+    // Throws for a region DR's world does not have
+    const at = regionNamed(region).name;
+    added.set(at, [...(added.get(at) ?? []), name]);
     locations.set(name, DR_RULES.locations[name]?.req ?? "true");
   }
   // A big key a vanilla drop holds (the escape's) is the item DR's rules
