@@ -263,3 +263,8 @@
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+/* An OWR run's flute screens: as many columns of checkboxes as fit */
+.overworld__screens {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+}

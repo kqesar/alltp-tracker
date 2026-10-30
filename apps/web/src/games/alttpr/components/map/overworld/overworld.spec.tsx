@@ -1,0 +1,121 @@
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it } from "vitest";
+import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
+import OverworldPanel from "@/games/alttpr/components/map/overworld/OverworldPanel";
+import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
+import { useGameStore } from "@/games/alttpr/stores/gameStore";
+
+/** An OWR run held in the fork's world, its overworld left as it is. */
+const OWR: RunSettings = {
+  ...getPreset("door-randomizer").settings,
+  bombBag: false,
+  customGoals: false,
+  prizeShuffle: "none",
+  randomizer: "owr",
+  shuffleFollowers: false,
+};
+const run = (change: Partial<RunSettings>) =>
+  act(() =>
+    useGameStore.getState().applyRun("door-randomizer", { ...OWR, ...change }),
+  );
+const store = () => useGameStore.getState();
+
+describe("the Overworld tab", () => {
+  beforeEach(() => {
+    act(() => useGameStore.setState(useGameStore.getInitialState(), true));
+  });
+
+  it("shows only while an OWR run shuffles its whirlpools or flute spots", async () => {
+    const user = userEvent.setup();
+    run({});
+    const { unmount } = render(<MapPanel />);
+    expect(screen.queryByRole("tab", { name: "Overworld" })).toBeNull();
+    act(() => store().updateDoorSettings({ owWhirlpool: true }));
+    await user.click(screen.getByRole("tab", { name: "Overworld" }));
+    expect(await screen.findByTestId("overworld-panel")).toBeInTheDocument();
+    expect(store().mapView).toBe("overworld");
+    // Whirlpools vanilla again: the map, the view kept for the next run
+    act(() => store().updateDoorSettings({ owWhirlpool: false }));
+    expect(screen.queryByTestId("overworld-panel")).toBeNull();
+    expect(screen.getByRole("tab", { name: "Map" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    // DR itself has neither: never the tab
+    act(() =>
+      store().updateDoorSettings({
+        owFluteShuffle: "random",
+        randomizer: "dr",
+      }),
+    );
+    expect(screen.queryByRole("tab", { name: "Overworld" })).toBeNull();
+    unmount();
+  });
+
+  it("notes where a whirlpool leads, both ways, one undo step", async () => {
+    const user = userEvent.setup();
+    run({ owWhirlpool: true });
+    render(<OverworldPanel />);
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "0 of 8 whirlpools noted",
+    );
+    // Flute spots not moved: not offered
+    expect(screen.queryByTestId("flute-screen-18")).toBeNull();
+    const pool = screen.getByRole("combobox", {
+      name: "C Whirlpool: leads to",
+    });
+    await user.selectOptions(pool, ["Zora Whirlpool"]);
+    expect(store().overworld.whirlpools).toEqual({
+      "C Whirlpool": "Zora Whirlpool",
+      "Zora Whirlpool": "C Whirlpool",
+    });
+    expect(
+      screen.getByRole("combobox", { name: "Zora Whirlpool: leads to" }),
+    ).toHaveValue("C Whirlpool");
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "2 of 8 whirlpools noted",
+    );
+    // A whirlpool never leads into itself
+    expect(
+      [...pool.querySelectorAll("option")].map((option) => option.value),
+    ).not.toContain("C Whirlpool");
+    act(() => store().undo());
+    expect(store().overworld).toEqual({});
+    expect(pool).toHaveValue("");
+  });
+
+  it("ticks the flute's screens, up to eight, by keyboard too", async () => {
+    const user = userEvent.setup();
+    run({ owFluteShuffle: "balanced" });
+    render(<OverworldPanel />);
+    expect(
+      screen.queryByRole("combobox", { name: "C Whirlpool: leads to" }),
+    ).toBeNull();
+    const village = screen.getByRole("checkbox", { name: "Kakariko Village" });
+    expect(village).toHaveAttribute("data-testid", "flute-screen-18");
+    village.focus();
+    await user.keyboard(" ");
+    expect(store().overworld.flute).toEqual([0x18]);
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "1 of 8 flute spots noted",
+    );
+    // Eight noted: the rest wait until one is taken off
+    for (const id of ["00", "02", "03", "05", "07", "0a", "0f"])
+      await user.click(screen.getByTestId(`flute-screen-${id}`));
+    expect(store().overworld.flute).toHaveLength(8);
+    expect(screen.getByTestId("flute-screen-3f")).toBeDisabled();
+    expect(village).toBeEnabled();
+    await user.click(village);
+    expect(store().overworld.flute).not.toContain(0x18);
+    expect(screen.getByTestId("flute-screen-3f")).toBeEnabled();
+  });
+
+  it("names an Inverted world's flute screens by the dark world, where the bird lands", () => {
+    run({ mode: "inverted", owFluteShuffle: "random" });
+    render(<OverworldPanel />);
+    expect(screen.getByTestId("flute-screen-18")).toHaveAccessibleName(
+      "Village of Outcasts",
+    );
+  });
+});

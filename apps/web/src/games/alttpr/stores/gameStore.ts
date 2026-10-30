@@ -402,6 +402,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
     saved.mapView === "checks" ||
     saved.mapView === "entrances" ||
     saved.mapView === "doors" ||
+    saved.mapView === "overworld" ||
     saved.mapView === "run"
       ? saved.mapView
       : base.mapView,

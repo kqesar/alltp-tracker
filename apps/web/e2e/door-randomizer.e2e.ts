@@ -330,3 +330,77 @@ for (const width of WIDTHS) {
       });
   });
 }
+
+/** An OWR run whose whirlpools are shuffled and flute spots moved. */
+const openOverworldRun = async (page: Page) => {
+  const dialog = await openDoorRun(page);
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  await page.evaluate(() => {
+    const key = "alltp-tracker-state";
+    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+    saved.state.settings = {
+      ...saved.state.settings,
+      customGoals: false,
+      owFluteShuffle: "random",
+      owWhirlpool: true,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    };
+    localStorage.setItem(key, JSON.stringify(saved));
+  });
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  await page.getByRole("tab", { name: "Overworld" }).click();
+  await expect(page.getByTestId("overworld-panel")).toBeVisible();
+};
+
+test("an OWR run's whirlpools and flute spots are noted by hand, from the keyboard", async ({
+  page,
+}) => {
+  await openOverworldRun(page);
+  const pool = page.getByRole("combobox", { name: "C Whirlpool: leads to" });
+  await pool.focus();
+  await pool.selectOption("Zora Whirlpool");
+  await expect(
+    page.getByRole("combobox", { name: "Zora Whirlpool: leads to" }),
+  ).toHaveValue("C Whirlpool");
+  const village = page.getByRole("checkbox", { name: "Kakariko Village" });
+  await village.focus();
+  await page.keyboard.press("Space");
+  await expect(village).toBeChecked();
+  await expect(page.getByTestId("overworld-summary")).toHaveText(
+    "2 of 8 whirlpools noted, 1 of 8 flute spots noted",
+  );
+  await auditPage(page);
+  // One undo step a note; the notes are the run's, kept across a reload
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(village).not.toBeChecked();
+  await page.reload();
+  await expect(
+    page.getByRole("combobox", { name: "Zora Whirlpool: leads to" }),
+  ).toHaveValue("C Whirlpool");
+});
+
+for (const width of WIDTHS) {
+  test(`the Overworld tab fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openOverworldRun(page);
+    await page
+      .getByRole("combobox", { name: "Lake Hylia Whirlpool: leads to" })
+      .selectOption("Octoballoon Whirlpool");
+    for (const id of ["00", "02", "03", "05", "07", "0a", "0f", "18"])
+      await page.getByTestId(`flute-screen-${id}`).check();
+    await expect(page.getByTestId("flute-screen-3f")).toBeDisabled();
+    await auditPage(page);
+    if (process.env.DOOR_SHOTS !== undefined) {
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/overworld-${width}.png`,
+      });
+      await page.getByTestId("overworld-panel").screenshot({
+        path: `${process.env.DOOR_SHOTS}/overworld-panel-${width}.png`,
+      });
+    }
+  });
+}

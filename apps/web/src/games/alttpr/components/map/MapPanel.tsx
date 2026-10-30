@@ -13,7 +13,10 @@ import {
   VoiceControl,
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
-import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
+import {
+  doorShuffleSettingsOf,
+  overworldShufflesOf,
+} from "@/games/alttpr/data/doorRando";
 import { doorLogic, entrancesShuffled } from "@/games/alttpr/data/presets";
 import { marginShown, tricksShown } from "@/games/alttpr/logic/solution";
 import { capitalized, useLogicWords } from "@/games/alttpr/logic/words";
@@ -25,20 +28,25 @@ import { useReviewStore } from "@/review/store";
 
 /**
  * The panel's views, as its tabs: the Entrances list with shuffled ones,
- * the Doors list with shuffled doors.
+ * the Doors list with shuffled doors, the Overworld's notes with an OWR
+ * run's shuffled whirlpools or flute spots.
  */
 const viewsOf = (
   entrances: boolean,
   doors: boolean,
+  overworld: boolean,
 ): readonly Tab<MapView>[] => [
   { label: "Map", value: "map" },
   { label: "Checks", value: "checks" },
   ...(entrances ? [{ label: "Entrances", value: "entrances" as const }] : []),
   ...(doors ? [{ label: "Doors", value: "doors" as const }] : []),
+  ...(overworld ? [{ label: "Overworld", value: "overworld" as const }] : []),
   { label: "Run", value: "run" },
 ];
-const VIEWS = [false, true].map((entrances) =>
-  [false, true].map((doors) => viewsOf(entrances, doors)),
+
+/** Each set of tabs once, by which of the three lists it holds. */
+const VIEWS = Array.from({ length: 8 }, (_, bits) =>
+  viewsOf((bits & 1) !== 0, (bits & 2) !== 0, (bits & 4) !== 0),
 );
 
 /** The entrance assistant's list and picker, loaded with their tables. */
@@ -52,6 +60,11 @@ const EntrancePicker = lazy(
 /** A door shuffle's notes, loaded with DR's world. */
 const DoorsPanel = lazy(
   () => import("@/games/alttpr/components/map/doors/DoorsPanel"),
+);
+
+/** An OWR run's overworld notes: whirlpools and flute spots. */
+const OverworldPanel = lazy(
+  () => import("@/games/alttpr/components/map/overworld/OverworldPanel"),
 );
 
 /** The dark room's plan: its code loads only when a dark room is read. */
@@ -76,10 +89,18 @@ export const MapPanel = () => {
       doorLogic(state.settings) &&
       doorShuffleSettingsOf(state.settings) !== undefined,
   );
+  const overworld = useGameStore(
+    (state) =>
+      doorLogic(state.settings) &&
+      overworldShufflesOf(state.settings) !== undefined,
+  );
   const saved = useGameStore((state) => state.mapView);
-  // A run without shuffled entrances or doors has no tab for them: the map
+  // A run without shuffled entrances, doors or overworld has no tab for
+  // them: the map
   const view =
-    (saved === "entrances" && !shuffled) || (saved === "doors" && !doors)
+    (saved === "entrances" && !shuffled) ||
+    (saved === "doors" && !doors) ||
+    (saved === "overworld" && !overworld)
       ? "map"
       : saved;
   const setMapView = useGameStore((state) => state.setMapView);
@@ -101,7 +122,9 @@ export const MapPanel = () => {
           panelId={MAP_VIEW_ID}
           selected={view}
           tabs={
-            VIEWS[Number(shuffled)]?.[Number(doors)] ?? viewsOf(false, false)
+            VIEWS[
+              Number(shuffled) | (Number(doors) << 1) | (Number(overworld) << 2)
+            ] ?? viewsOf(false, false, false)
           }
           testId="map-view-tab"
         />
@@ -152,6 +175,11 @@ export const MapPanel = () => {
         {view === "doors" && (
           <Suspense fallback={null}>
             <DoorsPanel />
+          </Suspense>
+        )}
+        {view === "overworld" && (
+          <Suspense fallback={null}>
+            <OverworldPanel />
           </Suspense>
         )}
         {view === "run" && <RunPanel />}

@@ -5,6 +5,7 @@ import {
   OWR_FLUTE_SCREENS,
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
+import { FLUTE_SCREENS } from "@/games/alttpr/data/owrScreens";
 import { withOverworldNotes } from "@/games/alttpr/logic/overworldNotes";
 import { isOverworldNotes } from "@/games/alttpr/stores/persistence";
 
@@ -67,5 +68,16 @@ describe("an OWR run's overworld notes", () => {
         .map(Number)
         .sort((a, b) => a - b),
     );
+  });
+
+  it("names each flute screen by the pack's regions, as it stands and flipped", () => {
+    const flute = OWR_DATA.overworld?.flute ?? {};
+    expect(FLUTE_SCREENS.map(([screen]) => screen)).toEqual(OWR_FLUTE_SCREENS);
+    for (const [screen, stands, flipped] of FLUTE_SCREENS)
+      expect([stands, flipped], String(screen)).toEqual(
+        flute[String(screen)]?.regions.map((region) =>
+          region.replace(/ Area$/, ""),
+        ),
+      );
   });
 });

@@ -1230,6 +1230,21 @@ export const OWR_FLUTE_SCREENS: readonly number[] = [
   0x3f,
 ];
 
+/**
+ * Which of an OWR run's overworld shuffles the player notes (its whirlpools
+ * shuffled, its flute spots moved), or undefined when it has none or is no
+ * OWR run: what the Overworld tab offers.
+ */
+export const overworldShufflesOf = (
+  settings: DoorRunSettings,
+): { readonly whirlpools: boolean; readonly flute: boolean } | undefined => {
+  const door = doorOf(settings);
+  if (door?.randomizer !== "owr") return undefined;
+  const whirlpools = door.owWhirlpool;
+  const flute = door.owFluteShuffle !== "vanilla";
+  return whirlpools || flute ? { flute, whirlpools } : undefined;
+};
+
 /** Each notes object's reading per shuffle, so a world is built once. */
 const owrNotes = new WeakMap<OverworldNotes, Map<string, OwrNotes>>();
 
