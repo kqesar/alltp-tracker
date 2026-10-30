@@ -374,6 +374,29 @@ describe("DR's world on shuffled doors against real seeds", () => {
     });
   });
 
+  it("counts each analysed layout's chest keys as the log holds them", () => {
+    // calc_max_chests (KeyDoorShuffle.py:262-265) over the noted layout:
+    // the small keys DR's pool held for the dungeon, which its fill placed
+    // (each a "Small Key" item of the log, in a chest, or a drop's or pot's
+    // where the run shuffles those)
+    let compared = 0;
+    for (const name of logs) {
+      const json = JSON.parse(read(name)) as Json;
+      const log = logOf(json);
+      const placed = Object.values(jsonLog(withoutDoors(json)).Locations);
+      for (const [dungeon, logic] of worldOf(json, log).doorKeyLogic ?? []) {
+        const word = KEY_NAMES[dungeon];
+        expect(logic.layout.maxChests, `${name}: ${dungeon}`).toBe(
+          placed.filter((item) => item === `Small Key (${word})`).length,
+        );
+        compared++;
+      }
+    }
+    // The six seeds whose layouts are analysed, every dungeon (but the
+    // escape of the two Standard ones)
+    expect(compared).toBe(76);
+  });
+
   for (const name of logs)
     it(`says yes to no location of a later sphere (${name})`, () => {
       const json = JSON.parse(read(name)) as Json;
