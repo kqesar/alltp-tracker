@@ -8,9 +8,10 @@
  *
  * The tracker reads the vanilla-door part of DR: its key drops, pots, enemy
  * drops and shop items are locations (the pack's door-rando/locations.ts),
- * and a DR run with vanilla doors and entrances is solved in the pack's port
- * of DR's own world (`doorLogic` in presets.ts). What it does not model yet
- * (door shuffle, the overworld shuffles, enemy shuffle, DR's entrance pools)
+ * and a DR run with vanilla doors is solved in the pack's port of DR's own
+ * world (`doorLogic` in presets.ts), on its entrances as noted where DR
+ * shuffled them (`doorShuffleOf`, the pack's DR entrance pools). What it
+ * does not model yet (door shuffle, the overworld shuffles, enemy shuffle)
  * is named by `doorReasons`, and what a run's logic rests on by `doorNotes`.
  */
 
@@ -20,6 +21,8 @@ import {
   type DrLocationSet,
   type DrModes,
   type DropShuffle,
+  type DrPoolSettings,
+  type DrShuffle,
   type DungeonId,
   doorSwitches,
   drKeysAdded,
@@ -122,6 +125,13 @@ export type DoorRunSettings = {
   potShuffle?: boolean;
   restrictBossItems?: RestrictBossItems;
   openPyramid?: OpenPyramid;
+  /**
+   * Whether the entrance shuffle moves Link's House (`--shufflelinks`,
+   * EntranceShuffle2.py:555) and the Tavern's back door (`--shuffletavern`,
+   * :211): a spoiler's meta names them, no ROM table does.
+   */
+  shuffleLinks?: boolean;
+  shuffleTavern?: boolean;
 };
 
 /** A DR setting's key. */
@@ -151,6 +161,8 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   pottery: "none",
   restrictBossItems: "none",
   shopsanity: false,
+  shuffleLinks: false,
+  shuffleTavern: false,
   takeAny: "none",
 };
 
@@ -269,6 +281,14 @@ export const DOOR_OPTIONS = {
     [false, "Off"],
     [true, "On"],
   ],
+  shuffleLinks: [
+    [false, "Off"],
+    [true, "Shuffled"],
+  ],
+  shuffleTavern: [
+    [false, "Off"],
+    [true, "Shuffled"],
+  ],
   takeAny: [
     ["none", "None"],
     ["random", "Random"],
@@ -302,6 +322,8 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   randomizer: "Randomizer",
   restrictBossItems: "Boss items",
   shopsanity: "Shopsanity",
+  shuffleLinks: "Link's House",
+  shuffleTavern: "Tavern's back door",
   takeAny: "Take-any caves",
 };
 
@@ -329,13 +351,81 @@ const OWR_ROWS = [
   "bonkDrops",
 ] as const satisfies readonly DoorSetting[];
 
+/** The entrance shuffle's own settings, shown while entrances are shuffled. */
+const ENTRANCE_ROWS = [
+  "shuffleLinks",
+  "shuffleTavern",
+] as const satisfies readonly DoorSetting[];
+
 /** The DR settings a run's summary shows, as selects: none outside DR. */
-export const doorRows = (settings: DoorRunSettings): readonly DoorSetting[] =>
-  settings.randomizer === undefined
-    ? []
-    : settings.randomizer === "owr"
-      ? [...DR_ROWS, ...OWR_ROWS]
-      : DR_ROWS;
+export const doorRows = (
+  settings: DoorRunSettings & { entranceShuffle?: string },
+): readonly DoorSetting[] => {
+  if (settings.randomizer === undefined) return [];
+  const entrances =
+    settings.doorEntrances !== undefined ||
+    (settings.entranceShuffle !== undefined &&
+      settings.entranceShuffle !== "none")
+      ? ENTRANCE_ROWS
+      : [];
+  return settings.randomizer === "owr"
+    ? [...DR_ROWS, ...entrances, ...OWR_ROWS]
+    : [...DR_ROWS, ...entrances];
+};
+
+/** alttpr.com's entrance shuffles DR has too, by the same name. */
+const DR_SHUFFLES: readonly string[] = [
+  "simple",
+  "restricted",
+  "full",
+  "crossed",
+  "insanity",
+];
+
+/**
+ * A DR run's entrance shuffle as the pack's DR pools name it: its own
+ * (`doorEntrances`) or alttpr.com's of the same name; undefined for vanilla
+ * entrances, an alttpr.com run and OWR's District, whose overworld is its
+ * own.
+ */
+export const doorShuffleOf = (
+  settings: DoorRunSettings & { entranceShuffle?: string },
+): DrShuffle | undefined => {
+  if (settings.randomizer === undefined) return undefined;
+  if (settings.doorEntrances !== undefined)
+    return settings.doorEntrances === "district"
+      ? undefined
+      : settings.doorEntrances;
+  const shuffle = settings.entranceShuffle;
+  return shuffle !== undefined && DR_SHUFFLES.includes(shuffle)
+    ? (shuffle as DrShuffle)
+    : undefined;
+};
+
+/**
+ * What of a DR run its entrance pool reads (the pack's `drShuffled`): the
+ * world, Link's House and the Tavern's back, and the settings lite's and
+ * lean's kept caves read.
+ */
+export const doorPoolSettingsOf = (
+  settings: DoorRunSettings & { mode?: string },
+): DrPoolSettings => {
+  const door = doorOf(settings) ?? { ...DOOR_DEFAULTS };
+  return {
+    dropShuffle: door.dropShuffle,
+    enemyShuffle: door.enemyShuffle !== "none",
+    mode:
+      settings.mode === "inverted"
+        ? "inverted"
+        : settings.mode === "standard"
+          ? "standard"
+          : "open",
+    pottery: door.pottery,
+    shopsanity: door.shopsanity,
+    shuffleLinks: door.shuffleLinks,
+    shuffleTavern: door.shuffleTavern,
+  };
+};
 
 /** A DR setting's value in words. */
 export const doorValueText = <K extends DoorSetting>(
@@ -387,7 +477,8 @@ export const doorReasons = (
       `${doorValueText("doorShuffle", door.doorShuffle)} door shuffle`,
     );
   }
-  if (door.doorEntrances !== undefined) {
+  // OWR's District moves its own overworld's entrances
+  if (door.doorEntrances === "district") {
     reasons.push(
       `the Door Randomizer's ${doorValueText("doorEntrances", door.doorEntrances)} entrance shuffle`,
     );
@@ -418,47 +509,29 @@ export const doorReasons = (
   return reasons;
 };
 
-/** Which world a modelled DR run is solved in. */
-export type DoorLogicKind = "crossed" | "door";
-
 /**
  * What a DR run's logic rests on, when the tracker models it: DR's own
- * world (`door`: vanilla doors and entrances, doorLogic), or the entrance
- * randomizer's crossed logic for DR's Crosskeys (until DR's own entrance
- * pools are ported), its new locations then shown as maybe. Any other DR
- * run is not modelled (`unmodelledReasons`): alttpr.com's v31 is no
- * stand-in, asking less than DR in places.
- * @param kind - The world the run is solved in
+ * world (doorLogic) and its key logic's reading (the notes its shuffled
+ * entrances rest on are LogicNote's, as any run's). Any other DR run is not
+ * modelled (`unmodelledReasons`): alttpr.com's v31 is no stand-in, asking
+ * less than DR in places.
  */
-export const doorNotes = (
-  settings: DoorRunSettings,
-  kind: DoorLogicKind,
-): string[] => {
+export const doorNotes = (settings: DoorRunSettings): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
-  if (kind === "door")
-    return [
-      `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
-      ...(door.keyLogic === "dangerous"
-        ? [
-            "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
-          ]
-        : []),
-      ...(door.keyLogic === "static"
-        ? [
-            "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
-          ]
-        : []),
-    ];
-  const notes = [
-    "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
+  return [
+    `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
+    ...(door.keyLogic === "dangerous"
+      ? [
+          "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
+        ]
+      : []),
+    ...(door.keyLogic === "static"
+      ? [
+          "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
+        ]
+      : []),
   ];
-  if (doorLocationsOf(settings).locations.length > 0) {
-    notes.push(
-      "Its key drops, pots, enemy drops and shop items show as maybe until then.",
-    );
-  }
-  return notes;
 };
 
 /** What decides a DR run's locations, as the pack takes it. */
@@ -676,6 +749,12 @@ export const doorFromSeed = (
       ...(exact.openPyramid === undefined
         ? {}
         : { openPyramid: option("openPyramid", exact.openPyramid) }),
+      ...(exact.shuffleLinks === undefined
+        ? {}
+        : { shuffleLinks: exact.shuffleLinks }),
+      ...(exact.shuffleTavern === undefined
+        ? {}
+        : { shuffleTavern: exact.shuffleTavern }),
       ...(ow === undefined
         ? {}
         : {

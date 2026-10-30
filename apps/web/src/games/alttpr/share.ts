@@ -488,6 +488,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   restrictBossItems:none restrictBossItems:mapcompass restrictBossItems:dungeon
   openPyramid:auto openPyramid:yes openPyramid:no
   doorVersion:1.5.6 doorVersion:1.5.7 doorVersion:1.5.8
+  shuffleLinks:false shuffleLinks:true shuffleTavern:false shuffleTavern:true
 `
   .trim()
   .split(/\s+/);
@@ -503,6 +504,8 @@ const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
   "owWhirlpool",
   "potShuffle",
   "shopsanity",
+  "shuffleLinks",
+  "shuffleTavern",
   "swordless",
 ]);
 

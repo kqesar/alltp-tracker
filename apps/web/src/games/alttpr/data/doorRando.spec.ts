@@ -5,7 +5,10 @@ import {
   doorFromSeed,
   doorLocationsOf,
   doorNotes,
+  doorPoolSettingsOf,
   doorReasons,
+  doorRows,
+  doorShuffleOf,
   doorTablesOf,
   doorVersionOf,
   isDoorSettings,
@@ -14,6 +17,7 @@ import {
 import {
   crossedLogic,
   doorLogic,
+  entrancesKnown,
   GLITCHES_LABELS,
   type Glitches,
   getPreset,
@@ -44,10 +48,10 @@ describe("a Door Randomizer run's logic", () => {
     expect(unmodelledReasons(DR)).toEqual([]);
     expect(logicModelled(DR)).toBe(true);
     expect(doorLogic(DR)).toBe(true);
-    expect(doorNotes(DR, "door")).toEqual([
+    expect(doorNotes(DR)).toEqual([
       "Door Randomizer seed: the logic is DR's own (1.5.8).",
     ]);
-    expect(doorNotes(getPreset("open").settings, "door")).toEqual([]);
+    expect(doorNotes(getPreset("open").settings)).toEqual([]);
   });
 
   it("names what keeps a run out of DR's world, v31's rules being no stand-in", () => {
@@ -99,23 +103,82 @@ describe("a Door Randomizer run's logic", () => {
     // Set, it is DR's own world again
     expect(doorLogic(with_(DR, { hidden: [] }))).toBe(true);
     // DR's world gives the DR locations their rules: nothing more to say
-    expect(doorNotes(with_(DR, { dropShuffle: "keys" }), "door")).toHaveLength(
-      1,
-    );
+    expect(doorNotes(with_(DR, { dropShuffle: "keys" }))).toHaveLength(1);
   });
 
-  it("keeps the crossed logic for DR's Crosskeys, with the note the owner asked for", () => {
-    expect(crossedLogic(DR_CROSSKEYS)).toBe(true);
-    expect(doorLogic(DR_CROSSKEYS)).toBe(false);
-    expect(doorNotes(DR_CROSSKEYS, "crossed")[0]).toBe(
-      "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
-    );
-    // Its DR places, which that logic knows nothing of
+  it("takes DR's own world for its shuffled entrances, Crosskeys among them", () => {
+    // DR shuffles with its own pools (EntranceShuffle2.py), which its own
+    // world reads: no longer the entrance randomizer's crossed logic
+    expect(crossedLogic(DR_CROSSKEYS)).toBe(false);
+    expect(doorLogic(DR_CROSSKEYS)).toBe(true);
+    expect(unmodelledReasons(DR_CROSSKEYS)).toEqual([]);
+    expect(entrancesKnown(DR_CROSSKEYS)).toBe(true);
+    expect(doorShuffleOf(DR_CROSSKEYS)).toBe("crossed");
+    expect(doorNotes(DR_CROSSKEYS)).toEqual([
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
+    ]);
+    // Every DR shuffle, in every world, with its keys anywhere; DR's own
+    // shuffles by `doorEntrances`, OWR's District not
+    for (const run of [
+      with_(DR_CROSSKEYS, { dungeonItems: "standard", mode: "inverted" }),
+      with_(DR, { entranceShuffle: "insanity" }),
+      with_(DR, { doorEntrances: "lite" }),
+      with_(DR, { doorEntrances: "dungeonssimple", mode: "standard" }),
+    ]) {
+      expect(doorLogic(run)).toBe(true);
+      expect(unmodelledReasons(run)).toEqual([]);
+      expect(entrancesKnown(run)).toBe(true);
+    }
+    expect(doorShuffleOf(with_(DR, { doorEntrances: "lite" }))).toBe("lite");
+    const district = with_(DR, {
+      doorEntrances: "district",
+      randomizer: "owr",
+    });
+    expect(doorShuffleOf(district)).toBeUndefined();
+    expect(doorLogic(district)).toBe(false);
+    expect(entrancesKnown(district)).toBe(false);
+    expect(doorShuffleOf(getPreset("open").settings)).toBeUndefined();
+    // Not known yet: no logic
     expect(
-      doorNotes(with_(DR_CROSSKEYS, { dropShuffle: "keys" }), "crossed")[1],
-    ).toBe(
-      "Its key drops, pots, enemy drops and shop items show as maybe until then.",
+      doorLogic(with_(DR_CROSSKEYS, { hidden: ["entranceShuffle"] })),
+    ).toBe(false);
+  });
+
+  it("reads Link's House and the Tavern's back into DR's pool", () => {
+    // DR Crosskeys counts the Tavern's back door as moved (race seeds set
+    // it)
+    expect(doorPoolSettingsOf(DR_CROSSKEYS)).toMatchObject({
+      mode: "open",
+      shuffleLinks: false,
+      shuffleTavern: true,
+    });
+    expect(doorPoolSettingsOf(DR).shuffleTavern).toBe(false);
+    expect(
+      doorPoolSettingsOf(
+        with_(DR_CROSSKEYS, {
+          mode: "inverted",
+          pottery: "cave",
+          shopsanity: true,
+          shuffleLinks: true,
+          shuffleTavern: true,
+        }),
+      ),
+    ).toMatchObject({
+      mode: "inverted",
+      pottery: "cave",
+      shopsanity: true,
+      shuffleLinks: true,
+      shuffleTavern: true,
+    });
+    expect(doorPoolSettingsOf(with_(DR, { mode: "standard" })).mode).toBe(
+      "standard",
     );
+    // The summary shows them while entrances are shuffled
+    expect(doorRows(DR_CROSSKEYS)).toContain("shuffleLinks");
+    expect(doorRows(with_(DR, { doorEntrances: "lean" }))).toContain(
+      "shuffleTavern",
+    );
+    expect(doorRows(DR)).not.toContain("shuffleLinks");
   });
 
   it("reads strict, dangerous and static key logic", () => {
@@ -131,7 +194,7 @@ describe("a Door Randomizer run's logic", () => {
       dangerousKeyLogic: true,
       strictKeyLogic: false,
     });
-    expect(doorNotes(with_(DR, { keyLogic: "dangerous" }), "door")[1]).toBe(
+    expect(doorNotes(with_(DR, { keyLogic: "dangerous" }))[1]).toBe(
       "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
     );
     // The entrance randomizer's key rules, in DR's world (static.ts)
@@ -142,7 +205,7 @@ describe("a Door Randomizer run's logic", () => {
       staticKeyLogic: true,
       strictKeyLogic: false,
     });
-    expect(doorNotes(fixed, "door")[1]).toBe(
+    expect(doorNotes(fixed)[1]).toBe(
       "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
     );
     // DR rolls none with key drops or key pots shuffled
@@ -212,8 +275,8 @@ describe("a Door Randomizer run's logic", () => {
       [{ doorShuffle: "partitioned" }, "Partitioned door shuffle"],
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
       [
-        { doorEntrances: "swapped" },
-        "the Door Randomizer's Swapped entrance shuffle",
+        { doorEntrances: "district", randomizer: "owr" },
+        "the Door Randomizer's District entrance shuffle",
       ],
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
       [{ owMixed: true, randomizer: "owr" }, "a mixed overworld"],
@@ -251,28 +314,26 @@ describe("a Door Randomizer run's logic", () => {
     }
   });
 
-  it("holds DR's shuffled entrances to its Crosskeys, as the entrance randomizer's world reads them", () => {
-    const cases: [Partial<RunSettings>, string][] = [
-      [
-        { entranceShuffle: "simple" },
-        "the Door Randomizer's Simple entrance shuffle",
-      ],
-      [
-        { dungeonItems: "standard" },
-        "Crossworld entrances with dungeon items kept in their dungeons",
-      ],
-      [{ mode: "retro" }, "Crossworld entrances in the Retro world"],
-      [{ bossShuffle: "full" }, "shuffled bosses behind Crossworld entrances"],
+  it("reads every DR entrance shuffle in DR's world, never the entrance randomizer's", () => {
+    const cases: Partial<RunSettings>[] = [
+      { entranceShuffle: "simple" },
+      { dungeonItems: "standard" },
+      { mode: "retro" },
     ];
-    for (const [change, reason] of cases) {
+    for (const change of cases) {
       const run = with_(DR_CROSSKEYS, change);
-      expect(crossedLogic(run), reason).toBe(false);
-      expect(unmodelledReasons(run), reason).toEqual([reason]);
+      expect(crossedLogic(run)).toBe(false);
+      expect(doorLogic(run)).toBe(true);
+      expect(unmodelledReasons(run)).toEqual([]);
       // An alttpr.com seed of the same settings is that world's
       const vt = with_(getPreset("crosskeys").settings, change);
-      expect(crossedLogic(vt), reason).toBe(true);
-      expect(unmodelledReasons(vt), reason).toEqual([]);
+      expect(crossedLogic(vt)).toBe(true);
+      expect(unmodelledReasons(vt)).toEqual([]);
     }
+    // Its bosses moved: DR's world reads each dungeon's own
+    expect(
+      unmodelledReasons(with_(DR_CROSSKEYS, { bossShuffle: "full" })),
+    ).toEqual(["shuffled bosses in a Door Randomizer seed"]);
   });
 
   it("models key drops in DR's world, and with keys in their dungeons in v31's", () => {
@@ -282,13 +343,16 @@ describe("a Door Randomizer run's logic", () => {
     const keysanity = with_(DR, { ...keydrop, dungeonItems: "full" });
     expect(doorLogic(keysanity)).toBe(true);
     expect(unmodelledReasons(keysanity)).toEqual([]);
+    // Crosskeys keydrop too, in DR's world on its noted entrances; v31's
+    // key model would count too few keys, which the reason says where DR's
+    // world does not hold a run
     const crosskeys = with_(DR_CROSSKEYS, keydrop);
-    expect(unmodelledReasons(crosskeys)).toEqual([
+    expect(unmodelledReasons(crosskeys)).toEqual([]);
+    expect(doorLogic(crosskeys)).toBe(true);
+    expect(crossedLogic(crosskeys)).toBe(false);
+    expect(doorReasons(crosskeys, true)).toEqual([
       "shuffled key drops with keys outside their dungeons",
     ]);
-    // Not the crossed logic either, nor the bosses' reason by default
-    expect(crossedLogic(crosskeys)).toBe(false);
-    expect(doorReasons(crosskeys, true)).toHaveLength(1);
   });
 });
 

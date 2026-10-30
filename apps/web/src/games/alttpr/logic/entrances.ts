@@ -5,6 +5,10 @@
 // tables.
 
 import {
+  DOOR_TARGETS,
+  type DrEntrancePool,
+  drEntrancePool,
+  ENTRANCES,
   type EntranceLink,
   type EntrancePool,
   type EntranceTarget,
@@ -13,8 +17,11 @@ import {
   type MapMarker,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
-  TARGETS,
 } from "@alltp/pack-alttpr";
+import {
+  doorPoolSettingsOf,
+  doorShuffleOf,
+} from "@/games/alttpr/data/doorRando";
 import {
   entrancesKnown,
   portedShuffleOf,
@@ -24,16 +31,33 @@ import {
 /** The pools made so far, by shuffle and world, each made once. */
 const pools = new Map<string, EntrancePool>();
 
+/** A Door Randomizer run's pool, by what it reads, each made once. */
+const doorPools = new Map<string, DrEntrancePool>();
+
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
  * shuffle or world (`entrancesKnown`): the pack's `entrancePool` of the
  * run's simple, restricted, full or crossed shuffle in the Open, Retro
  * (Open's with its take-any caves) or Standard world. Insanity parts a door
  * from its way out, and Inverted runs tables of its own: not modelled yet.
+ * A Door Randomizer run's is DR's own (the pack's `drEntrancePool`), in
+ * any world.
  */
 export const poolOf = (settings: RunSettings): EntrancePool | null => {
+  if (!entrancesKnown(settings)) return null;
+  const door = doorShuffleOf(settings);
+  if (door !== undefined) {
+    const read = doorPoolSettingsOf(settings);
+    const key = JSON.stringify([door, read]);
+    let found = doorPools.get(key);
+    if (found === undefined) {
+      found = drEntrancePool(door, read);
+      doorPools.set(key, found);
+    }
+    return found;
+  }
   const shuffle = portedShuffleOf(settings);
-  if (shuffle === undefined || !entrancesKnown(settings)) return null;
+  if (shuffle === undefined) return null;
   const world =
     settings.mode === "standard" || settings.mode === "retro"
       ? settings.mode
@@ -51,14 +75,10 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   return pool;
 };
 
-// Every pool's entrances are among the crossed shuffle's of either world
-const ENTRANCE_BY_ID = new Map(
-  [
-    ...entrancePool("crossed", "open").entrances,
-    ...entrancePool("crossed", "standard").entrances,
-  ].map((e) => [e.id, e]),
-);
-const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
+// Every pool's entrances are among the overworld's, the Inverted world's
+// names too (DR's pools)
+const ENTRANCE_BY_ID = new Map(ENTRANCES.map((e) => [e.id, e]));
+const TARGET_BY_ID = new Map(DOOR_TARGETS.map((t) => [t.id, t]));
 
 /** An entrance of the shuffle by id, or undefined. */
 export const entranceById = (id: string): OverworldEntrance | undefined =>
@@ -95,7 +115,10 @@ export const notesFor = (
  * Mode): each door or hole to its target, with its partners (`notesFor`),
  * when the shuffle may give it that target. Of targets alike, which the
  * game loads by one entrance, it keeps the one noted there, else takes the
- * first noted nowhere. The game wins over a note it contradicts.
+ * first noted nowhere. The game wins over a note it contradicts. Nothing
+ * in a decoupled shuffle (DR's insanity): Link coming out of a cave's exit
+ * by a door tells where the exit leads, not where that door does, and the
+ * game shows both alike.
  */
 export const gameNotes = (
   pool: EntrancePool,
@@ -103,6 +126,7 @@ export const gameNotes = (
   links: readonly EntranceLink[],
 ): Record<string, string> => {
   const notes: Record<string, string> = {};
+  if (pool.decoupled === true) return notes;
   for (const { entrance, targets } of linksOf(links)) {
     const may = new Set(pool.targetsOf.get(entrance)?.map((t) => t.id));
     const fits = targets.filter((target) => may.has(target));

@@ -22,7 +22,7 @@ import {
   TARGETS,
 } from "../entrances";
 import { locationId } from "../location";
-import connectionData from "./world/connections.json" with { type: "json" };
+import entranceData from "./world/entrances.json" with { type: "json" };
 
 /**
  * DR's entrance shuffles (`--shuffle`, args.json) but `vanilla` and OWR's
@@ -58,7 +58,7 @@ export interface DrPoolSettings {
 
 type Table = { readonly line: number; readonly value: unknown };
 const TABLES = (
-  connectionData as unknown as Readonly<
+  entranceData as unknown as Readonly<
     Record<string, Readonly<Record<string, Table>>>
   >
 )["source/overworld/EntranceShuffle2.py"] as Readonly<Record<string, Table>>;

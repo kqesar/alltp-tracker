@@ -44,7 +44,11 @@ import {
   trickState,
 } from "@alltp/pack-alttpr";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
-import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
+import {
+  doorLocationsOf,
+  doorPoolSettingsOf,
+  doorShuffleOf,
+} from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
   crossedLogic,
@@ -354,6 +358,9 @@ export const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
   return found;
 };
 
+/** No entrance noted yet: one object, so DR's world is built once for it. */
+const NO_NOTES: Readonly<Record<string, string>> = {};
+
 let last:
   | {
       crossed?: CrossedSolver;
@@ -374,7 +381,15 @@ let last:
  */
 export const solutionOf = (state: Inputs): Solution => {
   const events = eventsOf(state);
-  const entrances = crossedLogic(state.settings) ? state.entrances : undefined;
+  // The entrances noted, in a run whose world reads them: the entrance
+  // randomizer's, or DR's where it shuffled them
+  const doorShuffle = doorLogic(state.settings)
+    ? doorShuffleOf(state.settings)
+    : undefined;
+  const entrances =
+    crossedLogic(state.settings) || doorShuffle !== undefined
+      ? state.entrances
+      : undefined;
   if (
     last !== undefined &&
     last.events === events &&
@@ -410,7 +425,10 @@ export const solutionOf = (state: Inputs): Solution => {
   // in hand are those of another world
   const shuffle = portedShuffleOf(state.settings);
   const solved =
-    entrances === undefined || crossed === undefined || shuffle === undefined
+    entrances === undefined ||
+    crossed === undefined ||
+    shuffle === undefined ||
+    !crossedLogic(state.settings)
       ? undefined
       : {
           ...crossed.solve(settings, shuffle, entrances, recorded),
@@ -428,6 +446,13 @@ export const solutionOf = (state: Inputs): Solution => {
             drSettingsOf(state.settings),
             doorAddedOf(state.settings),
             doorStateOf(recorded, keysOf(state)),
+            doorShuffle === undefined
+              ? undefined
+              : {
+                  noted: entrances ?? NO_NOTES,
+                  pool: doorPoolSettingsOf(state.settings),
+                  shuffle: doorShuffle,
+                },
           ),
           solver: door,
         };

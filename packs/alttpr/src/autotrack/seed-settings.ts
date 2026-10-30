@@ -341,6 +341,13 @@ export interface DoorExactSettings {
   readonly potShuffle?: boolean;
   readonly restrictBossItems?: string;
   readonly openPyramid?: string;
+  /**
+   * Whether its shuffle moves Link's House (`shufflelinks`,
+   * EntranceShuffle2.py:555) and the Tavern's back door (`shuffletavern`,
+   * :211), where `meta` names them.
+   */
+  readonly shuffleLinks?: boolean;
+  readonly shuffleTavern?: boolean;
   readonly overworld?: {
     readonly layout: string;
     readonly crossed: string;

@@ -22,6 +22,7 @@ import {
   doorOf,
   doorReasons,
   doorRows,
+  doorShuffleOf,
   doorValueText,
   isDoorRun,
 } from "@/games/alttpr/data/doorRando";
@@ -295,7 +296,10 @@ export const presets: Preset[] = [
   },
   {
     // Crosskeys rolled on the Door Randomizer (Crosskeys 2026, Hyrule Town
-    // Hall): crossed entrances, every dungeon item wild, doors vanilla
+    // Hall): crossed entrances, every dungeon item wild, doors vanilla. The
+    // Tavern's back door counts as shuffled: race seeds set it (the
+    // recorded avianart meta of test/dr-seeds/C2BdrZOiV), and so read it
+    // leads nowhere until noted, never somewhere it may not
     description:
       "Crosskeys on the Door Randomizer: Crossworld entrances, keysanity, doors vanilla.",
     id: "door-crosskeys",
@@ -305,6 +309,7 @@ export const presets: Preset[] = [
       dungeonItems: "full",
       entranceShuffle: "crossed",
       randomizer: "dr",
+      shuffleTavern: true,
     },
   },
 ];
@@ -343,43 +348,31 @@ export const portedShuffleOf = (
  * er-keys.ts). Its boss slots read the boss shuffle as vt's world does, set
  * or hidden. The Glitches setting changes nothing: such a seed is filled
  * as NoGlitches, without the boots, whatever it names (`entranceRandomized`).
- * A Door Randomizer seed only as `doorCrossed` says.
+ * Never a Door Randomizer seed: DR shuffles entrances with its own pools,
+ * which its own world reads (`doorLogic`).
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   portedShuffleOf(settings) !== undefined &&
   !isHidden(settings, "entranceShuffle") &&
   settings.mode !== "inverted" &&
-  (!isDoorRun(settings) || doorCrossed(settings));
-
-/**
- * Whether the entrance randomizer's world holds a Door Randomizer seed with
- * shuffled entrances: DR's Crosskeys alone, Crossworld entrances in the Open
- * or Standard world with every dungeon item shuffled, its bosses in place,
- * no glitched logic and nothing `doorReasons` names (keys out of their
- * dungeons counted). DR shuffles entrances and fills a seed with its own
- * code (EntranceShuffle2.py, its key logic), which the pack does not port
- * yet: its other shuffles, the keys it keeps in their dungeons, its boss
- * shuffle and its glitched logics are causes of `unmodelledReasons`.
- */
-const doorCrossed = (settings: RunSettings): boolean =>
-  settings.entranceShuffle === "crossed" &&
-  (settings.mode === "open" || settings.mode === "standard") &&
-  settings.dungeonItems === "full" &&
-  !bossesMayMove(settings) &&
-  settings.glitches === undefined &&
-  doorReasons(settings, true).length === 0;
+  !isDoorRun(settings);
 
 /**
  * Whether a run takes the Door Randomizer's own world (the pack's
  * door-world, loaded on demand by `useDoorLogic`): a seed of DR itself (not
- * its Overworld fork, whose rules differ), its doors and entrances vanilla,
- * nothing the port of DR's world leaves out (`doorReasons`), no glitched
- * logic, its bosses in place (DR's world reads each dungeon's own) and
- * every setting known (a Mystery run's are not).
+ * its Overworld fork, whose rules differ), its doors vanilla, its entrances
+ * vanilla or of a shuffle DR's pools hold (`doorShuffleOf`: every one but
+ * OWR's District), nothing the port of DR's world leaves out
+ * (`doorReasons`), no glitched logic, its bosses in place (DR's world
+ * reads each dungeon's own) and every setting known (a Mystery run's are
+ * not).
  */
 export const doorLogic = (settings: RunSettings): boolean =>
   settings.randomizer === "dr" &&
-  settings.entranceShuffle === "none" &&
+  !isHidden(settings, "entranceShuffle") &&
+  ((settings.entranceShuffle === "none" &&
+    settings.doorEntrances === undefined) ||
+    doorShuffleOf(settings) !== undefined) &&
   settings.glitches === undefined &&
   !bossesMayMove(settings) &&
   (settings.hidden ?? []).length === 0 &&
@@ -397,22 +390,24 @@ export const bossesMayMove = (settings: RunSettings): boolean =>
  * Whether the entrance assistant knows a run's shuffled entrances
  * (`logic/entrances.ts`, `poolOf`): those of a shuffle the pack ports
  * (`PORTED_SHUFFLES`) in the Open world (Retro's too) or the Standard one
- * (packs/alttpr, `entrancePool`). Insanity's and the Inverted world's,
- * which runs tables of its own, are not modelled yet.
+ * (packs/alttpr, `entrancePool`); for a Door Randomizer seed, any shuffle
+ * of DR's own pools (`doorShuffleOf`, the pack's `drEntrancePool`), in any
+ * world. alttpr.com's Insanity and Inverted world, which run tables of
+ * their own, are not modelled yet.
  */
 export const entrancesKnown = (settings: RunSettings): boolean =>
   !isHidden(settings, "entranceShuffle") &&
-  portedShuffleOf(settings) !== undefined &&
-  settings.mode !== "inverted";
+  (isDoorRun(settings)
+    ? doorShuffleOf(settings) !== undefined
+    : portedShuffleOf(settings) !== undefined && settings.mode !== "inverted");
 
 /**
  * Why the pack does not model a run's logic, one phrase per cause: an
  * entrance shuffle the pack does not port (Insanity) and the Inverted
  * world's shuffled entrances; for a Door Randomizer seed, what its port
  * leaves out (`doorReasons`), its glitched logics (the pack ports
- * alttpr.com's, not DR's), its shuffled entrances past DR's Crosskeys
- * (`doorCrossed`), and, with its entrances vanilla, what keeps it out of
- * DR's own world (`doorBorrowed`). The pack ports vt's logics without shuffled entrances
+ * alttpr.com's, not DR's), and what else keeps it out of DR's own world
+ * (`doorBorrowed`), its entrances vanilla or shuffled by DR's pools. The pack ports vt's logics without shuffled entrances
  * and the entrance randomizer's NoGlitches for `crossedLogic`, whatever an
  * alttpr.com run's Glitches. Empty when the run is modelled. The one place
  * the cause is told, for the note over the map.
@@ -430,7 +425,9 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   const { entranceShuffle: shuffle, mode } = settings;
   // Not known yet: any shuffle, or none (`LogicNote` says to set it)
   if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
-  if (shuffle === "none") {
+  // DR's own pools hold its every shuffle but OWR's District (named by
+  // `doorReasons`)
+  if (shuffle === "none" || isDoorRun(settings)) {
     if (reasons.length === 0) reasons.push(...doorBorrowed(settings));
     return reasons;
   }
@@ -440,27 +437,12 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     reasons.push(`the ${ENTRANCE_LABELS[shuffle]} entrance shuffle`);
   if (mode === "inverted")
     reasons.push(`shuffled entrances in the ${MODE_LABELS[mode]} world`);
-  // A Door Randomizer seed past its Crosskeys (`doorCrossed`): its glitches
-  // and its `doorReasons` are said above
-  if (reasons.length === 0 && !crossedLogic(settings)) {
-    if (shuffle !== "crossed")
-      reasons.push(
-        `the Door Randomizer's ${ENTRANCE_LABELS[shuffle]} entrance shuffle`,
-      );
-    else if (mode !== "open" && mode !== "standard")
-      reasons.push(`Crossworld entrances in the ${MODE_LABELS[mode]} world`);
-    else if (settings.dungeonItems !== "full")
-      reasons.push(
-        "Crossworld entrances with dungeon items kept in their dungeons",
-      );
-    else reasons.push("shuffled bosses behind Crossworld entrances");
-  }
   return reasons;
 };
 
 /**
- * Why a Door Randomizer run with vanilla entrances that DR's own world
- * does not hold is not modelled: alttpr.com's v31 is no stand-in, its
+ * Why a Door Randomizer run that DR's own world does not hold is not
+ * modelled: alttpr.com's v31 is no stand-in, its
  * rules differing from DR's where DR asks more (an enemy room's kills,
  * Ganons Tower's Tile Room's powder, DR's key analysis over DR's own fill:
  * Rules.py:909-, the pack's README). Its Overworld fork, whose rules are

@@ -7,6 +7,7 @@
 
 import type { Settings, State, Tri } from "@alltp/engine";
 import {
+  type DrNotedEntrances,
   type DrWorld,
   drRegionId,
   drWorld,
@@ -31,23 +32,47 @@ const UNRECORDED = ["bigKeyH2"];
 /** A run's pots and enemy drops, each in its DR region. */
 type Added = readonly { readonly name: string; readonly region: string }[];
 
-const built = new WeakMap<Settings, { added: Added; world: DrWorld }>();
+const built = new WeakMap<
+  Settings,
+  { added: Added; entrances?: DrNotedEntrances; world: DrWorld }
+>();
+
+/** Whether two runs' noted entrances are the same notes of the same pool. */
+const sameEntrances = (a?: DrNotedEntrances, b?: DrNotedEntrances) =>
+  a === b ||
+  (a !== undefined &&
+    b !== undefined &&
+    a.noted === b.noted &&
+    a.shuffle === b.shuffle &&
+    JSON.stringify(a.pool) === JSON.stringify(b.pool));
 
 /**
  * The world of a run's settings (drSettingsOf, the same object for the
- * same run) and its pots and drops (doorLocationsOf's, memoized per modes),
- * built again only when they change: tens of milliseconds, DR's key
- * analysis included. Kept per settings, so the board's run and a review's
- * sweep (its keys tracked) never rebuild each other's.
+ * same run), its pots and drops (doorLocationsOf's, memoized per modes) and
+ * its entrances as noted, where DR shuffled them (the store's notes, the
+ * same object until one changes), built again only when they change: tens
+ * of milliseconds, DR's key analysis included. Kept per settings, so the
+ * board's run and a review's sweep (its keys tracked) never rebuild each
+ * other's.
  */
-const worldOf = (settings: Settings, added: Added): DrWorld => {
+const worldOf = (
+  settings: Settings,
+  added: Added,
+  entrances?: DrNotedEntrances,
+): DrWorld => {
   const found = built.get(settings);
-  if (found?.added === added) return found.world;
+  if (found?.added === added && sameEntrances(found.entrances, entrances))
+    return found.world;
   const world = drWorld(settings, {
     dropsAndPots: added,
+    ...(entrances === undefined ? {} : { entrances }),
     unrecorded: UNRECORDED,
   });
-  built.set(settings, { added, world });
+  built.set(settings, {
+    added,
+    ...(entrances === undefined ? {} : { entrances }),
+    world,
+  });
   return world;
 };
 
@@ -55,9 +80,14 @@ const worldOf = (settings: Settings, added: Added): DrWorld => {
 export interface DoorSolver extends OwnWorldSolver {
   /**
    * The run solved: every location of DR's world, its pots and drops
-   * (`added`) among them.
+   * (`added`) among them, on its entrances as noted where DR shuffled them.
    */
-  solve(settings: Settings, added: Added, state: State): DoorRun;
+  solve(
+    settings: Settings,
+    added: Added,
+    state: State,
+    entrances?: DrNotedEntrances,
+  ): DoorRun;
   /**
    * Where a region of DR's stands (a DR location's, by DR's name): maybe
    * for one the world does not hold (a take-any cave).
@@ -76,5 +106,6 @@ export const solver: DoorSolver = {
     const id = drRegionId(name);
     return id === undefined ? "maybe" : solution.region(id);
   },
-  solve: (settings, added, state) => solveIn(worldOf(settings, added), state),
+  solve: (settings, added, state, entrances) =>
+    solveIn(worldOf(settings, added, entrances), state),
 };

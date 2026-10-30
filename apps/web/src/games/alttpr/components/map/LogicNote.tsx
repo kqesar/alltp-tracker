@@ -1,7 +1,8 @@
 import { useShallow } from "zustand/react/shallow";
-import { doorNotes } from "@/games/alttpr/data/doorRando";
+import { doorNotes, doorShuffleOf } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
+  doorLogic,
   GLITCHES_LABELS,
   glitchesOf,
   isHidden,
@@ -36,13 +37,17 @@ export const LogicNote = () => {
     useShallow((state) => unmodelledReasons(state.settings)),
   );
   const crossed = useGameStore((state) => crossedLogic(state.settings));
+  // DR's world on its shuffled entrances follows the notes alike
+  const noted = useGameStore(
+    (state) =>
+      crossed ||
+      (doorLogic(state.settings) &&
+        doorShuffleOf(state.settings) !== undefined),
+  );
   const door = useGameStore(
     useShallow((state) =>
       unmodelledReasons(state.settings).length === 0
-        ? doorNotes(
-            state.settings,
-            crossedLogic(state.settings) ? "crossed" : "door",
-          )
+        ? doorNotes(state.settings)
         : [],
     ),
   );
@@ -74,13 +79,13 @@ export const LogicNote = () => {
         shows as maybe until you set <strong>Entrances</strong> in Mode.
       </p>
     );
-  if (crossed)
+  if (noted)
     return (
       <>
         <p className="logic-note" data-testid="logic-note">
           The logic follows the entrances you noted: a check behind a door you
           have not noted stays out of logic.
-          {glitched && (
+          {crossed && glitched && (
             <>
               {" "}
               A seed with shuffled entrances is filled without glitches,

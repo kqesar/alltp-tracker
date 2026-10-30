@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import connections from "./world/connections.json" with { type: "json" };
+import connectionData from "./world/connections.json" with { type: "json" };
 import doorData from "./world/doors.json" with { type: "json" };
+import entranceData from "./world/entrances.json" with { type: "json" };
 import regionData from "./world/regions.json" with { type: "json" };
+
+/** Both files' tables, by file. */
+const connections: Record<string, Record<string, Table>> = {};
+for (const data of [connectionData, entranceData] as unknown as Record<
+  string,
+  Record<string, Table>
+>[])
+  for (const [file, tables] of Object.entries(data))
+    if (typeof tables === "object")
+      connections[file] = { ...connections[file], ...tables };
 
 type Pair = readonly [string, string];
 type Table = { line: number; value: unknown };

@@ -31,7 +31,10 @@ import {
   toState,
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
-import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
+import {
+  DOOR_LOCATION_IDS,
+  doorShuffleOf,
+} from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
   doorLogic,
@@ -147,7 +150,13 @@ export const hiddenReason = (
     return "keysanity";
   }
   if (packSettings(settings).genericKeys) return "generic-keys";
-  if (settings.entranceShuffle !== "none" || log.format === "er") {
+  // DR's own shuffles too (`doorEntrances`: lite, lean, …), which leave
+  // alttpr.com's field at none
+  if (
+    settings.entranceShuffle !== "none" ||
+    doorShuffleOf(settings) !== undefined ||
+    log.format === "er"
+  ) {
     return "entrances";
   }
   const logic = log.extra.settings?.logic;

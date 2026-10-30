@@ -5,6 +5,9 @@ import connectionData from "../door-rando/world/connections.json" with {
   type: "json",
 };
 import doorData from "../door-rando/world/doors.json" with { type: "json" };
+import entranceData from "../door-rando/world/entrances.json" with {
+  type: "json",
+};
 import regionData from "../door-rando/world/regions.json" with { type: "json" };
 import ruleData from "../door-rando/world/rules.json" with { type: "json" };
 
@@ -94,9 +97,16 @@ export const DR_RULES = ruleData as unknown as {
 };
 
 type Table = { readonly line: number; readonly value: unknown };
-const TABLES = connectionData as unknown as Readonly<
-  Record<string, Readonly<Record<string, Table>>>
->;
+type Tables = Readonly<Record<string, Readonly<Record<string, Table>>>>;
+/** connections.json and entrances.json, a file's tables from both. */
+const TABLES: Tables = (() => {
+  const merged: Record<string, Record<string, Table>> = {};
+  for (const data of [connectionData, entranceData] as unknown as Tables[])
+    for (const [file, tables] of Object.entries(data))
+      if (typeof tables === "object")
+        merged[file] = { ...merged[file], ...tables };
+  return merged;
+})();
 
 /** A connection table, as pairs, by its file and name. */
 export function pairsOf(

@@ -521,12 +521,38 @@ function main(args) {
     { generated, upstream },
     { doors: world.doors, portals: world.portals },
   );
+  // The tables DR's entrance pools read apart (src/door-rando/entrances.ts):
+  // the entrance assistant loads them without the rest of DR's world
+  const ENTRANCE_FILE = "source/overworld/EntranceShuffle2.py";
+  const POOL_TABLES = new Set([
+    "drop_map",
+    "entrance_map",
+    "single_entrance_map",
+    "inverted_sub_table",
+    "modes",
+  ]);
+  /** @param {boolean} pool */
+  const tablesOf = (pool) =>
+    Object.fromEntries(
+      Object.entries(world.connections).flatMap(([file, tables]) => {
+        const kept = Object.fromEntries(
+          Object.entries(tables).filter(
+            ([name]) =>
+              (file === ENTRANCE_FILE && POOL_TABLES.has(name)) === pool,
+          ),
+        );
+        return Object.keys(kept).length === 0 ? [] : [[file, kept]];
+      }),
+    );
   writeLines(
     join(WORLD, "connections.json"),
     { generated, upstream },
-    Object.fromEntries(
-      Object.entries(world.connections).map(([file, tables]) => [file, tables]),
-    ),
+    tablesOf(false),
+  );
+  writeLines(
+    join(WORLD, "entrances.json"),
+    { generated, upstream },
+    tablesOf(true),
   );
   process.stdout.write(
     `${WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${world.portals.length} portals\n`,

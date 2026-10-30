@@ -148,12 +148,17 @@ describe("avianartReading", () => {
         open_pyramid: "no",
         potshuffle: 1,
         restricted_boss_items: "mapcompass",
+        shuffle: "crossed",
+        shufflelinks: true,
+        shuffletavern: false,
       }),
     ).toMatchObject({
       bombBag: true,
       openPyramid: "no",
       potShuffle: true,
       restrictBossItems: "mapcompass",
+      shuffleLinks: true,
+      shuffleTavern: false,
     });
     // An older seed's flag; a meta without them names none
     expect(read({ open_pyramid: true })?.openPyramid).toBe("yes");
@@ -162,7 +167,14 @@ describe("avianartReading", () => {
       open_pyramid: undefined,
       potshuffle: undefined,
       restricted_boss_items: undefined,
+      shufflelinks: undefined,
+      shuffletavern: undefined,
     });
+    expect(without).not.toHaveProperty("shuffleLinks");
+    expect(without).not.toHaveProperty("shuffleTavern");
+    // With vanilla entrances they move nothing: not named (the race seed's
+    // meta says its tavern is shuffled)
+    expect(read({ shufflelinks: true })).not.toHaveProperty("shuffleLinks");
     expect(without).not.toHaveProperty("bombBag");
     expect(without).not.toHaveProperty("openPyramid");
     expect(without).not.toHaveProperty("potShuffle");

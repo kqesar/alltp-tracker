@@ -8,7 +8,7 @@ import {
 } from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { checkStates, runZones } from "@/games/alttpr/logic/checks";
-import { setDoorSolver } from "@/games/alttpr/logic/solution";
+import { setDoorSolver, solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 const KEYDROP: RunSettings = {
@@ -110,5 +110,30 @@ describe("a Door Randomizer run's checks", () => {
     expect(
       runZones(state()).some((zone) => zone.checks.some((check) => check.door)),
     ).toBe(false);
+  });
+});
+
+describe("a Door Randomizer run with shuffled entrances", () => {
+  it("reads DR's world on the entrances noted, a door not noted leading nowhere", async () => {
+    useGameStore.getState().applyPreset("door-crosskeys");
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
+    // DR's world, not the entrance randomizer's
+    expect(solutionOf(state()).door).toBeDefined();
+    expect(solutionOf(state()).crossed).toBeUndefined();
+    // The Lost Woods' hideout, a hole's: not noted, it leads nowhere
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteEntrance("lost-woods-hideout-drop", "lost-woods-hideout-top");
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    // Noted elsewhere: the Kakariko Well's hole drops there
+    useGameStore.getState().noteEntrances({
+      "kakariko-well-drop": "lost-woods-hideout-top",
+      "lost-woods-hideout-drop": null,
+    });
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    useGameStore.getState().noteEntrance("kakariko-well-drop", null);
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
   });
 });

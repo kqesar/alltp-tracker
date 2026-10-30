@@ -358,6 +358,11 @@ export type ErShuffle = "simple" | "restricted" | "full" | "crossed";
 export interface EntrancePool {
   /** The shuffle's name: the entrance randomizer's or the Door Randomizer's. */
   readonly shuffle: string;
+  /**
+   * Whether an exit leads back elsewhere than its door (DR's insanity):
+   * coming out of a cave then tells nothing of where its door leads.
+   */
+  readonly decoupled?: boolean;
   /** The entrances it shuffles: doors, then holes. */
   readonly entrances: readonly OverworldEntrance[];
   /**

@@ -144,6 +144,39 @@ describe("the entrance assistant's model", () => {
     });
   });
 
+  it("has DR's own pool for a Door Randomizer run, in any world", () => {
+    const dr = getPreset("door-crosskeys").settings;
+    const pool = poolOf(dr);
+    expect(pool?.shuffle).toBe("crossed");
+    expect(poolOf({ ...dr })).toBe(pool);
+    // Its Inverted world's too, and its own shuffles
+    expect(poolOf({ ...dr, mode: "inverted" })?.shuffle).toBe("crossed");
+    expect(
+      poolOf({ ...dr, doorEntrances: "dungeonssimple" })?.entrances.length,
+    ).toBe(28);
+    // Link's House and the Tavern's back, as the run says
+    const ids = (settings: typeof dr) =>
+      poolOf(settings)?.entrances.map((e) => e.id) ?? [];
+    expect(ids(dr)).not.toContain("links-house");
+    expect(ids({ ...dr, shuffleLinks: true, shuffleTavern: true })).toContain(
+      "links-house",
+    );
+    expect(targetById("links-house-exit")?.place).toBe("Link's House");
+    expect(entranceById("inverted-pyramid-hole")?.kind).toBe("hole");
+    // Through Turtle Rock's front door, as in the entrance randomizer's
+    if (pool === null) throw new Error("no pool");
+    expect(
+      gameNotes(pool, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // Insanity's exits lead elsewhere: the game's doors tell nothing
+    const insanity = poolOf({ ...dr, entranceShuffle: "insanity" });
+    expect(insanity?.decoupled).toBe(true);
+    if (insanity === null) throw new Error("no pool");
+    expect(
+      gameNotes(insanity, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({});
+  });
+
   it("moves the checks inside a place above the door noted to lead there", () => {
     const blinds = MARKERS.find((m) => m.id === "blinds-hideout");
     const tomb = MARKERS.find((m) => m.id === "kings-tomb");

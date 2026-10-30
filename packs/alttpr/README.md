@@ -1095,14 +1095,17 @@ barriers, traps, events, dead ends, pairs, portals, controllers; a flag set
 under an `if` kept with its condition, a flag at its default left out, no
 layout byte), and the 25 portals. `connections.json` holds the tables
 `OverworldShuffle.py`, `EntranceShuffle2.py` and `DoorShuffle.py` wire the
-world with, as written, each with its line. `world-data.spec.ts` holds the
+world with, as written, each with its line (`EntranceShuffle2.py`'s
+`exit_ids` and `EntranceData.py`'s door slots and hole bytes among them, the
+layout bytes left out), but the five DR's entrance pools read (its entrance,
+drop and single cave maps, the Inverted names, `modes`), which
+`entrances.json` holds apart, so the entrance assistant loads them without
+the rest of DR's world. `world-data.spec.ts` holds the
 counts and that every exit is linked, but the doors the vanilla world never
 leaves by.
 
 **Its entrance shuffles** (`src/door-rando/entrances.ts`, over
-`EntranceShuffle2.py`'s `modes`, maps and `exit_ids` and `EntranceData.py`'s
-door slots and hole bytes, which the same import keeps, the layout bytes
-left out): `drShuffled(shuffle, settings)` is what a DR shuffle may move in
+`world/entrances.json`): `drShuffled(shuffle, settings)` is what a DR shuffle may move in
 a world, every entrance of `link_entrances_new`'s pool (`:45-80`, Inverted's
 names put in) less what it surely leaves vanilla: Standard's escape and
 Link's House (`do_standard_connections`), Link's House without

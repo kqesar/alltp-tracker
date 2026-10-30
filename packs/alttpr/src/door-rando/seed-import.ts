@@ -181,6 +181,11 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   const bombBag = flagOf(meta.bombbag);
   const potShuffle = flagOf(meta.potshuffle);
   const pyramid = pyramidOf(meta.open_pyramid);
+  // Link's House and the Tavern's back move only with the entrances: a
+  // seed of vanilla entrances names them to no effect
+  const moves = shuffle !== "vanilla";
+  const shuffleLinks = moves ? flagOf(meta.shufflelinks) : null;
+  const shuffleTavern = moves ? flagOf(meta.shuffletavern) : null;
   const exact: DoorExactSettings = {
     doorShuffle,
     dropShuffle,
@@ -196,6 +201,8 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       ? { restrictBossItems: meta.restricted_boss_items }
       : {}),
     ...(pyramid === null ? {} : { openPyramid: pyramid }),
+    ...(shuffleLinks === null ? {} : { shuffleLinks }),
+    ...(shuffleTavern === null ? {} : { shuffleTavern }),
   };
   // Only the Overworld fork writes `ow_layout` (OWR 0.8.0.0 BaseClasses.py)
   if (!("ow_layout" in meta)) return exact;

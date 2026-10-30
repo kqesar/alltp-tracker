@@ -134,12 +134,21 @@ describe("MapPanel", () => {
       "The logic follows the entrances you noted",
     );
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
-      "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
     );
 
+    // Its key drops too, in DR's world on the entrances noted
     act(() => useGameStore.getState().updateDoorSettings({ pottery: "keys" }));
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: shuffled key drops with keys outside their dungeons. Every check shows as maybe.",
+      "The logic follows the entrances you noted",
+    );
+    expect(screen.getByTestId("logic-note-door")).toBeInTheDocument();
+    // A door shuffle is not modelled
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ doorShuffle: "basic" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: Basic door shuffle and shuffled key drops with keys outside their dungeons. Every check shows as maybe.",
     );
     expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
 
