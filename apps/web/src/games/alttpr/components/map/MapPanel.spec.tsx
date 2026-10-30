@@ -172,14 +172,15 @@ describe("MapPanel", () => {
       "Not modelled yet: the Overworld Randomizer's own rules.",
     );
     expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
-    // A Mystery run's hidden settings borrow v31, between two logics
+    // A Mystery run's hidden settings: not modelled until set, never v31's
     act(() => {
       useGameStore.getState().updateDoorSettings({ randomizer: "dr" });
       useGameStore.getState().hideSetting("goal");
     });
-    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
-      "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: a Door Randomizer seed with hidden settings (set them in Mode). Every check shows as maybe.",
     );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
   });
 
   it("names the entrance shuffle as the cause in an Open run, not the run type", () => {

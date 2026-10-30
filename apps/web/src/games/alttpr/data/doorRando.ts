@@ -396,15 +396,15 @@ export const doorReasons = (
 };
 
 /** Which world a modelled DR run is solved in. */
-export type DoorLogicKind = "crossed" | "door" | "borrowed";
+export type DoorLogicKind = "crossed" | "door";
 
 /**
  * What a DR run's logic rests on, when the tracker models it: DR's own
- * world (`door`: vanilla doors and entrances, doorLogic), the entrance
+ * world (`door`: vanilla doors and entrances, doorLogic), or the entrance
  * randomizer's crossed logic for DR's Crosskeys (until DR's own entrance
- * pools are ported), or alttpr.com's v31 for a Mystery run whose settings
- * are not all known (its Overworld fork and a boss shuffle are not
- * modelled: `unmodelledReasons`), its new locations then shown as maybe.
+ * pools are ported), its new locations then shown as maybe. Any other DR
+ * run is not modelled (`unmodelledReasons`): alttpr.com's v31 is no
+ * stand-in, asking less than DR in places.
  * @param kind - The world the run is solved in
  */
 export const doorNotes = (
@@ -423,9 +423,7 @@ export const doorNotes = (
         : []),
     ];
   const notes = [
-    kind === "crossed"
-      ? "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported."
-      : "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
+    "Door Randomizer seed: entrance logic from the ALttP Entrance Randomizer until DR's own is ported.",
   ];
   if (doorLocationsOf(settings).locations.length > 0) {
     notes.push(

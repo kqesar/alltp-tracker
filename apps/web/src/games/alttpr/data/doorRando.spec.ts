@@ -16,6 +16,7 @@ import {
   GLITCHES_LABELS,
   type Glitches,
   getPreset,
+  HIDDEN_DOOR_SETTINGS,
   logicModelled,
   type RunSettings,
   unmodelledReasons,
@@ -69,22 +70,34 @@ describe("a Door Randomizer run's logic", () => {
     ).toEqual([]);
   });
 
-  it("borrows v31 for a Mystery run whose settings are not all known, and says so", () => {
+  it("names a Mystery run whose settings are not all known as not modelled, never v31's", () => {
+    // v31 says yes where DR says no (the tile room's powder, kill rooms,
+    // DR's key analysis): until the player sets the run, every check maybe
+    // (the owner's decision of 2026-10-30)
     for (const change of [
       { hidden: ["goal"] },
       { bossShuffle: "full", hidden: ["bossShuffle"] },
+      { entranceShuffle: "none", hidden: ["glitches", "entranceShuffle"] },
     ] as const) {
       const run = with_(DR, change);
       expect(doorLogic(run), JSON.stringify(change)).toBe(false);
-      expect(logicModelled(run), JSON.stringify(change)).toBe(true);
+      expect(logicModelled(run), JSON.stringify(change)).toBe(false);
     }
-    expect(doorNotes(with_(DR, { hidden: ["goal"] }), "borrowed")).toEqual([
-      "Door Randomizer seed: dungeon logic from alttpr.com's v31 until DR's own is ported.",
+    expect(unmodelledReasons(with_(DR, { hidden: ["goal"] }))).toEqual([
+      HIDDEN_DOOR_SETTINGS,
     ]);
+    // A boss shuffle known and other settings hidden: both said
     expect(
-      doorNotes(with_(DR, { dropShuffle: "keys" }), "borrowed")[1],
-    ).toMatch(/show as maybe until then/);
-    // DR's world gives them their rules: nothing more to say
+      unmodelledReasons(
+        with_(DR, { bossShuffle: "simple", hidden: ["crystalsGanon"] }),
+      ),
+    ).toEqual([
+      "shuffled bosses in a Door Randomizer seed",
+      HIDDEN_DOOR_SETTINGS,
+    ]);
+    // Set, it is DR's own world again
+    expect(doorLogic(with_(DR, { hidden: [] }))).toBe(true);
+    // DR's world gives the DR locations their rules: nothing more to say
     expect(doorNotes(with_(DR, { dropShuffle: "keys" }), "door")).toHaveLength(
       1,
     );

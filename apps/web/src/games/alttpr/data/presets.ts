@@ -463,19 +463,29 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
  * does not hold is not modelled: alttpr.com's v31 is no stand-in, its
  * rules differing from DR's where DR asks more (an enemy room's kills,
  * Ganons Tower's Tile Room's powder, DR's key analysis over DR's own fill:
- * Rules.py:906-, the pack's README). Its Overworld fork, whose rules are
- * its own, and a boss shuffle, whose slots DR's world reads as their own
- * bosses. A Mystery run whose settings are not all known keeps v31 read
- * between two logics, as the owner decided (2026-10-30): none for it.
+ * Rules.py:909-, the pack's README). Its Overworld fork, whose rules are
+ * its own; a boss shuffle, whose slots DR's world reads as their own
+ * bosses; a Mystery run while any of its settings is hidden, which DR's
+ * world needs all of (the owner's decision of 2026-10-30: v31 is no
+ * longer read for it, between two logics or otherwise).
  */
 const doorBorrowed = (settings: RunSettings): string[] => {
   if (!isDoorRun(settings) || doorLogic(settings)) return [];
   if (settings.randomizer === "owr")
     return ["the Overworld Randomizer's own rules"];
+  const reasons: string[] = [];
   if (!isHidden(settings, "bossShuffle") && bossShuffleOf(settings) !== "none")
-    return ["shuffled bosses in a Door Randomizer seed"];
-  return [];
+    reasons.push("shuffled bosses in a Door Randomizer seed");
+  if ((settings.hidden ?? []).length > 0) reasons.push(HIDDEN_DOOR_SETTINGS);
+  return reasons;
 };
+
+/**
+ * The cause `unmodelledReasons` gives while a Door Randomizer run's
+ * settings are not all known (a Mystery seed's): DR's world reads each.
+ */
+export const HIDDEN_DOOR_SETTINGS =
+  "a Door Randomizer seed with hidden settings (set them in Mode)";
 
 /**
  * The cause `unmodelledReasons` gives while a Mystery run's entrance

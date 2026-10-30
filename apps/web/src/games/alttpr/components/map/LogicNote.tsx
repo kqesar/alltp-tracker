@@ -2,7 +2,6 @@ import { useShallow } from "zustand/react/shallow";
 import { doorNotes } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
-  doorLogic,
   GLITCHES_LABELS,
   glitchesOf,
   isHidden,
@@ -42,11 +41,7 @@ export const LogicNote = () => {
       unmodelledReasons(state.settings).length === 0
         ? doorNotes(
             state.settings,
-            crossedLogic(state.settings)
-              ? "crossed"
-              : doorLogic(state.settings)
-                ? "door"
-                : "borrowed",
+            crossedLogic(state.settings) ? "crossed" : "door",
           )
         : [],
     ),
