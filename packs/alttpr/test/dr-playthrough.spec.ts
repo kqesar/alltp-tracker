@@ -1,11 +1,12 @@
 // The Door Randomizer's world held to real seeds: the playthrough of each
 // spoiler race DR wrote (test/dr-spoilers/, recorded by
-// scripts/record-dr-spoilers.mjs). DR builds it in create_playthrough
-// (Main.py:673-774 at DR 1.5.6): the spheres of the items the seed needs,
-// each location of sphere k reached by DR's own logic with the items of the
-// spheres before it, the dungeons' keys in their dungeons collected as DR's
-// sweep reaches them (sweep_for_events(key_only=True), BaseClasses.py:
-// 1051-1066). So a location of sphere k is `yes` here with the items of the
+// scripts/record-dr-spoilers.mjs; DR 1.5.7-u for ten, 1.5.8-u and 1.5.6-u
+// for one each, whose playthrough code is 1.5.6's). DR builds it in
+// create_playthrough (Main.py:673-774 at DR 1.5.6): the spheres of the
+// items the seed needs, each location of sphere k reached by DR's own logic
+// with the items of the spheres before it, the dungeons' keys in their
+// dungeons collected as DR's sweep reaches them (sweep_for_events(key_only=
+// True), BaseClasses.py:1051-1066). So a location of sphere k is `yes` here with the items of the
 // spheres before it held, unless the reviewed list below says why not; the
 // keys a seed keeps in their dungeons are found as a player finds them, at
 // every place of their dungeon the world does not refuse. The other way,

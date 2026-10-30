@@ -1009,8 +1009,9 @@ fetches it: no other run downloads DR's rules, at first load or at a
 service worker's install.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
-DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for
-most races of 2026; 1.5.2 to 1.5.8 coexist), its base patch
+DR 1.5.6 (`4da73127`; 1.5.2 to 1.5.8 coexist, and the races recorded below
+ran DR's unstable builds, 1.5.7-u for ten of them, 1.5.8-u and 1.5.6-u for
+one each, `test/dr-spoilers/index.json`), its base patch
 `aerinon/z3randomizer` `d0f46511` (DRUnstable, the same change as DR's
 `data/base2current.bps` at 1.5.6), and OWR 0.8.0.0 (`2297be2f`, the last
 release on DR 1.5.6).
@@ -1236,8 +1237,9 @@ Open and Inverted only), nor to a seed yet: every recorded spoiler race is
 Open.
 
 **Real seeds** (`test/dr-playthrough.spec.ts`): the playthrough of each
-recorded spoiler race (`test/dr-spoilers/`, below) is a contract.
-`create_playthrough` (`Main.py:673-774`) lists the items the seed needs by
+recorded spoiler race (`test/dr-spoilers/`, below; built by 1.5.6-u to
+1.5.8-u, whose playthrough and sweep code is 1.5.6's) is a contract.
+`create_playthrough` (`Main.py:673-774` at 1.5.6) lists the items the seed needs by
 sphere, each reached by DR's logic with the spheres before it, the keys
 kept in their dungeons collected as its sweep reaches them; so each
 location of a sphere is `yes` with the items of the spheres before it held,
