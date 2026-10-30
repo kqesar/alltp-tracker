@@ -862,17 +862,17 @@ describe("the doors Link goes through", () => {
         memory: seedMemory({ race: false }),
       };
     };
+    // Two doors of one district (Kakariko's): District places each door
+    // among its own district's
     const raced = owr();
-    goIn(raced.memory, "Light Hype Fairy", "Blinds Hideout");
+    goIn(raced.memory, "Kakariko Shop", "Blinds Hideout");
     raced.follower.read(readingOf(raced.memory, { race: true }));
     await settle();
     expect(notes()).toEqual({});
     const { follower, memory } = owr();
-    follower.read(
-      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
-    );
+    follower.read(readingOf(goIn(memory, "Kakariko Shop", "Blinds Hideout")));
     await vi.waitFor(() =>
-      expect(notes()).toEqual({ "light-hype-fairy": "blinds-hideout" }),
+      expect(notes()).toEqual({ "kakariko-shop": "blinds-hideout" }),
     );
   });
 

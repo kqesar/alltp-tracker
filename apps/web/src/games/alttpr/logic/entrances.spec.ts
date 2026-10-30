@@ -218,6 +218,18 @@ describe("the entrance assistant's model", () => {
     expect(
       gameNotes(district, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
     ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // District offers each entrance its own district's places, any under
+    // Mixed, whose flips move places between the worlds
+    const targetIds = (
+      settings: Partial<typeof owr> & Record<string, unknown>,
+    ) =>
+      poolOf({ ...owr, doorEntrances: "district", ...settings })
+        ?.targetsOf.get("kakariko-shop")
+        ?.map((t) => t.id) ?? [];
+    expect(targetIds({})).toContain("blinds-hideout");
+    expect(targetIds({})).not.toContain("ice-palace-exit");
+    expect(targetIds({ mode: "inverted" })).not.toContain("ice-palace-exit");
+    expect(targetIds({ owMixed: true })).toContain("ice-palace-exit");
     // DR's own Swapped keeps DR's pool
     expect(
       poolOf({ ...owr, doorEntrances: "swapped", randomizer: "dr" })?.entrances

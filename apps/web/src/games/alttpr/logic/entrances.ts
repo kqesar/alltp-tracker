@@ -50,9 +50,10 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   if (door !== undefined) {
     const read = doorPoolSettingsOf(settings);
     // The fork's start house is the Big Bomb Shop where its screen flips
-    // (is_bombshop_start), and the towers trade exits where both of theirs
-    // do (is_atgt_swapped, which Swapped's pairs read): Inverted's, not
-    // known once Mixed may flip them
+    // (is_bombshop_start), the towers trade exits where both of theirs do
+    // (is_atgt_swapped, which Swapped's pairs read), and District's pools
+    // read every screen's world: Inverted's, not known once Mixed may flip
+    // them
     const inverted =
       settings.owMixed === true ? undefined : read.mode === "inverted";
     const key = JSON.stringify([door, read, settings.randomizer, inverted]);
@@ -64,6 +65,7 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
           ? owrEntrancePool(door, {
               ...read,
               bombShopStart: inverted,
+              tilesSwapped: inverted,
               towersTraded: inverted,
             })
           : drEntrancePool(door, read);
