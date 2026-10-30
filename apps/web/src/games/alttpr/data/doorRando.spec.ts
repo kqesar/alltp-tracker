@@ -316,6 +316,17 @@ describe("a Door Randomizer run's logic", () => {
       expect(doorNotes(run)[1]).toBe(
         "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
       );
+      // Below intensity 3, coupled, entrances vanilla: DR's own analysis
+      // once a dungeon is noted whole (the pack's key-analysis/noted.ts)
+      expect(doorNotes(with_(run, { doorIntensity: "2" }))[1]).toBe(
+        "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when DR's own key analysis counts them.",
+      );
+      expect(
+        doorNotes(with_(run, { decoupledDoors: true, doorIntensity: "1" }))[1],
+      ).toMatch(/asks every key of its dungeon\.$/);
+      expect(
+        doorNotes(with_(run, { doorEntrances: "lite", doorIntensity: "1" }))[1],
+      ).toMatch(/asks every key of its dungeon\.$/);
     }
     // A boss room never leaves its dungeon (dungeon_boss_sectors): its
     // restricted items stay its dungeon's in a pool too

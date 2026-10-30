@@ -824,7 +824,14 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
     ...(door.doorShuffle === "vanilla"
       ? []
       : [
-          "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
+          // DR's own key analysis runs on a layout the notes tell whole at
+          // intensity 1 or 2, coupled, entrances vanilla (the pack's
+          // key-analysis/noted.ts); elsewhere strict-safe
+          (door.doorIntensity ?? "3") !== "3" &&
+          !door.decoupledDoors &&
+          doorShuffleOf(settings) === undefined
+            ? "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when DR's own key analysis counts them."
+            : "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
         ]),
     ...(door.keyLogic === "dangerous"
       ? [
