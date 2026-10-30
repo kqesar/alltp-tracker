@@ -876,7 +876,7 @@ function statement({ apply, call, ctx, line, name, scope, walk }) {
     return true;
   }
   if (name === "add_conditional_lamps") {
-    conditionalLamps(apply, scope, line);
+    conditionalLamps(ctx, apply, scope, line);
     return true;
   }
   if (name === "challenge_room_rules") {
@@ -1069,16 +1069,18 @@ const locationsOf = new Map();
 
 /**
  * add_conditional_lamps (Rules.py:1305-1376): each dark room's entrances
- * and locations need the lamp, but in Standard the sewers' (the light cone
- * of sewer_light_cone); under crossed or partitioned doors the sewers are
- * whichever rooms the sewers' builder took, which door shuffle decides
- * (step 6), so this reads the vanilla and basic path. The Old Man's house
- * always.
+ * and locations need the lamp, unless the room is lit, the derived setting
+ * `litRoom_<region>` (`kind: "litRoom"`, its `sewer` flag kept): in
+ * Standard the sewers' rooms (the light cone of sewer_light_cone), or,
+ * under crossed or partitioned doors, whichever rooms the castle's layout
+ * took, which the world reads off the noted doors (:1359-1366). The Old
+ * Man's house always.
+ * @param {Context} ctx
  * @param {import("./rules-core.mjs").Hook["apply"]} apply
  * @param {Scope} scope
  * @param {number} line
  */
-function conditionalLamps(apply, scope, line) {
+function conditionalLamps(ctx, apply, scope, line) {
   const fn = body(rulesSource, "add_conditional_lamps", "Rules.py");
   const within = rulesSource.slice(fn.start, fn.end);
   const offset = rulesSource.slice(0, fn.start).split("\n").length - 1;
@@ -1090,10 +1092,14 @@ function conditionalLamps(apply, scope, line) {
       rooms.value
     ),
   )) {
-    // Dark unless the sewers are lit (Standard) and the room is the sewers'
-    const when = info.sewer
-      ? all(scope.when, negate(setting("standardMode")))
-      : scope.when;
+    // Dark unless lit: a sewers' room in Standard, or the castle's layout's
+    const lit = derive(ctx, `litRoom_${idOf(ctx, region)}`, {
+      kind: "litRoom",
+      region,
+      sewer: info.sewer,
+      source: `Rules.py:${at}`,
+    });
+    const when = all(scope.when, negate(lit));
     for (const name of info.entrances)
       apply("and", { kind: "entrance", name }, lamp, when, at);
     for (const name of locationsOf.get(region) ?? [])

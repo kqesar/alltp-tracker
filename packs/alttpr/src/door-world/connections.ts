@@ -27,6 +27,13 @@ import {
   regionNamed,
   tableOf,
 } from "./data";
+import {
+  type DoorNotes,
+  type DoorShuffleSettings,
+  doorById,
+  isShuffledDoor,
+  portalId,
+} from "./doors";
 
 /** Where each exit leads, by DR's names: an exit to a region. */
 export type DrConnections = ReadonlyMap<string, string>;
@@ -152,13 +159,130 @@ const DARK_SANCTUARY = "Dark Sanctuary Hint";
 /** The Inverted world's save point's way out (EntranceShuffle2.py:174). */
 const DARK_SANCTUARY_EXIT = "Dark Sanctuary Hint Exit";
 
+/** A run's door shuffle, as the player noted it (doors.ts). */
+export interface DrNotedDoors {
+  readonly settings: DoorShuffleSettings;
+  readonly notes: DoorNotes;
+}
+
+/** The portal_map entry of a portal: its door's way out, its way in. */
+function portalEnds(name: string): readonly [string, string] {
+  const portalMap = tableOf<readonly [string, string, string]>(
+    "DoorShuffle.py",
+    "portal_map",
+  );
+  const [, exit, enter] = portalMap[name] ?? [];
+  if (exit === undefined || enter === undefined)
+    throw new RangeError(`No portal_map entry for ${name}`);
+  return [exit, enter];
+}
+
+/**
+ * connect_portal (DoorShuffle.py:739-752): the lobby's door out to the
+ * portal region, the portal region's way in to the lobby.
+ */
+function linkPortal(c: Map<string, string>, name: string, door: string) {
+  const [exit, enter] = portalEnds(name);
+  c.set(door, parentOf(exit));
+  c.set(enter, parentOf(door));
+}
+
+/**
+ * The doors each portal opens on: its own below intensity 3, the noted
+ * lobby from 3 (a portal not noted opens on none), by name.
+ */
+export function lobbiesOf(
+  doors: DrNotedDoors | undefined,
+): Map<string, string> {
+  const found = new Map<string, string>();
+  for (const portal of DR_PORTALS) {
+    if (doors === undefined || doors.settings.intensity < 3) {
+      found.set(portal.name, portal.door);
+      continue;
+    }
+    const noted = doors.notes.lobbies?.[portalId(portal.name)];
+    const door = noted === undefined ? undefined : doorById(noted);
+    if (door !== undefined) found.set(portal.name, door.name);
+  }
+  return found;
+}
+
+/**
+ * link_doors_prep with shuffled doors (DoorShuffle.py:60-133), then the
+ * links main_dungeon_pool makes, as noted: what no shuffle moves (logical
+ * connections, interior doors, pits, warps; open edges, straight stairs
+ * and ladders at intensity 1), each portal on its lobby (lobbiesOf), and
+ * each noted door into the region of the door it comes out of, its
+ * dependents along (connect_doors, DungeonGenerator.py:704-725). In a
+ * coupled shuffle a door noted leads back too, unless its own note says
+ * otherwise. A door the shuffle relinks and no note names leads nowhere,
+ * as the vanilla tables it would have stood in are not linked. Below
+ * intensity 3 the Sanctuary Mirror Route is removed (:84-90); from 3, in
+ * basic, it leads to Sanctuary's portal's lobby (cross_dungeon_clean_up,
+ * :1024-1028) once that is noted.
+ */
+function linkShuffledDoors(c: Map<string, string>, doors: DrNotedDoors): void {
+  const { notes, settings } = doors;
+  const simple = (name: string) => {
+    for (const [exit, region] of pairsOf("DoorShuffle.py", name))
+      c.set(exit, region);
+  };
+  const vanilla = (name: string) => {
+    for (const [a, b] of pairsOf("DoorShuffle.py", name))
+      linkDoor(c, a, b, true);
+  };
+  simple("logical_connections");
+  vanilla("interior_doors");
+  simple("falldown_pits");
+  simple("dungeon_warps");
+  if (settings.intensity < 2) {
+    vanilla("open_edges");
+    vanilla("straight_staircases");
+    vanilla("ladders");
+  }
+  const lobbies = lobbiesOf(doors);
+  for (const [portal, door] of lobbies) linkPortal(c, portal, door);
+  const lobbyDoors = new Set(lobbies.values());
+  const ownLinks = new Map<string, string>();
+  for (const [fromId, toId] of Object.entries(notes.links ?? {})) {
+    const from = doorById(fromId);
+    const to = doorById(toId);
+    if (from === undefined || to === undefined) continue;
+    if (!isShuffledDoor(from, settings) || !isShuffledDoor(to, settings))
+      continue;
+    if (lobbyDoors.has(from.name)) continue;
+    ownLinks.set(from.name, to.name);
+  }
+  const links = new Map(ownLinks);
+  if (!settings.decoupled)
+    for (const [from, to] of ownLinks)
+      if (!links.has(to) && !lobbyDoors.has(to)) links.set(to, from);
+  for (const [from, to] of links) linkDoor(c, from, to, false);
+  // Its portal's lobby while Sanctuary stays the castle's (basic); in a
+  // pool of dungeons DR picks one of the portals of Sanctuary's layout
+  // (:1009-1023, random.choice among those reaching it): left out
+  if (settings.intensity >= 3 && settings.shuffle === "basic") {
+    const sanctuary = lobbies.get("Sanctuary");
+    if (sanctuary !== undefined)
+      c.set(SANCTUARY_MIRROR_ROUTE, parentOf(sanctuary));
+  }
+}
+
+/** The Sanctuary's mirror way to its portal's lobby (Doors.py:125). */
+const SANCTUARY_MIRROR_ROUTE = "Sanctuary Mirror Route";
+
 /**
  * link_doors_prep with vanilla doors (DoorShuffle.py:60-133), door
  * intensity 1 as DR's tests build it: the logical connections, the
  * interior doors, the pits and warps, then the portals, then every vanilla
- * door table. The Sanctuary Mirror Route is removed (:84-90).
+ * door table. The Sanctuary Mirror Route is removed (:84-90). With a
+ * door shuffle, linkShuffledDoors.
  */
-function linkDoors(c: Map<string, string>): void {
+function linkDoors(c: Map<string, string>, shuffled?: DrNotedDoors): void {
+  if (shuffled !== undefined) {
+    linkShuffledDoors(c, shuffled);
+    return;
+  }
   const simple = (name: string) => {
     for (const [exit, region] of pairsOf("DoorShuffle.py", name))
       c.set(exit, region);
@@ -174,19 +298,7 @@ function linkDoors(c: Map<string, string>): void {
   doors("open_edges");
   doors("straight_staircases");
   doors("ladders");
-  // connect_portal (:739-752): the lobby's door out to the portal region,
-  // the portal region's way in to the lobby
-  const portalMap = tableOf<readonly [string, string, string]>(
-    "DoorShuffle.py",
-    "portal_map",
-  );
-  for (const portal of DR_PORTALS) {
-    const [, exit, enter] = portalMap[portal.name] ?? [];
-    if (exit === undefined || enter === undefined)
-      throw new RangeError(`No portal_map entry for ${portal.name}`);
-    c.set(portal.door, parentOf(exit));
-    c.set(enter, parentOf(portal.door));
-  }
+  for (const portal of DR_PORTALS) linkPortal(c, portal.name, portal.door);
   simple("vanilla_logical_connections");
   doors("spiral_staircases");
   doors("default_door_connections");
@@ -209,13 +321,23 @@ export const REMOVED_EXITS: ReadonlySet<string> = new Set([
  * @param version - The DR release the seed was built by, as its ROM title's
  *   digits (157 for 1.5.7), 156 for 1.5.6 or an older or unknown one
  */
-export function vanillaConnections(mode: DrMode, version = 156): DrConnections {
+export function vanillaConnections(
+  mode: DrMode,
+  version = 156,
+  doors?: DrNotedDoors,
+): DrConnections {
   const c = new Map<string, string>();
   linkOverworld(c, mode);
   linkEntrances(c, mode, version);
-  linkDoors(c);
-  for (const exit of REMOVED_EXITS) c.delete(exit);
+  linkDoors(c, doors);
+  removeExits(c, doors);
   return c;
+}
+
+/** REMOVED_EXITS, but the mirror route a lobby shuffle links. */
+function removeExits(c: Map<string, string>, doors?: DrNotedDoors): void {
+  for (const exit of REMOVED_EXITS)
+    if (doors === undefined || doors.settings.intensity < 3) c.delete(exit);
 }
 
 /** A DR run's shuffled entrances, as the player noted them. */
@@ -251,6 +373,7 @@ export function notedConnections(
   mode: DrMode,
   entrances: DrNotedEntrances,
   version = 156,
+  doors?: DrNotedDoors,
 ): DrNotedConnections {
   const c = new Map<string, string>();
   linkOverworld(c, mode);
@@ -280,8 +403,8 @@ export function notedConnections(
     if (mode === "inverted" && target === DARK_SANCTUARY)
       c.set(DARK_SANCTUARY_EXIT, parentOf(entrance));
   }
-  linkDoors(c);
-  for (const exit of REMOVED_EXITS) c.delete(exit);
+  linkDoors(c, doors);
+  removeExits(c, doors);
   return {
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,

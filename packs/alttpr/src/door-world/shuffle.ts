@@ -1,0 +1,414 @@
+// What the Door Randomizer's world reads of a door-shuffled run's notes
+// beside its links (connections.ts): each door's kind, which dungeon each
+// room ends up in, and the rules both make.
+//
+// - Kinds. With shuffled doors DR's rules read a door's kind in its room
+//   (Rules.py:895-906: a bombable door asks bombs, a dashable one bombs or
+//   the boots, each on the door and its dependents), its key and big key
+//   doors through add_key_logic_rules (:2347-2385), its traps through the
+//   door's `trapped` (no exit unless trap_door_exceptions, DoorShuffle.py:
+//   2477-2536). A door the shuffle may change (doors.ts kindShuffled) has
+//   the kind the player noted; not noted, it is unknown and `maybe` to
+//   pass, never yes. Every other door keeps its room's kind.
+// - Dungeons. A partitioned or crossed shuffle makes each layout one
+//   dungeon's, whatever rooms it holds (update_forced_keys, :1039-1050:
+//   `region.dungeon`): its keys open its key doors, its big key its big
+//   chest, its boss stands in its boss room (set_defeat_dungeon_boss_rule
+//   reads the room's dungeon), its drops hold its keys. A room's dungeon is
+//   the one whose portal the noted links reach it from; basic keeps each
+//   room in its own.
+// - Keys. DR analyses each generated layout (KeyDoorShuffle.py), which the
+//   notes tell only in part: a key door asks every key of its dungeon, or
+//   `maybe` (strict-safe), never more yes than DR's rules. Basic keeps a
+//   dungeon's key count; partitioned and crossed move it
+//   (shuffle_small_key_doors, :2139-2145), so its door asks the count the
+//   player noted (`keys`), `maybe` until then.
+import { DR_LOCATIONS } from "../door-rando/locations";
+import type { DrNotedDoors } from "./connections";
+import {
+  DR_DOORS,
+  DR_REGIONS,
+  DR_RULES,
+  type DrDoor,
+  type DrMode,
+  regionNamed,
+} from "./data";
+import {
+  type DoorKindNote,
+  doorId,
+  kindShuffled,
+  PORTAL_DUNGEON,
+  vanillaKind,
+} from "./doors";
+import {
+  DR_KEY_CODES,
+  isBigChest,
+  specialBigKeyDoors,
+  type WorldKeys,
+} from "./keys";
+import { and, maybeOf, or } from "./text";
+
+/** A door's kind in a run: noted, its room's, or unknown (undefined). */
+export function kindIn(
+  door: DrDoor,
+  doors: DrNotedDoors,
+): DoorKindNote | undefined {
+  if (!kindShuffled(door, doors.settings)) return vanillaKind(door);
+  return doors.notes.kinds?.[doorId(door.name)];
+}
+
+/**
+ * Whether a trap door shuts as an exit (is_trap_door_blocked,
+ * DoorShuffle.py:2533-2534): every trap but trap_door_exceptions
+ * (:2511-2530), which a trap mode leaves passable once in.
+ */
+const TRAP_EXCEPTIONS: ReadonlySet<string> = new Set([
+  "PoD Mimics 2 SW",
+  "TR Twin Pokeys NW",
+  "Thieves Blocked Entry SW",
+  "Hyrule Dungeon Armory Interior Key Door N",
+  "Desert Compass Key Door WN",
+  "TR Tile Room SE",
+  "Mire Cross SW",
+  "Tower Circle of Pots ES",
+  "PoD Mimics 1 SW",
+  "Eastern Single Eyegore ES",
+  "Eastern Duo Eyegores SE",
+  "Swamp Push Statue S",
+  "Skull 2 East Lobby WS",
+  "GT Hope Room WN",
+  "Eastern Courtyard Ledge S",
+  "Ice Lobby SE",
+  "GT Speed Torch WN",
+  "Ice Switch Room ES",
+  "Ice Switch Room NE",
+  "Skull Torch Room WS",
+  "GT Speed Torch NE",
+  "GT Speed Torch WS",
+  "GT Torch Cross WN",
+  "Mire Tile Room SW",
+  "Mire Tile Room ES",
+  "TR Torches WN",
+  "PoD Lobby N",
+  "PoD Middle Cage S",
+  "Ice Bomb Jump NW",
+  "GT Hidden Spikes SE",
+  "Ice Tall Hint EN",
+  "Ice Tall Hint SE",
+  "Eastern Pot Switch WN",
+  "Thieves Conveyor Maze WN",
+  "Thieves Conveyor Maze SW",
+  "Eastern Dark Square Key Door WN",
+  "Eastern Lobby NW",
+  "Eastern Lobby NE",
+  "Ice Cross Bottom SE",
+  "Ice Cross Right ES",
+  "Desert Back Lobby S",
+  "Desert West S",
+  "Desert West Lobby ES",
+  "Mire Hidden Shooters SE",
+  "Mire Hidden Shooters ES",
+  "Mire Hidden Shooters WS",
+  "Tower Dark Pits EN",
+  "Tower Dark Maze ES",
+  "TR Tongue Pull WS",
+  "GT Conveyor Cross EN",
+]);
+
+/**
+ * Whether a door's exit is shut (no exit, BaseClasses.py:646): a noted
+ * trap but the exceptions, a door whose room's kind no shuffle touches as
+ * Doors.py sets it, never a lobby (connect_portal unblocks it).
+ */
+export function isShut(
+  door: DrDoor,
+  doors: DrNotedDoors,
+  lobbies: ReadonlySet<string>,
+): boolean {
+  if (lobbies.has(door.name)) return false;
+  if (!kindShuffled(door, doors.settings)) return door.trapped === true;
+  return kindIn(door, doors) === "trap" && !TRAP_EXCEPTIONS.has(door.name);
+}
+
+/** The region each DR location stands in, by name. */
+const REGION_OF_LOCATION: ReadonlyMap<string, string> = new Map(
+  DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r.name] as const)),
+);
+
+/**
+ * Each dungeon room's dungeon in a run: basic keeps its own; partitioned
+ * and crossed give it the dungeon of the portal whose lobby its layout
+ * holds: the rooms the noted links join to the lobby's, whichever way
+ * they are crossed (a layout is a set of sectors DR joins by their doors,
+ * a trap's included), its own while no portal's layout holds it.
+ * @param exits - The world's connected exits, the shut ones among them
+ * @param lobbies - Each portal's lobby door, by portal name
+ */
+export function roomDungeons(
+  exits: readonly { readonly from: string; readonly to: string }[],
+  lobbies: ReadonlyMap<string, string>,
+  doors: DrNotedDoors,
+): ReadonlyMap<string, string> {
+  const found = new Map<string, string>();
+  for (const r of DR_REGIONS)
+    if (r.type === "dungeon" && r.dungeon !== null)
+      found.set(r.name, r.dungeon);
+  if (doors.settings.shuffle === "basic") return found;
+  const next = new Map<string, string[]>();
+  const join = (a: string, b: string) =>
+    next.set(a, [...(next.get(a) ?? []), b]);
+  for (const exit of exits)
+    if (
+      regionNamed(exit.from).type === "dungeon" &&
+      regionNamed(exit.to).type === "dungeon"
+    ) {
+      join(exit.from, exit.to);
+      join(exit.to, exit.from);
+    }
+  const seen = new Set<string>();
+  for (const [portal, door] of lobbies) {
+    const dungeon = PORTAL_DUNGEON.get(portal);
+    const start = DOOR_REGION.get(door);
+    if (dungeon === undefined || start === undefined || seen.has(start))
+      continue;
+    const queue = [start];
+    seen.add(start);
+    for (let at = queue.shift(); at !== undefined; at = queue.shift()) {
+      found.set(at, dungeon);
+      for (const to of next.get(at) ?? [])
+        if (!seen.has(to)) {
+          seen.add(to);
+          queue.push(to);
+        }
+    }
+  }
+  return found;
+}
+
+/** The region each door leaves from. */
+const DOOR_REGION: ReadonlyMap<string, string> = new Map(
+  DR_REGIONS.flatMap((r) => r.exits.map((e) => [e, r.name] as const)),
+);
+
+/** The rule a door of a kind asks beside its keys (Rules.py:895-906). */
+const KIND_RULES: Partial<Record<DoorKindNote, string>> = {
+  bomb: "@drCanUseBombs",
+  dash: "@drCanUseBombs | @drHasBoots",
+};
+
+/** Each dungeon's boss's rule, read off its "- Boss" location's. */
+const BOSS_RULES: ReadonlyMap<string, string> = (() => {
+  const found = new Map<string, string>();
+  for (const [name, rule] of Object.entries(DR_RULES.locations)) {
+    if (!name.endsWith(" - Boss")) continue;
+    const region = REGION_OF_LOCATION.get(name);
+    const dungeon = region === undefined ? null : regionNamed(region).dungeon;
+    if (dungeon !== null) found.set(dungeon, rule.req);
+  }
+  return found;
+})();
+
+/** Every boss's rule at once: a boss room whose dungeon has none. */
+const EVERY_BOSS = and(...new Set(BOSS_RULES.values()));
+
+/** An exit, as the world builder holds it. */
+interface ShuffleExit {
+  readonly name: string;
+  readonly from: string;
+  req: string;
+}
+
+/**
+ * The rules a door-shuffled run's doors and rooms ask: each door its
+ * kind's (its dependents its controller's), a key door the strict-safe
+ * rule of its room's dungeon, a big key door (and the two cells DR always
+ * asks it at, special_big_key_doors) and a big chest its big key, an
+ * unknown kind `maybe`; a boss room in another dungeon than its own that
+ * dungeon's boss (every boss for a dungeon without one).
+ */
+export function addShuffledDoorRules(
+  exits: readonly ShuffleExit[],
+  locations: Map<string, string>,
+  keys: WorldKeys,
+  doors: DrNotedDoors,
+  dungeons: ReadonlyMap<string, string>,
+  mode: DrMode,
+): void {
+  const special = specialBigKeyDoors(mode);
+  const doorNamed = new Map(DR_DOORS.map((d) => [d.name, d]));
+  const smallRule = (dungeon: string) =>
+    strictSafe(keys, doors, dungeon, dungeons);
+  for (const exit of exits) {
+    const door = doorNamed.get(exit.name);
+    const dungeon = dungeons.get(exit.from);
+    if (door === undefined || dungeon === undefined) continue;
+    const controller =
+      door.controller === undefined
+        ? undefined
+        : doorNamed.get(door.controller);
+    const kind = kindIn(controller ?? door, doors);
+    if (kind === undefined) exit.req = and(exit.req, "maybe");
+    else if (kind === "small") exit.req = and(exit.req, smallRule(dungeon));
+    else if (kind === "big") exit.req = and(exit.req, keys.bigKeyRule(dungeon));
+    else {
+      const rule = KIND_RULES[kind];
+      if (rule !== undefined) exit.req = and(exit.req, rule);
+    }
+    if (special.has(door.name))
+      exit.req = and(exit.req, keys.bigKeyRule(dungeon));
+  }
+  for (const region of DR_REGIONS) {
+    const dungeon = dungeons.get(region.name);
+    if (dungeon === undefined) continue;
+    for (const name of region.locations) {
+      const rule = locations.get(name);
+      if (rule === undefined) continue;
+      let req = rule;
+      if (isBigChest(name)) req = and(req, keys.bigKeyRule(dungeon));
+      if (dungeon !== region.dungeon && region.dungeon !== null)
+        req = bossIn(req, region.dungeon, dungeon);
+      locations.set(name, req);
+    }
+  }
+  for (const exit of exits) {
+    const region = regionNamed(exit.from);
+    const dungeon = dungeons.get(region.name);
+    if (dungeon !== undefined && region.dungeon !== null)
+      if (dungeon !== region.dungeon)
+        exit.req = bossIn(exit.req, region.dungeon, dungeon);
+  }
+}
+
+/** A rule reading a room's own dungeon's boss, read with another's. */
+function bossIn(req: string, own: string, dungeon: string): string {
+  const mine = BOSS_RULES.get(own);
+  if (mine === undefined || !req.includes(mine)) return req;
+  return req.split(mine).join(`(${BOSS_RULES.get(dungeon) ?? EVERY_BOSS})`);
+}
+
+/**
+ * A key door's strict-safe rule in a door-shuffled run: every key of its
+ * dungeon (basic: as many as the vanilla dungeon holds; partitioned and
+ * crossed: as many as the player noted, the drops of its rooms counted as
+ * their keys), or `maybe`; `maybe` while the count is not noted.
+ */
+function strictSafe(
+  keys: WorldKeys,
+  doors: DrNotedDoors,
+  dungeon: string,
+  dungeons: ReadonlyMap<string, string>,
+): string {
+  if (doors.settings.shuffle === "basic" || keys.holding === "universal")
+    return keys.strictSafeRule(dungeon);
+  const total = doors.notes.keys?.[dungeon];
+  if (total === undefined) return "maybe";
+  if (total <= 0) return "true";
+  const key = `key${DR_KEY_CODES[dungeon] ?? ""}`;
+  const facts = keys.forcedDrops
+    .filter(
+      (d) =>
+        !d.big &&
+        dungeons.get(REGION_OF_DROP.get(d.location) ?? "") === dungeon,
+    )
+    .map((d) => d.fact);
+  const sure = `count(${[key, ...facts].join(", ")}) >= ${total}`;
+  const unsure =
+    facts.length === 0
+      ? "false"
+      : and(
+          `count(${[key, ...facts, ...facts.map(maybeOf)].join(", ")}) >= ${total}`,
+          "maybe",
+        );
+  return or(sure, unsure, "maybe");
+}
+
+/** The region of each of DR's own locations (key drops among them). */
+const REGION_OF_DROP: ReadonlyMap<string, string> = new Map(
+  DR_LOCATIONS.map((l) => [l.name, l.region] as const),
+);
+
+/**
+ * The derived door settings rules.json reads, in a door-shuffled run:
+ * `vanillaDoors` false; a door's `trapped` its kind's (unknown: trapped,
+ * which only asks more); `entranceFlag` a lobby's; its room's crystal as
+ * Doors.py sets it; in a pool of dungeons, a dark room lit in Standard
+ * only in the castle's layout (add_conditional_lamps, Rules.py:1364-1366).
+ */
+export function shuffledDoorSettings(
+  doors: DrNotedDoors,
+  lobbies: ReadonlySet<string>,
+  dungeons: ReadonlyMap<string, string>,
+  mode: DrMode,
+): Record<string, boolean> {
+  const found: Record<string, boolean> = { vanillaDoors: false };
+  if (doors.settings.shuffle !== "basic")
+    for (const [name, data] of Object.entries(DR_RULES.derived))
+      if (data.kind === "litRoom")
+        found[name] =
+          mode === "standard" &&
+          dungeons.get(data.region ?? "") === "Hyrule Castle";
+  const doorNamed = new Map(DR_DOORS.map((d) => [d.name, d]));
+  for (const [name, data] of Object.entries(DR_RULES.doorData)) {
+    const door = doorNamed.get(data.door);
+    const flag = (data as { flag?: string }).flag;
+    if (door === undefined) continue;
+    const shuffled = kindShuffled(door, doors.settings);
+    const kind = kindIn(door, doors);
+    if (flag === "trapped")
+      found[name] = shuffled
+        ? kind === undefined || kind === "trap"
+        : data.vanilla;
+    else if (flag === "entranceFlag") found[name] = lobbies.has(data.door);
+    else if (flag === "bigKey")
+      found[name] = shuffled
+        ? kind === undefined || kind === "big"
+        : data.vanilla;
+  }
+  return found;
+}
+
+/** The portals of each dungeon (Doors.py:1549-1575), by dungeon. */
+const PORTALS_OF: ReadonlyMap<string, readonly string[]> = (() => {
+  const found = new Map<string, string[]>();
+  for (const [portal, dungeon] of PORTAL_DUNGEON)
+    found.set(dungeon, [...(found.get(dungeon) ?? []), portal]);
+  return found;
+})();
+
+/**
+ * The Sanctuary Mirror Route of a pool of dungeons from intensity 3
+ * (cross_dungeon_clean_up, DoorShuffle.py:1005-1028): to the lobby of the
+ * portal of Sanctuary's dungeon DR picks, its only portal, or the one
+ * whose lobby is Sanctuary's door; the castle's own Sanctuary portal while
+ * Sanctuary stays the castle's. Where DR picks at random among several
+ * (`random.choice`, :1023), none: the route is left out.
+ */
+export function sanctuaryRoute(
+  doors: DrNotedDoors,
+  dungeons: ReadonlyMap<string, string>,
+  lobbies: ReadonlyMap<string, string>,
+):
+  | {
+      readonly from: string;
+      readonly name: string;
+      req: string;
+      readonly to: string;
+    }
+  | undefined {
+  if (doors.settings.intensity < 3 || doors.settings.shuffle === "basic")
+    return undefined;
+  const dungeon = dungeons.get(SANCTUARY);
+  const portals = PORTALS_OF.get(dungeon ?? "") ?? [];
+  const picked =
+    dungeon === "Hyrule Castle"
+      ? "Sanctuary"
+      : (portals.find((p) => lobbies.get(p) === "Sanctuary S") ??
+        (portals.length === 1 ? portals[0] : undefined));
+  const lobby = picked === undefined ? undefined : lobbies.get(picked);
+  const to = lobby === undefined ? undefined : DOOR_REGION.get(lobby);
+  if (to === undefined) return undefined;
+  return { from: SANCTUARY, name: "Sanctuary Mirror Route", req: "true", to };
+}
+
+/** The Sanctuary's region. */
+const SANCTUARY = "Sanctuary";

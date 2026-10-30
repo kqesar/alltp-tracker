@@ -404,7 +404,10 @@ export function numberOf(ctx, expr, otherwise) {
  * them: whether a region lies in the light world (mark_light_world_regions),
  * whether everything held reaches it as Turtle Rock's key rules ask
  * (set_trock_key_rules), whether Swamp Palace needs the patch.
+ * A dark room of the Door Randomizer is lit or not (`litRoom`, its `sewer`
+ * flag kept: add_conditional_lamps).
  * @typedef {{ kind: "lightWorld" | "darkWorld" | "allItemsReach" | "door", region: string, source: string }
+ *   | { kind: "litRoom", region: string, sewer: boolean, source: string }
  *   | { kind: "swampPatch", source: string }} Derived
  */
 

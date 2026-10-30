@@ -37,8 +37,10 @@ import { addBunnyRules } from "./bunny";
 import {
   type DrConnections,
   type DrDynamicExit,
+  type DrNotedDoors,
   type DrNotedEntrances,
   dynamicExits,
+  lobbiesOf,
   notedConnections,
   PORTAL_DOORS,
   vanillaConnections,
@@ -75,6 +77,13 @@ import {
   type WorldKeys,
   worldKeys,
 } from "./keys";
+import {
+  addShuffledDoorRules,
+  isShut,
+  roomDungeons,
+  sanctuaryRoute,
+  shuffledDoorSettings,
+} from "./shuffle";
 import { addZeldaPath, UNCLE_SAVE_AND_QUIT, zeldaPath } from "./standard";
 import {
   addStaticKeyRules,
@@ -89,10 +98,12 @@ import { and, maybeOf, or, readFact } from "./text";
 export type {
   DrConnections,
   DrNotedConnections,
+  DrNotedDoors,
   DrNotedEntrances,
 } from "./connections";
 export { notedConnections, vanillaConnections } from "./connections";
 export type { DrMode } from "./data";
+export * from "./doors";
 export { KEY_ITEMS } from "./keys";
 
 /** How a world is built beside its settings. */
@@ -125,6 +136,12 @@ export interface DrWorldOptions {
    * built on them, in place of `connections`.
    */
   readonly entrances?: DrNotedEntrances;
+  /**
+   * A run's door shuffle, as noted (doors.ts, shuffle.ts): its doors link
+   * as the notes say, a door not noted leads nowhere, a kind not noted is
+   * `maybe` to pass, and its key doors ask the strict-safe rule.
+   */
+  readonly doors?: DrNotedDoors;
   /**
    * Test only: how a key door reads its rule of DR's analysis, the
    * player's reading by default (keys.ts). The key model's soundness spec
@@ -169,6 +186,11 @@ export interface DrWorld extends FactWorld {
   readonly compiled: CompiledWorld;
   /** The engine's id of each DR location, by DR's name. */
   readonly locationIds: ReadonlyMap<string, string>;
+  /**
+   * With a door shuffle, each dungeon room's dungeon as the notes make it
+   * (shuffle.ts roomDungeons), by region name.
+   */
+  readonly roomDungeons?: ReadonlyMap<string, string>;
 }
 
 /** The engine's id of the Menu, DR's start (BaseClasses.py:610-614). */
@@ -281,8 +303,10 @@ function exitsOf(
   connections: DrConnections,
   mode: DrMode,
   options: DrWorldOptions,
+  lobbies: ReadonlySet<string> = PORTAL_DOORS,
 ): DrExit[] {
   const found: DrExit[] = [];
+  const { doors } = options;
   for (const region of DR_REGIONS) {
     for (const name of region.exits) {
       const to = connections.get(name);
@@ -290,8 +314,10 @@ function exitsOf(
       const door = DOOR_NAMED.get(name);
       const blocked =
         region.type === "dungeon" &&
-        door?.trapped === true &&
-        !PORTAL_DOORS.has(name);
+        door !== undefined &&
+        (doors === undefined
+          ? door.trapped === true && !lobbies.has(name)
+          : isShut(door, doors, lobbies));
       found.push({
         ...(blocked ? { blocked } : {}),
         from: region.name,
@@ -400,6 +426,12 @@ function derivedSettings(
         (swamp !== undefined && swamp !== "Swamp Portal");
     } else if (kind === "door")
       derived[name] = DR_RULES.doorData[name]?.vanilla ?? false;
+    // add_conditional_lamps (Rules.py:1359-1366): the sewers lit in
+    // Standard (sewer_light_cone); a door shuffle's pools, shuffle.ts
+    else if (kind === "litRoom")
+      derived[name] =
+        mode === "standard" &&
+        (DR_RULES.derived[name] as { sewer?: boolean }).sewer === true;
     else throw new RangeError(`No derived setting of kind ${kind}`);
   }
   return derived;
@@ -879,15 +911,24 @@ export function drWorld(
     all.dangerousKeyLogic === true,
   );
   const version = Number(all.drVersion);
+  const { doors } = options;
   const noted =
     options.entrances === undefined
       ? undefined
-      : notedConnections(mode, options.entrances, version);
+      : notedConnections(mode, options.entrances, version, doors);
   const connections =
     noted?.connections ??
     options.connections ??
-    vanillaConnections(mode, version);
-  const exits = exitsOf(connections, mode, options);
+    vanillaConnections(mode, version, doors);
+  const lobbies = lobbiesOf(doors);
+  const lobbyDoors = new Set(lobbies.values());
+  const exits = exitsOf(connections, mode, options, lobbyDoors);
+  const dungeonOfRoom =
+    doors === undefined ? undefined : roomDungeons(exits, lobbies, doors);
+  if (doors !== undefined && dungeonOfRoom !== undefined) {
+    const route = sanctuaryRoute(doors, dungeonOfRoom, lobbies);
+    if (route !== undefined && !connections.has(route.name)) exits.push(route);
+  }
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)
     for (const name of locationsIn(region, mode))
@@ -920,7 +961,21 @@ export function drWorld(
       locations.set(name, req.replace(item, rule));
   }
   const marked = markWorlds(exits);
-  const derived = derivedSettings(connections, marked, mode);
+  const derived = {
+    ...derivedSettings(connections, marked, mode),
+    ...(doors === undefined || dungeonOfRoom === undefined
+      ? {}
+      : shuffledDoorSettings(doors, lobbyDoors, dungeonOfRoom, mode)),
+  };
+  // DoorShuffle.py:640-643: a Swamp portal on another lobby needs the patch
+  if (
+    doors !== undefined &&
+    doors.settings.intensity >= 3 &&
+    lobbies.has("Swamp") &&
+    lobbies.get("Swamp") !== "Swamp Lobby S"
+  )
+    for (const [name, { kind }] of Object.entries(DR_RULES.derived))
+      if (kind === "swampPatch") derived[name] = true;
   // A shuffled world's sides are known once every entrance is: until then
   // a rule reading a region's side holds in each side it may still take
   if (noted !== undefined && !noted.complete) {
@@ -934,7 +989,7 @@ export function drWorld(
   // 55-57 at 1.5.8), over DR's analysis: none without one (strict-safe)
   const { doorRule } = options;
   const analysis =
-    all.dungeonPotsAndDrops === true
+    all.dungeonPotsAndDrops === true || doors !== undefined
       ? undefined
       : noted !== undefined && options.entrances !== undefined
         ? // The static key logic's Turtle Rock probe reads the vanilla
@@ -955,19 +1010,22 @@ export function drWorld(
   const trCase = isStatic
     ? turtleRockCase(turtleRockAccess(mode, version))
     : null;
-  addKeyRules(
-    exits,
-    locations,
-    doorRule === undefined
-      ? keys
-      : {
-          ...keys,
-          doorRule: (dungeon, rule, logic) =>
-            doorRule(dungeon, rule, logic, keys),
-        },
-    mode,
-    isStatic ? staticLogicOf(analysis, trCase, version) : analysis,
-  );
+  if (doors !== undefined && dungeonOfRoom !== undefined)
+    addShuffledDoorRules(exits, locations, keys, doors, dungeonOfRoom, mode);
+  else
+    addKeyRules(
+      exits,
+      locations,
+      doorRule === undefined
+        ? keys
+        : {
+            ...keys,
+            doorRule: (dungeon, rule, logic) =>
+              doorRule(dungeon, rule, logic, keys),
+          },
+      mode,
+      isStatic ? staticLogicOf(analysis, trCase, version) : analysis,
+    );
   if (all.restrictBossItems === true)
     addBossItemRules(
       locations,
@@ -1100,5 +1158,10 @@ export function drWorld(
     ],
     settings: { ...all, ...derived },
   });
-  return { compiled, facts, locationIds };
+  return {
+    compiled,
+    facts,
+    locationIds,
+    ...(dungeonOfRoom === undefined ? {} : { roomDungeons: dungeonOfRoom }),
+  };
 }

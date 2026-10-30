@@ -80,7 +80,7 @@ export const specialBigKeyDoors = (mode: DrMode): ReadonlySet<string> =>
  * The locations a big key opens (find_big_chest_locations,
  * find_big_key_locked_locations, KeyDoorShuffle.py:1164-1176).
  */
-const isBigChest = (name: string): boolean =>
+export const isBigChest = (name: string): boolean =>
   name.includes("Big Chest") ||
   name === "Thieves' Town - Blind's Cell" ||
   name === "Hyrule Castle - Zelda's Chest";

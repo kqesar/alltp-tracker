@@ -1171,6 +1171,56 @@ which raised wherever the fill came to it, so a 1.5.6 seed never took that
 way and the world does not either. `noted.spec.ts` holds that a world noted
 where every entrance was is the vanilla world, in every shuffle and world.
 
+**Its door shuffle** (`src/door-world/doors.ts`, `shuffle.ts`, `drWorld`'s
+`doors` option): basic, partitioned and crossed (`--door_shuffle`, DR 1.5.8's
+`args.json`; `create_dungeon_pool` also knows a `paired` mode no option offers),
+each at intensity 1, 2 or 3. What a shuffle relinks is read off DR's own
+tables: a dungeon's normal doors and spiral stairs, from intensity 2 its
+open edges, straight stairs and ladders, from 3 its portals' own doors
+(`create_door_spoiler`, `DoorShuffle.py:178-182`), paired among the dungeons
+of a pool (each alone in `basic`, the three groups of `create_dungeon_pool`
+in `partitioned`, all of them in `crossed`) with a door facing back
+(`hook_from_door`); from intensity 3 each portal opens on a door of its
+pool that may be a lobby (`portal()` in `Doors.py`). A player notes it all
+by hand (`DoorNotes`: `links` door to door, `lobbies` portal to door,
+`kinds`, `keys`): the world links the noted doors as DR connects them
+(`connect_doors`, a door's dependents along, a coupled door back unless its
+own note says otherwise), every door the shuffle relinks and no note names
+leads nowhere, and a portal not noted at intensity 3 opens on nothing. A
+door's kind (key, big key, bombable, dashable, trap) moves with
+`shuffle_door_types`: a door that may change (`kindShuffled`: a normal,
+interior or spiral door at positions 0 to 3 of its room's list whose kind
+one of the shuffles takes or leaves, a door that shuts, a boss's only in
+the `boss` and `oneway` trap modes, from intensity 3 a door that may be a
+lobby) has the kind the player noted, and is `maybe` to pass while it has
+none; every other door keeps its room's (`RoomData.py`). DR's rules then read
+kinds, not its vanilla lists (`Rules.py:895-906`): a bombable door asks bombs,
+a dashable one bombs or the boots, a trap shuts its way out but for
+`trap_door_exceptions` and adds the kill rules `is_trapped` guards. In a
+pool of dungeons a room is the dungeon's whose portal its layout holds
+(`roomDungeons`: the rooms the noted links join to the lobby's, whichever
+way; `update_forced_keys`), so its key doors take that dungeon's keys, its
+big chest that big key, its boss room that dungeon's boss
+(`set_defeat_dungeon_boss_rule` reads the room's dungeon), its drops hold
+its keys, and in Standard its dark rooms are lit only in the castle's
+layout (`add_conditional_lamps`, `Rules.py:1359-1366`: `litRoom_<region>`,
+a derived setting the vanilla world reads as the sewers in Standard).
+Sanctuary's mirror route leads, from intensity 3, to the lobby of the
+portal `cross_dungeon_clean_up` picks: Sanctuary's own in `basic` or while
+Sanctuary stays the castle's, the only portal of its dungeon otherwise, and
+none where DR picks at random among several (`DoorShuffle.py:1005-1028`).
+DR analyses the key doors of each layout it generated, which the notes
+tell only in part: a key door asks every key of its dungeon or `maybe`
+(strict-safe), the vanilla count in `basic` and the count the player noted
+in a pool (`shuffle_small_key_doors` moves it, `DoorShuffle.py:2139-2145`),
+`maybe` until noted. Porting the analysis to a fully noted dungeon is left
+for later. `doorNotesFromSpoiler` reads a DR JSON spoiler's `Doors`, `Lobbies`
+and `DoorTypes` as the notes of a player who walked every door (every other
+door that may change kind plain: DR lists every kind it gives).
+`doors.spec.ts` holds the model, `shuffled.spec.ts` the world (a world noted
+where the vanilla tables link reaches what the vanilla world does with every
+key; a door not noted, a kind not noted, a lobby not noted).
+
 **Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
 `Rules.py` and `Bosses.py` in the engine's language, through the entrance
 randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`, "Its rules" below) under DR's
