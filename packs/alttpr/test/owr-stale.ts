@@ -19,6 +19,8 @@
 
 /** Why OWR's own world answers a case otherwise than the test says. */
 export const WHY = {
+  activatedFlute:
+    "OWR's Inverted pool holds the flute activated (get_pool_core's flute_activated, ItemList.py:291, :1129-1131): the case takes the plain Ocarina out, or none, and keeps a flute that flies (can_flute, BaseClasses.py:1431-1434), to the dark world's spots (FluteShuffle.py:36-42); the test reads vt's Inverted pool, whose flute is plain",
   atgtNames:
     "OWR names an entrance by its place: the castle's is Agahnims Tower, which leads into Ganon's Tower once both screens flip (is_atgt_swapped, BaseClasses.py:347-348; EntranceShuffle2.py:69-71); the test reads vt's Inverted names",
   beetles:
@@ -399,6 +401,8 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.bumperCave,
   "test/inverted/TestInvertedDarkWorld.py:6#11 Bumper Cave Ledge false":
     WHY.bumperCave,
+  "test/inverted/TestInvertedDarkWorld.py:6#12 Bumper Cave Ledge false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDarkWorld.py:6#13 Bumper Cave Ledge false":
     WHY.bumperCave,
   "test/inverted/TestInvertedDarkWorld.py:47#15 Pyramid Fairy - Left false":
@@ -407,26 +411,40 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.bigBomb,
   "test/inverted/TestInvertedDarkWorld.py:82#7 Link's House true":
     WHY.linksHouse,
+  "test/inverted/TestInvertedDarkWorld.py:97#1 Mire Shed - Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDarkWorld.py:97#2 Mire Shed - Left true":
     WHY.flute,
   "test/inverted/TestInvertedDarkWorld.py:97#3 Mire Shed - Left true":
     WHY.flute,
   "test/inverted/TestInvertedDarkWorld.py:97#4 Mire Shed - Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDarkWorld.py:97#7 Mire Shed - Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDarkWorld.py:97#8 Mire Shed - Right true":
     WHY.flute,
   "test/inverted/TestInvertedDarkWorld.py:97#9 Mire Shed - Right true":
     WHY.flute,
   "test/inverted/TestInvertedDarkWorld.py:97#10 Mire Shed - Right true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:6#1 Old Man false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:6#3 Old Man true":
     WHY.deathMountain,
+  "test/inverted/TestInvertedDeathMountain.py:6#6 Spectacle Rock Cave false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:6#7 Spectacle Rock Cave false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:6#11 Spectacle Rock Cave true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:6#12 Spectacle Rock Cave true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:6#13 Spectacle Rock Cave true":
     WHY.deathMountain,
+  "test/inverted/TestInvertedDeathMountain.py:25#2 Spiral Cave false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#3 Spiral Cave false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#9 Spiral Cave true": WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#10 Spiral Cave true":
     WHY.deathMountain,
@@ -434,6 +452,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#12 Spiral Cave true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#15 Paradox Cave Lower - Far Left false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#16 Paradox Cave Lower - Far Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#20 Paradox Cave Lower - Far Left true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#21 Paradox Cave Lower - Far Left true":
@@ -442,6 +464,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#23 Paradox Cave Lower - Far Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#26 Paradox Cave Lower - Left false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#27 Paradox Cave Lower - Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#31 Paradox Cave Lower - Left true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#32 Paradox Cave Lower - Left true":
@@ -450,6 +476,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#34 Paradox Cave Lower - Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#37 Paradox Cave Lower - Middle false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#38 Paradox Cave Lower - Middle false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#42 Paradox Cave Lower - Middle true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#43 Paradox Cave Lower - Middle true":
@@ -458,6 +488,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#45 Paradox Cave Lower - Middle true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#48 Paradox Cave Lower - Right false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#49 Paradox Cave Lower - Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#53 Paradox Cave Lower - Right true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#54 Paradox Cave Lower - Right true":
@@ -466,6 +500,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#56 Paradox Cave Lower - Right true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#59 Paradox Cave Lower - Far Right false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#60 Paradox Cave Lower - Far Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#64 Paradox Cave Lower - Far Right true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#65 Paradox Cave Lower - Far Right true":
@@ -474,6 +512,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#67 Paradox Cave Lower - Far Right true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#70 Paradox Cave Upper - Left false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#71 Paradox Cave Upper - Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#75 Paradox Cave Upper - Left true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#76 Paradox Cave Upper - Left true":
@@ -482,6 +524,10 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#78 Paradox Cave Upper - Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#81 Paradox Cave Upper - Right false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#82 Paradox Cave Upper - Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#86 Paradox Cave Upper - Right true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#87 Paradox Cave Upper - Right true":
@@ -490,34 +536,52 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:25#89 Paradox Cave Upper - Right true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:25#93 Mimic Cave false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#94 Mimic Cave false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#95 Mimic Cave true": WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#96 Mimic Cave true": WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#98 Mimic Cave true":
     WHY.deathMountain,
+  "test/inverted/TestInvertedDeathMountain.py:25#101 Ether Tablet false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#102 Ether Tablet false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#107 Ether Tablet true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#108 Ether Tablet true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#110 Ether Tablet true":
     WHY.deathMountain,
+  "test/inverted/TestInvertedDeathMountain.py:25#113 Spectacle Rock false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedDeathMountain.py:25#114 Spectacle Rock false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:25#117 Spectacle Rock true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#118 Spectacle Rock true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:25#120 Spectacle Rock true":
     WHY.deathMountain,
+  "test/inverted/TestInvertedDeathMountain.py:160#1 Superbunny Cave - Top false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#2 Superbunny Cave - Top true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#3 Superbunny Cave - Top true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:160#4 Superbunny Cave - Top true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:160#6 Superbunny Cave - Bottom false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#7 Superbunny Cave - Bottom true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#8 Superbunny Cave - Bottom true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:160#9 Superbunny Cave - Bottom true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:160#11 Hookshot Cave - Bottom Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#13 Hookshot Cave - Bottom Right true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#14 Hookshot Cave - Bottom Right true":
@@ -530,18 +594,24 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:160#18 Hookshot Cave - Bottom Right true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:160#20 Hookshot Cave - Bottom Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#22 Hookshot Cave - Bottom Left true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#23 Hookshot Cave - Bottom Left true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:160#24 Hookshot Cave - Bottom Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:160#26 Hookshot Cave - Top Left false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#28 Hookshot Cave - Top Left true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#29 Hookshot Cave - Top Left true":
     WHY.flute,
   "test/inverted/TestInvertedDeathMountain.py:160#30 Hookshot Cave - Top Left true":
     WHY.flute,
+  "test/inverted/TestInvertedDeathMountain.py:160#32 Hookshot Cave - Top Right false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedDeathMountain.py:160#34 Hookshot Cave - Top Right true":
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:160#35 Hookshot Cave - Top Right true":
@@ -575,6 +645,30 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.deathMountain,
   "test/inverted/TestInvertedDeathMountain.py:206#19 Spike Cave true":
     WHY.flute,
+  "test/inverted/TestInvertedEntrances.py:6#1 Hyrule Castle Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#2 Hyrule Castle Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#3 Hyrule Castle Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#8 Eastern Palace false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#9 Eastern Palace false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#10 Eastern Palace false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#16 Desert Palace Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#17 Desert Palace Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#18 Desert Palace Entrance (South) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#26 Desert Palace Entrance (North) false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#34 Tower of Hera false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#35 Tower of Hera false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedEntrances.py:6#36 Tower of Hera true":
     WHY.deathMountain,
   "test/inverted/TestInvertedEntrances.py:6#38 Tower of Hera true": WHY.flute,
@@ -595,14 +689,24 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.atgtNames,
   "test/inverted/TestInvertedEntrances.py:6#48 Agahnims Tower true":
     WHY.atgtNames,
+  "test/inverted/TestInvertedEntrances.py:6#50 Palace of Darkness false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedEntrances.py:6#53 Palace of Darkness true":
     WHY.flute,
   "test/inverted/TestInvertedEntrances.py:6#55 Palace of Darkness true":
     WHY.flute,
   "test/inverted/TestInvertedEntrances.py:6#65 Ice Palace true": WHY.iceberg,
+  "test/inverted/TestInvertedEntrances.py:6#67 Misery Mire false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#68 Misery Mire false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedEntrances.py:6#72 Misery Mire true": WHY.flute,
   "test/inverted/TestInvertedEntrances.py:6#74 Misery Mire true": WHY.flute,
   "test/inverted/TestInvertedEntrances.py:6#76 Misery Mire true": WHY.flute,
+  "test/inverted/TestInvertedEntrances.py:6#80 Turtle Rock false":
+    WHY.activatedFlute,
+  "test/inverted/TestInvertedEntrances.py:6#81 Turtle Rock false":
+    WHY.activatedFlute,
   "test/inverted/TestInvertedEntrances.py:6#82 Turtle Rock true":
     WHY.deathMountain,
   "test/inverted/TestInvertedEntrances.py:6#83 Turtle Rock true": WHY.flute,
@@ -628,4 +732,6 @@ export const OWR_STALE: Readonly<Record<string, string>> = {
     WHY.atgtNames,
   "test/inverted/TestInvertedEntrances.py:6#96 Ganons Tower true":
     WHY.atgtNames,
+  "test/inverted/TestInvertedLightWorld.py:173#20 Bombos Tablet false":
+    WHY.activatedFlute,
 };

@@ -1601,7 +1601,9 @@ harness of its own (its `test/TestBase.py` at the release:
 `make_logic_test_world`, one cached world per logic and mode, the bomb check
 overridden, the medallions Ether and Quake; the dungeon tests start in
 today's regions), so the fixtures record `overrideBombCheck` and no harness
-commit apart; 2,898 cases in 29 files (`test/owr-fixtures.spec.ts` counts
+commit apart, and its Inverted pool holds the flute activated (`get_pool_core`
+activates it once Kakariko's screen flips, `ItemList.py:291`: `pool.json`'s
+`activatedFlute`, which `poolOf` reads by mode); 2,898 cases in 29 files (`test/owr-fixtures.spec.ts` counts
 them). Its key layouts' validator and static key tests read its screens and
 are not imported. Each file is listed in `upstream.json`
 (`doorRandomizer.overworld.tests`), `pending` until the fork's world holds
@@ -1654,7 +1656,8 @@ suites' 181, the same as DR's for the same reasons at the fork's lines, and
 in Inverted the cases written for vt's Inverted layout (Old Man Cave behind
 Bumper Cave's door, a bomb shop in the light world, the towers' old names)
 or holding the plain Ocarina where the fork asks the activated one (each
-such case is asserted to hold with it). `src/door-world/owr-world.spec.ts`
+such case is asserted to hold with it), and the everything-but cases that
+keep the pool's activated flute, which flies where the test expects none. `src/door-world/owr-world.spec.ts`
 holds the links, the flute spots, the screens and the rules above.
 
 ## The entrance randomizer's tables

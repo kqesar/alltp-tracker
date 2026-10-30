@@ -96,19 +96,28 @@ export function collect(
 /**
  * The world's item pool, as TestBase.py's everything-but cases draw it
  * (`self.world.itempool`): the open pool, the dungeons' items and the
- * prizes (pool.json, cited by line).
+ * prizes (pool.json, cited by line), its Ocarina the activated one in a
+ * mode whose pool get_pool_core gives so (`activatedFlute`: the Overworld
+ * fork's Inverted).
  */
-export const poolOf = (path: string): readonly string[] => {
+export const poolOf = (
+  path: string,
+  mode: "open" | "inverted" = "open",
+): readonly string[] => {
   const pool = JSON.parse(readFileSync(join(PACK_DIR, path), "utf8")) as {
+    activatedFlute?: { modes: readonly string[] };
     progression: readonly { items: readonly string[] }[];
     dungeonItems: { items: readonly string[] };
     prizes: { items: readonly string[] };
   };
+  const activated = pool.activatedFlute?.modes.includes(mode) === true;
   return [
     ...pool.progression.flatMap((p) => p.items),
     ...pool.dungeonItems.items,
     ...pool.prizes.items,
-  ];
+  ].map((item) =>
+    activated && item === "Ocarina" ? "Ocarina (Activated)" : item,
+  );
 };
 
 export const POOL: readonly string[] = poolOf("test/dr-upstream/pool.json");

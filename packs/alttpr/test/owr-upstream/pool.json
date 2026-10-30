@@ -1,4 +1,8 @@
 {
+  "activatedFlute": {
+    "modes": ["inverted"],
+    "source": "ItemList.py:291, 1131"
+  },
   "dungeonItems": {
     "items": [
       "Small Key (Escape)",

@@ -6,6 +6,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { poolOf } from "./dr-state";
 import { loadManifest, PACK_DIR } from "./manifest";
 
 type Case = [string, boolean, string[], string[]?];
@@ -122,10 +123,19 @@ describe("the Overworld Randomizer's tests (test/owr-upstream)", () => {
 
   it("draw an 'everything but' case from the harness's pool", () => {
     const pool = JSON.parse(readFileSync(join(DIR, "pool.json"), "utf8")) as {
+      activatedFlute?: { modes: string[]; source: string };
       prizes: { items: string[]; source: string };
     };
     expect(pool.prizes.items).toHaveLength(12);
     expect(pool.prizes.source).toMatch(/^test\/TestBase\.py:\d+$/);
+    // Inverted flips Kakariko's screen: its pool's Ocarina is activated
+    // (get_pool_core's flute_activated, ItemList.py:291, :1129-1131)
+    expect(pool.activatedFlute?.modes).toEqual(["inverted"]);
+    expect(pool.activatedFlute?.source).toMatch(/^ItemList\.py:\d+, \d+$/);
+    const inverted = poolOf("test/owr-upstream/pool.json", "inverted");
+    expect(inverted).toContain("Ocarina (Activated)");
+    expect(inverted).not.toContain("Ocarina");
+    expect(poolOf("test/owr-upstream/pool.json", "open")).toContain("Ocarina");
   });
 
   it("are listed in upstream.json, pending until the world holds them", () => {

@@ -45,7 +45,10 @@ const read = <T>(path: string): T =>
   JSON.parse(readFileSync(join(PACK_DIR, path), "utf8")) as T;
 const LISTED = loadManifest().doorRandomizer.overworld.tests;
 const EVENTS = eventsOf(rules.events);
-const POOL = poolOf("test/owr-upstream/pool.json");
+const POOLS = {
+  inverted: poolOf("test/owr-upstream/pool.json", "inverted"),
+  open: poolOf("test/owr-upstream/pool.json", "open"),
+};
 
 const caseKey = (
   file: string,
@@ -65,6 +68,7 @@ describe("the Overworld Randomizer's own tests", () => {
 
   for (const listed of ported) {
     const fixture = read<OwrFixture>(listed.fixture ?? "");
+    const pool = POOLS[fixture.harness.mode];
     const worlds = new Map<string, DrWorld>();
     /** The world a test runs in: its suite's harness, its probes. */
     const worldOf = (test: OwrFixture["tests"][number]): DrWorld => {
@@ -110,7 +114,7 @@ describe("the Overworld Randomizer's own tests", () => {
               : (world.locationIds.get(name) ?? name);
           const got = solveFacts(
             world,
-            collect(itemsOf(items, allExcept, POOL), EVENTS),
+            collect(itemsOf(items, allExcept, pool), EVENTS),
           ).location(id);
           if (listedStale) {
             if (contractHolds(access, got))
@@ -122,7 +126,7 @@ describe("the Overworld Randomizer's own tests", () => {
             );
             const flute = solveFacts(
               world,
-              collect(itemsOf(activated, allExcept, POOL), EVENTS),
+              collect(itemsOf(activated, allExcept, pool), EVENTS),
             ).location(id);
             return OWR_STALE[key] === WHY.flute && !contractHolds(access, flute)
               ? [`${key}: listed for the flute, but fails activated`]

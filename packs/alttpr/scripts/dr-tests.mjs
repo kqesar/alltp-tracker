@@ -276,8 +276,25 @@ function poolOf(read, harness) {
   const prizes = /^PRIZES = /m.test(testBase)
     ? assigned(testBase, "PRIZES", "test/TestBase.py")
     : prizesAdded(testBase);
+  // get_pool_core swaps the pool's Ocarina for the activated one when its
+  // flute_activated holds: DR's only for the flute mode 'active', which
+  // the harness never sets; the Overworld fork's too when Kakariko's screen
+  // is flipped (owr:ItemList.py:291), as Inverted flips every screen
+  // (is_tile_swapped, owr:BaseClasses.py:331-332)
+  const call = lineOf(items, "= get_pool_core(world, player,");
+  const flipped = /is_tile_swapped\(0x18, player\)\)\s*$/.test(
+    items.split("\n")[call - 1] ?? "",
+  );
   return {
     dungeonItems: { items: keys, source: "Dungeons.py:16-28" },
+    ...(flipped
+      ? {
+          activatedFlute: {
+            modes: ["inverted"],
+            source: `ItemList.py:${call}, ${lineOf(items, "pool.append('Ocarina (Activated)')")}`,
+          },
+        }
+      : {}),
     prizes: {
       items: /** @type {string[]} */ (prizes.value),
       source: `test/TestBase.py:${prizes.line}`,
