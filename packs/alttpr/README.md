@@ -1407,7 +1407,11 @@ which DR floods over. Held: `test/vanilla` and `test/dungeons`, whose
 181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
 (the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
 drop keys DR's own key rules count, which it never sweeps either, the
-enemy logic, the harness reaching the overworld). The Inverted world is the same builder in that mode: its
+enemy logic, the bombs the bag would hold back, the Pinball Room's chest
+asking only the pearl, the harness reaching the overworld), each held to
+its reasons as the fork's are (`FIXES` below; a false case must lose its
+yes with the bomb bag, without the Cane of Byrna or the pearl, or reach
+its location through the overworld). The Inverted world is the same builder in that mode: its
 connections swap as `link_entrances_new` swaps them, the flute leaves from
 the dark world and the mirror from the light, the bunny is the light
 world's. `test/inverted` is held but `TestInvertedTurtleRock` (every test
