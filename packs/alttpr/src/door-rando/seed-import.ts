@@ -234,6 +234,8 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   if (!("ow_layout" in meta)) return exact;
   const followers = flagOf(meta.shuffle_followers);
   const customGoals = goalsSet(meta.custom_goals);
+  const versions = isRecord(meta.versions) ? meta.versions : {};
+  const version = versions.Overworld;
   return {
     ...exact,
     overworld: {
@@ -249,6 +251,8 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       // :93-95, :368-370, :536-538, get_goal_rule :176-290), which the
       // fork's world does not read
       ...(customGoals === null ? {} : { customGoals }),
+      // The fork's release, whose rules differ from one to the next
+      ...(typeof version === "string" ? { version } : {}),
       layout: String(meta.ow_layout),
       mixed: flagOf(meta.ow_mixed) ?? false,
       ...(typeof meta.prizeshuffle === "string"

@@ -115,12 +115,27 @@ export type OpenPyramid = "auto" | "yes" | "no";
  */
 export type DoorVersion = "1.5.6" | "1.5.7" | "1.5.8";
 
+/**
+ * The Overworld fork's release a seed was built by, as far as its logic
+ * goes: the pinned 0.8.0.2, whose world the pack ports, or another, whose
+ * rules differ (0.8.0.0 and 0.8.0.1 ask the pearl to cross Paradox Cave's
+ * top and Death Mountain Return Cave's right side, owr800:Rules.py:
+ * 1816-1818, which 0.8.0.2 drops, its CHANGELOG.md:4-5).
+ */
+export type OwrVersion = "0.8.0.2" | "other";
+
 /** The settings a DR run adds, each absent from an alttpr.com run. */
 export type DoorRunSettings = {
   /** DR's generator; absent for an alttpr.com seed. */
   randomizer?: Randomizer;
   /** The DR release that built the seed, from the seed; absent: not known. */
   doorVersion?: DoorVersion;
+  /**
+   * The Overworld fork's release that built the seed, from the seed (a
+   * spoiler's `versions.Overworld`, the ROM's fork table): unset, not known
+   * (`DOOR_UNSET`), a cause of `doorReasons` as any release but 0.8.0.2 is.
+   */
+  owrVersion?: OwrVersion;
   doorShuffle?: DoorShuffle;
   keyLogic?: DoorKeyLogic;
   dropShuffle?: DropShuffle;
@@ -213,6 +228,7 @@ export const DOOR_UNSET = [
   "shuffleFollowers",
   "bombBag",
   "customGoals",
+  "owrVersion",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -348,6 +364,10 @@ export const DOOR_OPTIONS = {
     [false, "Off"],
     [true, "Mixed"],
   ],
+  owrVersion: [
+    ["0.8.0.2", "0.8.0.2"],
+    ["other", "Another release"],
+  ],
   owWhirlpool: [
     [false, "Vanilla"],
     [true, "Shuffled"],
@@ -428,6 +448,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   owFluteShuffle: "Flute spots",
   owLayout: "Overworld layout",
   owMixed: "Mixed overworld",
+  owrVersion: "OWR version",
   owWhirlpool: "Whirlpools",
   potShuffle: "Pot shuffle",
   pottery: "Pottery",
@@ -457,6 +478,7 @@ const DR_ROWS = [
   "openPyramid",
 ] as const satisfies readonly DoorSetting[];
 const OWR_ROWS = [
+  "owrVersion",
   "owLayout",
   "owCrossed",
   "owMixed",
@@ -766,6 +788,13 @@ export const doorReasons = (
   // fork's world reads neither (ItemList.py:786, :1740-1745); not known,
   // either may be (DR itself has neither)
   if (door.randomizer === "owr") {
+    // The fork's world is 0.8.0.2's: another release's rules differ
+    // (`OwrVersion`), so one not known may be another
+    if (door.owrVersion === undefined) reasons.push(OWR_VERSION_NOT_KNOWN);
+    else if (door.owrVersion === "other")
+      reasons.push(
+        `an Overworld Randomizer release other than ${OVERWORLD_RANDOMIZER_VERSION}`,
+      );
     if (door.prizeShuffle === undefined) reasons.push(PRIZES_NOT_KNOWN);
     else if (door.prizeShuffle !== "none")
       reasons.push("shuffled dungeon prizes");
@@ -778,6 +807,10 @@ export const doorReasons = (
   }
   return reasons;
 };
+
+/** The cause `doorReasons` gives while an OWR run's release is unset. */
+export const OWR_VERSION_NOT_KNOWN =
+  "the Overworld Randomizer's release not known yet (set it in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's prize shuffle is unset. */
 export const PRIZES_NOT_KNOWN =
@@ -1054,6 +1087,15 @@ export const doorFromSeed = (
     ...(version === undefined ? {} : { doorVersion: version }),
     randomizer: randomizer.overworld ? "owr" : "dr",
   };
+  // The fork's release: a spoiler's meta's, else its ROM table's text
+  const owrVersion = owrVersionOf(
+    seed.doorExact?.overworld?.version ??
+      (seed.door?.overworld?.version.known
+        ? seed.door.overworld.version.value
+        : undefined),
+  );
+  if (own.randomizer === "owr" && owrVersion !== undefined)
+    own.owrVersion = owrVersion;
   // A spoiler's meta names each (an avianart permalink): taken as named,
   // where it is an option the tracker has
   const exact = seed.doorExact;
@@ -1206,6 +1248,21 @@ export const doorVersionOf = (
   ];
   const release = major * 10_000 + minor * 100 + patch;
   return release <= 10_506 ? "1.5.6" : release === 10_507 ? "1.5.7" : "1.5.8";
+};
+
+/**
+ * The Overworld fork's release a version text names ("0.8.0.2-u"), as a
+ * run keeps it (`OwrVersion`): 0.8.0.2, or another; undefined for a text
+ * that names none.
+ */
+export const owrVersionOf = (
+  version: string | null | undefined,
+): OwrVersion | undefined => {
+  const parts = /^(\d+)\.(\d+)\.(\d+)\.(\d+)/.exec(version ?? "");
+  if (parts === null) return undefined;
+  return parts.slice(1).join(".") === OVERWORLD_RANDOMIZER_VERSION
+    ? "0.8.0.2"
+    : "other";
 };
 
 /** Whether two runs hold the same Door Randomizer settings. */

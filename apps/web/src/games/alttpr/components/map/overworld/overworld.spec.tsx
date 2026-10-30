@@ -12,6 +12,7 @@ const OWR: RunSettings = {
   ...getPreset("door-randomizer").settings,
   bombBag: false,
   customGoals: false,
+  owrVersion: "0.8.0.2",
   prizeShuffle: "none",
   randomizer: "owr",
   shuffleFollowers: false,

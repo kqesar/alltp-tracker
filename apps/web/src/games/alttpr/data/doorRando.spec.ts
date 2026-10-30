@@ -1,7 +1,11 @@
-import type { SeedSettingsReading } from "@alltp/pack-alttpr";
+import {
+  OVERWORLD_RANDOMIZER_VERSION,
+  type SeedSettingsReading,
+} from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
   DOOR_LOCATION_IDS,
+  DOOR_OPTIONS,
   doorEntranceChange,
   doorEntranceModes,
   doorEntranceOf,
@@ -23,8 +27,10 @@ import {
   forcedWhirlpoolOf,
   GOALS_NOT_KNOWN,
   isDoorSettings,
+  OWR_VERSION_NOT_KNOWN,
   overworldShufflesOf,
   owrNotesOf,
+  owrVersionOf,
   PRIZES_NOT_KNOWN,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
@@ -54,9 +60,13 @@ const DR_CROSSKEYS = {
   ...getPreset("door-crosskeys").settings,
   bombBag: false,
 };
-/** An OWR run whose prize and follower shuffles are set: none of either. */
+/**
+ * An OWR run of the fork's pinned release whose prize and follower
+ * shuffles are set: none of either.
+ */
 const OWR = {
   customGoals: false,
+  owrVersion: "0.8.0.2",
   prizeShuffle: "none",
   randomizer: "owr",
   shuffleFollowers: false,
@@ -79,6 +89,69 @@ describe("a Door Randomizer run's logic", () => {
       "Door Randomizer seed: the logic is DR's own (1.5.8).",
     ]);
     expect(doorNotes(getPreset("open").settings)).toEqual([]);
+  });
+
+  it("holds an OWR run to the fork's release the pack ports", () => {
+    // 0.8.0.0 and 0.8.0.1 ask the pearl to cross Paradox Cave's top and
+    // Death Mountain Return Cave's right side (owr800:Rules.py:1816-1818),
+    // 0.8.0.2 does not: the world, 0.8.0.2's, would read yes there
+    expect(DOOR_OPTIONS.owrVersion[0][0]).toBe(OVERWORLD_RANDOMIZER_VERSION);
+    expect(owrVersionOf("0.8.0.2-u")).toBe("0.8.0.2");
+    expect(owrVersionOf("0.8.0.0")).toBe("other");
+    expect(owrVersionOf("0.8.0.1-u")).toBe("other");
+    expect(owrVersionOf("0.7.1.0")).toBe("other");
+    expect(owrVersionOf("1.5.7")).toBeUndefined();
+    expect(owrVersionOf(undefined)).toBeUndefined();
+    const older = with_(DR, { ...OWR, owrVersion: "other" });
+    expect(doorLogic(older)).toBe(false);
+    expect(unmodelledReasons(older)).toEqual([
+      "an Overworld Randomizer release other than 0.8.0.2",
+    ]);
+    const unknown = with_(DR, { ...OWR, owrVersion: undefined });
+    expect(doorLogic(unknown)).toBe(false);
+    expect(unmodelledReasons(unknown)).toEqual([OWR_VERSION_NOT_KNOWN]);
+    expect(doorRows(unknown)).toContain("owrVersion");
+    expect(doorRows(DR)).not.toContain("owrVersion");
+    // A spoiler's meta names it (`versions.Overworld`), a ROM its table
+    const meta = (version: string | undefined) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          overworld: {
+            bonkDrops: false,
+            crossed: "none",
+            fluteShuffle: "vanilla",
+            layout: "vanilla",
+            mixed: false,
+            version,
+            whirlpool: false,
+          },
+          pottery: "none",
+          shopsanity: false,
+          takeAny: "none",
+        },
+        randomizer: { kind: "door", overworld: true, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(meta("0.8.0.0"), DR)).toMatchObject({
+      owrVersion: "other",
+    });
+    expect(doorFromSeed(meta("0.8.0.2-u"), DR)).toMatchObject({
+      owrVersion: "0.8.0.2",
+    });
+    expect(doorFromSeed(meta(undefined), DR)?.owrVersion).toBeUndefined();
+    const rom = (overworld: boolean) =>
+      ({
+        door: {
+          overworld: { version: { known: true, value: "0.8.0.0" } },
+          version: { known: false, why: "unrecognized" },
+        },
+        randomizer: { kind: "door", overworld, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(rom(true), DR)).toMatchObject({ owrVersion: "other" });
+    // A DR seed keeps none
+    expect(doorFromSeed(rom(false), DR)?.owrVersion).toBeUndefined();
   });
 
   it("takes the Overworld Randomizer's own world for its vanilla overworld", () => {
@@ -121,6 +194,7 @@ describe("a Door Randomizer run's logic", () => {
     // Not known (a ROM that cannot tell none from dungeon, a race): never
     // read as none, each named until the player sets it
     expect(unmodelledReasons(with_(DR, { randomizer: "owr" }))).toEqual([
+      OWR_VERSION_NOT_KNOWN,
       PRIZES_NOT_KNOWN,
       FOLLOWERS_NOT_KNOWN,
       GOALS_NOT_KNOWN,
@@ -880,6 +954,8 @@ describe("doorFromSeed", () => {
       owCrossed: "grouped",
       owFluteShuffle: "random",
       owLayout: "wild",
+      // The fork's table names 0.8.0.0: not the release the pack ports
+      owrVersion: "other",
       owWhirlpool: true,
       randomizer: "owr",
       shuffleFollowers: false,
