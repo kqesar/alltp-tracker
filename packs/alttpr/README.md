@@ -1078,8 +1078,11 @@ apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
 `StandingItemCounterMask` (pots beyond the caves), its version text, and
 OWR's `owMode`/`owFlags`. From a fork of 0.6.0.0 on (its version text),
 three bytes of bank $30 the fork writes whole tell its prize and follower
-shuffles (OWR 0.8.0.2 `Rom.py`): `FreeItemText`'s $20 the prizes nearby or
-wild (:1432), the compass mode's $40 wild alone (:1461), and
+shuffles and its dungeon items placed nearby (OWR 0.8.0.2 `Rom.py`):
+`FreeItemText`'s $20 the prizes nearby or wild (:1432), its $40 a map,
+compass, small or big key kind nearby (:1431; HUDDungeonItems reads them
+outside their dungeons, :1613-1616, as a spoiler's "nearby" is read), the
+compass mode's $40 wild alone (:1461), and
 `SmithTravelsFreely` $02 the followers shuffled, a value written then and
 never otherwise (:1731, :1773). No byte tells a prize shuffle of none from
 one of dungeon: the ROM reads "inside", which the app keeps unset unless

@@ -136,7 +136,8 @@ export const SEED_SETTINGS_RANGES = [
   rom("goal-items", 0x30_8167, 2, "other", "z3:tables.asm:789-791"),
   // FreeItemText, a byte the Overworld fork writes whole: $20 when the
   // prizes leave their dungeons (OWR 0.8.0.2 Rom.py:1432-1436, prizeshuffle
-  // nearby or wild; z3 tables.asm:803-812).
+  // nearby or wild; z3 tables.asm:803-812), $40 when a dungeon item kind
+  // is placed nearby (:1431).
   rom("free-item-text", 0x30_816a, 1, "other", "owr:Rom.py:1432-1436"),
   // GenericKeys: $01 in the retro world only, whose small keys open any
   // door (tables.asm:819-821; vt Rom.php:1319-1323, World/Retro.php:18-23).
@@ -387,6 +388,12 @@ export interface DoorExactSettings {
     readonly prizeShuffle?: string;
     readonly followers?: boolean;
     /**
+     * Whether a dungeon item kind is placed nearby (`keyshuffle`,
+     * `bigkeyshuffle`, `mapshuffle` or `compassshuffle` "nearby", args.json):
+     * the fork's own placement, which its world does not read.
+     */
+    readonly nearbyItems?: boolean;
+    /**
      * Whether a customizer goal is set (`custom_goals`: GT's entry, Ganon,
      * the pedestal or Murahdahla, any not None), where `meta` names them.
      */
@@ -457,6 +464,8 @@ export interface DoorSeedSettings {
     readonly prizeShuffle: SeedSetting<SeedPrizeShuffle>;
     /** Its followers shuffled, from a 0.6.0.0 fork on. */
     readonly followers: SeedSetting<boolean>;
+    /** A dungeon item kind placed nearby, from a 0.6.0.0 fork on. */
+    readonly nearbyItems: SeedSetting<boolean>;
   };
 }
 
@@ -830,6 +839,12 @@ function doorSettings(
             : "vanilla",
       ),
       mixed: ow((mode) => (mode & 0x0400) !== 0),
+      // FreeItemText's $40: a map, compass, small or big key kind placed
+      // nearby (Rom.py:1431), which HUDDungeonItems reads as wild
+      nearbyItems: owBytes(
+        ["free-item-text"],
+        ([text]) => ((text as number) & 0x40) !== 0,
+      ),
       // FreeItemText's $20 for nearby or wild, the compass mode's $40 for
       // wild alone; neither for none or dungeon, which no byte tells apart
       prizeShuffle: owBytes(

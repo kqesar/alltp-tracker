@@ -89,8 +89,11 @@ const crystals = (value: unknown) => {
 };
 
 /** A dungeon item shuffled: `wild` (or true in older seeds). */
+// The fork's "nearby" places them outside their dungeon too, as its ROM's
+// HUDDungeonItems says (owr Rom.py:1613-1616); the placement itself is a
+// cause of doorReasons (nearbyItems)
 const wild = (value: unknown) =>
-  value === "wild" || value === true || value === 1
+  value === "wild" || value === "nearby" || value === true || value === 1
     ? true
     : value === "none" || value === false || value === 0
       ? false
@@ -234,6 +237,16 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   if (!("ow_layout" in meta)) return exact;
   const followers = flagOf(meta.shuffle_followers);
   const customGoals = goalsSet(meta.custom_goals);
+  // The fork's dungeon items placed nearby (args.json: none, nearby, wild)
+  const items = [
+    meta.keyshuffle,
+    meta.bigkeyshuffle,
+    meta.mapshuffle,
+    meta.compassshuffle,
+  ];
+  const nearbyItems = items.every((item) => typeof item === "string")
+    ? items.includes("nearby")
+    : null;
   return {
     ...exact,
     overworld: {
@@ -249,6 +262,9 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       // :93-95, :368-370, :536-538, get_goal_rule :176-290), which the
       // fork's world does not read
       ...(customGoals === null ? {} : { customGoals }),
+      // Nearby keys or items lie in a dungeon near their own (the fork's
+      // fill), which its world does not read
+      ...(nearbyItems === null ? {} : { nearbyItems }),
       layout: String(meta.ow_layout),
       mixed: flagOf(meta.ow_mixed) ?? false,
       ...(typeof meta.prizeshuffle === "string"

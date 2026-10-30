@@ -157,6 +157,36 @@ describe("avianartReading", () => {
     expect(without).not.toHaveProperty("prizeShuffle");
   });
 
+  it("reads OWR's dungeon items placed nearby as outside their dungeons, and says so", () => {
+    const json = avianart("4kxBlrWuP") as {
+      response: { spoiler: { meta: Record<string, unknown> } };
+    };
+    const { meta } = json.response.spoiler;
+    const read = (more: Record<string, unknown>) =>
+      avianartReading(
+        { response: { spoiler: { meta: { ...meta, ...more } } } },
+        "4kxBlrWuP",
+      );
+    expect(read({})?.doorExact?.overworld).toMatchObject({
+      nearbyItems: false,
+    });
+    // args.json: keyshuffle none, nearby, wild, universal; the others none,
+    // nearby, wild. Nearby is outside, as the ROM's HUDDungeonItems says
+    const nearby = read({ keyshuffle: "nearby" });
+    expect(nearby?.doorExact?.overworld).toMatchObject({ nearbyItems: true });
+    expect(nearby?.wildKeys).toMatchObject({ known: true, value: true });
+    expect(read({ mapshuffle: "nearby" })?.wildMaps).toMatchObject({
+      value: true,
+    });
+    // DR itself names no such option: not known there
+    const unnamed = { ...meta };
+    delete unnamed.compassshuffle;
+    expect(
+      avianartReading({ response: { spoiler: { meta: unnamed } } }, "4kxBlrWuP")
+        ?.doorExact?.overworld,
+    ).not.toHaveProperty("nearbyItems");
+  });
+
   it("reads OWR's custom goals: none while each is None", () => {
     const json = avianart("4kxBlrWuP") as {
       response: { spoiler: { meta: Record<string, unknown> } };

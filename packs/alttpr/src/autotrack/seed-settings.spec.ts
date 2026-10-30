@@ -517,6 +517,7 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
       followers: false,
       layout: "vanilla",
       mixed: true,
+      nearbyItems: false,
       prizeShuffle: "inside",
       version: "0.8.0.0",
       whirlpool: true,
@@ -627,6 +628,17 @@ describe("decodeSeedSettings, the Overworld fork's prizes and followers", () => 
     [{ [DR.compassMode]: 0x40, [DR.freeItemText]: 0x10 }, "inside"],
   ])("reads %j as the prizes %s", (writes, prizes) => {
     expect(owr(writes)?.prizeShuffle).toBe(prizes);
+  });
+
+  it("reads a dungeon item kind placed nearby from FreeItemText's $40 alone", () => {
+    // Rom.py:1431: $40 for a nearby map, compass, small or big key kind;
+    // HUDDungeonItems reads them wild all the same (:1613-1616)
+    expect(owr({ [DR.freeItemText]: 0x51 })?.nearbyItems).toBe(true);
+    expect(owr({ [DR.freeItemText]: 0x1f })?.nearbyItems).toBe(false);
+    expect(owr({ [DR.freeItemText]: 0x30 })?.nearbyItems).toBe(false);
+    expect(owr({ [DR.freeItemText]: 0x40 }, "0.5.1.5")?.nearbyItems).toBe(
+      "?unrecognized",
+    );
   });
 
   it("reads the followers shuffled from $02 alone, the base's byte or $01 not", () => {
