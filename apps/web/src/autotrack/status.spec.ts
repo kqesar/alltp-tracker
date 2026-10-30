@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { STATUSES, statusOf } from "@/autotrack/fixtures";
-import { headlineOf, phaseOf, shownStatus } from "@/autotrack/status";
+import { INFO, STATUSES, statusOf } from "@/autotrack/fixtures";
+import { detailOf, headlineOf, phaseOf, shownStatus } from "@/autotrack/status";
 
 describe("phaseOf", () => {
   it("is off while nothing runs, whatever the last status", () => {
@@ -128,5 +128,29 @@ describe("headlineOf", () => {
         true,
       ),
     ).toBe("Attaching to the FX Pak Pro…");
+  });
+});
+
+describe("detailOf", () => {
+  it("names a Lua bridge's kind, not an emulator, and drops its protocol version", () => {
+    const device = {
+      id: "luabridge://127.0.0.1:50000",
+      kind: "luabridge",
+    } as const;
+    const status = statusOf("connected", {
+      device: { ...INFO, device, name: "SNI Connector", version: "4" },
+    });
+    expect(detailOf(status, true, false)).toBe(
+      "SNI 0.0.103 · Lua emulator · luabridge://127.0.0.1:50000",
+    );
+    expect(headlineOf(statusOf("attaching", { device }), true)).toBe(
+      "Attaching to the Lua emulator…",
+    );
+  });
+
+  it("still gives RetroArch its version", () => {
+    expect(detailOf(STATUSES.connected, true, false)).toContain(
+      "RetroArch 1.22.2",
+    );
   });
 });

@@ -76,7 +76,7 @@ export const shownStatus = (
 const DEVICE_NAMES: Readonly<Record<DeviceKind, string>> = {
   emunwa: "the emulator",
   fxpakpro: "the FX Pak Pro",
-  luabridge: "BizHawk",
+  luabridge: "the Lua emulator",
   retroarch: "RetroArch",
   "snes-classic": "the SNES Classic",
   unknown: "the device",
@@ -157,7 +157,7 @@ const BRIDGE_NAMES: Record<BridgeInfo["kind"], string> = {
 const DEVICE_TITLES: Partial<Record<DeviceKind, string>> = {
   emunwa: "NWA emulator",
   fxpakpro: "FX Pak Pro",
-  luabridge: "BizHawk",
+  luabridge: "Lua emulator",
   retroarch: "RetroArch",
   "snes-classic": "SNES Classic",
 };
@@ -167,9 +167,17 @@ const bridgeName = (bridge: BridgeInfo) =>
   BRIDGE_NAMES[bridge.kind] &&
   [BRIDGE_NAMES[bridge.kind], bridge.version].filter(Boolean).join(" ");
 
-/** "RetroArch 1.22.2", from the kind of device and what Info reported. */
+/**
+ * "RetroArch 1.22.2", from the kind of device and what Info reported. A Lua
+ * bridge reports its connector's protocol version ("4"), which is no
+ * emulator's, and SNI keeps the emulator's name (BizHawk, Snes9x, Mesen-S) to
+ * itself: only the kind is shown.
+ */
 const deviceTitle = (info: DeviceInfo) =>
-  [DEVICE_TITLES[info.device.kind] ?? info.name, info.version]
+  [
+    DEVICE_TITLES[info.device.kind] ?? info.name,
+    info.device.kind === "luabridge" ? null : info.version,
+  ]
     .filter(Boolean)
     .join(" ");
 
