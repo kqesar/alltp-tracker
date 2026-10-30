@@ -181,7 +181,7 @@ describe("the Overworld tab", () => {
     );
     expect(screen.queryByTestId("flute-screen-18")).toBeNull();
     const pair = screen.getByRole("combobox", {
-      name: "Lost Woods SW to Lost Woods Pass NW: world",
+      name: "Lost Woods to Lost Woods Pass (west): world",
     });
     pair.focus();
     await user.selectOptions(pair, ["crosses"]);

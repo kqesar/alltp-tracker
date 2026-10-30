@@ -8,6 +8,7 @@ import {
   whirlpoolTargetsOf,
 } from "@/games/alttpr/data/doorRando";
 import {
+  crossingNamesOf,
   FLUTE_SCREENS,
   fluteScreenName,
   screenNameOf,
@@ -103,6 +104,9 @@ const FlipRow = memo(({ screens }: { screens: readonly number[] }) => {
 /** A crossing's select value: not known, stays, crosses. */
 const CROSSING_VALUE = { false: "stays", true: "crosses" } as const;
 
+/** Each crossing's name for the player, by its first edge. */
+const CROSSING_NAMES = crossingNamesOf(OWR_CROSSINGS);
+
 /**
  * A crossable edge pair of a crossed overworld: whether walking across it
  * leads into the other world (its twins' pair crossing with it).
@@ -111,13 +115,15 @@ const CrossingRow = memo(
   ({ edge, partner }: { edge: string; partner: string }) => {
     const crosses = useGameStore((state) => state.overworld.crossings?.[edge]);
     const noteOverworld = useGameStore((state) => state.noteOverworld);
+    const name = CROSSING_NAMES.get(edge) ?? {
+      label: `${edge} to ${partner}`,
+      shown: `${edge} – ${partner}`,
+    };
     return (
       <li className="door-row" data-testid={`crossing-row-${edge}`}>
-        <span className="door-row__name">
-          {edge} – {partner}
-        </span>
+        <span className="door-row__name">{name.shown}</span>
         <select
-          aria-label={`${edge} to ${partner}: world`}
+          aria-label={`${name.label}: world`}
           className="checks__input door-row__link"
           onChange={(event) => {
             const value = event.currentTarget.value;
@@ -295,9 +301,10 @@ const OverworldPanel = () => {
             Edges
           </h3>
           <p className="entrances__hint">
-            For each pair of light world screens, whether walking from one to
-            the other takes you into the other world; the same pair in the dark
-            world crosses with it.
+            For each pair of light world screens whose edge may cross (where
+            they meet more than once, which part of the edge), whether walking
+            from one to the other takes you into the other world; the same pair
+            in the dark world crosses with it.
           </p>
           <ul className="entrances__list">
             {OWR_CROSSINGS.map(([edge, partner]) => (

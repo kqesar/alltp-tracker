@@ -417,7 +417,7 @@ test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", asyn
 }) => {
   await openOverworldRun(page, true);
   const pair = page.getByRole("combobox", {
-    name: "Lost Woods SW to Lost Woods Pass NW: world",
+    name: "Lost Woods to Lost Woods Pass (west): world",
   });
   await pair.focus();
   await pair.selectOption("crosses");
@@ -428,7 +428,7 @@ test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", asyn
   await page.reload();
   await expect(
     page.getByRole("combobox", {
-      name: "Lost Woods SW to Lost Woods Pass NW: world",
+      name: "Lost Woods to Lost Woods Pass (west): world",
     }),
   ).toHaveValue("crosses");
 });
@@ -467,7 +467,7 @@ for (const width of WIDTHS) {
       .selectOption("stands");
     await page
       .getByRole("combobox", {
-        name: "Lost Woods SC to Lost Woods Pass NE: world",
+        name: "Lost Woods to Lost Woods Pass (east): world",
       })
       .selectOption("stays");
     await page
