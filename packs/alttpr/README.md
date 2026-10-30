@@ -1708,22 +1708,31 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   ledge once its screen does (`relocate_pyramid_entrances`,
   `owrMovedExits`), the Bomb Shop's and Dark Chapel's ways out lead to their
   own areas where Link starts there.
-- The fork's own entrance shuffles District (`modes`,
-  `EntranceShuffle2.py:2566-2726`: each entrance among its district's, by
-  the world its region stands in) and Swapped (`:2727-2743`: entrances
-  trading targets two by two, across worlds), as noted. Neither leaves an
-  entrance to vanilla connections (`undefined` error and swap, `:152-159`,
-  which `notedConnections` checks in the data), so `owrShuffled` moves the
-  whole pool but what `do_main_shuffle` surely connects as it stands: the
-  Tavern's back without shuffletavern (`:230-236`) and, without
-  shufflelinks, the start house's door (`do_links_house`, `:655-660`:
-  Links House, or the Big Bomb Shop once its screen flips,
-  `is_bombshop_start`; neither while that flip is not known). Ganon's Tower
-  and the pyramid stand only without `shuffle_ganon` (`:213-228`,
-  `:525-531`), which a run does not record: moved. The fork's tables are
+- The fork's entrance shuffles, every mode of its `modes` (`EntranceShuffle2.py:2158-2768`,
+  `src/door-rando/owr/entrances.json`), as noted: DR's by the same names, its pools its
+  own (lite's and lean's kept caves add the `takeany` and `bonk` conditions, simple has
+  no Inverted pools), and District (`:2566-2726`: each entrance among its district's, by
+  the world its region stands in). `owrShuffled` is what a mode may move: the whole
+  pool (`:60-61`) where `undefined` places what the pools leave (shuffle, swap, error,
+  `:152-159`), only what the pools name where it leaves it vanilla (the two dungeon
+  shuffles); less the caves a kept pool connects (`do_vanilla_connect`, `:1610-1646`:
+  shops without shopsanity, pots without pottery, fairies without enemy drops, the
+  take-any caves where `take_any` is known not fixed, the Good Bee Cave where bonk drops
+  are known not shuffled; Skull Woods' doors never, `skullwoods` not recorded), in
+  Standard Link's House and the escape's drop (`do_standard_connections`, `:479-494`; the
+  castle's front door and the drop's stairs trade exits where `linked_drops` parts them,
+  not recorded: moved), the Tavern's back without shuffletavern (`:230-236`) and, without
+  shufflelinks, the start house's door (`do_links_house`, `:655-660`: Links House, or the
+  Big Bomb Shop once its screen flips, `is_bombshop_start`; neither while that flip is
+  not known). Ganon's Tower and the pyramid stand only without `shuffle_ganon`
+  (`:213-228`, `:525-531`), which a run does not record: moved. Insanity is decoupled
+  (`:2761-2766`): a noted door leads one way, its exit's way back unlinked (the tracker
+  notes doors, never exits), but the start house's door, which `do_links_house`
+  connects both ways whatever the coupling (`:717-719`). The fork's tables are
   DR's Open world's name for name (no Inverted names: its Inverted world
   flips screens), and so are its ROM tables (`EntranceData`, `exit_ids`):
-  a note, the app's pool (`owrEntrancePool`, a hole any hole's drop, a door
+  a note, the app's pool (`owrEntrancePool`, a hole any hole's drop, where a mode
+  places dungeons among dungeons a dungeon's door a dungeon's exit, else a door
   any door's target) and autotracking read an OWR seed as a DR one
   (`src/door-rando/entrances.spec.ts`). `notedConnections` links the
   overworld as noted (above), what the shuffle keeps through
@@ -1864,7 +1873,24 @@ logs hold both walks with no exception but the prize-pack farms (with no
 flip read, `mPEeiQvu1` fails both walks; with the regions' types left
 unflipped, its sphere walk). Before the key analysis ran on the noted
 world, the Inverted one's Turtle Rock prize read maybe: its back ledges
-reached only through the dungeon once 0x45 flips. The app's side
+reached only through the dungeon once 0x45 flips. The shuffled entrances
+set (`test/owr-entrance-spoilers/`, `record-dr-spoilers owr-entrances`)
+holds a seed of each of the fork's modes, each entrance noted from the
+log's `Entrances` (its door lines, never an exit's): Swapped (`sLcpC6Z45`,
+`sbuwNOmVF` with small keys wild), District (`qzj33CUOO`, `p5dYMs8jC` with
+Mixed), Crossed (`xq1iZJVwM`, `uegcykSHR` with Mixed, `kL7bNLknt` with its
+edges crossed unrestricted, `waofX3504` Inverted), Lite (`1IAKwFudE`,
+`4cwdgebPq` Inverted), Lean (`jRN0n0tst`), Simple (`jUsfGyWR1`),
+Restricted (`zXFy19ljb`), Full (`89uvVx2xg`), Insanity (`DLSrm8B0f`) and
+the two dungeon shuffles (`ERKxf6EjS`, `tZeE1P1Du`). Its pool offers each
+door the log moves its logged target, every door it moves is in the log
+and nothing it keeps moved (the log lists what the shuffle connects, never
+what it leaves vanilla). No location of a later sphere is `yes` too early
+in any of them; what is not `yes` in time is reviewed (`REVIEWED`): key
+doors left strict-safe where the walk does not reach all of a dungeon's
+ways in (a tower behind Skull Woods' back door or Ice Palace's water, a
+castle door on Bumper Cave's ledge), each `yes` once the dungeon's keys
+are held, and Insanity's caves past an exit no note links. The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

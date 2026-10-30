@@ -230,18 +230,36 @@ export const OWR_MIXED_SEEDS = [
 
 /**
  * The shuffled entrances set (test/owr-entrance-spoilers/): avianart.games
- * seeds of OWR 0.8.0.2 as OWR_SEEDS', Open, their entrances shuffled by the
- * fork's own modes, generated 2026-10-30 (`[{"args":{"branch":"OWR",
+ * seeds of OWR 0.8.0.2 as OWR_SEEDS', their entrances shuffled by each of
+ * the fork's modes, generated 2026-10-30 (`[{"args":{"branch":"OWR",
  * "worldstate":"open","entranceshuffle":"swapped","spoiler":"full"}}]`):
  * Swapped, District (`"entranceshuffle":"district"`), Swapped with small
  * keys wild (`"keyshuffle":"wild"`) and District with Mixed
- * (`"entranceshuffle":"district","mixed":true`).
+ * (`"entranceshuffle":"district","mixed":true`); then Crossed, Crossed with
+ * Mixed (`"mixed":true`), with its edges crossed (`"ow_crossed":
+ * "unrestricted"`) and in the Inverted world (`"worldstate":"inverted"`),
+ * Lite (Open and Inverted), Lean, Simple, Restricted, Full, Insanity,
+ * Dungeons + Simple and Dungeons + Full (`"entranceshuffle":
+ * "dungeonssimple"`, `"dungeonsfull"`), each Open but where named.
  */
 export const OWR_ENTRANCE_SEEDS = [
   "sLcpC6Z45",
   "qzj33CUOO",
   "sbuwNOmVF",
   "p5dYMs8jC",
+  "xq1iZJVwM",
+  "uegcykSHR",
+  "kL7bNLknt",
+  "waofX3504",
+  "1IAKwFudE",
+  "4cwdgebPq",
+  "jRN0n0tst",
+  "jUsfGyWR1",
+  "zXFy19ljb",
+  "89uvVx2xg",
+  "DLSrm8B0f",
+  "ERKxf6EjS",
+  "tZeE1P1Du",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */

@@ -8,8 +8,9 @@
 // spoilers/ (… owr-mixed: screens flipped by Mixed, Open and Inverted,
 // with crossed edges or shuffled whirlpools, each flip noted from the
 // log's `Maps`) and of test/owr-entrance-spoilers/ (… owr-entrances: the
-// fork's own entrance shuffles, District and Swapped, one District seed
-// with Mixed, each entrance noted as its `Entrances` says), in the world the app
+// fork's own entrance shuffles, each of its modes, a District and a Crossed
+// seed with Mixed, a Crossed one with its edges crossed, Crossed and Lite in
+// the Inverted world, each entrance noted as its `Entrances` says), in the world the app
 // solves an OWR run in (drWorld on OWR_DATA, its bonk drops added as the
 // app adds them, `doorAddedOf`).
 //
@@ -69,7 +70,7 @@ const SETS: Readonly<
   >
 > = {
   "owr-crossed-spoilers": { crossed: true, entrances: false, mixed: false },
-  "owr-entrance-spoilers": { crossed: false, entrances: true },
+  "owr-entrance-spoilers": { entrances: true },
   "owr-mixed-spoilers": { entrances: false, mixed: true },
   "owr-spoilers": { crossed: false, entrances: false, mixed: false },
 };
@@ -126,13 +127,97 @@ const STRICT_SAFE =
   "its key doors ask every key of the dungeon, its portals not all reached by the walk (portalsKnown)";
 
 /**
+ * Insanity parts each door from its way back (decoupled, EntranceShuffle2.
+ * py:2761-2766): the log's exit lines tell where a cave's exit leads out,
+ * which no note says (the tracker notes doors), so the world links none and
+ * what lies past one is not reached.
+ */
+const DECOUPLED =
+  "Insanity: what lies past a cave's exit, which no note links (decoupled), the rest as STRICT_SAFE";
+
+/**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
  * answer, each reviewed: every one turns `yes` once the dungeon's keys
- * (its chests' and its pots') are all held (checked 2026-10-30).
+ * (its chests' and its pots') are all held (checked 2026-10-30), but
+ * Insanity's past an exit (DECOUPLED), which no key opens.
  */
 const REVIEWED: Readonly<
   Record<string, { readonly why: string; readonly at: Record<string, string> }>
 > = {
+  "owr-entrance-spoilers/avianart-1IAKwFudE.json": {
+    at: {
+      "5:Skull Woods - Prize": "maybe",
+      "6:Agahnim 2": "maybe",
+      "6:Ganons Tower - Map Chest": "maybe",
+      "7:Turtle Rock - Prize": "maybe",
+    },
+    why: `Ganons Tower (at Skull Woods' back door), Skull Woods, Turtle Rock: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-4cwdgebPq.json": {
+    at: {
+      "7:Turtle Rock - Compass Chest": "maybe",
+      "8:Desert Palace - Prize": "maybe",
+      "8:Turtle Rock - Prize": "maybe",
+    },
+    why: `Turtle Rock, Desert Palace: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-89uvVx2xg.json": {
+    at: { "5:Desert Palace - Prize": "maybe" },
+    why: `Desert Palace: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-DLSrm8B0f.json": {
+    at: {
+      "1:Desert Palace - Big Key Chest": "no",
+      "1:Mini Moldorm Cave - Far Right": "no",
+      "4:Desert Palace - Boss": "maybe",
+      "4:Desert Palace - Prize": "maybe",
+      "4:Palace of Darkness - Big Chest": "no",
+      "5:Palace of Darkness - Prize": "no",
+      "5:Trench 1 Switch": "maybe",
+      "6:Swamp Drain": "maybe",
+      "7:Swamp Palace - Boss": "maybe",
+      "7:Swamp Palace - Prize": "maybe",
+      "8:Agahnim 2": "maybe",
+      "8:Ganons Tower - Bob's Chest": "maybe",
+      "8:Ganons Tower - Randomizer Room - Bottom Left": "maybe",
+      "9:Attic Cracked Floor": "no",
+      "9:Suspicious Maiden": "no",
+      "10:Revealing Light": "no",
+      "11:Thieves' Town - Prize": "no",
+    },
+    why: DECOUPLED,
+  },
+  "owr-entrance-spoilers/avianart-ERKxf6EjS.json": {
+    at: {
+      "9:Turtle Rock - Eye Bridge - Bottom Right": "maybe",
+      "9:Turtle Rock - Eye Bridge - Top Right": "maybe",
+      "12:Desert Palace - Prize": "maybe",
+      "12:Turtle Rock - Prize": "maybe",
+    },
+    why: `Turtle Rock, Desert Palace: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-jRN0n0tst.json": {
+    at: { "3:Hyrule Castle - Zelda's Chest": "maybe" },
+    why: `Hyrule Castle (its front door at Bumper Cave's top): ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-jUsfGyWR1.json": {
+    at: {
+      "5:Ganons Tower - Big Key Chest": "maybe",
+      "5:Ganons Tower - Randomizer Room - Bottom Right": "maybe",
+      "7:Skull Woods - Prize": "maybe",
+      "7:Turtle Rock - Prize": "maybe",
+    },
+    why: `Ganons Tower (at Ice Palace's door), Skull Woods, Turtle Rock: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-kL7bNLknt.json": {
+    at: {
+      "3:Desert Palace - Boss": "maybe",
+      "3:Desert Palace - Prize": "maybe",
+      "8:Skull Woods - Prize": "maybe",
+      "9:Turtle Rock - Prize": "maybe",
+    },
+    why: `Desert Palace, Skull Woods, Turtle Rock: ${STRICT_SAFE}`,
+  },
   "owr-entrance-spoilers/avianart-p5dYMs8jC.json": {
     at: {
       "6:Attic Cracked Floor": "maybe",
@@ -157,11 +242,36 @@ const REVIEWED: Readonly<
     },
     why: `Skull Woods: ${STRICT_SAFE}`,
   },
+  "owr-entrance-spoilers/avianart-tZeE1P1Du.json": {
+    at: {
+      "7:Desert Palace - Prize": "maybe",
+      "9:Turtle Rock - Prize": "maybe",
+    },
+    why: `Desert Palace, Turtle Rock: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-uegcykSHR.json": {
+    at: { "2:Skull Woods - Prize": "maybe" },
+    why: `Skull Woods: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-waofX3504.json": {
+    at: { "4:Desert Palace - Prize": "maybe" },
+    why: `Desert Palace: ${STRICT_SAFE}`,
+  },
+  "owr-entrance-spoilers/avianart-zXFy19ljb.json": {
+    at: {
+      "7:Skull Woods - Prize": "maybe",
+      "10:Turtle Rock - Prize": "maybe",
+    },
+    why: `Skull Woods, Turtle Rock: ${STRICT_SAFE}`,
+  },
 };
 
 /** The prize-pack farms taken out of each log (PRIZE_FARM), reviewed. */
 const FARMS: Readonly<Record<string, readonly string[]>> = {
   "owr-crossed-spoilers/avianart-o4mamwuKZ.json": [
+    "1:South Pass Area Crab Drop",
+  ],
+  "owr-entrance-spoilers/avianart-DLSrm8B0f.json": [
     "1:South Pass Area Crab Drop",
   ],
   "owr-mixed-spoilers/avianart-mPEeiQvu1.json": [
@@ -200,13 +310,24 @@ function withoutPrizeFarms(log: Log): { log: Log; farms: readonly string[] } {
   return { farms, log: { ...log, playthrough } };
 }
 
-/** A log's entrance shuffle, the fork's own (District, Swapped). */
+/** A log's entrance shuffle, one of the fork's `modes`. */
 const shuffleOf = (log: Log): OwrShuffle => {
   const { shuffle } = log.meta;
-  if (shuffle !== "district" && shuffle !== "swapped")
+  const modes = OWR_DATA.tableOf<unknown>("EntranceShuffle2", "modes");
+  if (typeof shuffle !== "string" || modes[shuffle] === undefined)
     throw new RangeError(`Not an entrance shuffle of the fork: ${shuffle}`);
-  return shuffle;
+  return shuffle as OwrShuffle;
 };
+
+/**
+ * A log's pool settings: DR's, and the fork's bonk drops and take-any
+ * caves, which lite's and lean's kept caves read.
+ */
+const owrPoolOf = (meta: Log["meta"]) => ({
+  ...poolOf(meta),
+  bonkDrops: flag(meta.bonk_drops),
+  takeAny: String(meta.take_any ?? "none"),
+});
 
 /**
  * A log's shuffled entrances, noted as its `Entrances` says: each entrance
@@ -214,7 +335,7 @@ const shuffleOf = (log: Log): OwrShuffle => {
  * them all would) to the target it took.
  */
 function entranceNotesOf(log: Log): DrNotedEntrances {
-  const pool = poolOf(log.meta);
+  const pool = owrPoolOf(log.meta);
   const moved = new Set(
     owrEntrancePool(shuffleOf(log), {
       ...pool,
@@ -346,18 +467,31 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)} ${meta.shuffle} ${meta.keyshuffle}`;
     });
     expect(seen.sort()).toEqual([
+      "inverted false false vanilla none false crossed none",
+      "inverted false false vanilla none false lite none",
       "inverted false false vanilla none false vanilla none",
       "inverted false false vanilla none true vanilla none",
       "inverted false true balanced none false vanilla none",
       "inverted true false vanilla none false vanilla none",
       "open false false vanilla grouped false vanilla none",
       "open false false vanilla grouped true vanilla none",
+      "open false false vanilla none false crossed none",
       "open false false vanilla none false district none",
+      "open false false vanilla none false dungeonsfull none",
+      "open false false vanilla none false dungeonssimple none",
+      "open false false vanilla none false full none",
+      "open false false vanilla none false insanity none",
+      "open false false vanilla none false lean none",
+      "open false false vanilla none false lite none",
+      "open false false vanilla none false restricted none",
+      "open false false vanilla none false simple none",
       "open false false vanilla none false swapped none",
       "open false false vanilla none false swapped wild",
       "open false false vanilla none false vanilla none",
+      "open false false vanilla none true crossed none",
       "open false false vanilla none true district none",
       "open false false vanilla none true vanilla none",
+      "open false false vanilla unrestricted false crossed none",
       "open false false vanilla unrestricted false vanilla none",
       "open false true random none false vanilla none",
       "open false true vanilla none true vanilla none",
@@ -367,17 +501,24 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
 
   it("offers each entrance a shuffled seed moved, and its target; the rest stand", () => {
     const shuffled = logs.filter((name) => setOf(name).entrances);
-    expect(shuffled).toHaveLength(4);
+    expect(shuffled).toHaveLength(17);
     const maps = vanillaEntrances(false);
     for (const name of shuffled) {
       const { log, notes, entrances } = logOf(name);
-      const screens = owrScreensOf(OWR_DATA, "open", notes);
-      const pool = owrEntrancePool(shuffleOf(log), {
-        ...poolOf(log.meta),
+      const screens = owrScreensOf(
+        OWR_DATA,
+        log.meta.mode === "inverted" ? "inverted" : "open",
+        notes,
+      );
+      const shuffle = shuffleOf(log);
+      const pool = owrEntrancePool(shuffle, {
+        ...owrPoolOf(log.meta),
         bombShopStart: screens.swapped(0x2c),
       });
+      // The log lists what the shuffle connects (spoiler.set_entrance),
+      // never what it leaves to vanilla connections (connect_vanilla*)
       const ways = log.Entrances.filter((link) => link.direction !== "exit");
-      expect(ways).toHaveLength(140);
+      expect(ways.length).toBeGreaterThan(20);
       const kept: string[] = [];
       for (const link of ways) {
         const offered = pool.targetsOf.get(drEntranceOf(link.entrance).id);
@@ -401,11 +542,13 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
           .map((e) => drEntranceName(e.id)),
       ).toEqual([]);
       expect(pool.entrances.map((e) => drEntranceName(e.id))).not.toContain(
-        "Links House",
+        screens.swapped(0x2c) ? "Big Bomb Shop" : "Links House",
       );
-      expect(pool.entrances.map((e) => drEntranceName(e.id))).toContain(
-        "Tavern North",
-      );
+      // The dungeon shuffles leave it to vanilla connections
+      if (!shuffle.startsWith("dungeons"))
+        expect(pool.entrances.map((e) => drEntranceName(e.id))).toContain(
+          "Tavern North",
+        );
       // Some entrance leads elsewhere than its vanilla target
       expect(
         ways.filter(
@@ -413,7 +556,7 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
             (maps.twoWay.get(link.entrance) ??
               maps.oneWay.get(link.entrance)) !== link.exit,
         ).length,
-      ).toBeGreaterThan(50);
+      ).toBeGreaterThan(10);
     }
   });
 
