@@ -185,8 +185,10 @@ export type DoorRunSettings = {
   /**
    * A door shuffle's intensity (`--intensity`) and its decoupled doors
    * (`--decoupledoors`): a spoiler's meta names them, no ROM table read
-   * does. The intensity unset reads as 3, everything shuffled
-   * (`DOOR_UNSET`): a portal's lobby then waits for the player's note.
+   * does. Unset (`DOOR_UNSET`), the intensity reads as 3, everything
+   * shuffled: a portal's lobby then waits for the player's note; the doors
+   * read as decoupled: no way back is inferred from a door noted, so each
+   * waits for its own note, and the key analysis is the strict one.
    */
   doorIntensity?: DoorIntensity;
   decoupledDoors?: boolean;
@@ -199,13 +201,14 @@ export type DoorSetting = keyof DoorRunSettings;
  * The DR settings a run may leave unset, which no default stands for: what
  * a ROM may not state and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
- * move, and the bomb bag and OWR's prize and follower shuffles and custom
- * goals are causes of `doorReasons`.
+ * move, the doors read as decoupled, and the bomb bag and OWR's prize and
+ * follower shuffles and custom goals are causes of `doorReasons`.
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
   "shuffleTavern",
   "doorIntensity",
+  "decoupledDoors",
   "prizeShuffle",
   "shuffleFollowers",
   "bombBag",
@@ -224,7 +227,6 @@ export type DoorSettings = Required<
 /** DR's defaults (args.json): what an absent field of a DR run means. */
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   bonkDrops: false,
-  decoupledDoors: false,
   doorShuffle: "vanilla",
   doorVersion: "1.5.6",
   dropShuffle: "none",
@@ -503,9 +505,10 @@ export const doorRows = (
 /**
  * A DR run's door shuffle as the pack's DR world takes it (its
  * `DoorShuffleSettings`); undefined with vanilla doors or outside DR. The
- * intensity unset reads as 3 (everything shuffled), the trap mode as the
- * widest (a boss's trap door may open), so the world never assumes a door
- * vanilla that the seed may have moved.
+ * intensity unset reads as 3 (everything shuffled), the coupling unset as
+ * decoupled (no way back inferred), the trap mode as the widest (a boss's
+ * trap door may open), so the world never assumes a door vanilla, or a way
+ * back, that the seed may not have.
  */
 export const doorShuffleSettingsOf = (
   settings: DoorRunSettings,
@@ -520,7 +523,7 @@ export const doorShuffleSettingsOf = (
   const door = doorOf(settings);
   if (door === null || door.doorShuffle === "vanilla") return undefined;
   return {
-    decoupled: door.decoupledDoors,
+    decoupled: door.decoupledDoors ?? true,
     intensity: Number(door.doorIntensity ?? "3") as 1 | 2 | 3,
     shuffle: door.doorShuffle,
     trapMode: "oneway",

@@ -66,14 +66,46 @@ export function withDoorNotes(
   };
 }
 
+/** Each links table's way backs, so a coupled door's is found once. */
+const wayBacks = new WeakMap<
+  Readonly<Record<string, string>>,
+  ReadonlyMap<string, string>
+>();
+
+/**
+ * Where a door leads as the notes tell it: its own note, else, in a coupled
+ * shuffle, the way back of the door noted into it (the first, should two
+ * be), which the store never holds: DR's world derives it the same way
+ * (the pack's `linkShuffledDoors`).
+ */
+export function linkOf(
+  links: DoorNotes["links"],
+  door: string,
+  coupled: boolean,
+): string | undefined {
+  if (links === undefined) return undefined;
+  const own = links[door];
+  if (own !== undefined || !coupled) return own;
+  let back = wayBacks.get(links);
+  if (back === undefined) {
+    const found = new Map<string, string>();
+    for (const [from, to] of Object.entries(links))
+      if (!found.has(to)) found.set(to, from);
+    back = found;
+    wayBacks.set(links, back);
+  }
+  return back.get(door);
+}
+
 /**
  * What noting that `door` leads into `target` (or into nothing known,
- * `null`) changes. A door leads into one door, which comes out of it alone:
- * a door noted elsewhere before is forgotten there. In a coupled shuffle
- * the way back is noted with it (`target` leads into `door`), and the way
- * back of a link forgotten is forgotten too. No kind is noted with it: a
- * kind the player has not noted stays unknown, so what lies behind the door
- * reads maybe until they note it.
+ * `null`) changes. Only what the player noted is kept: a coupled door's way
+ * back is derived (`linkOf`), so it never outlives the coupling it rests
+ * on. A door leads into one door, which comes out of it alone: a door noted
+ * into the target before is forgotten; in a coupled shuffle so is every
+ * note that pairs the door or the target with another. No kind is noted
+ * with it: a kind the player has not noted stays unknown, so what lies
+ * behind the door reads maybe until they note it.
  */
 export function linkChange(
   notes: DoorNotes,
@@ -81,24 +113,16 @@ export function linkChange(
   target: string | null,
   coupled: boolean,
 ): DoorNotesChange {
-  const links = notes.links ?? {};
-  const change: Record<string, string | null> = { [door]: target };
-  const forget = (id: string | undefined) => {
-    if (id !== undefined && id !== door && id !== target) change[id] = null;
-  };
-  // The door's earlier target, and its way back to this door
-  const before = links[door];
-  if (coupled && before !== undefined && links[before] === door) forget(before);
-  if (target !== null) {
-    // Whatever led into the target before leads nowhere known now
-    for (const [from, to] of Object.entries(links))
-      if (to === target && from !== door) forget(from);
-    if (coupled) {
-      const theirs = links[target];
-      if (theirs !== undefined && theirs !== door && links[theirs] === target)
-        forget(theirs);
-      change[target] = door;
-    }
+  const change: Record<string, string | null> = {};
+  for (const [from, to] of Object.entries(notes.links ?? {})) {
+    const taken = target !== null && to === target && from !== door;
+    const paired =
+      coupled &&
+      (from === door ||
+        to === door ||
+        (target !== null && (from === target || to === target)));
+    if (taken || paired) change[from] = null;
   }
+  change[door] = target;
   return { links: change };
 }

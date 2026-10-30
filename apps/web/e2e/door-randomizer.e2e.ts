@@ -58,7 +58,10 @@ test("a Door Randomizer run lists its key pots in DR's logic, checked in place",
   ).toBeChecked();
 });
 
-/** A crossed door shuffle's run, its intensity not known, on the Doors tab. */
+/**
+ * A crossed door shuffle's run, its intensity not known, its doors coupled,
+ * on the Doors tab.
+ */
 const openDoorShuffle = async (page: Page) => {
   const dialog = await openDoorRun(page);
   await dialog
@@ -67,6 +70,10 @@ const openDoorShuffle = async (page: Page) => {
   await expect(
     dialog.getByRole("combobox", { name: "Door intensity" }),
   ).toHaveValue("?");
+  // Not known reads as decoupled: no way back is inferred until set
+  const coupling = dialog.getByRole("combobox", { name: "Decoupled doors" });
+  await expect(coupling).toHaveValue("?");
+  await coupling.selectOption("false");
   await dialog.getByRole("button", { name: "Close" }).first().click();
   await page.getByRole("tab", { name: "Doors" }).click();
   await expect(page.getByTestId("doors-panel")).toBeVisible();

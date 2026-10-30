@@ -15,7 +15,7 @@ import {
 import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
 import { memo, useId, useMemo, useState } from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
-import { linkChange } from "@/games/alttpr/logic/doorNotes";
+import { linkChange, linkOf } from "@/games/alttpr/logic/doorNotes";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** DR's door names have no world of their own: one line each. */
@@ -86,7 +86,10 @@ const DoorRow = memo(
     targets: readonly Door[];
   }) => {
     const id = doorId(door.name);
-    const target = useGameStore((state) => state.doors.links?.[id]);
+    const coupled = !settings.decoupled;
+    const target = useGameStore((state) =>
+      linkOf(state.doors.links, id, coupled),
+    );
     const noteDoors = useGameStore((state) => state.noteDoors);
     const byDungeon = useMemo(() => {
       const groups = new Map<string, Door[]>();
@@ -110,7 +113,7 @@ const DoorRow = memo(
                 useGameStore.getState().doors,
                 id,
                 value === "" ? null : value,
-                !settings.decoupled,
+                coupled,
               ),
             );
           }}
@@ -265,7 +268,8 @@ const DoorsPanel = () => {
   const matches = (door: Door) =>
     words.every((word) => door.name.toLowerCase().includes(word));
   const linked = relinked.filter(
-    (door) => notes.links?.[doorId(door.name)] !== undefined,
+    (door) =>
+      linkOf(notes.links, doorId(door.name), !settings.decoupled) !== undefined,
   ).length;
   const unknownKinds = [...relinked, ...kindOnly].filter(
     (door) =>

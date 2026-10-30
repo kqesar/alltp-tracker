@@ -39,7 +39,7 @@ describe("the Doors tab", () => {
 
   it("notes where a door leads, both ways, and its kind", async () => {
     const user = userEvent.setup();
-    run({ doorIntensity: "2", doorShuffle: "basic" });
+    run({ decoupledDoors: false, doorIntensity: "2", doorShuffle: "basic" });
     render(<DoorsPanel />);
     expect(screen.getByTestId("doors-summary")).toHaveTextContent(
       /^0 of \d+ doors of Hyrule Castle noted/,
@@ -50,8 +50,8 @@ describe("the Doors tab", () => {
     const link = screen.getByTestId("door-link-eastern-lobby-bridge-n");
     expect(link).toHaveAccessibleName("Eastern Lobby Bridge N: leads to");
     await user.selectOptions(link, ["eastern-cannonball-s"]);
+    // The note alone is kept: the way back is derived while coupled
     expect(store().doors.links).toEqual({
-      "eastern-cannonball-s": "eastern-lobby-bridge-n",
       "eastern-lobby-bridge-n": "eastern-cannonball-s",
     });
     expect(screen.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
@@ -72,6 +72,25 @@ describe("the Doors tab", () => {
     act(() => store().undo());
     expect(store().doors.links?.["eastern-lobby-bridge-n"]).toBe(
       "eastern-cannonball-s",
+    );
+  });
+
+  it("infers no way back while the coupling is not known", async () => {
+    const user = userEvent.setup();
+    run({ doorIntensity: "2", doorShuffle: "basic" });
+    render(<DoorsPanel />);
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Eastern Palace",
+    ]);
+    await user.selectOptions(
+      screen.getByTestId("door-link-eastern-lobby-bridge-n"),
+      ["eastern-cannonball-s"],
+    );
+    expect(screen.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+      "",
+    );
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(
+      /^1 of \d+ doors of Eastern Palace noted/,
     );
   });
 

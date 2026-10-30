@@ -332,14 +332,19 @@ describe("a Door Randomizer run's logic", () => {
       "doorIntensity",
       "decoupledDoors",
     ]);
-    // Unset, the intensity reads as 3: every portal's lobby may move
+    // Unset, the intensity reads as 3: every portal's lobby may move; the
+    // coupling as decoupled: no way back is inferred from a door noted
     expect(doorShuffleSettingsOf(basic)).toEqual({
-      decoupled: false,
+      decoupled: true,
       intensity: 3,
       shuffle: "basic",
       trapMode: "oneway",
     });
     expect(doorValueText("doorIntensity", undefined)).toBe("Not known");
+    expect(doorValueText("decoupledDoors", undefined)).toBe("Not known");
+    expect(
+      doorShuffleSettingsOf(with_(basic, { decoupledDoors: false })),
+    ).toMatchObject({ decoupled: false });
     expect(
       doorShuffleSettingsOf(
         with_(DR, {
