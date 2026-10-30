@@ -8,13 +8,25 @@
 import { rank, type Settings, type State } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import {
+  flag,
+  type Log,
+  readFixture,
+  settingsFor,
+} from "../../test/dr-playthrough";
 import { solveFacts, solveFactsState } from "../facts";
 import { ITEMS } from "../items";
 import { medallionFacts } from "../medallions";
 import { settingsFromUpstream } from "../settings";
+import type { DrNotedDoors } from "./connections";
+import {
+  type DoorShuffleSettings,
+  type DoorSpoiler,
+  doorNotesFromSpoiler,
+} from "./doors";
 import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, type DrWorld, drKeyLogic, drWorld } from "./index";
-import type { DoorRule } from "./key-analysis/analysis";
+import type { DoorRule, KeyLogic } from "./key-analysis/analysis";
 import { DUNGEON_EVENTS } from "./key-analysis/dungeon";
 import { DR_KEY_CODES, keyDropsOf, type WorldKeys } from "./keys";
 import { and, or } from "./text";
@@ -44,12 +56,11 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 type Placement = ReadonlyMap<string, string>;
 
 /**
- * The placement atoms DR's rule reads, for a world's analysis: the small
+ * The placement atoms DR's rule reads, for a world's analyses: the small
  * key in a door's one location behind (AllowSmall), the big key in a
  * door's locations behind (Lock).
  */
-function atomsOf(settings: Settings) {
-  const logic = drKeyLogic(DR_DATA, settings);
+function atomsOf(logic: ReadonlyMap<string, KeyLogic>) {
   const allow = new Map<DoorRule, string>();
   const lock = new Map<DoorRule, string>();
   for (const [dungeon, dungeonLogic] of logic)
@@ -152,6 +163,17 @@ const SPOTS = new Map(
   ]),
 );
 
+/** Where the fill places which dungeon items: the vanilla layouts'. */
+interface Layout {
+  readonly items: readonly {
+    readonly dungeon: string;
+    readonly item: string;
+  }[];
+  readonly spots: ReadonlyMap<string, readonly string[]>;
+}
+
+const VANILLA: Layout = { items: DUNGEON_ITEMS, spots: SPOTS };
+
 /**
  * `state` with each placed item collected once its location is surely
  * reached, until no more is; the final state holds the keys found.
@@ -192,14 +214,15 @@ function fill(
   pick: (spots: readonly string[]) => string,
   next: (count: number) => number,
   forward = false,
+  layout: Layout = VANILLA,
 ): Placement | undefined {
   const all: State = {
     ...BASE,
     ...Object.fromEntries(TRACKED.map(({ id, max }) => [id, max])),
   };
   const items = [
-    ...DUNGEON_ITEMS.filter((d) => d.item.startsWith("bigKey")),
-    ...DUNGEON_ITEMS.filter((d) => d.item.startsWith("key")),
+    ...layout.items.filter((d) => d.item.startsWith("bigKey")),
+    ...layout.items.filter((d) => d.item.startsWith("key")),
   ];
   const order: typeof items = [];
   for (const kind of forward ? ["key", "bigKey"] : ["bigKey", "key"]) {
@@ -219,7 +242,7 @@ function fill(
       { ...all, ...unplaced, ...atoms.of(placed) },
       placed,
     );
-    const spots = (SPOTS.get(current.dungeon) ?? []).filter(
+    const spots = (layout.spots.get(current.dungeon) ?? []).filter(
       (spot) =>
         !placed.has(spot) &&
         !(
@@ -259,13 +282,23 @@ const states = fc
  * reaches, over random states and fills; `seen` records a yes the
  * player's keys raised.
  */
-function soundness(model: DrWorld, settings: Settings) {
-  const atoms = atomsOf(settings);
+function soundness(
+  model: DrWorld,
+  settings: Settings,
+  noted?: { readonly doors: DrNotedDoors; readonly layout: Layout },
+) {
+  const atoms = atomsOf(
+    noted === undefined
+      ? drKeyLogic(DR_DATA, settings)
+      : (model.doorKeyLogic ?? new Map()),
+  );
   const truth = drWorld(settings, {
     data: DR_DATA,
     doorRule: truthOf(atoms),
     items: atoms.items,
+    ...(noted === undefined ? {} : { doors: noted.doors }),
   });
+  const layout = noted?.layout ?? VANILLA;
   const seen = new Set<string>();
   const property = fc.property(
     states,
@@ -291,7 +324,8 @@ function soundness(model: DrWorld, settings: Settings) {
       // its placement rules, is drawn again with the small keys each where
       // the keys before it reach
       const placement =
-        fill(truth, atoms, pick, draw) ?? fill(truth, atoms, pick, draw, true);
+        fill(truth, atoms, pick, draw, false, layout) ??
+        fill(truth, atoms, pick, draw, true, layout);
       if (placement === undefined) return true;
       const played = sweep(
         truth,
@@ -377,6 +411,97 @@ describe("the key model's soundness", () => {
         ),
     });
     const { property } = soundness(broken, WILD);
+    expect(
+      fc.check(property, { endOnFailure: true, numRuns: 60, seed: 7 }).failed,
+    ).toBe(true);
+  });
+});
+
+/**
+ * A door-shuffled seed's run as the player notes it whole from its log
+ * (test/dr-door-spoilers/), and where its fill puts each dungeon's items:
+ * the big key where the layout's analysis asks one, as many small keys as
+ * its key doors less its forced drops (calc_max_chests), each in a room of
+ * its layout.
+ */
+function notedRun(name: string) {
+  const json = JSON.parse(
+    readFixture("dr-door-spoilers", name),
+  ) as DoorSpoiler & { readonly meta: Log["meta"] };
+  const { meta } = json;
+  const doorSettings: DoorShuffleSettings = {
+    decoupled: flag(meta.decoupledoors),
+    intensity: Number(meta.intensity) as 1 | 2 | 3,
+    shuffle: meta.door_shuffle as DoorShuffleSettings["shuffle"],
+    trapMode: meta.trap_door_mode as DoorShuffleSettings["trapMode"],
+  };
+  const doors: DrNotedDoors = {
+    notes: doorNotesFromSpoiler(json, doorSettings, DR_DATA),
+    settings: doorSettings,
+  };
+  const settings: Settings = {
+    ...DR_DEFAULTS,
+    ...settingsFor(meta),
+    ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
+    ...(flag(meta.bombbag) ? { bombBag: true } : {}),
+  };
+  const model = drWorld(settings, { data: DR_DATA, doors });
+  const items: { dungeon: string; item: string }[] = [];
+  const spots = new Map<string, string[]>();
+  for (const [dungeon, logic] of model.doorKeyLogic ?? []) {
+    const code = DR_KEY_CODES[dungeon];
+    if (logic.bkDoors.size > 0 || logic.bkChests.size > 0)
+      items.push({ dungeon, item: `bigKey${code}` });
+    for (let i = 0; i < logic.layout.maxChests; i++)
+      items.push({ dungeon, item: `key${code}` });
+    spots.set(
+      dungeon,
+      DR_DATA.regions
+        .filter((r) => model.roomDungeons?.get(r.name) === dungeon)
+        .flatMap((r) =>
+          r.locations.filter((l) => !(r.locationModes?.[l]?.length === 1)),
+        )
+        .filter(
+          (l) =>
+            !DUNGEON_EVENTS.has(l) &&
+            !l.includes("- Prize") &&
+            l !== "Agahnim 1" &&
+            l !== "Agahnim 2" &&
+            !keyDropsOf(DR_DATA).some((k) => k.location === l),
+        ),
+    );
+  }
+  return { doors, layout: { items, spots }, model, settings };
+}
+
+describe("the key model's soundness on noted door-shuffled layouts", () => {
+  // The basic seeds, whose every dungeon DR's analysis reads from the
+  // notes (key-analysis/noted.ts), at intensity 1 and 2. The crossed ones
+  // (uMJQnKFrH, 7SFJ6YE0k) are analysed too, held by their playthroughs
+  // both ways (test/dr-door-playthrough.spec.ts): this assumed fill finds
+  // no spot for some of their layouts' keys, so it would hold nothing
+  for (const name of ["avianart-D14rBE1uq.json", "avianart-giw5Y13cP.json"])
+    it(`says yes only where every placement the fill may make lets the player in (${name})`, () => {
+      const { doors, layout, model, settings } = notedRun(name);
+      expect(model.doorKeyLogic?.size).toBe(13);
+      const { property, seen } = soundness(model, settings, { doors, layout });
+      fc.assert(property, { numRuns: 6, seed: 7 });
+      // Not vacuous: the model said yes where only its keys could
+      expect([...seen]).toEqual(["raised"]);
+    }, 90_000);
+
+  it("finds a noted layout's model asking one key fewer than DR unsound", () => {
+    const { doors, layout, settings } = notedRun("avianart-giw5Y13cP.json");
+    const broken = drWorld(settings, {
+      data: DR_DATA,
+      doorRule: (dungeon, rule, _, keys) =>
+        keys.atLeast(
+          dungeon,
+          Math.min(rule.worstCase ?? 0, rule.smallKeyNum) - 1,
+        ),
+      doors,
+    });
+    const { property } = soundness(broken, settings, { doors, layout });
     expect(
       fc.check(property, { endOnFailure: true, numRuns: 60, seed: 7 }).failed,
     ).toBe(true);

@@ -17,8 +17,12 @@
 //   dungeon_boss_sectors, DungeonGenerator.py:4138). A room's dungeon is
 //   the one whose portal the noted links reach it from; basic keeps each
 //   room in its own.
-// - Keys. DR analyses each generated layout (KeyDoorShuffle.py), which the
-//   notes tell only in part: a key door asks every key of its dungeon, or
+// - Keys. DR analyses each generated layout (KeyDoorShuffle.py). Where the
+//   notes tell all that analysis reads (key-analysis/noted.ts: intensity
+//   1 or 2, coupled doors, vanilla entrances, the layout noted whole, its
+//   starts certain), a key door asks the rule DR's analysis gives it
+//   (add_key_logic_rules, Rules.py:2347-2365). Elsewhere, and for a key
+//   door that analysis gives no rule, it asks every key of its dungeon, or
 //   `maybe` (strict-safe), never more yes than DR's rules. Basic keeps a
 //   dungeon's key count; partitioned and crossed move it
 //   (shuffle_small_key_doors, :2139-2145), so its door asks the count the
@@ -32,6 +36,7 @@ import {
   portalDungeonOf,
   vanillaKind,
 } from "./doors";
+import type { KeyLogic } from "./key-analysis/analysis";
 import {
   DR_KEY_CODES,
   isBigChest,
@@ -218,8 +223,9 @@ interface ShuffleExit {
 
 /**
  * The rules a door-shuffled run's doors and rooms ask: each door its
- * kind's (its dependents its controller's), a key door the strict-safe
- * rule of its room's dungeon, a big key door (and the two cells DR always
+ * kind's (its dependents its controller's), a key door the rule DR's
+ * analysis of its noted layout gives it (`logic`, noted.ts) or else the
+ * strict-safe rule of its room's dungeon, a big key door (and the two cells DR always
  * asks it at, special_big_key_doors) and a big chest its big key, an
  * unknown kind `maybe`. A boss room never changes dungeon: DR assigns each
  * dungeon its own first (dungeon_boss_sectors, DungeonGenerator.py:1320-
@@ -233,10 +239,19 @@ export function addShuffledDoorRules(
   doors: DrNotedDoors,
   dungeons: ReadonlyMap<string, string>,
   mode: DrMode,
+  logic: ReadonlyMap<string, KeyLogic> = new Map(),
 ): void {
   const special = specialBigKeyDoors(mode);
   const doorNamed = data.doorByName;
-  const smallRule = (dungeon: string) => strictSafe(keys, doors, dungeon);
+  // add_key_logic_rules: a door's rule by its own (or its controller's)
+  // name, its dependents along
+  const smallRule = (dungeon: string, door: string) => {
+    const analysed = logic.get(dungeon);
+    const rule = analysed?.doorRules.get(door);
+    return analysed === undefined || rule === undefined
+      ? strictSafe(keys, doors, dungeon)
+      : keys.doorRule(dungeon, rule, analysed);
+  };
   for (const exit of exits) {
     const door = doorNamed.get(exit.name);
     const dungeon = dungeons.get(exit.from);
@@ -247,7 +262,8 @@ export function addShuffledDoorRules(
         : doorNamed.get(door.controller);
     const kind = kindIn(controller ?? door, doors);
     if (kind === undefined) exit.req = and(exit.req, "maybe");
-    else if (kind === "small") exit.req = and(exit.req, smallRule(dungeon));
+    else if (kind === "small")
+      exit.req = and(exit.req, smallRule(dungeon, (controller ?? door).name));
     else if (kind === "big") exit.req = and(exit.req, keys.bigKeyRule(dungeon));
     else {
       const rule = KIND_RULES[kind];

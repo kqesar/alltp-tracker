@@ -184,10 +184,16 @@ const worldOf = (
 
 /**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
- * answer. Each is a key door read strict-safe (shuffle.ts): DR analyses the
- * layout it generated (KeyDoorShuffle.py) and asks fewer keys than all of
- * the dungeon's, which the notes cannot tell. The walk holds each to that:
- * every one turns `yes` once every key is held.
+ * answer. Below intensity 3 with vanilla entrances and coupled doors, the
+ * notes tell each layout whole and DR's own analysis of it is run
+ * (key-analysis/noted.ts): what stays is a rule's placement alternative,
+ * xd8m0E50c's Misery Mire (its big key behind a door, the `(Lock, big
+ * key)` branch DR's fill made true, maybe while the tracker cannot know
+ * where the big key lies). Elsewhere (intensity 3, shuffled entrances,
+ * decoupled doors) each is a key door read strict-safe (shuffle.ts): DR
+ * asks fewer keys than all of the dungeon's, from start regions its own
+ * random portal choices decide. The walk holds each to that: every one
+ * turns `yes` once every key is held.
  */
 const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   "avianart-1d6rBFvOW.json": {
@@ -209,20 +215,6 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     "10:Turtle Rock - Crystaroller Room": "maybe",
     "13:Palace of Darkness - Dark Maze - Bottom": "maybe",
   },
-  "avianart-7SFJ6YE0k.json": {
-    "5:Misery Mire - Prize": "maybe",
-    "5:Swamp Palace - Pot Row Pot Key": "maybe",
-    "9:Desert Palace - Desert Tiles 1 Pot Key": "maybe",
-    "9:Hyrule Castle - Boomerang Guard Key Drop": "maybe",
-    "9:Hyrule Castle - Key Rat Key Drop": "maybe",
-    "9:Thieves' Town - Spike Switch Pot Key": "maybe",
-    "10:Ganons Tower - Conveyor Cross Pot Key": "maybe",
-    "10:Swamp Drain": "maybe",
-    "11:Desert Palace - Boss": "maybe",
-    "11:Palace of Darkness - The Arena - Ledge": "maybe",
-    "12:Ice Palace - Spike Room": "maybe",
-    "14:Ice Palace - Prize": "maybe",
-  },
   "avianart-CURaRjUhM.json": {
     "2:Suspicious Maiden": "maybe",
     "4:Ganons Tower - Compass Room - Bottom Left": "maybe",
@@ -230,43 +222,11 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     "4:Palace of Darkness - Prize": "maybe",
     "5:Attic Cracked Floor": "maybe",
   },
-  "avianart-D14rBE1uq.json": {
-    "4:Swamp Palace - Boss": "maybe",
-    "5:Ice Palace - Prize": "maybe",
-    "5:Skull Woods - Prize": "maybe",
-    "6:Turtle Rock - Prize": "maybe",
-    "7:Agahnim 2": "maybe",
-  },
   "avianart-fKa1LLrNU.json": {
     "1:Misery Mire - Fishbone Pot Key": "maybe",
     "4:Desert Palace - Prize": "maybe",
   },
-  "avianart-giw5Y13cP.json": {
-    "3:Swamp Palace - Waterfall Room": "maybe",
-    "6:Ice Palace - Prize": "maybe",
-  },
-  "avianart-uMJQnKFrH.json": {
-    "5:Ganons Tower - Conveyor Star Pits Pot Key": "maybe",
-    "5:Ice Palace - Conveyor Key Drop": "maybe",
-    "5:Ice Palace - Prize": "maybe",
-    "5:Misery Mire - Spikes Pot Key": "maybe",
-    "5:Swamp Palace - Trench 2 Pot Key": "maybe",
-    "6:Hyrule Castle - Key Rat Key Drop": "maybe",
-    "6:Misery Mire - Prize": "maybe",
-    "6:Tower of Hera - Prize": "maybe",
-    "7:Eastern Palace - Dark Square Pot Key": "maybe",
-    "7:Ganons Tower - Mini Helmasaur Key Drop": "maybe",
-    "7:Turtle Rock - Pokey 2 Key Drop": "maybe",
-    "8:Misery Mire - Fishbone Pot Key": "maybe",
-    "8:Skull Woods - Prize": "maybe",
-    "9:Ganons Tower - Pre-Moldorm Chest": "maybe",
-  },
-  "avianart-w6Jx8UcW6.json": { "10:Agahnim 2": "maybe" },
-
-  "avianart-xd8m0E50c.json": {
-    "7:Ganons Tower - Conveyor Cross Pot Key": "maybe",
-    "7:Misery Mire - Prize": "maybe",
-  },
+  "avianart-xd8m0E50c.json": { "7:Misery Mire - Prize": "maybe" },
 };
 
 /** Every key and big key DR's items name, thirty of each small key. */
@@ -387,6 +347,32 @@ describe("DR's world on shuffled doors against real seeds", () => {
         ).toBe("yes");
       }
     });
+
+  it("runs DR's key analysis on each layout the notes tell whole, below intensity 3 alone", () => {
+    const analysed = Object.fromEntries(
+      logs.map((name) => {
+        const json = JSON.parse(read(name)) as Json;
+        const keyLogic = worldOf(json, logOf(json)).doorKeyLogic;
+        return [name, keyLogic === undefined ? -1 : keyLogic.size];
+      }),
+    );
+    // Every dungeon of a seed at intensity 1 or 2, coupled, entrances
+    // vanilla (but Standard's escape); none at 3, decoupled or with ER
+    expect(analysed).toEqual({
+      "avianart-1d6rBFvOW.json": 0,
+      "avianart-2uDU33UMw.json": 0,
+      "avianart-4L77dyaAg.json": -1,
+      "avianart-7SFJ6YE0k.json": 13,
+      "avianart-CURaRjUhM.json": 0,
+      "avianart-D14rBE1uq.json": 13,
+      "avianart-fKa1LLrNU.json": 0,
+      "avianart-giw5Y13cP.json": 13,
+      "avianart-gVe3VdZba.json": 0,
+      "avianart-uMJQnKFrH.json": 13,
+      "avianart-w6Jx8UcW6.json": 12,
+      "avianart-xd8m0E50c.json": 12,
+    });
+  });
 
   for (const name of logs)
     it(`says yes to no location of a later sphere (${name})`, () => {

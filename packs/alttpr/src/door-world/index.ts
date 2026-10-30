@@ -59,6 +59,7 @@ import {
   vanillaKeyLogic,
 } from "./key-analysis/analysis";
 import { portalsKnown } from "./key-analysis/dungeon";
+import { notedDoorKeyLogic } from "./key-analysis/noted";
 import {
   addKeyRules,
   DR_KEY_CODES,
@@ -224,6 +225,12 @@ export interface DrWorld extends FactWorld {
    * (shuffle.ts roomDungeons), by region name.
    */
   readonly roomDungeons?: ReadonlyMap<string, string>;
+  /**
+   * With shuffled doors, DR's key analysis of each layout the notes tell
+   * whole (key-analysis/noted.ts), by dungeon: the dungeons whose key
+   * doors ask its rules, every other strict-safe.
+   */
+  readonly doorKeyLogic?: ReadonlyMap<string, KeyLogic>;
 }
 
 /** The engine's id of the Menu, DR's start (BaseClasses.py:610-614). */
@@ -845,6 +852,25 @@ export function keyHoldingOf(settings: Settings): KeyHolding {
 /** The analyses run, by what they read of the settings. */
 const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
 
+/** What DR's key analysis reads of a run's settings and keys. */
+function analysisSettingsOf(all: Settings, keys: WorldKeys) {
+  return {
+    accessibility:
+      all.locationsAccessibility === true
+        ? ("locations" as const)
+        : ("items" as const),
+    bigKeyShuffle: all.wildBigKeys === true,
+    dropShuffleNone: all.dropShuffle !== true,
+    forcedDrops: new Set(keys.forcedDrops.map((d) => d.location)),
+    keyShuffle:
+      keys.holding === "universal"
+        ? ("universal" as const)
+        : keys.holding === "dungeon"
+          ? ("none" as const)
+          : ("wild" as const),
+  };
+}
+
 /**
  * DR's key analysis of the vanilla world for a run's settings
  * (key-analysis/, vanilla_key_logic, DoorShuffle.py:226-313), once per
@@ -865,22 +891,7 @@ export function drKeyLogic(
     drops: all.dropShuffle === true,
     pots: all.potKeys === true,
   });
-  const analysis = {
-    accessibility:
-      all.locationsAccessibility === true
-        ? ("locations" as const)
-        : ("items" as const),
-    bigKeyShuffle: all.wildBigKeys === true,
-    dropShuffleNone: all.dropShuffle !== true,
-    forcedDrops: new Set(keys.forcedDrops.map((d) => d.location)),
-    keyShuffle:
-      keys.holding === "universal"
-        ? ("universal" as const)
-        : keys.holding === "dungeon"
-          ? ("none" as const)
-          : ("wild" as const),
-    mode,
-  };
+  const analysis = { ...analysisSettingsOf(all, keys), mode };
   const id = JSON.stringify({
     ...analysis,
     flavor: data.flavor,
@@ -1281,28 +1292,50 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const trCase = isStatic
     ? turtleRockCase(turtleRockAccess(data, mode, version))
     : null;
+  // DR's analysis of each layout the notes tell whole (noted.ts), its
+  // entrances vanilla; pots and drops beyond the keys and the static key
+  // logic as for vanilla doors: none
+  const doorKeyLogic =
+    doors === undefined ||
+    dungeonOfRoom === undefined ||
+    options.entrances !== undefined ||
+    options.connections !== undefined ||
+    all.dungeonPotsAndDrops === true ||
+    all.staticKeyLogic === true
+      ? undefined
+      : notedDoorKeyLogic({
+          analysis: analysisSettingsOf(all, keys),
+          connections,
+          data,
+          doors,
+          dungeons: dungeonOfRoom,
+          mode,
+        });
+  const ruledKeys: WorldKeys =
+    doorRule === undefined
+      ? keys
+      : {
+          ...keys,
+          doorRule: (dungeon, rule, logic) =>
+            doorRule(dungeon, rule, logic, keys),
+        };
   if (doors !== undefined && dungeonOfRoom !== undefined)
     addShuffledDoorRules(
       data,
       exits,
       locations,
-      keys,
+      ruledKeys,
       doors,
       dungeonOfRoom,
       mode,
+      doorKeyLogic,
     );
   else
     addKeyRules(
       data,
       exits,
       locations,
-      doorRule === undefined
-        ? keys
-        : {
-            ...keys,
-            doorRule: (dungeon, rule, logic) =>
-              doorRule(dungeon, rule, logic, keys),
-          },
+      ruledKeys,
       mode,
       isStatic ? staticLogicOf(data, analysis, trCase, version) : analysis,
     );
@@ -1464,5 +1497,6 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
     facts,
     locationIds,
     ...(dungeonOfRoom === undefined ? {} : { roomDungeons: dungeonOfRoom }),
+    ...(doorKeyLogic === undefined ? {} : { doorKeyLogic }),
   };
 }

@@ -1237,19 +1237,42 @@ Sanctuary's mirror route leads, from intensity 3, to the lobby of the
 portal `cross_dungeon_clean_up` picks: Sanctuary's own in `basic` or while
 Sanctuary stays the castle's, the only portal of its dungeon otherwise, and
 none where DR picks at random among several (`DoorShuffle.py:1005-1028`).
-DR analyses the key doors of each layout it generated, which the notes
-tell only in part: a key door asks every key of its dungeon or `maybe`
-(strict-safe), the vanilla count in `basic` and the count the player noted
-in a pool (`shuffle_small_key_doors` moves it, `DoorShuffle.py:2139-2145`),
-`maybe` until noted. That stays so in this port, even on a dungeon whose
-every door is noted (the owner's decision of 2026-10-30): DR's analysis
-(`KeyDoorShuffle.py`, `analyze_dungeon`) reads the whole layout it built
-and where its keys may lie, which a player knows only once every door,
-kind and lobby of the dungeon is noted, and porting it onto notes is a
-step of its own. Strict-safe costs precision only: a key door reads
-`maybe` where DR's analysis may say yes with fewer keys (the door contract
-lists each, all `yes` once every key is held), and never `yes` where DR
-does not. The door kinds read the widest of DR's settings, as neither
+DR analyses the key doors of each layout it generated, once, as it picks
+them (`find_valid_combination`, `DoorShuffle.py:2753-2812`, in
+`shuffle_small_key_doors` after the traps and big key doors):
+`build_key_layout` (`KeyDoorShuffle.py:234-242`) over the layout's rooms,
+its key doors (`build_pair_list`, `:3038-3049`), its chest keys
+(`calc_max_chests`, `:262-265`: the vanilla dungeon's in `basic`, the key
+doors less the forced drops in a pool) and the start regions
+`filter_start_regions` keeps (`:2332-2365`: each portal lobby of the
+layout but a destination portal's, the lobbies a rules-free walk of the
+world reaches, `find_accessible_entrances` `:3439-3479`, and the drops
+below accessible overworld), then `analyze_dungeon`.
+`key-analysis/noted.ts` (`notedDoorKeyLogic`) runs that analysis, the
+vanilla port's own (`analyzeDungeon` over a `keyWorld` given the noted
+layout: links as `dest`, kinds, traps, rooms' dungeons), on each dungeon
+whose inputs the notes all tell, and its key doors ask DR's rules as with
+vanilla doors (`keys.doorRule`; a key door with no rule of it keeps the
+strict-safe one). Told means: intensity 1 or 2 (each portal on its own
+door, the destinations fixed by `link_doors_prep`, `:100-108`), coupled
+doors, vanilla entrances, every door of the layout linked and of a known
+kind, its drops in its layout, and each lobby the walk reaches or a walk
+that crossed no door not noted; Standard's castle aside (its courtyard
+start, `std_flag`). Anywhere else a key door asks every key of its
+dungeon or `maybe` (strict-safe), the vanilla count in `basic` and the
+count the player noted in a pool (`shuffle_small_key_doors` moves it,
+`DoorShuffle.py:2139-2145`), `maybe` until noted: from intensity 3 DR
+marks portals as destinations at random (`choose_portals` `:560-610`,
+`analyze_portals` `:715-733` with shuffled entrances), which no note tells,
+and its start regions follow them. A layout DR could not walk (notes it
+never made) stays strict-safe rather than failing. Strict-safe costs
+precision only: a key door reads `maybe` where DR's analysis may say yes
+with fewer keys (the door contract lists each, all `yes` once every key is
+held), and never `yes` where DR does not. `shuffled.spec.ts` holds the
+plumbing: a layout noted as the vanilla one reads DR's vanilla analysis
+rule for rule, but for `vanilla_key_logic`'s hand adjustments, which DR
+makes for vanilla doors alone; `key-model.spec.ts` holds the analysed
+model of the basic door seeds to every placement its fill may make. The door kinds read the widest of DR's settings, as neither
 `door_type_mode` nor `trap_door_mode` is a run setting: `kindShuffled`
 takes every kind any `door_type_mode` may give or take (original, big,
 all, chaos) and the trap mode as `oneway` (`doorShuffleSettingsOf` in the
@@ -3230,8 +3253,12 @@ keys as its counter shows them, its chests' and the forced drops its rooms
 hold), and its entrances where they are shuffled, and holds: each link a door the shuffle relinks paired with one the
 picker offers, each lobby and kind one the model allows, each room in the
 dungeon the log puts its locations in (` @ Dungeon`), and the playthrough
-both ways. Not `yes` where DR says reachable: only key doors read
-strict-safe, listed and each proved `yes` once every key is held; `yes` too
-early: none (a flood switch waits on its pot's key as DR's spheres do, above).
+both ways. The six seeds below intensity 3 with vanilla entrances and
+coupled doors have every dungeon analysed (`notedDoorKeyLogic`; the escape
+of the two Standard ones aside), and their key layouts' chest keys match
+the logs' keys. Not `yes` where DR says reachable: on those, one rule's
+placement alternative (xd8m0E50c's Misery Mire, its big key behind a
+door); elsewhere key doors read strict-safe; each listed and proved `yes`
+once every key is held; `yes` too early: none (a flood switch waits on its pot's key as DR's spheres do, above).
 The walks hold no item for a forced drop's key, which the world reads as a
 fact.

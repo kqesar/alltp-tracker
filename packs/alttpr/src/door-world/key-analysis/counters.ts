@@ -375,10 +375,21 @@ export function findMaxCounter(layout: KeyLayout): KeyCounter {
 
 /**
  * A dungeon's key layout and its counters (build_key_layout,
- * KeyDoorShuffle.py:234-242, then create_key_counters), on the vanilla
- * small key doors.
+ * KeyDoorShuffle.py:234-242, then create_key_counters): on the vanilla
+ * small key doors, or with `noted` a door-shuffled layout's own key doors,
+ * chest keys (calc_max_chests, :262-265, of the forced drops counted) and
+ * start regions (noted.ts).
  */
-export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
+export function keyLayout(
+  world: KeyWorld,
+  dungeon: string,
+  noted?: {
+    readonly proposal: readonly (KDoor | readonly [KDoor, KDoor])[];
+    /** calc_max_chests of the forced drops counted; undefined, basic's. */
+    readonly maxChests: (maxDrops: number) => number | undefined;
+    readonly starts: readonly KRegion[];
+  },
+): KeyLayout {
   const regions = [...world.regions.values()].filter(
     (r) => r.dungeon === dungeon,
   );
@@ -387,11 +398,13 @@ export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
     if (door === undefined) throw new RangeError(`No door ${name}`);
     return door;
   };
-  const proposal = (DEFAULT_SMALL_KEY_DOORS[dungeon] ?? []).map((entry) =>
-    typeof entry === "string"
-      ? doorNamed(entry)
-      : ([doorNamed(entry[0]), doorNamed(entry[1])] as const),
-  );
+  const proposal =
+    noted?.proposal ??
+    (DEFAULT_SMALL_KEY_DOORS[dungeon] ?? []).map((entry) =>
+      typeof entry === "string"
+        ? doorNamed(entry)
+        : ([doorNamed(entry[0]), doorNamed(entry[1])] as const),
+    );
   const flatProposal = proposal.flatMap((entry) =>
     Array.isArray(entry) ? [...entry] : [entry as KDoor],
   );
@@ -423,13 +436,13 @@ export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
     explorable,
     flatProposal,
     foundDoors: new Set(),
-    maxChests: chestKeys,
+    maxChests: noted?.maxChests(maxDrops) ?? chestKeys,
     maxDrops,
     proposal,
     proposalSet: new Set(flatProposal),
     regions,
     specialBig: specialBigKeyDoors(mode),
-    starts: world.starts.get(dungeon) ?? [],
+    starts: noted?.starts ?? world.starts.get(dungeon) ?? [],
     world,
   };
   createKeyCounters(layout);

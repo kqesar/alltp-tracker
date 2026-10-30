@@ -14,7 +14,16 @@ import {
   vanillaKind,
 } from "./doors";
 import { DR_DATA } from "./dr-data";
-import { DR_DEFAULTS, drLocationId, drWorld, KEY_ITEMS } from "./index";
+import {
+  DR_DEFAULTS,
+  drKeyLogic,
+  drLocationId,
+  drWorld,
+  KEY_ITEMS,
+} from "./index";
+import type { KeyLogic } from "./key-analysis/analysis";
+import { ALTERNATIVE_CRYSTAL_DOORS, UGLY_SMALLS } from "./keys";
+import { OWR_DATA } from "./owr-data";
 
 type Mode = "open" | "standard";
 
@@ -175,26 +184,34 @@ describe("DR's world on noted doors", () => {
     });
     expect(world.roomDungeons?.get("GT Big Chest")).toBe("Eastern Palace");
     expect(world.roomDungeons?.get("Eastern Lobby")).toBe("Eastern Palace");
-    // A pool's key doors wait for the dungeon's count, noted
+    // From intensity 3 (lobbies DR picks, portals it marks at random) a
+    // pool's key doors are strict-safe: they wait for the dungeon's count
     const all = everything(settingsFromUpstream("open"));
+    const s3 = shuffle({ intensity: 3, shuffle: "crossed" });
+    const notes3 = vanillaNotes(s3);
     const counted = drWorld(settings("open"), {
       data: DR_DATA,
       doors: {
-        notes: { ...notes, keys: { "Eastern Palace": 2 } },
-        settings: s,
+        notes: { ...notes3, keys: { "Eastern Palace": 2 } },
+        settings: s3,
       },
     });
     const location = drLocationId("Eastern Palace - Big Key Chest");
-    expect(
-      answers(
-        drWorld(settings("open"), {
-          data: DR_DATA,
-          doors: { notes, settings: s },
-        }),
-        all,
-      ).get(location),
-    ).toBe("maybe");
+    const uncounted = drWorld(settings("open"), {
+      data: DR_DATA,
+      doors: { notes: notes3, settings: s3 },
+    });
+    expect(uncounted.doorKeyLogic?.size).toBe(0);
+    expect(answers(uncounted, all).get(location)).toBe("maybe");
     expect(answers(counted, all).get(location)).toBe("yes");
+    // Below 3, the layout noted whole, DR's own analysis asks its keys
+    // with no count noted (the key doors' own, calc_max_chests)
+    const analysed = drWorld(settings("open"), {
+      data: DR_DATA,
+      doors: { notes, settings: s },
+    });
+    expect(analysed.doorKeyLogic?.has("Eastern Palace")).toBe(true);
+    expect(answers(analysed, all).get(location)).toBe("yes");
   });
 
   it("floods a trench only once its pot is reached, maybe while its item is unknown", () => {
@@ -226,5 +243,113 @@ describe("DR's world on noted doors", () => {
     });
     const all = everything(settingsFromUpstream("open"));
     expect(answers(world, all).get(COMPASS)).toBe("no");
+  });
+});
+
+describe("DR's key analysis on a noted door shuffle", () => {
+  /** Each door rule's numbers, by door: what a key door asks. */
+  const rulesOf = (
+    logic: KeyLogic | undefined,
+    leave: readonly string[] = [],
+  ) =>
+    Object.fromEntries(
+      [...(logic?.doorRules ?? [])]
+        .filter(([door]) => !leave.includes(door))
+        .map(([door, rule]) => [
+          door,
+          [rule.smallKeyNum, rule.worstCase, rule.allowSmall, rule.lockNum],
+        ]),
+    );
+  /** A layout noted where the vanilla world has it, its key doors DR's. */
+  const vanillaLayout = (s: DoorShuffleSettings): DoorNotes => {
+    const notes = vanillaNotes(s);
+    // unmark_ugly_smalls (DoorShuffle.py:476-480): no key doors in DR
+    const kinds = { ...notes.kinds };
+    for (const name of UGLY_SMALLS) kinds[doorId(name)] = "normal";
+    return { ...notes, kinds };
+  };
+
+  it("reads a layout noted as the vanilla one as DR's vanilla analysis, but its hand adjustments", () => {
+    const s = shuffle();
+    const world = drWorld(settings("open"), {
+      data: DR_DATA,
+      doors: { notes: vanillaLayout(s), settings: s },
+    });
+    const vanilla = drKeyLogic(DR_DATA, settings("open"));
+    expect([...(world.doorKeyLogic?.keys() ?? [])]).toEqual([
+      ...vanilla.keys(),
+    ]);
+    // vanilla_key_logic's own (DoorShuffle.py:282-316), for vanilla doors
+    // alone: the escape's three doors, the Palace of Darkness's front door,
+    // Misery Mire's blue barriers
+    const adjusted: Readonly<Record<string, readonly string[]>> = {
+      "Hyrule Castle": [
+        "Sewers Secret Room Key Door S",
+        "Hyrule Dungeon Map Room Key Door S",
+        "Sewers Dark Cross Key Door N",
+      ],
+      "Misery Mire": [...ALTERNATIVE_CRYSTAL_DOORS],
+      "Palace of Darkness": ["PoD Middle Cage N"],
+    };
+    for (const [dungeon, logic] of vanilla) {
+      const noted = world.doorKeyLogic?.get(dungeon);
+      expect(rulesOf(noted, adjusted[dungeon]), dungeon).toEqual(
+        rulesOf(logic, adjusted[dungeon]),
+      );
+      expect(noted?.layout.maxChests, dungeon).toBe(logic.layout.maxChests);
+    }
+    // Where DR's hand moves a door, the analysis's own number stands
+    expect(
+      world.doorKeyLogic
+        ?.get("Palace of Darkness")
+        ?.doorRules.get("PoD Middle Cage N")?.smallKeyNum,
+    ).toBe(6);
+  });
+
+  it("leaves a dungeon strict-safe while a door of its layout or a kind is not noted", () => {
+    const s = shuffle();
+    const notes = vanillaLayout(s);
+    const build = (more: Partial<DoorNotes>) =>
+      drWorld(settings("open"), {
+        data: DR_DATA,
+        doors: { notes: { ...notes, ...more }, settings: s },
+      }).doorKeyLogic;
+    // A link left out, both its ways
+    const links: Record<string, string> = { ...notes.links };
+    const door = doorId("Eastern Big Key NE");
+    const partner = links[door] ?? "";
+    delete links[door];
+    delete links[partner];
+    const unlinked = build({ links });
+    expect(unlinked?.has("Eastern Palace")).toBe(false);
+    expect(unlinked?.has("Tower of Hera")).toBe(true);
+    const kinds: Record<string, DoorKindNote> = { ...notes.kinds };
+    delete kinds[doorId("Hera Lobby Key Stairs")];
+    expect(build({ kinds })?.has("Tower of Hera")).toBe(false);
+  });
+
+  it("runs no analysis from intensity 3, with decoupled doors, shuffled entrances or the fork's world", () => {
+    const run = (s: DoorShuffleSettings, more = {}) =>
+      drWorld(settings("open"), {
+        data: DR_DATA,
+        doors: { notes: vanillaLayout(s), settings: s },
+        ...more,
+      }).doorKeyLogic;
+    expect(run(shuffle({ intensity: 3 }))?.size).toBe(0);
+    expect(run(shuffle({ decoupled: true }))?.size).toBe(0);
+    expect(run(shuffle({ shuffle: "crossed" }))?.size).toBe(13);
+    // Standard's escape starts from its courtyard and Zelda (std_flag)
+    expect(
+      drWorld(settings("standard"), {
+        data: DR_DATA,
+        doors: { notes: vanillaLayout(shuffle()), settings: shuffle() },
+      }).doorKeyLogic?.has("Hyrule Castle"),
+    ).toBe(false);
+    expect(
+      drWorld(settings("open"), {
+        data: OWR_DATA,
+        doors: { notes: vanillaLayout(shuffle()), settings: shuffle() },
+      }).doorKeyLogic?.size,
+    ).toBe(0);
   });
 });

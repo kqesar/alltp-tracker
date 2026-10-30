@@ -170,7 +170,7 @@ const DUNGEON_PORTALS: Readonly<Record<string, readonly string[]>> = {
 };
 
 /** dungeon_drops (DungeonGenerator.py:4239-4242). */
-const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
+export const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
   "Hyrule Castle": ["Sewers Rat Path"],
   "Skull Woods": [
     "Skull Pot Circle",
@@ -258,6 +258,26 @@ export interface KeyAnalysisSettings {
    * default.
    */
   readonly screens?: OwrScreens;
+  /**
+   * A door shuffle's noted layout (noted.ts): what DR's analysis reads of
+   * the layout it generated where the vanilla tables stood. Its starts are
+   * worked out apart (noted.ts), so the world's are left empty.
+   */
+  readonly layout?: NotedKeyLayout;
+}
+
+/** What a door-shuffled world's notes say in place of the vanilla tables. */
+export interface NotedKeyLayout {
+  /** A door's key kind and whether it shuts, as the run has it. */
+  readonly kindOf: (name: string) => {
+    readonly smallKey: boolean;
+    readonly bigKey: boolean;
+    readonly blocked: boolean;
+  };
+  /** The door each shuffled door is linked to (connect_doors' dest). */
+  readonly dests: ReadonlyMap<string, string>;
+  /** Each dungeon room's dungeon (roomDungeons); a forced drop's key too. */
+  readonly dungeons: ReadonlyMap<string, string>;
 }
 
 /** The crystal states DR's walk carries (CrystalBarrier). */
@@ -321,7 +341,7 @@ export function rstrip(text: string, chars: string): string {
 }
 
 /** The exits of each region, the dynamic ones after the static. */
-function exitsByRegion(
+export function exitsByRegion(
   data: DrData,
   mode: DrMode,
   screens: OwrScreens = screensOf(mode),
@@ -582,26 +602,36 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
   );
   const logical = logicalDoors(inaccessible, target, exits, mode);
 
+  const { layout } = settings;
+  // A room's dungeon: its layout's under a door shuffle, whose forced drops
+  // hold that dungeon's keys (update_forced_keys, DoorShuffle.py:1039-1050)
+  const dungeonOf = (region: string, own: string | null) =>
+    layout?.dungeons.get(region) ?? own;
   const forcedOf = new Map(
     keyDropsOf(data)
       .filter((d) => settings.forcedDrops.has(d.location))
-      .map((d) => [d.location, { big: d.big, dungeon: d.dungeon }]),
+      .map((d) => [
+        d.location,
+        { big: d.big, dungeon: dungeonOf(d.region, d.dungeon) ?? d.dungeon },
+      ]),
   );
   const regions = new Map<string, KRegion>();
-  for (const r of data.regions)
+  for (const r of data.regions) {
+    const dungeon = dungeonOf(r.name, r.dungeon);
     regions.set(r.name, {
       doors: [],
-      dungeon: r.dungeon,
+      dungeon,
       isDungeon: r.type === "dungeon",
       locations: r.locations
         .filter((name) => r.locationModes?.[name]?.includes(mode) ?? true)
         .map((name) => ({
-          dungeon: r.dungeon,
+          dungeon,
           forced: forcedOf.get(name) ?? null,
           name,
         })),
       name: r.name,
     });
+  }
 
   // The doors: Doors.py's, then a logical door for each exit
   // add_inaccessible_doors names that is none
@@ -620,19 +650,23 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
             | string
             | undefined)
         : undefined);
+    // A noted layout's kinds, as the run has them when DR analyses it
+    const noted = layout?.kindOf(d.name);
     doors.set(d.name, {
       // unmark_ugly_smalls (DoorShuffle.py:476-480)
-      bigKey: d.bigKey === true,
+      bigKey: noted?.bigKey ?? d.bigKey === true,
       blocked:
-        d.trapped === true && !data.portals.some((p) => p.door === d.name),
+        noted?.blocked ??
+        (d.trapped === true && !data.portals.some((p) => p.door === d.name)),
       controller: null,
       crystal: d.crystal ?? null,
       dest: null,
       name: d.name,
       reqEvent: event ?? null,
       smallKey:
-        d.smallKey === true &&
-        (!UGLY_SMALLS.has(d.name) || proposed.has(d.name)),
+        noted?.smallKey ??
+        (d.smallKey === true &&
+          (!UGLY_SMALLS.has(d.name) || proposed.has(d.name))),
       to: null,
       type: d.type,
     });
@@ -652,6 +686,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
         type: "Logical",
       });
   const dest = destinations(data);
+  for (const [a, b] of layout?.dests ?? []) dest.set(a, b);
   for (const door of doors.values()) {
     const to = target(door.name);
     door.to = to === undefined ? null : (regions.get(to) ?? null);
@@ -667,14 +702,10 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
       if (door !== undefined) region.doors.push(door);
     }
 
-  const starts = startRegions(
-    settings,
-    regions,
-    entrances,
-    inaccessible,
-    target,
-    exits,
-  );
+  const starts =
+    layout === undefined
+      ? startRegions(settings, regions, entrances, inaccessible, target, exits)
+      : new Map<string, KRegion[]>();
   return { doors, inaccessible, regions, settings, starts };
 }
 
