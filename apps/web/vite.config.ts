@@ -17,6 +17,23 @@ const DESKTOP_OUT = "dist-desktop";
  */
 const SITE_ONLY = ["models", "social", "robots.txt", "sitemap.xml"];
 
+/**
+ * The files the service worker caches only once a page fetches them, so
+ * players who never need them never download them: voice commands' engine,
+ * the SMZ3 board's map of Zebes, reading a spoiler log (its worker and each
+ * game's parser, `review-*`), and code only some runs load (`ondemand-*`:
+ * the Door Randomizer's world, which the lazy guard holds there).
+ */
+const ON_DEMAND = /^assets\/(vosk[.-]|smz3\/|review-|ondemand-)/;
+
+/** Whether a chunk holds the Door Randomizer's world (logic/doorWorld.ts). */
+const doorWorldChunk = (chunk: {
+  facadeModuleId: string | null;
+  moduleIds: readonly string[];
+}) =>
+  chunk.facadeModuleId?.endsWith("/logic/doorWorld.ts") === true ||
+  chunk.moduleIds.some((id) => id.includes("/door-world/"));
+
 const withoutSiteOnlyFiles = (): Plugin => ({
   apply: "build",
   closeBundle: () => {
@@ -48,17 +65,24 @@ export default defineConfig(({ mode }) => {
           // A game pack's spoiler parser (its `./spoiler` entry) is read only
           // when a player reviews a run, in the review worker or, where there
           // is none, in place: its chunk takes the worker's `review-` name so
-          // the service worker keeps it out of every install
-          chunkFileNames: (chunk: { facadeModuleId: string | null }) =>
+          // the service worker keeps it out of every install; so does DR's
+          // world, which only a DR run loads, under `ondemand-`
+          chunkFileNames: (chunk: {
+            facadeModuleId: string | null;
+            moduleIds: readonly string[];
+          }) =>
             chunk.facadeModuleId?.includes("/spoiler/parse.")
               ? "assets/review-[name]-[hash].js"
-              : "assets/[name]-[hash].js",
+              : doorWorldChunk(chunk)
+                ? "assets/ondemand-[name]-[hash].js"
+                : "assets/[name]-[hash].js",
         },
       },
     },
     plugins: [
       react(),
-      // Code only some runs load stays out of every player's first download
+      // Code only some runs load stays out of every player's first download,
+      // and out of what the service worker caches at install
       lazyGuard({
         lazy: [
           {
@@ -67,6 +91,8 @@ export default defineConfig(({ mode }) => {
             what: "The Door Randomizer's world",
           },
         ],
+        // The desktop app has no worker
+        ...(desktop ? {} : { onDemand: ON_DEMAND }),
         roots: ["src/games/alttpr/module.ts"],
       }),
       desktop
@@ -99,13 +125,8 @@ export default defineConfig(({ mode }) => {
                   module: "src/games/smz3/module.ts",
                 },
               },
-              // Voice commands' engine, and the SMZ3 board's map of Zebes:
-              // fetched the first time a page asks, so players of another
-              // game never do
-              // Reading a spoiler log: its worker and each game's parser
-              // (`review-*`, named under `worker` below), loaded when a
-              // player reviews a run
-              onDemand: /^assets\/(vosk[.-]|smz3\/|review-)/,
+              // Fetched the first time a page asks (`ON_DEMAND`)
+              onDemand: ON_DEMAND,
               // Never at install: the speech model, and what only crawlers
               // and link previews read (the link preview images, the game
               // pages, robots.txt and the sitemap), which no player's install

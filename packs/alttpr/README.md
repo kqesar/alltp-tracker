@@ -1003,8 +1003,10 @@ imported as data (below), the world is built from them with DR's key
 analysis (`KeyDoorShuffle.py`) and held to DR's tests and to real seeds'
 playthroughs; the app solves a DR run with vanilla doors and entrances in
 it, through the package's `./door-world` export, which only its lazy chunk
-imports (`apps/web/src/games/alttpr/logic/doorWorld.ts`), so no other run
-downloads DR's rules.
+imports (`apps/web/src/games/alttpr/logic/doorWorld.ts`), named on demand
+(`ondemand-`) so the site's service worker caches it only once a DR run
+fetches it: no other run downloads DR's rules, at first load or at a
+service worker's install.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
 DR 1.5.6 (`4da73127`, the version Hyrule Town Hall and SahasrahBot ran for

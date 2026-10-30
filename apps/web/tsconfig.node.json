@@ -23,6 +23,7 @@
     "vitest.shared.ts",
     "playwright.config.ts",
     "lazy-guard/plugin.ts",
+    "lazy-guard/plugin.spec.ts",
     "seo/*.ts",
     "sw/plugin.ts"
   ]
