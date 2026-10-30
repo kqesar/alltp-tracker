@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import DoorsPanel from "@/games/alttpr/components/map/doors/DoorsPanel";
@@ -12,6 +12,12 @@ const run = (change: Partial<RunSettings>) =>
     useGameStore.getState().applyRun("door-randomizer", { ...DR, ...change }),
   );
 const store = () => useGameStore.getState();
+/** A door's link select once its targets are in (a deferred render). */
+const linkSelect = async (door: string) => {
+  const select = screen.getByTestId(`door-link-${door}`);
+  await within(select).findByRole("option", { name: "Eastern Cannonball S" });
+  return select;
+};
 
 describe("the Doors tab", () => {
   beforeEach(() => {
@@ -47,7 +53,7 @@ describe("the Doors tab", () => {
     await user.selectOptions(screen.getByTestId("doors-dungeon"), [
       "Eastern Palace",
     ]);
-    const link = screen.getByTestId("door-link-eastern-lobby-bridge-n");
+    const link = await linkSelect("eastern-lobby-bridge-n");
     expect(link).toHaveAccessibleName("Eastern Lobby Bridge N: leads to");
     await user.selectOptions(link, ["eastern-cannonball-s"]);
     // The note alone is kept: the way back is derived while coupled
@@ -82,10 +88,9 @@ describe("the Doors tab", () => {
     await user.selectOptions(screen.getByTestId("doors-dungeon"), [
       "Eastern Palace",
     ]);
-    await user.selectOptions(
-      screen.getByTestId("door-link-eastern-lobby-bridge-n"),
-      ["eastern-cannonball-s"],
-    );
+    await user.selectOptions(await linkSelect("eastern-lobby-bridge-n"), [
+      "eastern-cannonball-s",
+    ]);
     expect(screen.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
       "",
     );
@@ -103,10 +108,9 @@ describe("the Doors tab", () => {
     ]);
     // Nothing linked: nothing to note plain
     expect(screen.queryByTestId("doors-plain")).toBeNull();
-    await user.selectOptions(
-      screen.getByTestId("door-link-eastern-lobby-bridge-n"),
-      ["eastern-cannonball-s"],
-    );
+    await user.selectOptions(await linkSelect("eastern-lobby-bridge-n"), [
+      "eastern-cannonball-s",
+    ]);
     const plain = screen.getByTestId("doors-plain");
     expect(plain).toHaveAccessibleName(
       "Note the 1 linked door of Eastern Palace plain",

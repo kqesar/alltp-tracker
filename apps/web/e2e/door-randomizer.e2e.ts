@@ -132,6 +132,47 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   );
 });
 
+/** A dungeon picked in a crossed shuffle's Doors tab: its first paint. */
+const DOORS_FIRST_PAINT_MS = 200;
+
+test("the Doors tab shows a crossed shuffle's biggest dungeon at once", async ({
+  page,
+}) => {
+  await openDoorShuffle(page);
+  // Ganon's Tower: 104 rows, some 6,800 options in all (440 ms to show
+  // them in one render, measured): the options come in a deferred render
+  const timing = await page.evaluate(async () => {
+    const select = document.querySelector<HTMLSelectElement>(
+      '[data-testid="doors-dungeon"]',
+    );
+    if (select === null) throw new Error("no dungeon select");
+    const long: number[] = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) long.push(entry.duration);
+    });
+    observer.observe({ type: "longtask" });
+    const start = performance.now();
+    select.value = "Ganons Tower";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((done) =>
+      requestAnimationFrame(() => setTimeout(done, 0)),
+    );
+    const first = performance.now() - start;
+    await new Promise((done) => setTimeout(done, 1000));
+    observer.disconnect();
+    return { first, longest: Math.max(0, ...long) };
+  });
+  console.info(
+    `Doors tab, Ganon's Tower: first paint ${timing.first.toFixed(0)} ms, longest task ${timing.longest.toFixed(0)} ms`,
+  );
+  expect(timing.first).toBeLessThan(DOORS_FIRST_PAINT_MS);
+  expect(timing.longest).toBeLessThan(DOORS_FIRST_PAINT_MS);
+  // Every target offered once the deferred render is in
+  await expect(
+    page.getByTestId("door-link-gt-lobby-s").locator("option"),
+  ).not.toHaveCount(1);
+});
+
 for (const width of WIDTHS) {
   test(`the Doors tab fits at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ height: 900, width });

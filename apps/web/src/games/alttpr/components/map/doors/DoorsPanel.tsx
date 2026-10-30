@@ -13,7 +13,14 @@ import {
   shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
 import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
-import { memo, useId, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useDeferredValue,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { linkChange, linkOf } from "@/games/alttpr/logic/doorNotes";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -91,14 +98,23 @@ const DoorRow = memo(
       linkOf(state.doors.links, id, coupled),
     );
     const noteDoors = useGameStore((state) => state.noteDoors);
+    // A crossed shuffle offers a door of Ganon's Tower some 70 targets, a
+    // dungeon thousands in all (440 ms to show it, measured): a row first
+    // shows the target noted alone, its other options in a render React
+    // defers, so a dungeon picked shows at once
+    const full = useDeferredValue(true, false);
     const byDungeon = useMemo(() => {
+      if (!full) return [];
       const groups = new Map<string, Door[]>();
       for (const other of targets) {
         const dungeon = homeDungeonOf(other, DR_DATA) ?? "";
         groups.set(dungeon, [...(groups.get(dungeon) ?? []), other]);
       }
       return [...groups];
-    }, [targets]);
+    }, [full, targets]);
+    const noted = full
+      ? undefined
+      : targets.find((other) => doorId(other.name) === target);
     return (
       <li className="door-row" data-testid={`door-row-${id}`}>
         <span className="door-row__name">{door.name}</span>
@@ -120,6 +136,9 @@ const DoorRow = memo(
           value={target ?? ""}
         >
           <option value="">? Not known</option>
+          {noted !== undefined && (
+            <option value={doorId(noted.name)}>{noted.name}</option>
+          )}
           {byDungeon.map(([dungeon, doors]) => (
             <optgroup key={dungeon} label={dungeonText(dungeon)}>
               {doors.map((other) => (
