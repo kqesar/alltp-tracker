@@ -384,9 +384,12 @@ describe("the Door Randomizer's world (door-world)", () => {
   it("puts a boss's items behind its map and compass when restricted", () => {
     const held = { bigKeyP1: 1, bow: 1, heartContainer: 3, keyP1: 2, lamp: 1 };
     const boss = drLocationId("Eastern Palace - Boss");
+    // Maps and compasses shuffled: the player records them
     const restricted = drWorld({
       ...settings("open"),
       restrictBossItems: true,
+      wildCompasses: true,
+      wildMaps: true,
     });
     expect(solveFacts(drWorld(settings("open")), held).location(boss)).toBe(
       "yes",
@@ -396,6 +399,12 @@ describe("the Door Randomizer's world (door-world)", () => {
       solveFacts(restricted, { ...held, compassP1: 1, mapP1: 1 }).location(
         boss,
       ),
+    ).toBe("yes");
+    // Kept in their dungeons, unrecorded: they may be in hand, never yes
+    const kept = drWorld({ ...settings("open"), restrictBossItems: true });
+    expect(solveFacts(kept, held).location(boss)).toBe("maybe");
+    expect(
+      solveFacts(kept, { ...held, compassP1: 1, mapP1: 1 }).location(boss),
     ).toBe("yes");
   });
 

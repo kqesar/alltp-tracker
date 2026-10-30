@@ -1221,7 +1221,9 @@ room that a blank state does not pass, read from the world's rules so far,
 a stricter reading where DR added one later), set on the tapestry and her
 drop-off. The rest of `unported` but the key logic and the shuffles' code
 is ported in `index.ts`: Murahdahla in a triforce hunt, a boss's items
-behind its map and compass (`restrictBossItems`), Mire's spikes' key pot
+behind its map and compass (`restrictBossItems`; `maybe` without them
+while the maps and compasses stay in their dungeons, which the player does
+not record), Mire's spikes' key pot
 behind the spikes or `maybe` once pots shuffle (`potShuffle`); a big key a
 vanilla drop holds (the escape's) stands for the item wherever a rule reads
 it. A fact whose location is reached at `maybe` only is read at `maybe`

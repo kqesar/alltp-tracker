@@ -66,6 +66,20 @@ export type OverworldCrossed = "none" | "grouped" | "polar" | "unrestricted";
 /** OWR's flute spots (`--ow_fluteshuffle`). */
 export type FluteShuffle = "vanilla" | "balanced" | "random";
 
+/**
+ * DR's restricted boss items (`--restrict_boss_items`, args.json): any but
+ * none puts each prize, boss and Agahnim 2 behind its dungeon's map and
+ * compass (Rules.py:806-822).
+ */
+export type RestrictBossItems = "none" | "mapcompass" | "dungeon";
+
+/**
+ * DR's pyramid hole (`--openpyramid`, args.json): `auto` opens it for the
+ * crystals, trinity and ganonhunt goals with vanilla or dungeon entrances
+ * alone (is_pyramid_open, BaseClasses.py:299-311).
+ */
+export type OpenPyramid = "auto" | "yes" | "no";
+
 /** The settings a DR run adds, each absent from an alttpr.com run. */
 export type DoorRunSettings = {
   /** DR's generator; absent for an alttpr.com seed. */
@@ -84,6 +98,18 @@ export type DoorRunSettings = {
   owWhirlpool?: boolean;
   owFluteShuffle?: FluteShuffle;
   bonkDrops?: boolean;
+  /**
+   * The settings DR's rules read that no ROM table states: the bomb bag
+   * (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
+   * BaseClasses.py:1208-1209), the legacy pot shuffle (`--shufflepots`:
+   * Mire's spikes' key pot may move onto the spikes, Rules.py:527-530), the
+   * boss items and the pyramid hole. A spoiler's meta names them; a run
+   * read from its ROM alone holds DR's defaults until the player sets them.
+   */
+  bombBag?: boolean;
+  potShuffle?: boolean;
+  restrictBossItems?: RestrictBossItems;
+  openPyramid?: OpenPyramid;
 };
 
 /** A DR setting's key. */
@@ -96,17 +122,21 @@ export type DoorSettings = Required<Omit<DoorRunSettings, "doorEntrances">> & {
 
 /** DR's defaults (args.json): what an absent field of a DR run means. */
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
+  bombBag: false,
   bonkDrops: false,
   doorShuffle: "vanilla",
   dropShuffle: "none",
   enemyShuffle: "none",
   keyLogic: "partial",
+  openPyramid: "auto",
   owCrossed: "none",
   owFluteShuffle: "vanilla",
   owLayout: "vanilla",
   owMixed: false,
   owWhirlpool: false,
+  potShuffle: false,
   pottery: "none",
+  restrictBossItems: "none",
   shopsanity: false,
   takeAny: "none",
 };
@@ -127,6 +157,10 @@ export const doorOf = (settings: DoorRunSettings): DoorSettings | null =>
 
 /** Each DR setting's options, in args.json's order, with their words. */
 export const DOOR_OPTIONS = {
+  bombBag: [
+    [false, "Off"],
+    [true, "On"],
+  ],
   bonkDrops: [
     [false, "Off"],
     [true, "Shuffled"],
@@ -160,6 +194,11 @@ export const DOOR_OPTIONS = {
     ["strict", "Strict"],
     ["static", "Static"],
   ],
+  openPyramid: [
+    ["auto", "Auto"],
+    ["yes", "Open"],
+    ["no", "Closed"],
+  ],
   owCrossed: [
     ["none", "None"],
     ["grouped", "Grouped"],
@@ -184,6 +223,10 @@ export const DOOR_OPTIONS = {
     [false, "Vanilla"],
     [true, "Shuffled"],
   ],
+  potShuffle: [
+    [false, "Off"],
+    [true, "On"],
+  ],
   pottery: [
     ["none", "None"],
     ["keys", "Key pots"],
@@ -198,6 +241,11 @@ export const DOOR_OPTIONS = {
   randomizer: [
     ["dr", "Door Randomizer"],
     ["owr", "Overworld Randomizer"],
+  ],
+  restrictBossItems: [
+    ["none", "None"],
+    ["mapcompass", "Map and compass"],
+    ["dungeon", "Dungeon items"],
   ],
   shopsanity: [
     [false, "Off"],
@@ -217,19 +265,23 @@ export const DOOR_OPTIONS = {
 
 /** Each DR setting's label in the run's summary. */
 export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
+  bombBag: "Bomb bag",
   bonkDrops: "Bonk drops",
   doorEntrances: "DR entrances",
   doorShuffle: "Door shuffle",
   dropShuffle: "Enemy drops",
   enemyShuffle: "Enemies",
   keyLogic: "Key logic",
+  openPyramid: "Pyramid hole",
   owCrossed: "Crossed overworld",
   owFluteShuffle: "Flute spots",
   owLayout: "Overworld layout",
   owMixed: "Mixed overworld",
   owWhirlpool: "Whirlpools",
+  potShuffle: "Pot shuffle",
   pottery: "Pottery",
   randomizer: "Randomizer",
+  restrictBossItems: "Boss items",
   shopsanity: "Shopsanity",
   takeAny: "Take-any caves",
 };
@@ -240,9 +292,13 @@ const DR_ROWS = [
   "keyLogic",
   "dropShuffle",
   "pottery",
+  "potShuffle",
   "shopsanity",
   "takeAny",
   "enemyShuffle",
+  "bombBag",
+  "restrictBossItems",
+  "openPyramid",
 ] as const satisfies readonly DoorSetting[];
 const OWR_ROWS = [
   "owLayout",
@@ -322,6 +378,9 @@ export const doorReasons = (
     reasons.push("shuffled key drops with keys outside their dungeons");
   }
   if (door.enemyShuffle !== "none") reasons.push("shuffled enemies");
+  // Bombs then need the bag, the +10 upgrade (can_use_bombs, BaseClasses.py:
+  // 1208-1209), which no cell records: the bomb count starts at 10
+  if (door.bombBag) reasons.push("the bomb bag");
   if (door.keyLogic === "static") reasons.push("DR's static key logic");
   if (door.owLayout !== "vanilla") {
     reasons.push(
@@ -386,7 +445,7 @@ export const doorModesOf = (
       settings.bossShuffle !== undefined && settings.bossShuffle !== "none",
     dropShuffle: door.dropShuffle,
     enemyShuffle: door.enemyShuffle !== "none",
-    potShuffle: false,
+    potShuffle: door.potShuffle,
     pottery: door.pottery,
     shopsanity: door.shopsanity,
     takeAny: door.takeAny,
@@ -544,6 +603,21 @@ export const doorFromSeed = (
       pottery: option("pottery", exact.pottery),
       shopsanity: exact.shopsanity,
       takeAny: option("takeAny", exact.takeAny),
+      ...(exact.bombBag === undefined ? {} : { bombBag: exact.bombBag }),
+      ...(exact.potShuffle === undefined
+        ? {}
+        : { potShuffle: exact.potShuffle }),
+      ...(exact.restrictBossItems === undefined
+        ? {}
+        : {
+            restrictBossItems: option(
+              "restrictBossItems",
+              exact.restrictBossItems,
+            ),
+          }),
+      ...(exact.openPyramid === undefined
+        ? {}
+        : { openPyramid: option("openPyramid", exact.openPyramid) }),
       ...(ow === undefined
         ? {}
         : {

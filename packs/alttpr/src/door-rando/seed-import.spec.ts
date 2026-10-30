@@ -78,11 +78,15 @@ describe("avianartReading", () => {
       version: "1.5.6",
     });
     expect(reading.doorExact).toEqual({
+      bombBag: false,
       doorShuffle: "vanilla",
       dropShuffle: "keys",
       enemyShuffle: "none",
       keyLogic: "partial",
+      openPyramid: "auto",
+      potShuffle: false,
       pottery: "keys",
+      restrictBossItems: "none",
       shopsanity: false,
       takeAny: "none",
     });
@@ -126,6 +130,43 @@ describe("avianartReading", () => {
     // Older seeds write a boolean where newer ones write "wild"
     expect(reading && shown(reading.wildMaps)).toBe(true);
     expect(reading && shown(reading.goal)).toBe("triforce-hunt");
+  });
+
+  it("reads the bomb bag, pot shuffle, restricted boss items and pyramid DR's rules read", () => {
+    const json = avianart("C2BdrZOiV") as {
+      response: { spoiler: { meta: Record<string, unknown> } };
+    };
+    const meta = json.response.spoiler.meta;
+    const read = (change: Record<string, unknown>) =>
+      avianartReading(
+        { response: { spoiler: { meta: { ...meta, ...change } } } },
+        "x",
+      )?.doorExact;
+    expect(
+      read({
+        bombbag: true,
+        open_pyramid: "no",
+        potshuffle: 1,
+        restricted_boss_items: "mapcompass",
+      }),
+    ).toMatchObject({
+      bombBag: true,
+      openPyramid: "no",
+      potShuffle: true,
+      restrictBossItems: "mapcompass",
+    });
+    // An older seed's flag; a meta without them names none
+    expect(read({ open_pyramid: true })?.openPyramid).toBe("yes");
+    const without = read({
+      bombbag: undefined,
+      open_pyramid: undefined,
+      potshuffle: undefined,
+      restricted_boss_items: undefined,
+    });
+    expect(without).not.toHaveProperty("bombBag");
+    expect(without).not.toHaveProperty("openPyramid");
+    expect(without).not.toHaveProperty("potShuffle");
+    expect(without).not.toHaveProperty("restrictBossItems");
   });
 
   it("refuses JSON without a DR meta", () => {

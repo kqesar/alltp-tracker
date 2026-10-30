@@ -211,14 +211,33 @@ const DUNGEON_POTS: ReadonlySet<string> = new Set([
 const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
 
 /**
+ * Whether a DR run's pyramid hole is open from the start (is_pyramid_open,
+ * BaseClasses.py:299-311): as its `openPyramid` says, and under `auto`
+ * for the crystals goal (the tracker's Fast Ganon, the pyramid open) and
+ * ganonhunt, with vanilla or dungeon entrances alone (trinity has no run
+ * type).
+ */
+export const pyramidOpen = (run: RunSettings): boolean => {
+  const door = doorOf(run);
+  const pyramid = door?.openPyramid ?? "auto";
+  if (pyramid !== "auto") return pyramid === "yes";
+  const entrances =
+    run.entranceShuffle === "none" &&
+    (door?.doorEntrances === undefined ||
+      door.doorEntrances === "dungeonssimple" ||
+      door.doorEntrances === "dungeonsfull");
+  return entrances && (run.goal === "fast-ganon" || run.goal === "ganonhunt");
+};
+
+/**
  * The settings of the Door Randomizer's world for a DR run (doorLogic): the
  * pack's, and what DR reads beside them (the pack's door-world, whose
  * DR_DEFAULTS fill the rest): retro's universal keys and rupee bow, strict
- * key logic, the
- * drops' and pots' keys shuffled, the pots, whether pots or drops join the
- * dungeons beyond their keys (the key analysis then left out), the pyramid
- * a fast Ganon opens (open_pyramid auto, is_pyramid_open, BaseClasses.py:
- * 300-311), a triforce hunt, a ganonhunt: Ganon (Rules.py:70-71) and
+ * key logic, the drops' and pots' keys shuffled, the pots, whether pots or
+ * drops join the dungeons beyond their keys (the key analysis then left
+ * out), the bomb bag, the legacy pot shuffle, the boss items behind map and
+ * compass, the pyramid hole (`pyramidOpen`), a triforce hunt, a ganonhunt:
+ * Ganon (Rules.py:70-71) and
  * Murahdahla (:69) ask the pieces the goal asks, which the state holds as
  * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
  * The same run settings always give the same object, so the world compiled
@@ -231,7 +250,20 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const pottery = door?.pottery ?? "none";
   const drops = door?.dropShuffle ?? "none";
   const keyLogic = door?.keyLogic ?? "partial";
-  const key = [pottery, drops, keyLogic, run.goal].join("/");
+  const bombBag = door?.bombBag ?? false;
+  const potShuffle = door?.potShuffle ?? false;
+  const bossItems = door?.restrictBossItems ?? "none";
+  const pyramid = pyramidOpen(run);
+  const key = [
+    pottery,
+    drops,
+    keyLogic,
+    run.goal,
+    bombBag,
+    potShuffle,
+    bossItems,
+    pyramid,
+  ].join("/");
   let byKey = doorSettings.get(settings);
   if (byKey === undefined) {
     byKey = new Map();
@@ -242,12 +274,15 @@ export const drSettingsOf = (run: RunSettings): Settings => {
     const hunt = run.goal === "ganonhunt" || run.goal === "triforce-hunt";
     found = {
       ...settings,
+      bombBag,
       dropShuffle: drops !== "none",
       dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
       ganonHuntGoal: run.goal === "ganonhunt",
-      openPyramid: settings.fastGanonGoal,
+      openPyramid: pyramid,
       potKeys: pottery !== "none" && pottery !== "cave",
+      potShuffle,
       pottery: pottery !== "none",
+      restrictBossItems: bossItems !== "none",
       retroBow: settings.rupeeBow,
       // key_logic_algorithm strict; dangerous reads as partial (doorNotes)
       strictKeyLogic: keyLogic === "strict",

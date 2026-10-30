@@ -114,6 +114,15 @@ const ENTRANCES: Readonly<Record<string, SeedEntrances>> = {
   vanilla: "none",
 };
 
+const PYRAMIDS = ["auto", "yes", "no"] as const;
+
+/**
+ * `open_pyramid` as DR names it (args.json `openpyramid`: auto, yes, no),
+ * a flag in older seeds; null when `meta` has none.
+ */
+const pyramidOf = (value: unknown): string | null =>
+  value === true ? "yes" : value === false ? "no" : oneOf(value, PYRAMIDS);
+
 /**
  * DR's goal as the tracker's: its "crystals" is Fast Ganon when the pyramid
  * opens, which `open_pyramid: auto` does for it under vanilla or dungeon
@@ -122,11 +131,11 @@ const ENTRANCES: Readonly<Record<string, SeedEntrances>> = {
 const goalOf = (meta: Meta): SeedGoal | null => {
   const goal = meta.goal;
   if (goal === "crystals") {
-    const open = meta.open_pyramid;
+    const open = pyramidOf(meta.open_pyramid);
     const opens =
-      open === "yes" || open === true
+      open === "yes"
         ? true
-        : open === "no" || open === false
+        : open === "no"
           ? false
           : open === "auto"
             ? ["vanilla", "dungeonssimple", "dungeonsfull"].includes(
@@ -169,6 +178,9 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
     return null;
   }
   const shuffle = String(meta.shuffle ?? "vanilla");
+  const bombBag = flagOf(meta.bombbag);
+  const potShuffle = flagOf(meta.potshuffle);
+  const pyramid = pyramidOf(meta.open_pyramid);
   const exact: DoorExactSettings = {
     doorShuffle,
     dropShuffle,
@@ -178,6 +190,12 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
     shopsanity,
     takeAny: String(meta.take_any ?? "none"),
     ...(shuffle in ENTRANCES ? {} : { doorEntrances: shuffle }),
+    ...(bombBag === null ? {} : { bombBag }),
+    ...(potShuffle === null ? {} : { potShuffle }),
+    ...(typeof meta.restricted_boss_items === "string"
+      ? { restrictBossItems: meta.restricted_boss_items }
+      : {}),
+    ...(pyramid === null ? {} : { openPyramid: pyramid }),
   };
   // Only the Overworld fork writes `ow_layout` (OWR 0.8.0.0 BaseClasses.py)
   if (!("ow_layout" in meta)) return exact;

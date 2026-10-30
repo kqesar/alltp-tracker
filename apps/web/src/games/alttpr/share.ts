@@ -484,6 +484,9 @@ export const SHARE_SETTINGS: readonly string[] = `
   owFluteShuffle:vanilla owFluteShuffle:balanced owFluteShuffle:random
   bonkDrops:false bonkDrops:true
   keyLogic:partial keyLogic:strict keyLogic:dangerous keyLogic:static
+  bombBag:false bombBag:true potShuffle:false potShuffle:true
+  restrictBossItems:none restrictBossItems:mapcompass restrictBossItems:dungeon
+  openPyramid:auto openPyramid:yes openPyramid:no
 `
   .trim()
   .split(/\s+/);
@@ -493,9 +496,11 @@ const SETTINGS_PACKED = 4;
 
 /** The settings whose values are true or false. */
 const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
+  "bombBag",
   "bonkDrops",
   "owMixed",
   "owWhirlpool",
+  "potShuffle",
   "shopsanity",
   "swordless",
 ]);

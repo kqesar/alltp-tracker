@@ -532,15 +532,25 @@ const MURAHDAHLA = "Murahdahla";
 /**
  * restrict_boss_items (Rules.py:807-822): each prize and boss of a dungeon
  * that has a prize, and Agahnim 2, behind the dungeon's compass and map
- * (Agahnim 1 too once doors shuffle, which this world does not).
+ * (Agahnim 1 too once doors shuffle, which this world does not). Maps and
+ * compasses kept in their dungeons are not recorded: the rule is then
+ * theirs or `maybe` (they may be in hand), never `no`.
+ * @param recorded - Whether the player records maps and compasses (wild)
  */
-function addBossItemRules(locations: Map<string, string>): void {
+function addBossItemRules(
+  locations: Map<string, string>,
+  recorded: boolean,
+): void {
   const behind = (location: string, dungeon: string) => {
     const code = DR_KEY_CODES[dungeon];
     if (code === undefined || !locations.has(location)) return;
+    const items = `compass${code} & map${code}`;
     locations.set(
       location,
-      and(locations.get(location) ?? "true", `compass${code} & map${code}`),
+      and(
+        locations.get(location) ?? "true",
+        recorded ? items : or(items, "maybe"),
+      ),
     );
   };
   for (const dungeon of DR_DUNGEONS) {
@@ -690,7 +700,11 @@ export function drWorld(
       ? drKeyLogic(all)
       : undefined,
   );
-  if (all.restrictBossItems === true) addBossItemRules(locations);
+  if (all.restrictBossItems === true)
+    addBossItemRules(
+      locations,
+      all.wildMaps === true && all.wildCompasses === true,
+    );
   if (all.potShuffle === true) addSpikesPotRule(locations);
   if (mode === "standard") {
     const blank = { ...all, ...derived };

@@ -91,6 +91,47 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorLogic(fixed)).toBe(false);
   });
 
+  it("carries the pot shuffle, the boss items and the pyramid into DR's rules", () => {
+    expect(drSettingsOf(DR)).toMatchObject({
+      bombBag: false,
+      openPyramid: false,
+      potShuffle: false,
+      restrictBossItems: false,
+    });
+    for (const change of [
+      { potShuffle: true },
+      { restrictBossItems: "mapcompass" },
+      { restrictBossItems: "dungeon" },
+      { openPyramid: "yes" },
+      { openPyramid: "no" },
+    ] as const) {
+      expect(doorLogic(with_(DR, change)), JSON.stringify(change)).toBe(true);
+    }
+    expect(drSettingsOf(with_(DR, { potShuffle: true }))).toMatchObject({
+      potShuffle: true,
+    });
+    expect(
+      drSettingsOf(with_(DR, { restrictBossItems: "mapcompass" })),
+    ).toMatchObject({ restrictBossItems: true });
+    // is_pyramid_open (BaseClasses.py:299-311): auto opens it for the
+    // crystals goal and ganonhunt with vanilla entrances
+    const pyramid = (change: Partial<RunSettings>) =>
+      drSettingsOf(with_(DR, change)).openPyramid;
+    expect(pyramid({ goal: "fast-ganon" })).toBe(true);
+    expect(pyramid({ goal: "ganonhunt" })).toBe(true);
+    expect(pyramid({ goal: "ganon" })).toBe(false);
+    expect(pyramid({ goal: "ganon", openPyramid: "yes" })).toBe(true);
+    expect(pyramid({ goal: "fast-ganon", openPyramid: "no" })).toBe(false);
+    expect(pyramid({ entranceShuffle: "crossed", goal: "fast-ganon" })).toBe(
+      false,
+    );
+    // The pot shuffle moves pots, which the run's locations follow
+    expect(
+      doorLocationsOf(with_(DR, { potShuffle: true, pottery: "keys" }))
+        .unflagged.size,
+    ).toBeGreaterThan(0);
+  });
+
   it("refuses District outside the Overworld fork", () => {
     expect(
       isDoorSettings({ doorEntrances: "district", randomizer: "dr" }),
@@ -112,6 +153,8 @@ describe("a Door Randomizer run's logic", () => {
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
       [{ owMixed: true, randomizer: "owr" }, "a mixed overworld"],
       [{ owFluteShuffle: "random", randomizer: "owr" }, "shuffled flute spots"],
+      // Bombs then need the +10 upgrade, which no cell records
+      [{ bombBag: true }, "the bomb bag"],
     ];
     for (const [change, reason] of cases) {
       const run = with_(DR, change);
@@ -372,6 +415,55 @@ describe("doorFromSeed", () => {
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, true), {}),
     ).toEqual({ doorEntrances: "district", randomizer: "owr" });
+  });
+
+  it("takes a spoiler's bomb bag, pot shuffle, boss items and pyramid", () => {
+    const exact = (more: Record<string, unknown>) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          pottery: "none",
+          shopsanity: false,
+          takeAny: "none",
+          ...more,
+        },
+        randomizer: { kind: "door", overworld: false, version: "1.5.6" },
+      }) as unknown as SeedSettingsReading;
+    expect(
+      doorFromSeed(
+        exact({
+          bombBag: true,
+          openPyramid: "no",
+          potShuffle: true,
+          restrictBossItems: "dungeon",
+        }),
+        {},
+      ),
+    ).toEqual({
+      bombBag: true,
+      openPyramid: "no",
+      potShuffle: true,
+      randomizer: "dr",
+      restrictBossItems: "dungeon",
+    });
+    // DR's defaults are left out; a meta without them keeps the run's
+    expect(
+      doorFromSeed(
+        exact({
+          bombBag: false,
+          openPyramid: "auto",
+          potShuffle: false,
+          restrictBossItems: "none",
+        }),
+        { bombBag: true, randomizer: "dr" },
+      ),
+    ).toEqual({ randomizer: "dr" });
+    expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
+      potShuffle: true,
+      randomizer: "dr",
+    });
   });
 
   it("keeps the run's own in Race Mode, the generator from the title", () => {

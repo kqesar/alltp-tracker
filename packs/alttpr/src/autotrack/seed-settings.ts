@@ -328,6 +328,18 @@ export interface DoorExactSettings {
   readonly keyLogic?: string;
   /** Its entrance shuffle, when alttpr.com has none of that name. */
   readonly doorEntrances?: string;
+  /**
+   * The settings its rules read that no ROM table states, each where `meta`
+   * names it: `bombbag` (can_use_bombs, BaseClasses.py:1208-1209),
+   * `potshuffle` (Mire's spikes' key pot, Rules.py:527-530),
+   * `restricted_boss_items` (none, mapcompass or dungeon: Rules.py:806-822)
+   * and `open_pyramid` (auto, yes or no: is_pyramid_open, BaseClasses.py:
+   * 299-311).
+   */
+  readonly bombBag?: boolean;
+  readonly potShuffle?: boolean;
+  readonly restrictBossItems?: string;
+  readonly openPyramid?: string;
   readonly overworld?: {
     readonly layout: string;
     readonly crossed: string;
