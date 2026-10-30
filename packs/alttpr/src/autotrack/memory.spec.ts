@@ -183,11 +183,14 @@ describe("MEMORY_RANGES", () => {
       "overworld-settings:other",
       "medallions:other",
       "map-mode:prizes",
+      "compass-mode:other",
       "swordless-mode:other",
       "dungeon-item-menu:other",
       "inverted-mode:other",
+      "follower-shuffle:other",
       "prize-kinds:prizes",
       "goal-items:other",
+      "free-item-text:other",
       "generic-keys:other",
       "tower-crystals:other",
       "ganon-crystals:other",
@@ -421,7 +424,9 @@ describe("MEMORY_RANGES", () => {
     // phase (they are v2.0's locations): 1,280 bytes in six more pieces
     // (usb2snes cuts a span into 255-byte ones). The Overworld fork's bonk
     // drops, switch on, join the casual phase alone: the screens' 130 bytes
-    // again, in a piece of their own.
+    // again, in a piece of their own. The fork's prize and follower bytes
+    // (seed-settings.ts) are three ranges more, in pieces the settings
+    // already span: no byte or piece more.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -434,7 +439,7 @@ describe("MEMORY_RANGES", () => {
     }).toEqual({
       casual: { bytes: 638, pieces: 24 },
       race: { bytes: 2073, pieces: 26 },
-      ranges: { casual: 38, race: 41 },
+      ranges: { casual: 41, race: 41 },
     });
   });
 });

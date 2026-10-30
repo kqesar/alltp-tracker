@@ -193,6 +193,15 @@ describe("MapPanel", () => {
     act(() =>
       useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
     );
+    // Its prizes and followers not known yet: named, never read as none
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the prize shuffle not known yet (set it in Mode) and the follower shuffle not known yet (set it in Mode). Every check shows as maybe.",
+    );
+    act(() =>
+      useGameStore
+        .getState()
+        .updateDoorSettings({ prizeShuffle: "none", shuffleFollowers: false }),
+    );
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
       "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
     );

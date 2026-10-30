@@ -214,6 +214,7 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   };
   // Only the Overworld fork writes `ow_layout` (OWR 0.8.0.0 BaseClasses.py)
   if (!("ow_layout" in meta)) return exact;
+  const followers = flagOf(meta.shuffle_followers);
   return {
     ...exact,
     overworld: {
@@ -222,11 +223,14 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       fluteShuffle: String(meta.ow_fluteshuffle ?? "vanilla"),
       // Each moves what the fork's rules read: a prize becomes an item
       // placed elsewhere (ItemList.py:786), a follower's quest a location of
-      // its own (ItemList.py:1740-1745, BaseClasses.py:1751)
-      followers: flagOf(meta.shuffle_followers) ?? false,
+      // its own (ItemList.py:1740-1745, BaseClasses.py:1751). Where meta
+      // does not name one, it is not known, never none
+      ...(followers === null ? {} : { followers }),
       layout: String(meta.ow_layout),
       mixed: flagOf(meta.ow_mixed) ?? false,
-      prizeShuffle: String(meta.prizeshuffle ?? "none"),
+      ...(typeof meta.prizeshuffle === "string"
+        ? { prizeShuffle: meta.prizeshuffle }
+        : {}),
       whirlpool: flagOf(meta.ow_whirlpool) ?? false,
     },
   };

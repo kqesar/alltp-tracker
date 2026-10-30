@@ -135,7 +135,9 @@ describe("a Door Randomizer run's checks", () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,
       bonkDrops: true,
+      prizeShuffle: "none",
       randomizer: "owr",
+      shuffleFollowers: false,
     });
     const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
     setBonkDrops(BONK_DROPS);

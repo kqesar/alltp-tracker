@@ -18,7 +18,9 @@ import {
   doorTablesOf,
   doorValueText,
   doorVersionOf,
+  FOLLOWERS_NOT_KNOWN,
   isDoorSettings,
+  PRIZES_NOT_KNOWN,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -42,6 +44,12 @@ import {
 
 const DR = getPreset("door-randomizer").settings;
 const DR_CROSSKEYS = getPreset("door-crosskeys").settings;
+/** An OWR run whose prize and follower shuffles are set: none of either. */
+const OWR = {
+  prizeShuffle: "none",
+  randomizer: "owr",
+  shuffleFollowers: false,
+} as const;
 const with_ = (base: RunSettings, change: Partial<RunSettings>) => ({
   ...base,
   ...change,
@@ -64,7 +72,7 @@ describe("a Door Randomizer run's logic", () => {
 
   it("takes the Overworld Randomizer's own world for its vanilla overworld", () => {
     for (const mode of ["open", "inverted"] as const) {
-      const run = with_(DR, { bonkDrops: true, mode, randomizer: "owr" });
+      const run = with_(DR, { ...OWR, bonkDrops: true, mode });
       expect(unmodelledReasons(run), mode).toEqual([]);
       expect(doorLogic(run), mode).toBe(true);
       expect(doorNotes(run)).toEqual([
@@ -73,19 +81,26 @@ describe("a Door Randomizer run's logic", () => {
     }
     // Its prizes or followers moved: the fork's world reads neither
     expect(
-      unmodelledReasons(
-        with_(DR, { prizeShuffle: "nearby", randomizer: "owr" }),
-      ),
+      unmodelledReasons(with_(DR, { ...OWR, prizeShuffle: "nearby" })),
     ).toEqual(["shuffled dungeon prizes"]);
     expect(
-      unmodelledReasons(
-        with_(DR, { randomizer: "owr", shuffleFollowers: true }),
-      ),
+      unmodelledReasons(with_(DR, { ...OWR, shuffleFollowers: true })),
     ).toEqual(["shuffled followers"]);
     // What the fork's world does not model yet stays named
+    expect(unmodelledReasons(with_(DR, { ...OWR, owMixed: true }))).toEqual([
+      "a mixed overworld",
+    ]);
+    // Not known (a ROM that cannot tell none from dungeon, a race): never
+    // read as none, each named until the player sets it
+    expect(unmodelledReasons(with_(DR, { randomizer: "owr" }))).toEqual([
+      PRIZES_NOT_KNOWN,
+      FOLLOWERS_NOT_KNOWN,
+    ]);
     expect(
-      unmodelledReasons(with_(DR, { owMixed: true, randomizer: "owr" })),
-    ).toEqual(["a mixed overworld"]);
+      unmodelledReasons(with_(DR, { ...OWR, shuffleFollowers: undefined })),
+    ).toEqual([FOLLOWERS_NOT_KNOWN]);
+    // DR itself has neither
+    expect(unmodelledReasons(DR)).toEqual([]);
   });
 
   it("names what keeps a run out of DR's world, v31's rules being no stand-in", () => {
@@ -93,15 +108,15 @@ describe("a Door Randomizer run's logic", () => {
     // Room's powder, DR's key analysis): a yes there would be unsound
     const cases: [Partial<RunSettings>, string][] = [
       [
-        { mode: "standard", randomizer: "owr" },
+        { mode: "standard", ...OWR },
         "the Overworld Randomizer's Standard world",
       ],
       [
-        { entranceShuffle: "crossed", randomizer: "owr" },
+        { entranceShuffle: "crossed", ...OWR },
         "the Overworld Randomizer's entrance shuffles",
       ],
       [
-        { doorShuffle: "basic", randomizer: "owr" },
+        { doorShuffle: "basic", ...OWR },
         "a door shuffle in an Overworld Randomizer seed",
       ],
       [{ bossShuffle: "full" }, "shuffled bosses in a Door Randomizer seed"],
@@ -708,14 +723,18 @@ describe("doorFromSeed", () => {
           bonkDrops: known(true),
           crossed: known(true),
           fluteShuffle: known(true),
+          followers: known(false),
           layout: known("wild"),
           mixed: known(false),
+          prizeShuffle: known("inside"),
           version: known("0.8.0.0"),
           whirlpool: known(true),
         },
       },
       randomizer: { kind: "door", overworld: true, version: "1.5.6" },
     } as unknown as SeedSettingsReading;
+    // Prizes inside the dungeons: none or dungeon, which the ROM never
+    // tells apart, so not known (unset) unless the run says which
     expect(doorFromSeed(rom, { owCrossed: "grouped" })).toEqual({
       bonkDrops: true,
       owCrossed: "grouped",
@@ -723,6 +742,35 @@ describe("doorFromSeed", () => {
       owLayout: "wild",
       owWhirlpool: true,
       randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    expect(doorFromSeed(rom, { prizeShuffle: "dungeon" })).toMatchObject({
+      prizeShuffle: "dungeon",
+    });
+    expect(doorFromSeed(rom, { prizeShuffle: "none" })).toMatchObject({
+      prizeShuffle: "none",
+    });
+    expect(doorFromSeed(rom, { prizeShuffle: "wild" })).not.toHaveProperty(
+      "prizeShuffle",
+    );
+    const moved = (prizes: string, followers: boolean) =>
+      ({
+        ...rom,
+        door: {
+          ...rom.door,
+          overworld: {
+            ...rom.door?.overworld,
+            followers: known(followers),
+            prizeShuffle: known(prizes),
+          },
+        },
+      }) as unknown as SeedSettingsReading;
+    expect(doorFromSeed(moved("nearby", true), {})).toMatchObject({
+      prizeShuffle: "nearby",
+      shuffleFollowers: true,
+    });
+    expect(doorFromSeed(moved("wild", false), {})).toMatchObject({
+      prizeShuffle: "wild",
     });
     const meta = {
       doorExact: {

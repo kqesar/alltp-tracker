@@ -1068,7 +1068,14 @@ as Ganon. Outside Race Mode, `seed-settings.ts` reads its own tables:
 apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
 `MultiClientFlagsROM` (drops, shopsanity, take-any, pots, Mystery) and
 `StandingItemCounterMask` (pots beyond the caves), its version text, and
-OWR's `owMode`/`owFlags`. A table that does not open as the base patch
+OWR's `owMode`/`owFlags`. From a fork of 0.6.0.0 on (its version text),
+three bytes of bank $30 the fork writes whole tell its prize and follower
+shuffles (OWR 0.8.0.2 `Rom.py`): `FreeItemText`'s $20 the prizes nearby or
+wild (:1432), the compass mode's $40 wild alone (:1461), and
+`SmithTravelsFreely` $02 the followers shuffled, a value written then and
+never otherwise (:1731, :1773). No byte tells a prize shuffle of none from
+one of dungeon: the ROM reads "inside", which the app keeps unset unless
+the run says which. A table that does not open as the base patch
 writes it is unrecognized, never vanilla. A seed DR marks as Mystery hides
 its settings, the world but.
 

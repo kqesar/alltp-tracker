@@ -30,7 +30,11 @@ describe("useDoorLogic", () => {
     const { rerender } = renderHook(() => useDoorLogic());
     act(() => {
       useGameStore.getState().applyPreset("door-randomizer");
-      useGameStore.getState().updateDoorSettings({ randomizer: "owr" });
+      useGameStore.getState().updateDoorSettings({
+        prizeShuffle: "none",
+        randomizer: "owr",
+        shuffleFollowers: false,
+      });
     });
     rerender();
     await waitFor(() => expect(doorSolverLoaded("owr")).toBe(true));

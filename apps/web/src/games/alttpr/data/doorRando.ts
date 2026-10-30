@@ -133,9 +133,10 @@ export type DoorRunSettings = {
   /**
    * OWR's prize shuffle and its followers shuffled (`--shuffle_followers`:
    * each follower's quest a location, ItemList.py:1740-1745), which its
-   * rules read: a spoiler's meta names them, no ROM table the tracker reads
-   * does, so a run read from its ROM alone holds the fork's defaults (none)
-   * until the player sets them.
+   * rules read. A spoiler's meta names them; the ROM tells the followers
+   * and a prize shuffle out of the dungeons, never none from dungeon
+   * (seed-settings.ts). Unset, each is not known (`DOOR_UNSET`): a cause
+   * of `doorReasons` until the player sets it, never none by assumption.
    */
   prizeShuffle?: PrizeShuffle;
   shuffleFollowers?: boolean;
@@ -175,13 +176,16 @@ export type DoorSetting = keyof DoorRunSettings;
 
 /**
  * The DR settings a run may leave unset, which no default stands for: what
- * no ROM table states and a guess would make unsound. Unset, the entrance
- * shuffle may have moved the door (`doorPoolSettingsOf`).
+ * a ROM may not state and a guess would make unsound. Unset, the entrance
+ * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
+ * move, and OWR's prize and follower shuffles are causes of `doorReasons`.
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
   "shuffleTavern",
   "doorIntensity",
+  "prizeShuffle",
+  "shuffleFollowers",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -211,10 +215,8 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   owWhirlpool: false,
   potShuffle: false,
   pottery: "none",
-  prizeShuffle: "none",
   restrictBossItems: "none",
   shopsanity: false,
-  shuffleFollowers: false,
   takeAny: "none",
 };
 
@@ -715,11 +717,25 @@ export const doorReasons = (
   if (door.owWhirlpool) reasons.push("shuffled whirlpools");
   if (door.owFluteShuffle !== "vanilla") reasons.push("shuffled flute spots");
   // A prize an item placed elsewhere, a follower's quest a location: the
-  // fork's world reads neither (ItemList.py:786, :1740-1745)
-  if (door.prizeShuffle !== "none") reasons.push("shuffled dungeon prizes");
-  if (door.shuffleFollowers) reasons.push("shuffled followers");
+  // fork's world reads neither (ItemList.py:786, :1740-1745); not known,
+  // either may be (DR itself has neither)
+  if (door.randomizer === "owr") {
+    if (door.prizeShuffle === undefined) reasons.push(PRIZES_NOT_KNOWN);
+    else if (door.prizeShuffle !== "none")
+      reasons.push("shuffled dungeon prizes");
+    if (door.shuffleFollowers === undefined) reasons.push(FOLLOWERS_NOT_KNOWN);
+    else if (door.shuffleFollowers) reasons.push("shuffled followers");
+  }
   return reasons;
 };
+
+/** The cause `doorReasons` gives while an OWR run's prize shuffle is unset. */
+export const PRIZES_NOT_KNOWN =
+  "the prize shuffle not known yet (set it in Mode)";
+
+/** The cause `doorReasons` gives while an OWR run's followers are unset. */
+export const FOLLOWERS_NOT_KNOWN =
+  "the follower shuffle not known yet (set it in Mode)";
 
 /**
  * What a DR run's logic rests on, when the tracker models it: DR's own
@@ -1051,7 +1067,7 @@ export const doorFromSeed = (
             owMixed: ow.mixed,
             owWhirlpool: ow.whirlpool,
             prizeShuffle: option("prizeShuffle", ow.prizeShuffle),
-            shuffleFollowers: ow.followers,
+            shuffleFollowers: ow.followers ?? own.shuffleFollowers,
           }),
     });
   }
@@ -1101,6 +1117,17 @@ export const doorFromSeed = (
         ? kept(door.owFluteShuffle, ["balanced", "random"], "random")
         : "vanilla";
     }
+    door.shuffleFollowers = stated(ow.followers, door.shuffleFollowers);
+    const prizes = stated(ow.prizeShuffle, undefined);
+    // Kept inside the dungeons: none or dungeon, which the run's own tells
+    // apart when it is one of them, else not known
+    if (prizes !== undefined)
+      door.prizeShuffle =
+        prizes === "inside"
+          ? door.prizeShuffle === "none" || door.prizeShuffle === "dungeon"
+            ? door.prizeShuffle
+            : undefined
+          : prizes;
   }
   return withoutDefaults(door);
 };

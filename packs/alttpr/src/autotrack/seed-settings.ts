@@ -105,6 +105,10 @@ export const SEED_SETTINGS_RANGES = [
   // their dungeon, dungeonItems mc, mcs or full (Rom.php:1959-1964,
   // World.php:122-124, 1232). Read by the prizes (prizes.ts).
   rom("map-mode", 0x30_803b, 1, "prizes", "z3:tables.asm:124-125"),
+  // The compass mode, a byte both forks write whole (OWR 0.8.0.2 Rom.py:
+  // 1449-1463: $40 when the prizes are shuffled wild, read with the
+  // Overworld fork's own table alone; z3 tables.asm:120-128).
+  rom("compass-mode", 0x30_803c, 1, "other", "owr:Rom.py:1449-1463"),
   // HammerableGanon, a byte nothing uses, then AllowSwordlessMedallionUse
   // (tables.asm:136-144): setSwordlessMode writes $01 to both, or $00 (vt
   // Rom.php:2065-2069), on every seed (World.php:1249).
@@ -117,6 +121,10 @@ export const SEED_SETTINGS_RANGES = [
   // InvertedMode: $00 normal, $01 inverted (tables.asm:181-183; vt
   // Rom.php:1592).
   rom("inverted-mode", 0x30_804a, 1, "other", "z3:tables.asm:181-183"),
+  // SmithTravelsFreely (tables.asm:190-192): the Overworld fork writes $02
+  // there when it shuffles the followers, and only then (OWR 0.8.0.2
+  // Rom.py:1724-1731; $01 at :1773 under an entrance shuffle without them).
+  rom("follower-shuffle", 0x30_804c, 1, "other", "owr:Rom.py:1724-1773"),
   // CrystalPendantFlags_2 from Eastern Palace to Turtle Rock: $00 a
   // pendant, $40 a crystal (tables.asm:213-233). vt writes each prize's
   // fifth byte there (Prize locations' fifth address, Region/Standard/
@@ -126,6 +134,10 @@ export const SEED_SETTINGS_RANGES = [
   // GoalItemRequirement, a word: the triforce pieces the goal asks for, $0000
   // when it asks for none (tables.asm:789-791; vt Rom.php:472-476).
   rom("goal-items", 0x30_8167, 2, "other", "z3:tables.asm:789-791"),
+  // FreeItemText, a byte the Overworld fork writes whole: $20 when the
+  // prizes leave their dungeons (OWR 0.8.0.2 Rom.py:1432-1436, prizeshuffle
+  // nearby or wild; z3 tables.asm:803-812).
+  rom("free-item-text", 0x30_816a, 1, "other", "owr:Rom.py:1432-1436"),
   // GenericKeys: $01 in the retro world only, whose small keys open any
   // door (tables.asm:819-821; vt Rom.php:1319-1323, World/Retro.php:18-23).
   rom("generic-keys", 0x30_8172, 1, "other", "z3:tables.asm:819-821"),
@@ -362,10 +374,13 @@ export interface DoorExactSettings {
     readonly whirlpool: boolean;
     readonly fluteShuffle: string;
     readonly bonkDrops: boolean;
-    /** OWR's prize shuffle (`prizeshuffle`: none, dungeon, nearby, wild). */
-    readonly prizeShuffle: string;
-    /** OWR's followers shuffled (`shuffle_followers`). */
-    readonly followers: boolean;
+    /**
+     * OWR's prize shuffle (`prizeshuffle`: none, dungeon, nearby, wild) and
+     * its followers shuffled (`shuffle_followers`), where `meta` names them:
+     * never assumed none.
+     */
+    readonly prizeShuffle?: string;
+    readonly followers?: boolean;
   };
 }
 
@@ -396,6 +411,13 @@ export type SeedDropShuffle = "none" | "keys" | "underworld";
  */
 export type SeedPotteryKind = "none" | "cave" | "beyond-caves";
 
+/**
+ * The Overworld fork's prize shuffle as its ROM tells it (OWR 0.8.0.2
+ * Rom.py:1432, :1461): nearby, wild, or kept inside the dungeons, the ROM
+ * writing the same bytes for none and dungeon.
+ */
+export type SeedPrizeShuffle = "inside" | "nearby" | "wild";
+
 /** The Overworld fork's layout (OWR args.json `ow_layout`). */
 export type SeedOverworldLayout = "vanilla" | "grid" | "wild";
 
@@ -419,6 +441,10 @@ export interface DoorSeedSettings {
     /** The flute's spots moved (ow_fluteshuffle balanced or random). */
     readonly fluteShuffle: SeedSetting<boolean>;
     readonly bonkDrops: SeedSetting<boolean>;
+    /** Its prize shuffle, from a 0.6.0.0 fork on (`OWR_READ_FROM`). */
+    readonly prizeShuffle: SeedSetting<SeedPrizeShuffle>;
+    /** Its followers shuffled, from a 0.6.0.0 fork on. */
+    readonly followers: SeedSetting<boolean>;
   };
 }
 
@@ -651,6 +677,26 @@ const MULTI_CLIENT = {
   takeAny: 0x04,
 } as const;
 
+/**
+ * The first fork release whose ROM writes the prize and follower bytes as
+ * read here: 0.6.0.0 brought the follower shuffle (`fcaaab30`), and 0.5.1.5
+ * gave $20 and $40 their prize meaning (`8e511ff5`); before, $40 of the
+ * compass mode told a wild dungeon item. Unchanged to 0.8.0.2.
+ */
+const OWR_READ_FROM = [0, 6, 0, 0] as const;
+
+/** Whether a fork's version text ("0.8.0.2-u") is `OWR_READ_FROM` or later. */
+const owrReadable = (version: string | null): boolean => {
+  const parts = /^(\d+)\.(\d+)\.(\d+)\.(\d+)/.exec(version ?? "");
+  if (parts === null) return false;
+  const numbers = parts.slice(1).map(Number);
+  for (let i = 0; i < OWR_READ_FROM.length; i++) {
+    if (numbers[i] !== OWR_READ_FROM[i])
+      return (numbers[i] as number) > OWR_READ_FROM[i];
+  }
+  return true;
+};
+
 /** Whether DR's table opens with "DR", as its base patch writes it (doorrando.asm:15). */
 const isDoorTable = (table: Uint8Array) =>
   table[0] === 0x44 && table[1] === 0x52;
@@ -684,6 +730,23 @@ function doorSettings(
     hide(
       decodeFrom(memory, race, ["door-settings", "standing-items"], (t, s) =>
         isDoorTable(t) ? decode(t, word(s, 1), s[5]) : null,
+      ),
+    );
+  /**
+   * A setting from bytes the fork writes in vt's tables, read once its
+   * own table names a release that writes them so (`owrReadable`).
+   */
+  const owBytes = <T>(
+    ids: readonly SeedSettingsRangeId[],
+    decode: (...bytes: Uint8Array[]) => T,
+  ) =>
+    hide(
+      decodeFrom(
+        memory,
+        race,
+        ["overworld-settings", ...ids],
+        (table, ...rest) =>
+          owrReadable(textOf(table.subarray(0x10))) ? decode(...rest) : null,
       ),
     );
   /** A setting from the Overworld fork's table. */
@@ -726,6 +789,10 @@ function doorSettings(
       bonkDrops: ow((_, flags) => (flags & 0x0200) !== 0),
       crossed: ow((mode) => (mode & 0x0200) !== 0),
       fluteShuffle: ow((_, flags) => (flags & 0x0100) !== 0),
+      // $02 is written with the followers shuffled and never without
+      // (Rom.py:1731, :1773): any other byte, the base patch's included,
+      // says they are not
+      followers: owBytes(["follower-shuffle"], ([smith]) => smith === 0x02),
       layout: ow<SeedOverworldLayout>((mode, flags) =>
         (flags & 0x06) === 0x06
           ? "grid"
@@ -734,6 +801,17 @@ function doorSettings(
             : "vanilla",
       ),
       mixed: ow((mode) => (mode & 0x0400) !== 0),
+      // FreeItemText's $20 for nearby or wild, the compass mode's $40 for
+      // wild alone; neither for none or dungeon, which no byte tells apart
+      prizeShuffle: owBytes(
+        ["free-item-text", "compass-mode"],
+        ([text], [compass]): SeedPrizeShuffle =>
+          ((text as number) & 0x20) === 0
+            ? "inside"
+            : ((compass as number) & 0x40) !== 0
+              ? "wild"
+              : "nearby",
+      ),
       version: decodeFrom(memory, race, ["overworld-settings"], (table) =>
         textOf(table.subarray(0x10)),
       ),

@@ -319,13 +319,17 @@ describe("decodeSeedSettings", () => {
 // own table, "DR" and DRMode, DRFlags, DRVersionInfo; the standing items'
 // table; the Overworld fork's.
 const DR = {
+  // vt's tables, which the fork writes whole (OWR 0.8.0.2 Rom.py)
+  compassMode: 0x18_003c, // :1463
   flags: 0x13_8004, // Rom.py:678-679
+  freeItemText: 0x18_016a, // :1432
   magic: 0x13_8000, // doorrando.asm:15
   mode: 0x13_8002, // Rom.py:629, 656
   multiClient: 0x14_2a51, // Rom.py:736
   owFlags: 0x15_0004, // OWR Rom.py:677
   owMode: 0x15_0002, // OWR Rom.py:676
   owVersion: 0x15_0010, // OWR Rom.py:1854
+  smith: 0x18_004c, // :1731, :1773
   standingMask: 0x14_2a55, // Rom.py:738
   version: 0x13_8010, // Rom.py:1509
 } as const;
@@ -505,8 +509,10 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
       bonkDrops: true,
       crossed: true,
       fluteShuffle: true,
+      followers: false,
       layout: "vanilla",
       mixed: true,
+      prizeShuffle: "inside",
       version: "0.8.0.0",
       whirlpool: true,
     });
@@ -521,6 +527,63 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
     expect(doorShown(decode(doorImage("OR156_1_1_1")))?.overworld?.layout).toBe(
       "?unrecognized",
     );
+  });
+});
+
+describe("decodeSeedSettings, the Overworld fork's prizes and followers", () => {
+  /** An OWR 0.8.0.2 image with these bytes, at a version. */
+  const owr = (
+    writes: Readonly<Record<number, number>>,
+    version = "0.8.0.2-u",
+  ) => {
+    const rom = doorImage("OR157_1_1_1", writes);
+    write(rom, DR.owVersion, version);
+    return doorShown(decode(rom))?.overworld;
+  };
+
+  it.each([
+    // FreeItemText keeps $10 and the dungeon items' bits (Rom.py:1432-1436)
+    [{ [DR.freeItemText]: 0x10 }, "inside"],
+    [{ [DR.freeItemText]: 0x5f }, "inside"],
+    [{ [DR.freeItemText]: 0x30 }, "nearby"],
+    // The compass mode's $40 only with $20: wild (Rom.py:1461-1462)
+    [{ [DR.compassMode]: 0x41, [DR.freeItemText]: 0x30 }, "wild"],
+    [{ [DR.compassMode]: 0x40, [DR.freeItemText]: 0x10 }, "inside"],
+  ])("reads %j as the prizes %s", (writes, prizes) => {
+    expect(owr(writes)?.prizeShuffle).toBe(prizes);
+  });
+
+  it("reads the followers shuffled from $02 alone, the base's byte or $01 not", () => {
+    expect(owr({ [DR.smith]: 0x02 })?.followers).toBe(true);
+    expect(owr({ [DR.smith]: 0x01 })?.followers).toBe(false);
+    expect(owr({})?.followers).toBe(false);
+  });
+
+  it("reads neither from a fork before 0.6.0.0, nor without its version", () => {
+    const old = owr({ [DR.freeItemText]: 0x30, [DR.smith]: 0x02 }, "0.5.1.5");
+    expect(old).toMatchObject({
+      followers: "?unrecognized",
+      prizeShuffle: "?unrecognized",
+    });
+    expect(owr({}, "0.6.0.0")).toMatchObject({
+      followers: false,
+      prizeShuffle: "inside",
+    });
+    expect(owr({}, "0.10.0.0")?.followers).toBe(false);
+    const none = doorImage("OR157_1_1_1", { [DR.smith]: 0x02 });
+    expect(doorShown(decode(none))?.overworld).toMatchObject({
+      followers: "?unrecognized",
+      prizeShuffle: "?unrecognized",
+    });
+  });
+
+  it("reads neither in Race Mode", () => {
+    const rom = doorImage("OR157_1_1_1", { [DR.smith]: 0x02 });
+    write(rom, DR.owVersion, "0.8.0.2-u");
+    expect(doorShown(decode(rom, { race: true }))?.overworld).toMatchObject({
+      followers: "?race-mode",
+      prizeShuffle: "?race-mode",
+    });
   });
 });
 
