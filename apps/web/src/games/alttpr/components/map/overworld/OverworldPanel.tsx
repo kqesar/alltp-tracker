@@ -34,7 +34,9 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
     return (
       <li className="door-row" data-testid={`whirlpool-row-${name}`}>
         <span className="door-row__name">{name}</span>
-        <span className="door-row__link">leads to {forced} (always)</span>
+        <span className="door-row__link">
+          leads to {forced} (always: no note needed)
+        </span>
       </li>
     );
   return (
@@ -260,8 +262,10 @@ const OverworldPanel = () => {
           >
             Flute spots
           </h3>
-          <p className="entrances__hint">
+          <p className="entrances__hint" id={`${headingId}-flute-hint`}>
             Tick the screens the flute's map offers, up to {FLUTE_SPOTS}.
+            {flute.length >= FLUTE_SPOTS &&
+              ` All ${FLUTE_SPOTS} are ticked: untick one to choose another.`}
           </p>
           <ul className="entrances__list overworld__screens">
             {FLUTE_SCREENS.map(([screen, stands, flips]) => {
@@ -272,6 +276,7 @@ const OverworldPanel = () => {
                 <li className="check-row" key={screen}>
                   <label className="check-row__check">
                     <input
+                      aria-describedby={`${headingId}-flute-hint`}
                       checked={on}
                       className="check-row__input"
                       data-testid={`flute-screen-${id}`}

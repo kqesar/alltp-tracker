@@ -70,7 +70,9 @@ describe("the Overworld tab", () => {
     );
     expect(
       screen.getByTestId("whirlpool-row-Qirn Jump Whirlpool"),
-    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
+    ).toHaveTextContent(
+      "leads to Bomber Corner Whirlpool (always: no note needed)",
+    );
     // Flute spots not moved: not offered
     expect(screen.queryByTestId("flute-screen-18")).toBeNull();
     const pool = screen.getByRole("combobox", {
@@ -155,6 +157,10 @@ describe("the Overworld tab", () => {
       await user.click(screen.getByTestId(`flute-screen-${id}`));
     expect(store().overworld.flute).toHaveLength(8);
     expect(screen.getByTestId("flute-screen-3f")).toBeDisabled();
+    // Said beside the boxes, which the hint describes
+    expect(screen.getByTestId("flute-screen-3f")).toHaveAccessibleDescription(
+      /All 8 are ticked: untick one to choose another\.$/,
+    );
     expect(village).toBeEnabled();
     await user.click(village);
     expect(store().overworld.flute).not.toContain(0x18);
@@ -246,7 +252,9 @@ describe("the Overworld tab", () => {
     // Nothing flipped: the dark world's two, a pool of two (:380-391)
     expect(
       screen.getByTestId("whirlpool-row-Qirn Jump Whirlpool"),
-    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
+    ).toHaveTextContent(
+      "leads to Bomber Corner Whirlpool (always: no note needed)",
+    );
     expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
       "2 of 8 whirlpools noted",
     );
@@ -263,7 +271,9 @@ describe("the Overworld tab", () => {
     await user.selectOptions(select, ["flipped"]);
     expect(
       screen.getByTestId("whirlpool-row-River Bend Whirlpool"),
-    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
+    ).toHaveTextContent(
+      "leads to Bomber Corner Whirlpool (always: no note needed)",
+    );
     expect(
       screen.getByRole("combobox", { name: "Qirn Jump Whirlpool: leads to" }),
     ).toBeInTheDocument();
