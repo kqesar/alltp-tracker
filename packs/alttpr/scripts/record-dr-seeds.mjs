@@ -16,7 +16,7 @@
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "../test/dr-seeds");
 const AGENT = "RandoAtlas fixtures (github.com/KqesaR/alltp-tracker)";
@@ -160,32 +160,44 @@ const reduced = (patch) => {
   return Uint8Array.from(out);
 };
 
-await mkdir(OUT, { recursive: true });
-const recorded = new Date().toISOString().slice(0, 10);
-for (const hash of AVIANART) {
-  const url = `https://avianart.games/api.php?action=permlink&hash=${hash}`;
-  const json =
-    /** @type {{ response: { type: string, spoiler: { meta: unknown } } }} */ (
-      await (await get(url)).json()
+/** Fetches every seed listed and writes its fixture. */
+async function main() {
+  await mkdir(OUT, { recursive: true });
+  const recorded = new Date().toISOString().slice(0, 10);
+  for (const hash of AVIANART) {
+    const url = `https://avianart.games/api.php?action=permlink&hash=${hash}`;
+    const json =
+      /** @type {{ response: { type: string, spoiler: { meta: unknown } } }} */ (
+        await (await get(url)).json()
+      );
+    const fixture = {
+      provenance: `${url}, ${recorded}: response.type and response.spoiler.meta kept, nothing else (scripts/record-dr-seeds.mjs)`,
+      response: {
+        spoiler: { meta: json.response.spoiler.meta },
+        type: json.response.type,
+      },
+    };
+    await writeFile(
+      join(OUT, `avianart-${hash}.json`),
+      `${JSON.stringify(fixture, null, 2)}\n`,
     );
-  const fixture = {
-    provenance: `${url}, ${recorded}: response.type and response.spoiler.meta kept, nothing else (scripts/record-dr-seeds.mjs)`,
-    response: {
-      spoiler: { meta: json.response.spoiler.meta },
-      type: json.response.type,
-    },
-  };
-  await writeFile(
-    join(OUT, `avianart-${hash}.json`),
-    `${JSON.stringify(fixture, null, 2)}\n`,
-  );
+  }
+  for (const name of HTH) {
+    const url = `https://hyruletownhall.com/seed/${name}`;
+    const patch = new Uint8Array(await (await get(url)).arrayBuffer());
+    await writeFile(join(OUT, `hth-${name}`), reduced(patch));
+    await writeFile(
+      join(OUT, `hth-${name}.provenance.txt`),
+      `${url}, ${recorded}: the settings decoder's bytes alone, re-encoded (scripts/record-dr-seeds.mjs); checksums zeroed\n`,
+    );
+  }
 }
-for (const name of HTH) {
-  const url = `https://hyruletownhall.com/seed/${name}`;
-  const patch = new Uint8Array(await (await get(url)).arrayBuffer());
-  await writeFile(join(OUT, `hth-${name}`), reduced(patch));
-  await writeFile(
-    join(OUT, `hth-${name}.provenance.txt`),
-    `${url}, ${recorded}: the settings decoder's bytes alone, re-encoded (scripts/record-dr-seeds.mjs); checksums zeroed\n`,
-  );
+
+// Run as a script only: the settings import's spec imports `KEPT`, and a
+// test never reaches the network nor writes a fixture
+if (
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  await main();
 }
