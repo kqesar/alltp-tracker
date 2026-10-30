@@ -663,3 +663,75 @@ for (const width of WIDTHS) {
     }
   });
 }
+
+/** An OWR run's crossed door shuffle, its intensity not known, on Doors. */
+const openOwrDoors = async (page: Page) => {
+  await openOwrEntranceRun(page, { doorShuffle: "crossed" });
+  await page.getByRole("tab", { name: "Doors" }).click();
+  await expect(page.getByTestId("doors-panel")).toBeVisible();
+};
+
+test("an OWR run's door shuffle is noted by hand in the fork's world, from the keyboard", async ({
+  page,
+}) => {
+  await openOwrDoors(page);
+  await expect(page.getByTestId("logic-note-door")).toContainText(
+    "Overworld Randomizer seed",
+  );
+  await expect(page.getByTestId("logic-note-door")).toContainText(
+    "Its doors are shuffled: the logic follows the doors you note",
+  );
+  await page.getByTestId("doors-dungeon").selectOption("Eastern Palace");
+  // The lobby by the keyboard alone: focus, then the arrow picks a door
+  const lobby = page.getByRole("combobox", {
+    name: "Eastern entrance: opens on",
+  });
+  await lobby.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(lobby).not.toHaveValue("");
+  await lobby.selectOption("eastern-lobby-s");
+  await page
+    .getByTestId("door-link-eastern-lobby-bridge-n")
+    .selectOption("eastern-cannonball-s");
+  await expect(page.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+    "eastern-lobby-bridge-n",
+  );
+  await expect(page.getByTestId("doors-summary")).toContainText(
+    "2 of 31 doors of Eastern Palace noted",
+  );
+  await auditPage(page);
+  // Kept across a reload, as a DR run's
+  await page.reload();
+  await page.getByTestId("doors-dungeon").selectOption("Eastern Palace");
+  await expect(page.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+    "eastern-lobby-bridge-n",
+  );
+});
+
+for (const width of WIDTHS) {
+  test(`an OWR run's Doors tab fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openOwrDoors(page);
+    await page.getByTestId("doors-dungeon").selectOption("Ganons Tower");
+    await page
+      .getByTestId("door-link-gt-lobby-left-down-stairs")
+      .selectOption({ index: 1 });
+    await page.getByTestId("door-link-gt-lobby-s").selectOption({ index: 1 });
+    await expect(page.getByTestId("doors-plain")).toBeVisible();
+    await auditPage(page);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth,
+      ),
+    ).toBe(false);
+    if (process.env.DOOR_SHOTS !== undefined) {
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/owr-doors-${width}.png`,
+      });
+      await page.getByTestId("doors-panel").screenshot({
+        path: `${process.env.DOOR_SHOTS}/owr-doors-panel-${width}.png`,
+      });
+    }
+  });
+}
