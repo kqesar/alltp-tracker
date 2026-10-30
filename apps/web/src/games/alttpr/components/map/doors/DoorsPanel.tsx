@@ -1,3 +1,4 @@
+import type { DrData } from "@alltp/pack-alttpr/door-world";
 import {
   type DoorKindNote,
   type DoorShuffleSettings,
@@ -12,8 +13,15 @@ import {
   portalsOf,
   shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
-import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
-import { memo, useId, useMemo, useState } from "react";
+import {
+  createContext,
+  memo,
+  use,
+  useContext,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { linkChange } from "@/games/alttpr/logic/doorNotes";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -42,6 +50,36 @@ const dungeonText = (name: string): string =>
         : name;
 
 const DUNGEONS = PARTITIONS.flat();
+
+/** Each release's world data, loaded once, with its solver's chunk. */
+const loads = new Map<string, Promise<DrData>>();
+
+/**
+ * A run's release's world data: the Overworld Randomizer's for its runs
+ * (its doors are its own, the bosses' Spoils rooms among them), DR's for
+ * DR's, each from its solver's module, so neither run loads the other's.
+ */
+export const dataOf = (randomizer: string): Promise<DrData> => {
+  let found = loads.get(randomizer);
+  if (found === undefined) {
+    found =
+      randomizer === "owr"
+        ? import("@/games/alttpr/logic/owrWorld").then((m) => m.data)
+        : import("@/games/alttpr/logic/drSolver").then((m) => m.data);
+    loads.set(randomizer, found);
+  }
+  return found;
+};
+
+/** The world data the panel reads its doors from. */
+const DoorData = createContext<DrData | null>(null);
+
+/** The panel's world data: set by DoorsPanel before any row renders. */
+const useDoorData = (): DrData => {
+  const data = useContext(DoorData);
+  if (data === null) throw new Error("No door data");
+  return data;
+};
 
 /** The kind select of a door whose kind the shuffle may change. */
 const KindSelect = ({ door, label }: { door: string; label: string }) => {
@@ -88,14 +126,15 @@ const DoorRow = memo(
     const id = doorId(door.name);
     const target = useGameStore((state) => state.doors.links?.[id]);
     const noteDoors = useGameStore((state) => state.noteDoors);
+    const data = useDoorData();
     const byDungeon = useMemo(() => {
       const groups = new Map<string, Door[]>();
       for (const other of targets) {
-        const dungeon = homeDungeonOf(other, DR_DATA) ?? "";
+        const dungeon = homeDungeonOf(other, data) ?? "";
         groups.set(dungeon, [...(groups.get(dungeon) ?? []), other]);
       }
       return [...groups];
-    }, [targets]);
+    }, [targets, data]);
     return (
       <li className="door-row" data-testid={`door-row-${id}`}>
         <span className="door-row__name">{door.name}</span>
@@ -148,9 +187,10 @@ const LobbyRow = ({
   const id = portalId(portal);
   const lobby = useGameStore((state) => state.doors.lobbies?.[id]);
   const noteDoors = useGameStore((state) => state.noteDoors);
+  const data = useDoorData();
   const doors = useMemo(
-    () => lobbyDoors(portal, settings.shuffle, DR_DATA),
-    [portal, settings.shuffle],
+    () => lobbyDoors(portal, settings.shuffle, data),
+    [portal, settings.shuffle, data],
   );
   return (
     <li className="door-row door-row--lobby" data-testid={`door-lobby-${id}`}>
@@ -218,9 +258,20 @@ const KeysField = ({ dungeon }: { dungeon: string }) => {
  * whose kind alone may change, each portal's lobby from intensity 3 and,
  * in a pool of dungeons, the dungeon's small keys. Everything is noted by
  * hand: the tracker never reads a door, a room or a transition. Loaded on
- * demand, with DR's world.
+ * demand, with its release's world data (`dataOf`).
  */
 const DoorsPanel = () => {
+  const randomizer = useGameStore((state) => state.settings.randomizer ?? "dr");
+  const data = use(dataOf(randomizer));
+  return (
+    <DoorData value={data}>
+      <DoorsOf data={data} />
+    </DoorData>
+  );
+};
+
+/** The panel's body on its release's world data. */
+const DoorsOf = ({ data }: { data: DrData }) => {
   const run = useGameStore((state) => state.settings);
   const settings = useMemo(() => doorShuffleSettingsOf(run), [run]);
   const notes = useGameStore((state) => state.doors);
@@ -234,19 +285,19 @@ const DoorsPanel = () => {
     () =>
       settings === undefined
         ? []
-        : shuffledDoors(settings, DR_DATA).filter(
-            (d) => homeDungeonOf(d, DR_DATA) === dungeon,
+        : shuffledDoors(settings, data).filter(
+            (d) => homeDungeonOf(d, data) === dungeon,
           ),
-    [settings, dungeon],
+    [settings, dungeon, data],
   );
   const kindOnly = useMemo(
     () =>
       settings === undefined
         ? []
-        : kindOnlyDoors(settings, DR_DATA).filter(
-            (d) => homeDungeonOf(d, DR_DATA) === dungeon,
+        : kindOnlyDoors(settings, data).filter(
+            (d) => homeDungeonOf(d, data) === dungeon,
           ),
-    [settings, dungeon],
+    [settings, dungeon, data],
   );
   const targets = useMemo(
     () =>
@@ -255,10 +306,10 @@ const DoorsPanel = () => {
           ? []
           : relinked.map((door) => [
               door.name,
-              doorTargets(door, settings, DR_DATA),
+              doorTargets(door, settings, data),
             ]),
       ),
-    [settings, relinked],
+    [settings, relinked, data],
   );
   if (settings === undefined) return null;
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -281,7 +332,7 @@ const DoorsPanel = () => {
   const unknownLinked = unknownKinds.filter((door) =>
     through.has(doorId(door.name)),
   );
-  const portals = settings.intensity >= 3 ? portalsOf(dungeon, DR_DATA) : [];
+  const portals = settings.intensity >= 3 ? portalsOf(dungeon, data) : [];
   return (
     <div className="doors" data-testid="doors-panel">
       <div className="doors__bar">

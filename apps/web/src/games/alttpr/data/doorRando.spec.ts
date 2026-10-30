@@ -141,10 +141,6 @@ describe("a Door Randomizer run's logic", () => {
     // v31 asks less than DR in places (kill rooms, Ganons Tower's Tile
     // Room's powder, DR's key analysis): a yes there would be unsound
     const cases: [Partial<RunSettings>, string][] = [
-      [
-        { doorShuffle: "basic", ...OWR },
-        "a door shuffle in an Overworld Randomizer seed",
-      ],
       [{ bossShuffle: "full" }, "shuffled bosses in a Door Randomizer seed"],
       [{ bossShuffle: "simple" }, "shuffled bosses in a Door Randomizer seed"],
     ];
@@ -234,6 +230,7 @@ describe("a Door Randomizer run's logic", () => {
       { entranceShuffle: "crossed", mode: "inverted" },
       { entranceShuffle: "crossed", mode: "standard" },
       { doorEntrances: "lite", mode: "standard" },
+      { doorShuffle: "crossed", entranceShuffle: "crossed" },
     ] as const) {
       const run = with_(DR, { ...OWR, ...change });
       expect(doorShuffleOf(run)).toBe(

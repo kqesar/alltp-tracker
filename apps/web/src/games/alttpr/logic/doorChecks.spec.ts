@@ -395,6 +395,39 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
   });
 
+  it("reads an OWR door shuffle in the fork's world on the doors noted", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      doorShuffle: "basic",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    expect(solutionOf(state()).door).toBeDefined();
+    const cannonball = "eastern-palace/cannonball-chest";
+    // Eastern's lobby not noted (intensity read as 3): nowhere
+    expect(checkStates(state())[cannonball]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteDoors({ lobbies: { eastern: "eastern-lobby-s" } });
+    useGameStore
+      .getState()
+      .noteDoors(
+        linkChange(
+          state().doors,
+          "eastern-lobby-bridge-n",
+          "eastern-cannonball-s",
+          true,
+        ),
+      );
+    expect(checkStates(state())[cannonball]).toBe("available");
+  });
+
   it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,

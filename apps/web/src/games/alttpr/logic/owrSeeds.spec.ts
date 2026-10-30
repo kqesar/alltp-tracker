@@ -7,6 +7,7 @@
 import { avianartReading } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
+import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import {
   doorLogic,
   entrancesKnown,
@@ -16,6 +17,15 @@ import {
 import { drSettingsOf } from "@/games/alttpr/logic/settings";
 import unrestricted from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-0DsyCwK23.json?raw";
 import grouped from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-o4mamwuKZ.json?raw";
+import doorsCrossed from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-0tUGDpve7.json?raw";
+import doorsEntrances from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-61u7cpluY.json?raw";
+import doorsMixed from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-CTRTq1Rhj.json?raw";
+import doorsPartitioned from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-kxnOoGUE9.json?raw";
+import doorsBasic from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-nrVetY8I2.json?raw";
+import doorsCrossed3 from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-pSf43q0bF.json?raw";
+import doorsInverted from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-tIJDkPsK3.json?raw";
+import doorsStandard from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-uVQOPwIvs.json?raw";
+import doorsDecoupled from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-x1FHBuUpu.json?raw";
 import lite from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-1IAKwFudE.json?raw";
 import liteInverted from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-4cwdgebPq.json?raw";
 import full from "../../../../../../packs/alttpr/test/owr-entrance-spoilers/avianart-89uvVx2xg.json?raw";
@@ -75,6 +85,15 @@ const SEEDS = [
   ["6DIwXjzG5", mixedInverted, true, false],
   ["4yKJq5H2E", mixedGrouped, false, false],
   ["t8B3wJpHK", mixedWhirlpools, false, false],
+  ["nrVetY8I2", doorsBasic, false, false],
+  ["kxnOoGUE9", doorsPartitioned, false, false],
+  ["0tUGDpve7", doorsCrossed, false, false],
+  ["pSf43q0bF", doorsCrossed3, false, false],
+  ["tIJDkPsK3", doorsInverted, true, false],
+  ["CTRTq1Rhj", doorsMixed, false, false],
+  ["61u7cpluY", doorsEntrances, false, false],
+  ["uVQOPwIvs", doorsStandard, false, false],
+  ["x1FHBuUpu", doorsDecoupled, false, false],
   ["AjT8OHdZc", standard, false, false],
   ["0rrVwugI5", standardBonks, false, true],
   ["mhKQq39uX", standardMixed, false, false],
@@ -117,9 +136,25 @@ describe("an Overworld Randomizer seed started from its permalink", () => {
       });
       // The fork's own entrance shuffles: its pool on the Entrances tab,
       // its rules' `shuffle_<mode>`; its Standard world
-      const { mode, shuffle } = (
-        JSON.parse(raw) as { meta: { mode: string; shuffle: string } }
+      const { mode, shuffle, ...meta } = (
+        JSON.parse(raw) as {
+          meta: {
+            mode: string;
+            shuffle: string;
+            door_shuffle: string;
+            intensity: number;
+            decoupledoors: boolean;
+          };
+        }
       ).meta;
+      // The fork's door shuffle, as its world reads it
+      const doors = doorShuffleSettingsOf(run);
+      expect(doors?.shuffle ?? "vanilla").toBe(meta.door_shuffle);
+      if (doors !== undefined)
+        expect([doors.intensity, doors.decoupled]).toEqual([
+          meta.intensity,
+          meta.decoupledoors,
+        ]);
       expect(drSettingsOf(run).standardMode === true).toBe(mode === "standard");
       expect(entrancesKnown(run)).toBe(shuffle !== "vanilla");
       expect(drSettingsOf(run)).toMatchObject(
