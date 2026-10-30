@@ -133,6 +133,37 @@ describe("the Door Randomizer's world data (import-dr, stage A)", () => {
       });
   });
 
+  it("gives each door in a room's door list its kind there (RoomData.py)", () => {
+    const listed = doors.filter((door) => "listPos" in door);
+    // Every door create_door places in its room's list (`pos`) has a kind
+    expect(listed.filter((door) => !("kind" in door))).toEqual([]);
+    expect(listed).toHaveLength(679);
+    // The key doors are the room's key kinds, a spiral stair's its own
+    const kindOf = (door: (typeof doors)[number]) =>
+      "kind" in door ? door.kind : undefined;
+    expect(
+      new Set(doors.filter((door) => "smallKey" in door).map(kindOf)),
+    ).toEqual(new Set(["SmallKey", "StairKey", "StairKey2", "StairKeyLow"]));
+    // The big key doors, but the two cells no list places (special_big_
+    // key_doors asks the big key there, DungeonGenerator.py:774-781)
+    expect(
+      doors
+        .filter((door) => "bigKey" in door && kindOf(door) !== "BigKey")
+        .map((door) => door.name),
+    ).toEqual(["Hyrule Dungeon Cellblock Door", "Thieves Blind's Cell Door"]);
+    expect(doors.filter((door) => kindOf(door) === "Bombable")).toHaveLength(
+      28,
+    );
+    expect(doors.filter((door) => kindOf(door) === "Dashable")).toHaveLength(
+      16,
+    );
+    // create_rooms' swaps (RoomData.py:250-253): Hera's lobby stairs, the
+    // castle's west door
+    expect(
+      doors.find((door) => door.name === "Hyrule Castle Lobby WN"),
+    ).toMatchObject({ kind: "Normal", listPos: 1 });
+  });
+
   it("keeps a flag set under a condition with its condition", () => {
     const conditional = doors.flatMap((door) =>
       "conditional" in door && door.conditional !== undefined

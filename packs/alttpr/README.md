@@ -1093,7 +1093,11 @@ Crystal` apart). `doors.json` holds the 1,200 doors of `Doors.py`, their
 builder chains and the statements after them read into flags (keys,
 barriers, traps, events, dead ends, pairs, portals, controllers; a flag set
 under an `if` kept with its condition, a flag at its default left out, no
-layout byte), and the 25 portals. `connections.json` holds the tables
+layout byte), each door's index in its room's door list (`listPos`) and the
+kind `RoomData.py` gives it there (`kind`: `SmallKey`, `Bombable`,
+`Dashable`, `Trap`..., `create_rooms`' swaps applied; `shuffledKind` where a
+door shuffle deletes the entry), which the door shuffle reassigns, and the
+25 portals. `connections.json` holds the tables
 `OverworldShuffle.py`, `EntranceShuffle2.py` and `DoorShuffle.py` wire the
 world with, as written, each with its line (`EntranceShuffle2.py`'s
 `exit_ids` and `EntranceData.py`'s door slots and hole bytes among them, the

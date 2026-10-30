@@ -43,6 +43,15 @@ export interface DrDoor {
   /** no_exit(): blocked as an exit (BaseClasses.py:1952-1954). */
   readonly trapped?: boolean;
   readonly portal?: string;
+  /** A door a door shuffle may make a dungeon's way in (lobby). */
+  readonly portalAble?: boolean;
+  /** Its index in its room's door list (RoomData.py), if it has one. */
+  readonly listPos?: number;
+  /**
+   * Its kind there (RoomData.py's DoorKind name: `SmallKey`, `Bombable`,
+   * `Dashable`, `Trap`...), as the vanilla world has it.
+   */
+  readonly kind?: string;
   /** The door whose link this one follows (controller_door). */
   readonly controller?: string;
   readonly source: string;

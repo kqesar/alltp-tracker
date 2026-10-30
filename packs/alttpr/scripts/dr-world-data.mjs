@@ -16,8 +16,12 @@
 //   list applied (barriers, events, dead ends, dungeon links, controllers,
 //   paired doors, portals). A statement under an `if` is kept with its
 //   condition in `conditional`, for the world to read per setting. A door's
-//   layout bytes (pos, ss, edge, toggler, trap's flag) are no logic and are
-//   never written.
+//   layout bytes (ss, edge, toggler, trap's flag) are no logic and are
+//   never written; its index in its room's door list (`pos`) is, with the
+//   kind RoomData.py gives it there (Room.kind, RoomData.py:278-279: a key,
+//   bombable, dashable or trap door...), which the door shuffle reassigns.
+// - RoomData.py: each room's door list (create_rooms, :5-258), the swaps
+//   it makes after, and what a door shuffle deletes there (:248-249).
 // - The connection tables of OverworldShuffle.py, EntranceShuffle2.py and
 //   DoorShuffle.py, each as it is written, with its line: the world builder
 //   links them as link_overworld, link_entrances_new and link_doors_prep do.
@@ -406,6 +410,7 @@ function readDoors(source) {
       dead: false,
       direction: null,
       event: null,
+      listPos: null,
       name,
       portalAble: false,
       smallKey: false,
@@ -457,8 +462,16 @@ function readDoors(source) {
         case "portal":
           door.portalAble = true;
           break;
+        // Its index in its room's door list (RoomData.py), which says
+        // its kind (Room.kind, :278-279)
+        case "pos": {
+          const at = step.args[0];
+          if (at?.t !== "const" || typeof at.value !== "number")
+            fail(`${where}: pos of no number`);
+          door.listPos = at.value;
+          break;
+        }
         // Layout: where the door sits and how the room scrolls
-        case "pos":
         case "ss":
         case "edge":
         case "toggler":
@@ -682,6 +695,114 @@ function readDoors(source) {
   return { doors: lean, portals };
 }
 
+const ROOMS = "RoomData.py";
+
+/**
+ * Each room's door kinds, in its door list's order (RoomData.py
+ * create_rooms, :5-258): the list as built, the swaps applied, and the
+ * index a door shuffle deletes (`shuffled`). What an enemy shuffle changes
+ * (:254-256) is left out: the tracker does not model it.
+ * @param {string} source - RoomData.py
+ * @returns {Map<number, { kinds: string[], shuffled: Set<number> }>}
+ */
+function readRooms(source) {
+  const fn = body(source, "create_rooms", ROOMS);
+  /** @type {Map<number, { kinds: string[], shuffled: Set<number> }>} */
+  const rooms = new Map();
+  for (const { call, line } of callExpressions(
+    source,
+    "Room",
+    ROOMS,
+    fn.start,
+    fn.end,
+  )) {
+    const where = `${ROOMS}:${line}`;
+    /** @type {Extract<Expr, { t: "call" }>[]} */
+    const chain = [];
+    /** @type {Expr} */
+    let at = call;
+    while (at.t === "call") {
+      chain.unshift(at);
+      if (at.fn.t !== "attr") break;
+      at = at.fn.of;
+    }
+    const [head, ...doors] = chain;
+    const index = head?.args[1];
+    if (index?.t !== "const" || typeof index.value !== "number")
+      fail(`${where}: a room of no index`);
+    /** @type {string[]} */
+    const kinds = [];
+    for (const step of doors) {
+      const kind = step.args[1];
+      if (
+        step.fn.t !== "attr" ||
+        step.fn.name !== "door" ||
+        kind?.t !== "attr" ||
+        kind.of.t !== "name" ||
+        kind.of.name !== "DoorKind"
+      )
+        fail(`${where}: a room's door of no DoorKind`);
+      kinds.push(kind.name);
+    }
+    if (rooms.has(index.value)) fail(`${where}: room ${index.value} twice`);
+    rooms.set(index.value, { kinds, shuffled: new Set() });
+  }
+  const room = (/** @type {string} */ hex, /** @type {string} */ where) =>
+    rooms.get(Number.parseInt(hex, 16)) ?? fail(`${where}: no room ${hex}`);
+  /** @param {Statement[]} statements @param {string | undefined} when */
+  const walk = (statements, when) => {
+    for (const { body: inner, line, text } of statements) {
+      const where = `${ROOMS}:${line}`;
+      if (text.startsWith("world.rooms += [")) continue;
+      if (/^if world\.doorShuffle\[player\] != 'vanilla':?$/.test(text)) {
+        walk(inner, "doorShuffle");
+        continue;
+      }
+      // Enemy shuffle's kill rooms: not modelled
+      if (/^if world\.enemy_shuffle\[player\] != 'none':?$/.test(text))
+        continue;
+      const call =
+        /^world\.get_room\(0x([0-9a-f]+), player\)\.(swap|delete)\((\d+)(?:, (\d+))?\)$/.exec(
+          text,
+        );
+      if (call === null) fail(`${where}: the statement ${text.slice(0, 60)}`);
+      const [, hex = "", what, a = "", b] = call;
+      const { kinds, shuffled } = room(hex, where);
+      if (what === "swap" && when === undefined && b !== undefined) {
+        const i = Number(a);
+        const j = Number(b);
+        [kinds[i], kinds[j]] = [kinds[j] ?? "", kinds[i] ?? ""];
+      } else if (what === "delete" && when === "doorShuffle")
+        shuffled.add(Number(a));
+      else fail(`${where}: the statement ${text.slice(0, 60)}`);
+    }
+  };
+  walk(functionBody(source, "create_rooms", ROOMS).body, undefined);
+  return rooms;
+}
+
+/**
+ * Each door's kind in its room's list (Room.kind): the vanilla kind, and,
+ * where a door shuffle deletes its entry, `FF` then (`shuffledKind`).
+ * @param {(Record<string, unknown> & { name: string })[]} doors
+ * @param {Map<number, { kinds: string[], shuffled: Set<number> }>} rooms
+ */
+function withKinds(doors, rooms) {
+  return doors.map((door) => {
+    const { listPos, supertile } = door;
+    if (typeof listPos !== "number") return door;
+    const room = rooms.get(/** @type {number} */ (supertile));
+    const kind = room?.kinds[listPos];
+    if (room === undefined || kind === undefined)
+      fail(`${door.source}: no kind at ${listPos} of room ${supertile}`);
+    return {
+      ...door,
+      kind,
+      ...(room.shuffled.has(listPos) ? { shuffledKind: "FF" } : {}),
+    };
+  });
+}
+
 /**
  * What a table keeps of each entry where it is more than the world needs:
  * of door_addresses, a door's slot of the game's door table or a hole's
@@ -749,7 +870,7 @@ export function importDrWorld(read) {
   const { doors, portals } = readDoors(read(DOORS));
   return {
     connections: readTables(read),
-    doors,
+    doors: withKinds(doors, readRooms(read(ROOMS))),
     dungeons,
     portals,
     regions,
