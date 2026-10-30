@@ -2,6 +2,7 @@ import { whirlpoolsOf } from "@alltp/pack-alttpr/door-world";
 import { OWR_DATA } from "@alltp/pack-alttpr/door-world/owr";
 import { describe, expect, it } from "vitest";
 import {
+  OWR_DARK_WHIRLPOOLS,
   OWR_FLUTE_SCREENS,
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
@@ -73,6 +74,15 @@ describe("an OWR run's overworld notes", () => {
         .map(Number)
         .sort((a, b) => a - b),
     );
+  });
+
+  it("holds the dark world's whirlpools to the pack's screens", () => {
+    expect(
+      [...whirlpoolsOf(OWR_DATA)]
+        .filter(([, { screen }]) => screen >= 0x40)
+        .map(([name]) => name)
+        .sort(),
+    ).toEqual([...OWR_DARK_WHIRLPOOLS].sort());
   });
 
   it("names each flute screen by the pack's regions, as it stands and flipped", () => {

@@ -2,6 +2,7 @@ import { memo, useId } from "react";
 import {
   OWR_WHIRLPOOLS,
   overworldShufflesOf,
+  whirlpoolTargetsOf,
 } from "@/games/alttpr/data/doorRando";
 import { FLUTE_SCREENS, fluteScreenName } from "@/games/alttpr/data/owrScreens";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -9,10 +10,15 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 /** The flute's eight spots (shuffle_flute_spots, FluteShuffle.py:54). */
 const FLUTE_SPOTS = 8;
 
-/** A whirlpool: where it leads, noted both ways. */
+/** A whirlpool: where it leads, among its pool's, noted both ways. */
 const WhirlpoolRow = memo(({ name }: { name: string }) => {
   const target = useGameStore((state) => state.overworld.whirlpools?.[name]);
   const noteOverworld = useGameStore((state) => state.noteOverworld);
+  const settings = useGameStore((state) => state.settings);
+  // A note the run's pools no longer offer (its settings changed) stays shown
+  const pool = whirlpoolTargetsOf(name, settings);
+  const targets =
+    target === undefined || pool.includes(target) ? pool : [...pool, target];
   return (
     <li className="door-row" data-testid={`whirlpool-row-${name}`}>
       <span className="door-row__name">{name}</span>
@@ -28,7 +34,7 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
         value={target ?? ""}
       >
         <option value="">? Not known</option>
-        {OWR_WHIRLPOOLS.filter((other) => other !== name).map((other) => (
+        {targets.map((other) => (
           <option key={other} value={other}>
             {other}
           </option>

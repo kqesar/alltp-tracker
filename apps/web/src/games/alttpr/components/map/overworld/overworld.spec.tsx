@@ -85,6 +85,42 @@ describe("the Overworld tab", () => {
     expect(pool).toHaveValue("");
   });
 
+  it("offers a whirlpool its own world's pool, every other once crossed or mixed", () => {
+    const options = (name: string) =>
+      [
+        ...screen
+          .getByRole("combobox", { name: `${name}: leads to` })
+          .querySelectorAll("option"),
+      ]
+        .map((option) => option.value)
+        .filter((value) => value !== "");
+    run({ owWhirlpool: true });
+    const { unmount } = render(<OverworldPanel />);
+    // OverworldShuffle.py:378-391: light with light, dark with dark
+    expect(options("Qirn Jump Whirlpool")).toEqual(["Bomber Corner Whirlpool"]);
+    expect(options("C Whirlpool")).toEqual([
+      "River Bend Whirlpool",
+      "Lake Hylia Whirlpool",
+      "Zora Whirlpool",
+      "Kakariko Pond Whirlpool",
+      "Octoballoon Whirlpool",
+    ]);
+    unmount();
+    for (const crossed of [
+      { owCrossed: "unrestricted" as const },
+      { owCrossed: "grouped" as const },
+      { owMixed: true },
+    ]) {
+      run({ owWhirlpool: true, ...crossed });
+      const view = render(<OverworldPanel />);
+      expect(
+        options("Qirn Jump Whirlpool"),
+        JSON.stringify(crossed),
+      ).toHaveLength(7);
+      view.unmount();
+    }
+  });
+
   it("ticks the flute's screens, up to eight, by keyboard too", async () => {
     const user = userEvent.setup();
     run({ owFluteShuffle: "balanced" });

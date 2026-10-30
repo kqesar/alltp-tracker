@@ -1226,6 +1226,38 @@ export const OWR_WHIRLPOOLS = [
 ] as const;
 
 /**
+ * The whirlpools on dark world screens (whirlpool_map's 0x55 and 0x7f,
+ * OverworldShuffle.py:370): its spec holds them to the pack's data.
+ */
+export const OWR_DARK_WHIRLPOOLS: ReadonlySet<string> = new Set([
+  "Qirn Jump Whirlpool",
+  "Bomber Corner Whirlpool",
+]);
+
+/**
+ * The whirlpools a run's whirlpool may lead into. The fork shuffles them in
+ * two pools, light world and dark (OverworldShuffle.py:378-391): an
+ * overworld not crossed (nor Polar's, but with Mixed's flips) keeps each
+ * whirlpool in its own world's, which an Inverted world flips whole. Mixed
+ * flips screens one by one and the other crossed shuffles mix the pools,
+ * so any of the others then.
+ */
+export const whirlpoolTargetsOf = (
+  name: string,
+  settings: DoorRunSettings,
+): readonly string[] => {
+  const door = doorOf(settings);
+  const others = OWR_WHIRLPOOLS.filter((other) => other !== name);
+  const apart =
+    door !== null &&
+    !door.owMixed &&
+    (door.owCrossed === "none" || door.owCrossed === "polar");
+  if (!apart) return others;
+  const dark = OWR_DARK_WHIRLPOOLS.has(name);
+  return others.filter((other) => OWR_DARK_WHIRLPOOLS.has(other) === dark);
+};
+
+/**
  * The screens a flute spot may stand on (flute_data's light world ids,
  * FluteShuffle.py:683-726): what an overworld note lists. Its spec holds
  * the list to the pack's data.
