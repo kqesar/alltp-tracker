@@ -543,6 +543,40 @@ function mainOwr(checkout) {
     { generated, upstream },
     world.connections,
   );
+  // Stage B: its rules, in DR's translation under the fork's dialect
+  const {
+    bombShop,
+    bunny,
+    crystal,
+    doorsOpen,
+    fill,
+    negatedEvents,
+    newItems,
+    uncalledMethods,
+    unported,
+    ...tables
+  } = importDrRules(read, world, locations, "owr");
+  writeLines(
+    join(OWR_WORLD, "rules.json"),
+    {
+      // The fork's big bomb is an event's (Pyramid Crack), no rule by
+      // where the bomb shop's door is
+      bombShop: bombShop ?? null,
+      bunny,
+      doorsOpen,
+      fill,
+      generated,
+      negatedEvents,
+      newItems,
+      staticKeyLogic: importStaticKeyLogic(read),
+      uncalledMethods,
+      upstream,
+    },
+    { ...tables, crystal, unported },
+  );
+  process.stdout.write(
+    `rules: ${Object.keys(tables.entrances).length} entrances, ${Object.keys(tables.locations).length} locations, ${Object.keys(tables.helpers).length} helpers, ${unported.length} unported\n`,
+  );
   const overworld =
     world.overworld ?? fail("the fork's overworld was not read");
   writeLines(

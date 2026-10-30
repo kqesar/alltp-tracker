@@ -1559,6 +1559,32 @@ they part). `src/door-rando/owr-data.spec.ts` holds the data: every region
 and door, every table's names, every exit linked but those the fork links in
 code (save points, flute spots, Houlihan's room, the dark world starts).
 
+**Its rules** (`src/door-rando/owr/rules.json`, the same run): DR's
+translation (`dr-rules.mjs` over `rules-core.mjs`) under the fork's dialect.
+A rule object reads as the state call it compiles to (`Has(item, player,
+n)` is `state.has(…)`, `Primitive(m, …)` `state.m(…)`, `Reach(…)`
+`state.can_reach(…)`, `and_rule`/`or_rule`/`not_rule` Python's and, or,
+not; `accessRule`), so every DR expression and method applies where the
+fork's `BaseClasses.py` agrees with DR 1.5.8's. Where it parts, its own
+methods (`OWR_METHODS`, each citing its lines): `can_use_bombs` also needs
+bombs to farm unless `override_bomb_check` (`overrideBombCheck`, which only
+the fork's test harness sets) (`can_farm_bombs`: a farm's event, rupees and a shop selling
+bombs; Standard's escape and the seed's stun prize are maybe), `can_flute`
+is the activated flute alone (its activation an event at Kakariko),
+`has_beaten_aga` waits for Zelda in Standard, `can_collect_bonkdrops`.
+`world.is_tile_swapped(screen)` is the setting `tileSwapped_<screen>`,
+which the world gives (every screen in Inverted, its flip in Mixed);
+`is_atgt_swapped` and `is_bombshop_start` are screens too. Its events come
+from `location_events` (`Regions.py`), each boss kill an event of its own
+(`beatBoss_…`, which the dungeons goal counts); `dynamicEvents` lists those
+the world adds at locations of its own: the flute's activation and the
+bomb and rupee farms of `create_farm_locations` (the tree pulls and crabs,
+which drop what the seed's prize packs hold, are left out). Each bonk drop
+has its rule while `bonkDrops` (`shuffle_bonk_drops`). What is code is
+listed in `unported`, the same code as DR's at the fork's lines, and its
+own `ow_terrain_rules` (water edges: flippers, and the pearl by where the
+edge leads), which the world ports. `owr-rules.spec.ts` holds all of it.
+
 ## The entrance randomizer's tables
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python

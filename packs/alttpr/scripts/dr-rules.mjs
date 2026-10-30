@@ -347,7 +347,9 @@ const METHODS = {
  */
 const canUseBombs = (ctx) =>
   method(ctx, "can_use_bombs", "", () =>
-    any(negate(setting("bombBag")), atom("bombUpgrade")),
+    ctx.dialect === OWR
+      ? owrCanUseBombs(ctx)
+      : any(negate(setting("bombBag")), atom("bombUpgrade")),
   );
 
 /**
@@ -1131,6 +1133,466 @@ const DR = {
   world: WORLD,
 };
 
+// ---------------------------------------------------------------------------
+// The Overworld fork
+
+/** An expression: a name. @param {string} name @returns {Expr} */
+const named = (name) => ({ name, t: "name" });
+
+/**
+ * A rule object of the Overworld fork (owr:source/logic/AccessRule.py) as
+ * the state call it compiles to: `Has(item, player, count)` is
+ * `state.has(item, player, count)` (:132-137), `Primitive(m, *args)`
+ * `state.m(*args)` (:163-166), `Reach(spot, hint, player)`
+ * `state.can_reach(spot, hint, player)` (:204-206), `and_rule`, `or_rule`
+ * and `not_rule` Python's and, or and not (:340-371, `_compile_and/or`), TRUE
+ * and FALSE their values. Undefined for anything else.
+ * @param {Expr} expr
+ * @returns {Expr | undefined}
+ */
+export function accessRule(expr) {
+  if (expr.t === "name" && (expr.name === "TRUE" || expr.name === "FALSE"))
+    return { t: "const", value: expr.name === "TRUE" };
+  if (expr.t !== "call" || expr.fn.t !== "name") return undefined;
+  if (Object.keys(expr.keywords).length > 0)
+    throw new Untranslatable(`${expr.fn.name} with keywords`);
+  /** @param {string} name @param {Expr[]} args @returns {Expr} */
+  const stateCall = (name, args) => ({
+    args,
+    fn: { name, of: named("state"), t: "attr" },
+    keywords: {},
+    t: "call",
+  });
+  const { args } = expr;
+  switch (expr.fn.name) {
+    case "Has":
+      return stateCall("has", args);
+    case "Primitive": {
+      const [method, ...rest] = args;
+      if (method?.t !== "const" || typeof method.value !== "string")
+        throw new Untranslatable("a primitive of no name");
+      return stateCall(method.value, rest);
+    }
+    case "Reach": {
+      const [spot, hint, player] = args;
+      if (spot === undefined) throw new Untranslatable("a reach of nothing");
+      // A hint of None is can_reach's default, a region
+      const kind =
+        hint === undefined || (hint.t === "const" && hint.value === null)
+          ? { t: /** @type {const} */ ("const"), value: "Region" }
+          : hint;
+      return stateCall("can_reach", [spot, kind, player ?? named("player")]);
+    }
+    case "and_rule":
+    case "or_rule":
+      return {
+        args: [...args],
+        t: expr.fn.name === "and_rule" ? "and" : "or",
+      };
+    case "not_rule": {
+      const [of] = args;
+      if (of === undefined || args.length !== 1)
+        throw new Untranslatable("a not_rule of no one rule");
+      return { of: accessRule(of) ?? of, t: "not" };
+    }
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * The expressions the Overworld fork writes: its rule objects, read as the
+ * state calls they compile to, then DR's.
+ * @param {Context} ctx
+ * @param {Expr} expr
+ * @param {Scope} scope
+ * @returns {Rule | undefined}
+ */
+function owrExpression(ctx, expr, scope) {
+  const call = accessRule(expr);
+  if (call !== undefined) return translate(ctx, call, scope);
+  // A lambda among rule objects (coerce_rule makes it Opaque): its body
+  if (expr.t === "lambda") return translate(ctx, expr.body, scope);
+  // world.custom_goals[player]['…']: the customizer's goals, None in a
+  // seed of the options (BaseClasses.py: set_player_attr)
+  if (
+    expr.t === "index" &&
+    expr.of.t === "index" &&
+    worldAttribute(expr.of) === "custom_goals"
+  )
+    return FALSE;
+  if (
+    expr.t === "call" &&
+    expr.fn.t === "attr" &&
+    expr.fn.of.t === "name" &&
+    expr.fn.of.name === "world"
+  ) {
+    const tile = (/** @type {number} */ screen) =>
+      setting(`tileSwapped_${screen.toString(16).padStart(2, "0")}`);
+    switch (expr.fn.name) {
+      // A screen flipped: every screen in Inverted, its tile in Mixed
+      // (BaseClasses.py:331-332), which the world gives
+      case "is_tile_swapped": {
+        const [screen] = expr.args;
+        if (screen?.t !== "const" || typeof screen.value !== "number")
+          throw new Untranslatable("a tile of no number");
+        return tile(screen.value);
+      }
+      // BaseClasses.py:347-351
+      case "is_atgt_swapped":
+        return all(tile(0x03), tile(0x1b));
+      case "is_bombshop_start":
+        return tile(0x2c);
+      // BaseClasses.py:353-356: the sanctuary's tile where it may flip
+      // (allow_flip_sanc), else Inverted; the world gives it
+      case "is_dark_chapel_start":
+        return setting("darkChapelStart");
+    }
+  }
+  // state.has('Beat Boss', player, n): the boss kills (location_events,
+  // Regions.py), each an event of its own location
+  if (
+    expr.t === "call" &&
+    expr.fn.t === "attr" &&
+    expr.fn.name === "has" &&
+    expr.fn.of.t === "name" &&
+    expr.fn.of.name === "state" &&
+    expr.args[0]?.t === "const" &&
+    expr.args[0].value === "Beat Boss"
+  ) {
+    const count = numberOf(ctx, expr.args[2], 1);
+    if (typeof count !== "number") throw new Untranslatable("a boss count");
+    const ids = owrBossKills.map((location) => {
+      ctx.heldEvents.add(`Beat Boss@${location}`);
+      return bossKillId(location);
+    });
+    return atom(`count(${ids.join(", ")}) >= ${count}`);
+  }
+  // A function of the module that returns a rule (spike_cave_access_rule)
+  if (expr.t === "call" && expr.fn.t === "name") {
+    const fn = moduleFunctions.get(expr.fn.name);
+    if (fn !== undefined) return translate(ctx, fn, scope);
+  }
+  return expression(ctx, expr, scope);
+}
+
+/**
+ * The events the Overworld fork adds at locations of its own, which the
+ * world adds the same way: the flute's activation at Kakariko
+ * (ItemList.py:255-269, its rule Rules.py:100-104; none where Kakariko's
+ * screen is flipped, whose pool holds the flute activated) and the farms of
+ * create_farm_locations (ItemList.py:655-760): bushes, rocks, the bonk
+ * rocks unless bonk drops are shuffled, the caves' pots without pottery
+ * (keys and dungeon pottery leave them too, read here as none: fewer farms
+ * is never a yes too many) and the archery game, each behind the bunny.
+ * The tree pulls and crabs drop what the seed's prize packs hold
+ * (world.prizes): left out.
+ * @param {Context} ctx
+ * @param {string} itemList - ItemList.py
+ */
+function owrDynamicEvents(ctx, itemList) {
+  const fn = body(itemList, "create_farm_locations", "ItemList.py");
+  const within = itemList.slice(fn.start, fn.end);
+  const offset = itemList.slice(0, fn.start).split("\n").length - 1;
+  /** @param {string} name */
+  const list = (name) => {
+    const { line, value } = assigned(within, name, "ItemList.py", "\\s+");
+    return {
+      line: offset + line,
+      regions: /** @type {string[]} */ (value),
+    };
+  };
+  /** @type {{ name: string, region: string, item: string, req: string, when?: string, source: string }[]} */
+  const out = [];
+  /**
+   * @param {string} listName
+   * @param {string} suffix
+   * @param {string} item
+   * @param {Rule} rule
+   * @param {Rule} [when]
+   */
+  const farms = (listName, suffix, item, rule, when) => {
+    const { line, regions } = list(listName);
+    for (const region of regions)
+      out.push({
+        item,
+        name: `${region} ${suffix}`,
+        region,
+        req: print(all(rule, notBunny(ctx, region, `ItemList.py:${line}`))),
+        source: `ItemList.py:${line}`,
+        ...(when === undefined ? {} : { when: print(when) }),
+      });
+  };
+  const methods = OWR_METHODS;
+  farms("bush_bombs", "Bush Drop", "Farmable Bombs", TRUE);
+  farms(
+    "rock_bombs",
+    "Rock Drop",
+    "Farmable Bombs",
+    methods.can_lift_rocks?.(ctx, []) ?? FALSE,
+  );
+  farms(
+    "bonk_bombs",
+    "Bonk Drop",
+    "Farmable Bombs",
+    methods.can_collect_bonkdrops?.(ctx, []) ?? FALSE,
+    negate(setting("bonkDrops")),
+  );
+  farms(
+    "bomb_caves",
+    "Pot Drop",
+    "Farmable Bombs",
+    TRUE,
+    negate(setting("pottery")),
+  );
+  farms(
+    "rupee_caves",
+    "Pot Drop",
+    "Farmable Rupees",
+    TRUE,
+    negate(setting("pottery")),
+  );
+  farms("rupee_games", "Prize", "Farmable Rupees", TRUE);
+  const flute = /\n( {4}if \(world\.flute_mode\[player\] != 'active')/.exec(
+    itemList,
+  );
+  if (flute === null) throw new Error("ItemList.py: no flute activation");
+  out.push({
+    item: "Ocarina (Activated)",
+    name: "Flute Activation",
+    region: "Kakariko Village",
+    // Rules.py:100-104: the flute; the bunny's rule is left out there
+    req: print(holding(ctx, "Ocarina", 1)),
+    source: `ItemList.py:${itemList.slice(0, flute.index + 1).split("\n").length}`,
+    when: print(negate(setting("tileSwapped_18"))),
+  });
+  ctx.helpers.set("drFluteActive", {
+    req: print(
+      any(atom("flute >= 2"), atom(drRegionId("Ocarina (Activated)"))),
+    ),
+    source: "BaseClasses.py:1270",
+  });
+  for (const item of [
+    "Farmable Bombs",
+    "Farmable Rupees",
+    "Ocarina (Activated)",
+  ])
+    ctx.heldEvents.add(item);
+  return out;
+}
+
+/** The Overworld fork's boss kills (location_events' 'Beat Boss'). @type {string[]} */
+let owrBossKills = [];
+/** Each boss kill's line in location_events. @type {Map<string, number>} */
+const bossKillLines = new Map();
+/** A boss kill's event id. @param {string} location */
+const bossKillId = (location) => `beatBoss_${drRegionId(location)}`;
+
+/**
+ * The module's functions of one return, by name (Rules.py's
+ * spike_cave_access_rule(player)): their returned rule, read where called.
+ * @type {Map<string, Expr>}
+ */
+const moduleFunctions = new Map();
+
+/**
+ * The Overworld fork's can_use_bombs (owr:BaseClasses.py:1366-1367): DR's,
+ * and bombs to farm unless `override_bomb_check` (the setting
+ * `overrideBombCheck`: set only on the copies of the world its layout code
+ * builds, OverworldShuffle.py:1363, EntranceShuffle2.py:872, and by its
+ * tests' harness, test/TestBase.py:117; never by a seed). The two +5
+ * upgrades are no item the tracker records: never held.
+ * @param {Context} ctx
+ */
+const owrCanUseBombs = (ctx) =>
+  all(
+    any(negate(setting("bombBag")), atom("bombUpgrade")),
+    any(setting("overrideBombCheck"), canFarmBombs(ctx)),
+  );
+
+/**
+ * can_farm_bombs (owr:BaseClasses.py:1251-1268): Standard's escape, the
+ * farms create_farm_locations makes (their event), a stun prize that drops
+ * bombs, or rupees to farm and a shop that sells bombs. Standard's escape
+ * reads Zelda not yet delivered, which a tracker cannot hold as reach only
+ * grows: maybe in Standard. The stun prize is the seed's (world.prizes):
+ * maybe with a way to stun.
+ * @param {Context} ctx
+ */
+const canFarmBombs = (ctx) =>
+  method(ctx, "can_farm_bombs", "", () =>
+    any(
+      all(setting("standardMode"), MAYBE),
+      holding(ctx, "Farmable Bombs", 1),
+      all(canStunEnemies(ctx), MAYBE),
+      all(
+        holding(ctx, "Farmable Rupees", 1),
+        any(
+          buyable(ctx, "Bombs (10)"),
+          atom(`reach(${idOf(ctx, "Big Bomb Shop")})`),
+        ),
+      ),
+    ),
+  );
+
+/**
+ * can_stun_enemies (owr:BaseClasses.py:1239-1247).
+ * @param {Context} ctx
+ */
+const canStunEnemies = (ctx) =>
+  method(ctx, "can_stun_enemies", "", () =>
+    any(
+      all(setting("halfBottleMagic"), atom("hookshot")),
+      all(
+        negate(setting("halfBottleMagic")),
+        negate(setting("quarterBottleMagic")),
+        any(atom("hookshot"), atom("boomerang"), atom("redBoomerang")),
+      ),
+    ),
+  );
+
+/**
+ * The Overworld fork's methods where its BaseClasses.py parts from DR
+ * 1.5.8's (read side by side for the port; each cites its lines).
+ * @type {Readonly<Record<string, (ctx: Context, args: Expr[]) => Rule>>}
+ */
+const OWR_METHODS = {
+  ...METHODS,
+  // owr:BaseClasses.py:1305-1306
+  can_collect_bonkdrops: (ctx) =>
+    method(ctx, "can_collect_bonkdrops", "", () =>
+      any(
+        atom("pegasusBoots"),
+        all(hasSword(ctx, []), holding(ctx, "Quake", 1)),
+      ),
+    ),
+  can_farm_bombs: (ctx) => canFarmBombs(ctx),
+  // owr:BaseClasses.py:1248-1249
+  can_farm_rupees: (ctx) => holding(ctx, "Farmable Rupees", 1),
+  // owr:BaseClasses.py:1270-1273: the activated flute alone; its
+  // activation is an event at Kakariko (ItemList.py:255-269), read where
+  // the world adds it
+  can_flute: (ctx) =>
+    method(ctx, "can_flute", "", () =>
+      all(
+        any(
+          negate(setting("standardMode")),
+          holding(ctx, "Zelda Delivered", 1),
+        ),
+        atom("@drFluteActive"),
+      ),
+    ),
+  can_stun_enemies: (ctx) => canStunEnemies(ctx),
+  can_use_bombs: (ctx) => canUseBombs(ctx),
+  // completionist and the key rules' placements: a tracker cannot vouch
+  everything: () => MAYBE,
+  // owr:BaseClasses.py:1229-1230
+  has_beaten_aga: (ctx) =>
+    method(ctx, "has_beaten_aga", "", () =>
+      all(
+        holding(ctx, "Beat Agahnim 1", 1),
+        any(
+          negate(setting("standardMode")),
+          holding(ctx, "Zelda Delivered", 1),
+        ),
+      ),
+    ),
+  item_in_named_locations: () => MAYBE,
+  item_is_at: () => MAYBE,
+};
+
+/**
+ * The names the Overworld fork binds: a rule object (`hidden_pits_rule =
+ * Has('Hidden Pits', player)`), read where named, then DR's.
+ * @param {Context} ctx
+ * @param {Expr} value
+ * @param {Scope} scope
+ */
+function owrAssign(ctx, value, scope) {
+  if (accessRule(value) !== undefined) return translate(ctx, value, scope);
+  return assign(ctx, value, scope);
+}
+
+/**
+ * The blocks the Overworld fork writes: the bonk drops' rules
+ * (Rules.py:387-398), each by its row of bonk_prize_table, then DR's.
+ * @param {Omit<import("./rules-core.mjs").Hook, "name" | "call"> & { statement: import("./python.mjs").Statement }} hook
+ */
+function owrBlock(hook) {
+  const { apply, ctx, line, scope, statement } = hook;
+  if (
+    statement.text !==
+    "for location_name, (_, _, aga_required, _, _, _) in bonk_prize_table.items()"
+  )
+    return block(hook);
+  const bonks = /** @type {Record<string, unknown[]>} */ (
+    assigned(regionsText, "bonk_prize_table", "Regions.py").value
+  );
+  const methods = OWR_METHODS;
+  const bonk = methods.can_collect_bonkdrops?.(ctx, []) ?? FALSE;
+  for (const [name, row] of Object.entries(bonks)) {
+    const spot = { kind: /** @type {const} */ ("location"), name };
+    const rule =
+      name === "Cold Fairy Statue"
+        ? all(canUseBombs(ctx), bonk)
+        : row[2] === true
+          ? all(bonk, methods.has_beaten_aga?.(ctx, []) ?? FALSE)
+          : bonk;
+    apply("set", spot, rule, scope.when, line);
+    apply(
+      "and",
+      spot,
+      notBunny(ctx, regionOf(ctx, spot), `Rules.py:${line}`),
+      scope.when,
+      line,
+    );
+  }
+  return true;
+}
+
+/** Regions.py, for the hooks that read its tables. */
+let regionsText = "";
+
+/** @type {Dialect} */
+const OWR = {
+  ...DR,
+  assign: owrAssign,
+  block: owrBlock,
+  code: {
+    ...CODE,
+    create_farm_locations:
+      "the farms of bombs and rupees: events the world adds (ItemList.py)",
+    ow_terrain_rules:
+      "water edges and whirlpools: flippers and the pearl, by where each edge leads",
+  },
+  expression: owrExpression,
+  methods: OWR_METHODS,
+  prefix: "dr",
+  ruleObjects: true,
+  world: {
+    ...WORLD,
+    is_premature_copied_world: FALSE,
+    shuffle: Object.fromEntries(
+      [
+        "simple",
+        "restricted",
+        "full",
+        "lite",
+        "lean",
+        "district",
+        "swapped",
+        "crossed",
+        "insanity",
+        "dungeonssimple",
+        "dungeonsfull",
+      ]
+        .map((mode) => [mode, setting(`shuffle_${mode}`)])
+        .concat([["vanilla", negate(setting("entranceShuffle"))]]),
+    ),
+    shuffle_bonk_drops: setting("bonkDrops"),
+  },
+};
+
 /**
  * DR's rules, translated.
  * @param {(file: string) => string} read - A file of the checkout
@@ -1138,8 +1600,9 @@ const DR = {
  * @param {readonly { name: string, region: string, kind: string, pot?: { block: boolean }, flag: { memory: string, room?: number } }[]} extras
  *   The locations DR adds (src/door-rando/locations.json): pots, drops, shops
  *   Stage A's regions and dungeons
+ * @param {"dr" | "owr"} [flavor] - The Overworld fork's own rules
  */
-export function importDrRules(read, world, extras) {
+export function importDrRules(read, world, extras, flavor = "dr") {
   rulesSource = read("Rules.py");
   const bossesSource = read("Bosses.py");
   const baseSource = read("BaseClasses.py");
@@ -1218,6 +1681,21 @@ export function importDrRules(read, world, extras) {
     } else typeOf.set(entry.name, entry.kind === "shop" ? "Shop" : "Normal");
   }
 
+  // The Overworld fork's bonk drops (Regions.py bonk_prize_table), made
+  // in their regions (ItemList.py create_dynamic_bonkdrop_locations)
+  regionsText = regionsSource;
+  if (flavor === "owr")
+    for (const [name, row] of Object.entries(
+      /** @type {Record<string, unknown[]>} */ (
+        assigned(regionsSource, "bonk_prize_table", "Regions.py").value
+      ),
+    )) {
+      const region = String(row[4]);
+      regionOfLocation.set(name, region);
+      locationsOf.set(region, [...(locationsOf.get(region) ?? []), name]);
+      typeOf.set(name, "Bonk");
+    }
+
   // Dungeons and their bosses (Dungeons.py create_dungeons, GT's three)
   /** @type {Map<string, string>} */
   const dungeonOfRegion = new Map();
@@ -1259,7 +1737,7 @@ export function importDrRules(read, world, extras) {
 
   // The events: items generate_itempool places at locations it locks
   const pool = body(itemListSource, "generate_itempool", "ItemList.py");
-  /** @type {Map<string, { item: string, location: string, line: number }>} */
+  /** @type {Map<string, { item: string, location: string, line: number, source?: string }>} */
   const placed = new Map();
   const within = itemListSource.slice(pool.start + 1, pool.end);
   const offset = itemListSource.slice(0, pool.start + 1).split("\n").length - 1;
@@ -1275,9 +1753,53 @@ export function importDrRules(read, world, extras) {
       location: m[1] ?? "",
     });
   }
+  // The Overworld fork places its events by a table (Regions.py
+  // location_events, ItemList.py:277-280), the boss kills all 'Beat Boss'
+  owrBossKills = [];
+  if (flavor === "owr") {
+    placed.clear();
+    const table = assigned(regionsSource, "location_events", "Regions.py");
+    const start = regionsSource.indexOf("\nlocation_events = {");
+    for (const [location, item] of Object.entries(
+      /** @type {Record<string, string>} */ (table.value),
+    )) {
+      const at = regionsSource.indexOf(
+        `'${location.replace(/'/g, "\\'")}'`,
+        start,
+      );
+      const line = regionsSource.slice(0, at).split("\n").length;
+      if (item === "Beat Boss") {
+        owrBossKills.push(location);
+        bossKillLines.set(location, line);
+        continue;
+      }
+      if (ITEMS[item] !== undefined) continue;
+      placed.set(item, { item, line, location, source: "Regions.py" });
+    }
+    // The module's functions of one return (spike_cave_access_rule)
+    moduleFunctions.clear();
+    for (const m of rulesSource.matchAll(/^def (\w+)\(player\):$/gm)) {
+      const fn = functionBody(rulesSource, m[1] ?? "", "Rules.py");
+      const [only] = fn.body;
+      if (fn.body.length === 1 && only?.text.startsWith("return "))
+        moduleFunctions.set(
+          m[1] ?? "",
+          pythonExpression(only.text.slice("return ".length)),
+        );
+    }
+  }
   const events = new Map(
     [...placed.keys()].map((item) => [item, drRegionId(item)]),
   );
+  // The farms' and the flute's events, which locations the world adds give
+  // (dynamicEvents below)
+  if (flavor === "owr")
+    for (const item of [
+      "Farmable Bombs",
+      "Farmable Rupees",
+      "Ocarina (Activated)",
+    ])
+      events.set(item, drRegionId(item));
 
   /** @param {string} name */
   const methodLine = (name) => {
@@ -1311,7 +1833,7 @@ export function importDrRules(read, world, extras) {
       `drDefeat${pascal(bossOfRegion(region, level))}`,
     bossOfRegion,
     derived: new Map(),
-    dialect: DR,
+    dialect: flavor === "owr" ? OWR : DR,
     events,
     heldEvents: new Set(),
     helpers: new Map(),
@@ -1379,6 +1901,8 @@ export function importDrRules(read, world, extras) {
   };
 
   const { bombShop, fill, spots, unported } = walkRules(rulesSource, ctx);
+  const dynamicEvents =
+    flavor === "owr" ? owrDynamicEvents(ctx, itemListSource) : [];
 
   // A spot reached (can_reach(…, 'Location' or 'Entrance')): its region,
   // and its rule
@@ -1443,15 +1967,26 @@ export function importDrRules(read, world, extras) {
     doorData: sortedOf(found.doorData),
     doorsOpen: [...found.doorsOpen].sort(),
     drops: sortedOf(enemies.drops),
+    ...(flavor === "owr" ? { dynamicEvents } : {}),
     entrances: rulesOf("entrance"),
-    events: Object.fromEntries(
-      [...placed.values()]
+    events: Object.fromEntries([
+      ...[...placed.values()]
         .filter(({ item }) => ctx.heldEvents.has(item))
-        .map(({ item, line, location }) => [
+        .map(({ item, line, location, source = "ItemList.py" }) => [
           drRegionId(item),
-          { item, location, source: `ItemList.py:${line}` },
+          { item, location, source: `${source}:${line}` },
         ]),
-    ),
+      ...owrBossKills
+        .filter((location) => ctx.heldEvents.has(`Beat Boss@${location}`))
+        .map((location) => [
+          bossKillId(location),
+          {
+            item: "Beat Boss",
+            location,
+            source: `Regions.py:${bossKillLines.get(location)}`,
+          },
+        ]),
+    ]),
     // The lines alone: no key model reads DR's yet
     fill: [
       ...new Set(

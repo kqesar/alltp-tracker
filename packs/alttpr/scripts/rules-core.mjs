@@ -344,7 +344,9 @@ export function numberOf(ctx, expr, otherwise) {
  * state's methods, the rule functions that are code, by what they do, and
  * the prefix of the helpers the translation names (`@erHasBoots`). Hooks:
  * a region's engine id (regionId by default), the expressions and the
- * statements only its randomizer writes, read before the shared ones.
+ * statements only its randomizer writes, read before the shared ones;
+ * `ruleObjects`, a rule passed as an object rather than a lambda (the
+ * Overworld fork's `Has(…)`, `and_rule(…)`), which `expression` reads.
  * @typedef {{
  *   prefix: string,
  *   world: Readonly<Record<string, Readonly<Record<string, Rule>> | Rule>>,
@@ -359,6 +361,7 @@ export function numberOf(ctx, expr, otherwise) {
  *   list?: (ctx: Context, expr: Expr, scope: Scope) => unknown[] | undefined,
  *   assign?: (ctx: Context, value: Expr, scope: Scope) => unknown,
  *   block?: (block: Omit<Hook, "name" | "call"> & { statement: Statement }) => boolean,
+ *   ruleObjects?: boolean,
  * }} Dialect
  * @typedef {{
  *   ctx: Context,
@@ -1251,6 +1254,9 @@ export function walkRules(source, ctx) {
   const simple = (statement, scope) => {
     const { line, text } = statement;
     if (text === "pass") return;
+    // An import inside a function (the Overworld fork's `from Regions
+    // import bonk_prize_table`): no rule
+    if (/^from [\w.]+ import [\w, ]+$/.test(text)) return;
     const { found, stream } = parse(statement, text);
     if (!stream.done()) {
       const sign = String(stream.next().value);
@@ -1258,6 +1264,46 @@ export function walkRules(source, ctx) {
     }
     if (found.t !== "call" || found.fn.t !== "name")
       throw new Untranslatable("a statement");
+    // A spot named by a test on the settings (`world.get_entrance('X' if
+    // … else 'Y', player)`): the statement on each, under its branch
+    const [first] = found.args;
+    if (
+      first?.t === "call" &&
+      first.fn.t === "attr" &&
+      first.args[0]?.t === "ifelse"
+    ) {
+      const { test, then, otherwise } = first.args[0];
+      const rule = translate(ctx, test, scope);
+      if (!settingsOnly(rule))
+        throw new Untranslatable("a spot chosen by more than the settings");
+      /** @param {Expr} name @param {Rule} when */
+      const on = (name, when) =>
+        callStatement(
+          {
+            ...found,
+            args: [
+              { ...first, args: [name, ...first.args.slice(1)] },
+              ...found.args.slice(1),
+            ],
+          },
+          { ...scope, when: all(scope.when, when) },
+          line,
+        );
+      on(then, rule);
+      on(otherwise, negate(rule));
+      return;
+    }
+    callStatement(found, scope, line);
+  };
+
+  /**
+   * A statement calling a function.
+   * @param {Extract<Expr, { t: "call" }>} found
+   * @param {Scope} scope
+   * @param {number} line
+   */
+  const callStatement = (found, scope, line) => {
+    if (found.fn.t !== "name") throw new Untranslatable("a statement");
     const name = found.fn.name;
     const { args } = found;
     /** @param {number} index */
@@ -1273,6 +1319,10 @@ export function walkRules(source, ctx) {
         only?.text.startsWith("return ")
       )
         return translate(ctx, parse(only, only.text.slice(7)).found, scope);
+      // A rule object (the Overworld fork's AccessRule trees): the dialect
+      // reads it as an expression
+      if (arg !== undefined && arg.t !== "lambda" && ctx.dialect.ruleObjects)
+        return translate(ctx, arg, scope);
       if (arg?.t !== "lambda")
         throw new Untranslatable("a rule other than a lambda");
       return translate(ctx, arg.body, scope);
