@@ -181,6 +181,34 @@ describe("a save's entrances", () => {
   });
 });
 
+describe("a save's door notes", () => {
+  it("keeps ids, kinds and key counts, and refuses anything else", () => {
+    const doors = {
+      keys: { "Ganons Tower": 4 },
+      kinds: { "gt-lobby-s": "small" },
+      links: { "eastern-cannonball-n": "gt-big-chest-sw" },
+      lobbies: { eastern: "pod-lobby-s" },
+    };
+    expect(validateProgress({ doors })).toEqual({
+      errors: [],
+      value: { doors },
+    });
+    expect(validateProgress({ doors: {} }).value).toEqual({ doors: {} });
+    for (const bad of [
+      [],
+      { links: { "Eastern Lobby": "x" } },
+      { kinds: { "gt-lobby-s": "locked" } },
+      { keys: { Nowhere: 1 } },
+      { keys: { "Ganons Tower": 31 } },
+      { notes: {} },
+    ]) {
+      expect(validateProgress({ doors: bad }).errors).toEqual([
+        "doors must map door ids to door ids, portal ids to door ids, door ids to kinds and dungeons to key counts",
+      ]);
+    }
+  });
+});
+
 describe("migrate", () => {
   it("moves a version 3 side-by-side layout, the old default, to auto", () => {
     expect(migrate({ mapLayout: "side-by-side" }, 3)).toEqual({

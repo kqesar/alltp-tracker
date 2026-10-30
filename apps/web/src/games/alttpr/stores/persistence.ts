@@ -4,6 +4,7 @@ import {
   LEGACY_DUNGEONS,
   MAP_LOCATIONS,
 } from "@alltp/pack-alttpr";
+import type { DoorKindNote as PackDoorKind } from "@alltp/pack-alttpr/door-world";
 import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import {
   DOOR_LOCATION_IDS,
@@ -76,6 +77,13 @@ export type Progress = {
    * before it was kept, notes none: no version needed.
    */
   entrances: Readonly<Record<string, string>>;
+  /**
+   * A Door Randomizer run's door shuffle as the player noted it
+   * (`DoorNotes`): where each door leads, each portal's lobby, each door's
+   * kind, each dungeon's small keys. A save without it, from before it was
+   * kept, notes none: no version needed.
+   */
+  doors: DoorNotes;
   /**
    * The seed the run is played on: its hash on alttpr.com, as the ROM's
    * header names it, or the one the player started the run from. Null while
@@ -640,6 +648,15 @@ export const validateProgress = (
     } else errors.push("entrances must map entrance ids to target ids");
   }
 
+  if (saved.doors !== undefined) {
+    // Ids only: what they name is the pack's DR world, loaded on demand
+    if (isDoorNotes(saved.doors)) value.doors = saved.doors;
+    else
+      errors.push(
+        "doors must map door ids to door ids, portal ids to door ids, door ids to kinds and dungeons to key counts",
+      );
+  }
+
   if (saved.seed !== undefined) {
     if (saved.seed === null || isSeedId(saved.seed)) value.seed = saved.seed;
     else errors.push("seed must be a seed id or null");
@@ -661,6 +678,82 @@ export const validateProgress = (
 
 /** An entrance's or a target's id: a slug, as the pack makes them. */
 const ENTRANCE_ID = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
+
+/**
+ * A Door Randomizer run's door notes (the pack's `DoorNotes`, its
+ * `door-world` loaded on demand, so its type alone here): where each door
+ * leads (`links`, door id to door id), the door each portal opens on
+ * (`lobbies`, portal id to door id), each door's kind (`kinds`) and each
+ * dungeon's small keys in all (`keys`, by DR's dungeon name).
+ */
+export type DoorKindNote = PackDoorKind;
+
+export type DoorNotes = {
+  readonly links?: Readonly<Record<string, string>>;
+  readonly lobbies?: Readonly<Record<string, string>>;
+  readonly kinds?: Readonly<Record<string, DoorKindNote>>;
+  readonly keys?: Readonly<Record<string, number>>;
+};
+
+/** The kinds a door is noted as (the pack's `DOOR_KIND_NOTES`). */
+export const DOOR_KINDS = [
+  "normal",
+  "small",
+  "big",
+  "bomb",
+  "dash",
+  "trap",
+] as const satisfies readonly DoorKindNote[];
+
+// The pack's kinds and these are the same: a kind added there fails here
+const _kinds: readonly (typeof DOOR_KINDS)[number][] = [] as DoorKindNote[];
+void _kinds;
+
+/** DR's dungeons, as a door note counts their keys. */
+export const DOOR_DUNGEONS: readonly string[] = [
+  "Hyrule Castle",
+  "Eastern Palace",
+  "Desert Palace",
+  "Tower of Hera",
+  "Agahnims Tower",
+  "Palace of Darkness",
+  "Swamp Palace",
+  "Skull Woods",
+  "Thieves Town",
+  "Ice Palace",
+  "Misery Mire",
+  "Turtle Rock",
+  "Ganons Tower",
+];
+
+const isIdMap = (value: unknown): boolean =>
+  isRecord(value) &&
+  Object.entries(value).every(
+    ([from, to]) =>
+      ENTRANCE_ID.test(from) && typeof to === "string" && ENTRANCE_ID.test(to),
+  );
+
+/** Whether a saved value is door notes of the shape `DoorNotes` holds. */
+export const isDoorNotes = (value: unknown): value is DoorNotes =>
+  isRecord(value) &&
+  Object.keys(value).every((key) =>
+    ["links", "lobbies", "kinds", "keys"].includes(key),
+  ) &&
+  (value.links === undefined || isIdMap(value.links)) &&
+  (value.lobbies === undefined || isIdMap(value.lobbies)) &&
+  (value.kinds === undefined ||
+    (isRecord(value.kinds) &&
+      Object.entries(value.kinds).every(
+        ([id, kind]) =>
+          ENTRANCE_ID.test(id) &&
+          (DOOR_KINDS as readonly unknown[]).includes(kind),
+      ))) &&
+  (value.keys === undefined ||
+    (isRecord(value.keys) &&
+      Object.entries(value.keys).every(
+        ([dungeon, count]) =>
+          DOOR_DUNGEONS.includes(dungeon) && isIntIn(count, 0, 30),
+      )));
 
 /** Marks a file written by exportState. */
 export const SAVE_FORMAT = "alltp-tracker-save";

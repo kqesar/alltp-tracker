@@ -44,6 +44,10 @@ import {
   type TrickPrefs,
 } from "@/games/alttpr/data/tricks";
 import {
+  type DoorNotesChange,
+  withDoorNotes,
+} from "@/games/alttpr/logic/doorNotes";
+import {
   knownBossIndex,
   knownBossValues,
   stepKnownBoss,
@@ -162,6 +166,13 @@ type GameState = Progress &
      */
     noteEntrances: (notes: Readonly<Record<string, string | null>>) => void;
     /**
+     * Note a Door Randomizer run's doors (`DoorNotes`): each entry of the
+     * change set, or forgotten (`null`), as one undo step (none when nothing
+     * changes). Its pieces come whole from `logic/doorNotes.ts`, which
+     * keeps a coupled door's way back with it.
+     */
+    noteDoors: (change: DoorNotesChange) => void;
+    /**
      * Change settings in the run going, its progress kept (`retune`): what
      * a Mystery run discovers, and the dungeon items, whose counters keep
      * the items found. A setting changed is no longer hidden. One undo
@@ -276,6 +287,7 @@ export const createProgress = (
   settings: RunSettings = getPreset(presetId).settings,
 ): Progress => ({
   checked: {},
+  doors: {},
   entrances: {},
   items: {
     ...initialItems,
@@ -305,6 +317,9 @@ export const isFreshRun = (progress: Progress): boolean => {
     progress.medallions.every((value) => value === 0) &&
     progress.smallKeys.every((value) => value === 0) &&
     Object.keys(progress.entrances).length === 0 &&
+    Object.values(progress.doors).every(
+      (notes) => Object.keys(notes ?? {}).length === 0,
+    ) &&
     Object.entries(fresh.items).every(
       ([id, value]) => progress.items[id] === value,
     )
@@ -342,6 +357,7 @@ const restoreProgress = (
       : base.items;
   return {
     checked: saved.checked ?? base.checked,
+    doors: saved.doors ?? base.doors,
     entrances: saved.entrances ?? base.entrances,
     items,
     medallions: saved.medallions ?? base.medallions,
@@ -385,6 +401,7 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
 /** The run alone, as a save file carries it. */
 const progressOf = (state: GameState): Progress => ({
   checked: state.checked,
+  doors: state.doors,
   entrances: state.entrances,
   items: state.items,
   medallions: state.medallions,
@@ -745,6 +762,11 @@ export const useGameStore = create<GameState>()(
           runReplaced("alttpr", get().past);
           requestResync("alttpr");
         },
+        noteDoors: (change: DoorNotesChange) =>
+          set((state) => {
+            const doors = withDoorNotes(state.doors, change);
+            return doors === state.doors ? state : record(state, { doors });
+          }),
 
         noteEntrance: (entrance: string, target: string | null) =>
           get().noteEntrances({ [entrance]: target }),

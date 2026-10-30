@@ -950,6 +950,27 @@ describe("the settings in a link (link 4)", () => {
     ]);
   });
 
+  it("carries a door-shuffled run's door notes as they are", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      doorIntensity: "3",
+      doorShuffle: "crossed",
+    };
+    const doors = {
+      keys: { "Eastern Palace": 3 },
+      kinds: { "eastern-cannonball-n": "big" },
+      links: { "eastern-cannonball-n": "gt-big-chest-sw" },
+      lobbies: { eastern: "pod-lobby-s" },
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), { doors });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(back.doors).toEqual(doors);
+    expect(back.settings).toEqual(settings);
+    expect(runOf(unpacked.save).doors).toEqual(doors);
+  });
+
   it("holds every option the tracker has, each once, each setting's own", () => {
     const options = [
       ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),

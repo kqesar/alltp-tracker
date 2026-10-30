@@ -1023,6 +1023,43 @@ describe("GameStore", () => {
     });
   });
 
+  describe("the doors noted", () => {
+    const store = () => useGameStore.getState();
+    const DR = getPreset("door-randomizer").settings;
+
+    it("notes a door shuffle as one undo step, and saves it with the run", () => {
+      store().applyRun("door-randomizer", { ...DR, doorShuffle: "basic" });
+      const past = store().past.length;
+      store().noteDoors({
+        keys: { "Eastern Palace": 2 },
+        kinds: { "eastern-cannonball-n": "small" },
+        links: {
+          "eastern-cannonball-n": "eastern-courtyard-ledge-s",
+          "eastern-courtyard-ledge-s": "eastern-cannonball-n",
+        },
+        lobbies: { eastern: "eastern-lobby-s" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      expect(isFreshRun(store())).toBe(false);
+      // The same again records nothing
+      store().noteDoors({ kinds: { "eastern-cannonball-n": "small" } });
+      expect(store().past).toHaveLength(past + 1);
+      const file = JSON.parse(store().exportState());
+      expect(file.progress.doors.links["eastern-cannonball-n"]).toBe(
+        "eastern-courtyard-ledge-s",
+      );
+      store().noteDoors({ keys: { "Eastern Palace": null } });
+      expect(store().doors.keys).toBeUndefined();
+      store().undo();
+      store().undo();
+      expect(store().doors).toEqual({});
+      store().reset();
+      expect(store().doors).toEqual({});
+      importSave(JSON.stringify(file));
+      expect(store().doors.lobbies).toEqual({ eastern: "eastern-lobby-s" });
+    });
+  });
+
   describe("a Mystery run's settings", () => {
     const store = () => useGameStore.getState();
 
