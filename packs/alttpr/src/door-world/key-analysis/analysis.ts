@@ -551,9 +551,13 @@ export function vanillaKeyLogic(
     if (settings.partial !== true || world.starts.has(dungeon))
       logics.set(dungeon, analyzeDungeon(keyLayout(world, dungeon)));
   if (settings.keyShuffle === "universal") return logics;
+  // A partly noted world's dungeon may be walked in part (one whose ways
+  // in are not all known, which the world reads strict-safe): a door its
+  // walk did not reach has no rule to adjust
   const rule = (dungeon: string, door: string) => {
     const found = logics.get(dungeon)?.doorRules.get(door);
-    if (found === undefined) throw new RangeError(`No rule for ${door}`);
+    if (found === undefined && settings.partial !== true)
+      throw new RangeError(`No rule for ${door}`);
     return found;
   };
   // The adjustments DR makes by hand, to the dungeons analyzed
@@ -569,14 +573,14 @@ export function vanillaKeyLogic(
       "Sewers Dark Cross Key Door N",
     ]) {
       const hc = rule("Hyrule Castle", door);
-      if (hc.worstCase === 3) {
+      if (hc?.worstCase === 3) {
         hc.worstCase = 2;
         hc.smallKeyNum = 2;
       }
     }
   if (has("Palace of Darkness")) {
     const podFront = rule("Palace of Darkness", "PoD Middle Cage N");
-    if (podFront.worstCase === 6) {
+    if (podFront?.worstCase === 6) {
       podFront.worstCase = 1;
       podFront.smallKeyNum = 1;
     }
@@ -596,8 +600,8 @@ export function vanillaKeyLogic(
   if (has("Ganons Tower")) {
     const conveyor = rule("Ganons Tower", "GT Conveyor Star Pits EN");
     for (const door of ["GT Firesnake Room SW", "GT Tile Room EN"])
-      for (const loc of conveyor.alternateBigKeyLoc)
-        rule("Ganons Tower", door).alternateBigKeyLoc.add(loc);
+      for (const loc of conveyor?.alternateBigKeyLoc ?? [])
+        rule("Ganons Tower", door)?.alternateBigKeyLoc.add(loc);
   }
   return logics;
 }

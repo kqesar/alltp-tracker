@@ -1663,8 +1663,7 @@ app solves an OWR run there with its overworld, doors and entrances
 vanilla, in the Open or Inverted world, its bonk drops among the world's
 locations while shuffled): `drWorld(settings,
 { data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
-fork links or rules otherwise (`overworld.ts`), its layout vanilla, no
-screen flipped by Mixed:
+fork links or rules otherwise (`overworld.ts`), its layout vanilla:
 
 - `link_overworld` (`OverworldShuffle.py:21-584`): the mandatory
   connections, the save-and-quit points by the screens they stand on
@@ -1673,8 +1672,7 @@ screen flipped by Mixed:
   (`ow_connections`), the whirlpools, every edge with its partner
   (`edgePartnersOf`: the vanilla one, or a crossed overworld's as noted),
   the flute spots in slot order (`fluteSpots`, `FluteShuffle.py:36-50,
-  655-657`). Inverted flips every screen, any other mode none
-  (`isTileSwapped`): Mixed's flips are not read yet. A seed's shuffled
+  655-657`). Inverted flips every screen, Mixed as noted (below). A seed's shuffled
   whirlpools and moved flute spots are linked as the player notes them
   (`options.overworld`, `OwrNotes`): each noted whirlpool into its
   partner's region (connect_whirlpool, `OverworldShuffle.py:359-367`), the
@@ -1703,6 +1701,54 @@ screen flipped by Mixed:
   `owrMovedExits`), the Bomb Shop's and Dark Chapel's ways out lead to their
   own areas where Link starts there. OWR's own entrance shuffles (District,
   Swapped) are not modelled yet: `notedConnections` refuses an OWR world.
+- Mixed's flips (`ow_mixed`, `OverworldShuffle.py:156-179`), as noted
+  (`OwrNotes.flips`: a screen by its light world id, 0x80 and 0x81 the
+  pedestal's and Zora's). `owrScreensOf` reads them into the run's screens
+  (`OwrScreens`): each screen's own flip and `is_tile_swapped` (Inverted
+  unless Mixed flipped it back, `BaseClasses.py:331-332`), a dark world
+  screen its light twin's, a large screen's other ids never flipped
+  (`:1002-1005`). Screens flip in groups (`owrFlipGroups`, a port of
+  `define_tile_groups`, `:971-1056`, for a vanilla layout and no
+  customizer): a note on one screen tells its group, and a group that may
+  not flip (the sanctuary's while its save point must stay, `can_shuffle_
+  group`, `:989-999`, `allow_flip_sanc` false outside the customizer,
+  `:746`) stands; a group with no note, or notes that disagree, is not
+  known. A flipped screen's regions switch worlds (`regionTypeOf`,
+  `update_world_regions`, `:1216-1222`), which the flute and mirror exits
+  (`dynamicExits`), the regions' sides and the bunny read. Mixed alone
+  crosses each pair of edges whose two screens flip apart (`shuffle_tiles`
+  swaps the flipped screens' edges, `:945-957`; performSwap moves one
+  end into its twin, `:28-110`), Polar never (its edges stay vanilla,
+  `OwrNotes.polar`), and a crossed overworld's crossings are noted as the
+  player sees them (walking across changes worlds or not), which a pair's
+  screens flipped apart turn round (`edgePartnersOf`, `crossingsOf`).
+  **A screen whose flip is not known** links neither way of what it
+  decides: its `ow_connections`, the save-and-quit points and the start's
+  ways out it carries, Houlihan's room, the towers' trade, the pyramid's
+  exits, its pairs of edges, a flute spot on it (and, while Death
+  Mountain's slot is not known, any spot whose rank it moves). Its
+  regions have no type, so no flute or mirror exit; its `tileSwapped_<id>`
+  and every derived side that may differ are held in both values
+  (`eachValue`: the rule asks each case, past four reads each is maybe);
+  the flute's activation, which waits on Kakariko standing, is not
+  given; Death Mountain's Return Cave asks the bunny's rule as if
+  flipped. The sides are bounds (`sideBounds`): what a region surely is,
+  every unknown region the other world's and its links left out, and what
+  it may be, every unknown region the world's own and every link it may
+  have (`OwrPossibleLinks`); a region's side only grows with a light type
+  and more links, so the truth lies between. A bunny is read where it may
+  be one, Link's own world only where surely; the terrain rules ask the
+  pearl where it may be the other world. `owrNotesFromSpoiler` reads the
+  flips from `Maps`' swaps `data` (`:179`), never its text map.
+- DR's key analysis runs on the world the notes link (OWR analyses the
+  world it linked, `link_doors` after `link_overworld`): with every
+  shuffle noted whole (`owrNotesComplete`), the analysis is that world's;
+  while some is not, as for noted entrances: a dungeon whose ways in the
+  notes all tell is analysed, any other asks every key. Its walk reads the
+  fork's own find_inaccessible_regions (`owr:DoorShuffle.py:3405-3437`:
+  from the Bomb Shop once 0x2c flips, the castle's ledge by the pyramid's
+  screen), destination portals by their screens (`:99-108`) and the
+  towers' trade for `inverted_aga_check` (`:1294-1302`).
 - `ow_terrain_rules` (`owrTerrainRules`, `Rules.py:1417-1429`), the
   activated flute (an event at Kakariko while its screen stands, a fact
   `ocarinaActivated`; in Inverted the recorded flute must be the activated
@@ -1711,7 +1757,7 @@ screen flipped by Mixed:
   (`OWR_DEFAULTS`: bonk drops unshuffled, the bomb check not overridden: a
   real run farms or holds its bombs; only the contract overrides it, as the
   fork's harness does), the Death Mountain Return Cave a bunny cannot cross
-  once its screen flips (`Rules.py:2002-2008`). A count of events (the
+  once its screen flips, with vanilla-like entrances (`Rules.py:2002-2008`). A count of events (the
   dungeons goal's ten boss kills) reads each at maybe too (`readFacts`).
 - Bunny rules: DR's port over the fork's lists. The fork walks its paths
   under a Pareto front of their requirements' atoms
@@ -1771,10 +1817,17 @@ random prize packs make (tree pulls and crabs, `ItemList.py:742-760`), which
 no tracker knows and the world never holds: the walks take them out, their
 items never held (`FARMS`: `o4mamwuKZ`'s crab, whose rupees nothing later
 waited for). The Mixed set (`test/owr-mixed-spoilers/`, `record-dr-spoilers
-owr-mixed`: `mPEeiQvu1`, Open, screens flipped) is recorded for the world's
-Mixed flips, not modelled yet: `test/owr-mixed.spec.ts` holds its flipped
-screens as `Maps`' swaps `data` (a light screen with its dark twin), never
-its text map. The app's side
+owr-mixed`) holds four seeds whose screens Mixed flipped: Open
+(`mPEeiQvu1`), Inverted (`6DIwXjzG5`), Open with its edges crossed grouped
+(`4yKJq5H2E`) and Open with its whirlpools shuffled (`t8B3wJpHK`), each
+flip noted from `Maps`' swaps `data` (`test/owr-mixed.spec.ts` holds its
+shape: a light screen with its dark twin). The world crosses exactly the
+edges the non-crossed ones list from their flips alone, and all twelve
+logs hold both walks with no exception but the prize-pack farms (with no
+flip read, `mPEeiQvu1` fails both walks; with the regions' types left
+unflipped, its sphere walk). Before the key analysis ran on the noted
+world, the Inverted one's Turtle Rock prize read maybe: its back ledges
+reached only through the dungeon once 0x45 flips. The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

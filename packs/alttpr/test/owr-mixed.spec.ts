@@ -1,8 +1,9 @@
-// The Mixed overworld's seed (test/owr-mixed-spoilers/, recorded by
-// scripts/record-dr-spoilers.mjs owr-mixed), held as what the world will
-// read once it models Mixed's flips: its flipped screens are `Maps` swaps'
-// `data` (world.owswaps[0], OverworldShuffle.py:159, set_map at :179), read as a
-// list, never from the text map beside it.
+// The Mixed overworld's first seed (test/owr-mixed-spoilers/, recorded by
+// scripts/record-dr-spoilers.mjs owr-mixed), held as what the world reads
+// of Mixed's flips (owrNotesFromSpoiler): its flipped screens are `Maps`
+// swaps' `data` (world.owswaps[0], OverworldShuffle.py:159, set_map at
+// :179), read as a list, never from the text map beside it. The set's
+// playthroughs are test/owr-playthrough.spec.ts's.
 
 import { describe, expect, it } from "vitest";
 import { OWR_DATA } from "../src/door-world/owr-data";

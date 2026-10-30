@@ -15,7 +15,7 @@ import {
   drTargetName,
   vanillaEntrances,
 } from "../door-rando/entrances";
-import { type DrData, type DrMode, dependentsOf } from "./data";
+import { type DrData, type DrMode, type DrRegion, dependentsOf } from "./data";
 import {
   type DoorNotes,
   type DoorShuffleSettings,
@@ -23,7 +23,14 @@ import {
   isShuffledDoor,
   portalId,
 } from "./doors";
-import { linkOwrEntrances, linkOwrOverworld, type OwrNotes } from "./overworld";
+import {
+  linkOwrEntrances,
+  linkOwrOverworld,
+  type OwrNotes,
+  type OwrPossibleLinks,
+  type OwrScreens,
+  owrScreensOf,
+} from "./overworld";
 
 /** Where each exit leads, by DR's names: an exit to a region. */
 export type DrConnections = ReadonlyMap<string, string>;
@@ -329,6 +336,9 @@ export const REMOVED_EXITS: ReadonlySet<string> = new Set([
  * its own overworld and entrances (overworld.ts), the doors as DR's.
  * @param version - The DR release the seed was built by, as its ROM title's
  *   digits (157 for 1.5.7), 156 for 1.5.6 or an older or unknown one
+ * @param screens - An OWR run's screens (owrScreensOf), its notes' by
+ *   default
+ * @param possible - Where an OWR run's links its notes do not tell yet go
  */
 export function vanillaConnections(
   data: DrData,
@@ -336,11 +346,13 @@ export function vanillaConnections(
   version = 156,
   doors?: DrNotedDoors,
   overworld?: OwrNotes,
+  screens: OwrScreens = owrScreensOf(data, mode, overworld),
+  possible?: OwrPossibleLinks,
 ): DrConnections {
   const c = new Map<string, string>();
   if (data.flavor === "owr") {
-    linkOwrOverworld(data, c, mode, overworld);
-    linkOwrEntrances(data, c, mode);
+    linkOwrOverworld(data, c, mode, overworld, screens, possible);
+    linkOwrEntrances(data, c, mode, screens, possible);
   } else {
     linkOverworld(data, c, mode);
     linkEntrances(data, c, mode, version);
@@ -445,11 +457,15 @@ const NO_DYNAMIC_EXITS = new Set([
  * create_dynamic_exits (OverworldShuffle.py:31-73): a flute exit from every
  * land region of Link's own world to the sky, and a mirror exit from each
  * region of the other world that mirror_connections lists, which a water
- * region asks the flippers and the pearl for.
+ * region asks the flippers and the pearl for; OWR's (FluteShuffle.py:665-
+ * 676, create_dynamic_mirror_exits, OverworldShuffle.py:1186-1207) read
+ * the same regions by the type Mixed leaves them (`typeOf`, regionTypeOf),
+ * none from a region whose type is not known.
  */
 export function dynamicExits(
   data: DrData,
   mode: DrMode,
+  typeOf: (region: DrRegion) => DrRegion["type"] | undefined = (r) => r.type,
 ): readonly DrDynamicExit[] {
   const inverted = mode === "inverted";
   const own = inverted ? "dw" : "lw";
@@ -461,7 +477,7 @@ export function dynamicExits(
   const found: DrDynamicExit[] = [];
   for (const region of data.regions) {
     if (NO_DYNAMIC_EXITS.has(region.name)) continue;
-    if (region.type === own && region.terrain === "land")
+    if (typeOf(region) === own && region.terrain === "land")
       found.push({
         from: region.name,
         name: `Flute From ${region.name}`,
@@ -471,7 +487,7 @@ export function dynamicExits(
       });
   }
   for (const region of data.regions) {
-    if (NO_DYNAMIC_EXITS.has(region.name) || region.type !== other) continue;
+    if (NO_DYNAMIC_EXITS.has(region.name) || typeOf(region) !== other) continue;
     const targets = mirrors[region.name] ?? [];
     for (const to of targets) {
       const target = data.regionNamed(to);

@@ -16,7 +16,12 @@ import {
 } from "../connections";
 import type { DrData, DrMode } from "../data";
 import { keyDropsOf, UGLY_SMALLS } from "../keys";
-import { owrMovedExits } from "../overworld";
+import {
+  type OwrScreens,
+  owrMovedExits,
+  regionTypeOf,
+  screensOf,
+} from "../overworld";
 
 /** DR's dungeons, in the order create_dungeons lists them (Dungeons.py:30). */
 export const DR_DUNGEON_ORDER: readonly string[] = [
@@ -177,16 +182,29 @@ const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
 
 /**
  * The portals link_doors_prep marks as destinations with vanilla
- * entrances (DoorShuffle.py:100-109), which should_delay_processing reads.
+ * entrances (DoorShuffle.py:100-109), which should_delay_processing reads;
+ * OWR's (owr:DoorShuffle.py:99-108) by the screens they stand on, flipped
+ * where read so (a screen not known read as standing).
  */
-const destinationPortals = (mode: DrMode): ReadonlySet<string> =>
-  new Set([
+const destinationPortals = (
+  data: DrData,
+  mode: DrMode,
+  screens: OwrScreens,
+): ReadonlySet<string> => {
+  const swapped = (screen: number) =>
+    data.flavor === "owr"
+      ? screens.swapped(screen) === true
+      : mode === "inverted";
+  return new Set([
     ...(mode === "standard" ? ["Sanctuary"] : []),
     "Desert East",
-    ...(mode === "inverted"
-      ? ["Desert West"]
-      : ["Skull 2 West", "Turtle Rock Lazy Eyes", "Turtle Rock Eye Bridge"]),
+    ...(swapped(0x30) ? ["Desert West"] : []),
+    ...(swapped(0x00) ? [] : ["Skull 2 West"]),
+    ...(swapped(0x05)
+      ? []
+      : ["Turtle Rock Lazy Eyes", "Turtle Rock Eye Bridge"]),
   ]);
+};
 
 /** standard_starts (Dungeons.py:251-253). */
 const STANDARD_STARTS: Readonly<Record<string, readonly string[]>> = {
@@ -234,6 +252,12 @@ export interface KeyAnalysisSettings {
    * has one (`Infinite loop detected`, DoorShuffle.py:251-252).
    */
   readonly partial?: boolean;
+  /**
+   * An OWR run's screens (owrScreensOf): where the pyramid's exits stand,
+   * the regions' types the flute and mirror exits read. Its mode's by
+   * default.
+   */
+  readonly screens?: OwrScreens;
 }
 
 /** The crystal states DR's walk carries (CrystalBarrier). */
@@ -297,14 +321,18 @@ export function rstrip(text: string, chars: string): string {
 }
 
 /** The exits of each region, the dynamic ones after the static. */
-function exitsByRegion(data: DrData, mode: DrMode): Map<string, string[]> {
+function exitsByRegion(
+  data: DrData,
+  mode: DrMode,
+  screens: OwrScreens = screensOf(mode),
+): Map<string, string[]> {
   // OWR's pyramid door and hole on the castle's ledge once its screen flips
-  const moved = owrMovedExits(data, mode);
+  const moved = owrMovedExits(data, mode, screens);
   const exits = new Map(
     data.regions.map((r) => [r.name, r.exits.filter((e) => !moved.has(e))]),
   );
   for (const [exit, region] of moved) exits.get(region)?.push(exit);
-  for (const exit of dynamicExits(data, mode))
+  for (const exit of dynamicExits(data, mode, regionTypeOf(data, screens)))
     exits.get(exit.from)?.push(exit.name);
   return exits;
 }
@@ -312,7 +340,10 @@ function exitsByRegion(data: DrData, mode: DrMode): Map<string, string[]> {
 /**
  * find_inaccessible_regions (DoorShuffle.py:3402-3437): the regions out of
  * the dungeons Link cannot walk to from his house or the sanctuary, rules
- * aside, before link_doors_prep links the doors and portals.
+ * aside, before link_doors_prep links the doors and portals. OWR's
+ * (owr:DoorShuffle.py:3405-3437) starts where its screens put Link's house
+ * (the Bomb Shop once 0x2c flips, either while not known) and reads the
+ * castle's ledge by the pyramid's screen.
  */
 function inaccessibleRegions(
   data: DrData,
@@ -320,7 +351,9 @@ function inaccessibleRegions(
   target: (exit: string) => string | undefined,
   exits: ReadonlyMap<string, readonly string[]>,
   entrances: ReadonlyMap<string, readonly string[]>,
+  screens: OwrScreens = screensOf(mode),
 ): Set<string> {
+  const owr = data.flavor === "owr";
   // The doors and the portals' ways in are linked after this walk
   const portalEnters = new Set(
     Object.values(
@@ -332,10 +365,12 @@ function inaccessibleRegions(
   );
   const linked = (exit: string) =>
     !data.doorByName.has(exit) && !portalEnters.has(exit);
-  const starts =
-    mode === "inverted"
-      ? ["Links House", "Dark Sanctuary Hint"]
-      : ["Links House", "Sanctuary"];
+  const bombShop = owr ? screens.swapped(0x2c) : false;
+  const starts = [
+    ...(bombShop !== true ? ["Links House"] : []),
+    ...(bombShop !== false ? ["Big Bomb Shop"] : []),
+    mode === "inverted" ? "Dark Sanctuary Hint" : "Sanctuary",
+  ];
   const queue = [...starts];
   const queued = new Set(queue);
   const visited = new Set<string>();
@@ -375,7 +410,7 @@ function inaccessibleRegions(
       .map((r) => r.name),
   );
   if (
-    mode === "inverted" &&
+    (owr ? screens.swapped(0x1b) !== false : mode === "inverted") &&
     (exits.get("Hyrule Castle Ledge") ?? []).some(
       (exit) => target(exit) === "Agahnims Tower Portal",
     )
@@ -463,10 +498,16 @@ export function portalsKnown(
   data: DrData,
   mode: DrMode,
   connections: DrConnections,
+  screens: OwrScreens = screensOf(mode),
 ): Set<string> {
-  const dynamic = new Map(dynamicExits(data, mode).map((e) => [e.name, e.to]));
+  const dynamic = new Map(
+    dynamicExits(data, mode, regionTypeOf(data, screens)).map((e) => [
+      e.name,
+      e.to,
+    ]),
+  );
   const target = (exit: string) => connections.get(exit) ?? dynamic.get(exit);
-  const exits = exitsByRegion(data, mode);
+  const exits = exitsByRegion(data, mode, screens);
   const entrances = new Map<string, string[]>();
   for (const [region, list] of exits)
     for (const exit of list) {
@@ -480,6 +521,7 @@ export function portalsKnown(
     target,
     exits,
     entrances,
+    screens,
   );
   const known = new Set<string>();
   for (const dungeon of DR_DUNGEON_ORDER) {
@@ -510,11 +552,16 @@ export function portalsKnown(
  * dungeon's start regions.
  */
 export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
-  const { data, mode } = settings;
+  const { data, mode, screens = screensOf(mode) } = settings;
   const connections = settings.connections ?? vanillaConnections(data, mode);
-  const dynamic = new Map(dynamicExits(data, mode).map((e) => [e.name, e.to]));
+  const dynamic = new Map(
+    dynamicExits(data, mode, regionTypeOf(data, screens)).map((e) => [
+      e.name,
+      e.to,
+    ]),
+  );
   const target = (exit: string) => connections.get(exit) ?? dynamic.get(exit);
-  const exits = exitsByRegion(data, mode);
+  const exits = exitsByRegion(data, mode, screens);
   const parentOf = new Map<string, string>();
   for (const [region, list] of exits)
     for (const exit of list) parentOf.set(exit, region);
@@ -531,6 +578,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
     target,
     exits,
     entrances,
+    screens,
   );
   const logical = logicalDoors(inaccessible, target, exits, mode);
 
@@ -729,7 +777,8 @@ function startRegions(
   };
   const regionsOf = (dungeon: string) =>
     data.regions.filter((r) => r.dungeon === dungeon).map((r) => r.name);
-  const destinations = destinationPortals(mode);
+  const screens = settings.screens ?? screensOf(mode);
+  const destinations = destinationPortals(data, mode, screens);
   // _find_portal_for_region (:352-354) strips its parent's name with
   // rstrip(' Portal'), a set of characters, not a suffix: "Hyrule Castle
   // West Portal" turns "Hyrule Castle Wes", no portal, as DR finds it
@@ -780,8 +829,13 @@ function startRegions(
       )
         enable(name, name);
     }
-    // inverted_aga_check (:1292-1300)
-    if (mode === "inverted") {
+    // inverted_aga_check (:1292-1300; OWR's once the towers trade, owr:
+    // DoorShuffle.py:1294-1302)
+    if (
+      data.flavor === "owr"
+        ? screens.swapped(0x03) === true && screens.swapped(0x1b) === true
+        : mode === "inverted"
+    ) {
       const ledge = potentials.get("Hyrule Castle Ledge");
       if (ledge !== undefined)
         for (const name of ledge) enable(name, "Tower Agahnim 1");

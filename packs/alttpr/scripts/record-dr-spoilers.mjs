@@ -208,13 +208,21 @@ export const OWR_SEEDS = [
 export const OWR_CROSSED_SEEDS = ["o4mamwuKZ", "0DsyCwK23"];
 
 /**
- * The Mixed overworld set (test/owr-mixed-spoilers/): an avianart.games
- * seed of OWR 0.8.0.2 as OWR_SEEDS', Open, its screens flipped by Mixed
- * (generated 2026-10-30 from the customizer, `ow_mixed: true`), its
- * `Maps` swaps' `data` the flipped screens: what the world will read once
- * it models Mixed's flips.
+ * The Mixed overworld set (test/owr-mixed-spoilers/): avianart.games seeds
+ * of OWR 0.8.0.2 as OWR_SEEDS', their screens flipped by Mixed, its `Maps`
+ * swaps' `data` the flipped screens: Open (generated 2026-10-30 from the
+ * customizer, `ow_mixed: true`), Inverted, Open with its edges crossed
+ * grouped and Open with its whirlpools shuffled (2026-10-30, `[{"args":
+ * {"branch":"OWR","worldstate":"inverted","mixed":true,"spoiler":"full"}}]`,
+ * `…"worldstate":"open","mixed":true,"ow_crossed":"grouped"…` and
+ * `…"mixed":true,"ow_whirlpool":true…`).
  */
-export const OWR_MIXED_SEEDS = ["mPEeiQvu1"];
+export const OWR_MIXED_SEEDS = [
+  "mPEeiQvu1",
+  "6DIwXjzG5",
+  "4yKJq5H2E",
+  "t8B3wJpHK",
+];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
 export const KEPT_KEYS = [

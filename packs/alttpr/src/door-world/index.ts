@@ -70,14 +70,23 @@ import {
   worldKeys,
 } from "./keys";
 import {
-  isTileSwapped,
   OWR_DEFAULTS,
   type OwrNotes,
+  type OwrPossibleLinks,
+  type OwrScreens,
   owrDynamicEvents,
   owrDynamicFacts,
   owrMovedExits,
+  owrNotesComplete,
+  owrScreensOf,
   owrSettings,
+  owrShuffleOf,
   owrTerrainRules,
+  regionTypeOf,
+  type SideBounds,
+  screensOf,
+  unknownScreenSettings,
+  type WorldSides,
 } from "./overworld";
 import {
   addShuffledDoorRules,
@@ -111,8 +120,11 @@ export { KEY_ITEMS } from "./keys";
 export {
   crossablePairsOf,
   crossingsOf,
+  type OwrFlipGroup,
   type OwrNotes,
+  owrFlipGroups,
   owrNotesFromSpoiler,
+  owrScreensOf,
   whirlpoolsOf,
 } from "./overworld";
 
@@ -144,8 +156,8 @@ export interface DrWorldOptions {
   readonly sweepEvents?: boolean;
   /**
    * The Overworld Randomizer's shuffled overworld as noted (whirlpools,
-   * flute spots, a crossed overworld's edges: overworld.ts `OwrNotes`),
-   * for its data alone.
+   * flute spots, a crossed overworld's edges, Mixed's flips: overworld.ts
+   * `OwrNotes`), for its data alone.
    */
   readonly overworld?: OwrNotes;
   /**
@@ -333,10 +345,11 @@ function exitsOf(
   mode: DrMode,
   options: DrWorldOptions,
   lobbies: ReadonlySet<string> = portalDoorsOf(data),
+  screens: OwrScreens = screensOf(mode),
 ): DrExit[] {
   const found: DrExit[] = [];
   const { doors } = options;
-  const moved = owrMovedExits(data, mode);
+  const moved = owrMovedExits(data, mode, screens);
   for (const region of data.regions) {
     for (const name of region.exits) {
       const to = connections.get(name);
@@ -357,7 +370,11 @@ function exitsOf(
       });
     }
   }
-  const dynamic: readonly DrDynamicExit[] = dynamicExits(data, mode);
+  const dynamic: readonly DrDynamicExit[] = dynamicExits(
+    data,
+    mode,
+    regionTypeOf(data, screens),
+  );
   for (const exit of dynamic) found.push({ ...exit });
   if (mode === "standard") found.push({ ...UNCLE_SAVE_AND_QUIT });
   for (const name of options.start ?? [])
@@ -404,14 +421,15 @@ function addBombShopRule(
   target.req = and(target.req, req);
 }
 
-/** The worlds' light and dark regions (mark_light_dark_world_regions). */
+/**
+ * The worlds' light and dark regions (mark_light_dark_world_regions), each
+ * region of the type `typeOf` gives it (its own by default).
+ */
 export function markWorlds(
   data: DrData,
-  exits: readonly DrExit[],
-): {
-  readonly light: ReadonlySet<string>;
-  readonly dark: ReadonlySet<string>;
-} {
+  exits: readonly { readonly from: string; readonly to: string }[],
+  typeOf: (region: DrRegion) => DrRegion["type"] = (r) => r.type,
+): WorldSides {
   const out = new Map<string, string[]>();
   for (const exit of exits)
     out.set(exit.from, [...(out.get(exit.from) ?? []), exit.to]);
@@ -419,18 +437,88 @@ export function markWorlds(
   // world (Regions.py:1113-1140)
   const mark = (type: string, other: string) => {
     const seen = new Set(
-      data.regions.filter((r) => r.type === type).map((r) => r.name),
+      data.regions.filter((r) => typeOf(r) === type).map((r) => r.name),
     );
     const queue = [...seen];
     for (let name = queue.shift(); name !== undefined; name = queue.shift())
       for (const to of out.get(name) ?? []) {
-        if (seen.has(to) || data.regionNamed(to).type === other) continue;
+        if (seen.has(to) || typeOf(data.regionNamed(to)) === other) continue;
         seen.add(to);
         queue.push(to);
       }
     return seen;
   };
   return { dark: mark("dw", "lw"), light: mark("lw", "dw") };
+}
+
+/**
+ * The sides a world's regions surely have and may have (SideBounds) while
+ * some screens' flips are not known: the light world's least with every
+ * region whose type is not known dark and its links not known left out,
+ * its most with each such region light and every link it may have
+ * (`possible`), and the dark world's the other way round. A region's side
+ * only grows with its type light (a start, no longer a wall) and with
+ * more links, so the truth lies between.
+ */
+function sideBounds(
+  data: DrData,
+  exits: readonly DrExit[],
+  possible: readonly { readonly from: string; readonly to: string }[],
+  typeOf: (region: DrRegion) => DrRegion["type"] | undefined,
+): SideBounds {
+  if (
+    possible.length === 0 &&
+    data.regions.every((r) => typeOf(r) !== undefined)
+  ) {
+    const marked = markWorlds(data, exits, (r) => typeOf(r) ?? r.type);
+    return { lower: marked, upper: marked };
+  }
+  const as =
+    (type: DrRegion["type"]) =>
+    (r: DrRegion): DrRegion["type"] =>
+      typeOf(r) ?? type;
+  const wide = [...exits, ...possible];
+  return {
+    lower: {
+      dark: markWorlds(data, exits, as("lw")).dark,
+      light: markWorlds(data, exits, as("dw")).light,
+    },
+    upper: {
+      dark: markWorlds(data, wide, as("dw")).dark,
+      light: markWorlds(data, wide, as("lw")).light,
+    },
+  };
+}
+
+/**
+ * A rule with each read of a setting the run does not know (`unknown`)
+ * held in both its values: the rule asks each case, past four reads it
+ * reads each `maybe`.
+ */
+export function eachValue(req: string, unknown: ReadonlySet<string>): string {
+  if (unknown.size === 0) return req;
+  const reads = [
+    ...new Set(
+      [...req.matchAll(/setting\((\w+)\)/g)]
+        .map((m) => m[1] ?? "")
+        .filter((name) => unknown.has(name)),
+    ),
+  ].map((name) => `setting(${name})`);
+  if (reads.length === 0) return req;
+  const put = (rule: string, read: string, value: string, negated: string) =>
+    rule.split(`!${read}`).join(negated).split(read).join(value);
+  if (reads.length > 4)
+    return reads.reduce((rule, read) => put(rule, read, "maybe", "maybe"), req);
+  const cases: string[] = [];
+  for (let bits = 0; bits < 1 << reads.length; bits++)
+    cases.push(
+      reads.reduce((rule, read, i) => {
+        const on = ((bits >> i) & 1) === 1;
+        // A negated read first: the engine takes no `!true`
+        return put(rule, read, on ? "true" : "false", on ? "false" : "true");
+      }, req),
+    );
+  return and(...cases);
 }
 
 /**
@@ -766,7 +854,11 @@ const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
 export function drKeyLogic(
   data: DrData,
   settings: Settings,
-  noted?: { readonly connections: DrConnections; readonly key: string },
+  noted?: {
+    readonly connections: DrConnections;
+    readonly key: string;
+    readonly screens?: OwrScreens;
+  },
 ): ReadonlyMap<string, KeyLogic> {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
@@ -806,6 +898,7 @@ export function drKeyLogic(
             connections: noted.connections,
             data,
             partial: true,
+            ...(noted.screens === undefined ? {} : { screens: noted.screens }),
           },
     );
     // The vanilla world's few analyses stay; a noted world's, one per note,
@@ -853,6 +946,33 @@ function notedKeyLogic(
   if (mode === "standard") known.delete("Hyrule Castle");
   if (known.size === 0) return new Map();
   const logic = drKeyLogic(data, settings, { connections, key });
+  return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
+}
+
+/**
+ * DR's key analysis on an OWR run's noted overworld (its whirlpools, flute
+ * spots, crossed edges, Mixed's flips): OWR analyses the world it linked
+ * (link_doors after link_overworld, Main.py), whose ways between screens
+ * decide which regions only a dungeon reaches. Every shuffle noted whole,
+ * the analysis is that world's; while some is not, as notedKeyLogic reads
+ * a noted world: a dungeon whose ways in the notes all tell starts as
+ * there, any other keeps the strict-safe rule.
+ */
+function owrNotedKeyLogic(
+  data: DrData,
+  settings: Settings,
+  mode: DrMode,
+  notes: OwrNotes,
+  connections: DrConnections,
+  screens: OwrScreens,
+): ReadonlyMap<string, KeyLogic> {
+  const key = JSON.stringify(["owr", notes, settings.drVersion]);
+  if (owrNotesComplete(data, notes, screens))
+    return drKeyLogic(data, settings, { connections, key, screens });
+  const known = portalsKnown(data, mode, connections, screens);
+  if (mode === "standard") known.delete("Hyrule Castle");
+  if (known.size === 0) return new Map();
+  const logic = drKeyLogic(data, settings, { connections, key, screens });
   return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
 }
 
@@ -955,23 +1075,46 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const { exitRule, helpersReach, loadedRules } = readersOf(data);
   const owr = data.flavor === "owr";
   const mode = drModeOf({ ...DR_DEFAULTS, ...settings });
+  // An OWR run's screens as its notes tell them (Mixed's flips)
+  const screens = owr
+    ? owrScreensOf(data, mode, options.overworld, {
+        ...OWR_DEFAULTS,
+        ...settings,
+      })
+    : screensOf(mode);
   // OWR's rules read the screens' flips and its own options beside DR's
   const all = owr
-    ? { ...DR_DEFAULTS, ...OWR_DEFAULTS, ...owrSettings(mode), ...settings }
+    ? {
+        ...DR_DEFAULTS,
+        ...OWR_DEFAULTS,
+        ...owrSettings(mode, screens),
+        ...settings,
+      }
     : { ...DR_DEFAULTS, ...settings };
+  // The settings the run does not know: screens whose flip is not noted
+  const unknown = new Set(owr ? unknownScreenSettings(screens) : []);
   const version = Number(all.drVersion);
   const { doors } = options;
   const noted =
     options.entrances === undefined
       ? undefined
       : notedConnections(data, mode, options.entrances, version, doors);
+  const possible: OwrPossibleLinks = [];
   const connections =
     noted?.connections ??
     options.connections ??
-    vanillaConnections(data, mode, version, doors, options.overworld);
+    vanillaConnections(
+      data,
+      mode,
+      version,
+      doors,
+      options.overworld,
+      screens,
+      possible,
+    );
   const lobbies = lobbiesOf(data, doors);
   const lobbyDoors = new Set(lobbies.values());
-  const exits = exitsOf(data, connections, mode, options, lobbyDoors);
+  const exits = exitsOf(data, connections, mode, options, lobbyDoors, screens);
   const dungeonOfRoom =
     doors === undefined ? undefined : roomDungeons(data, exits, lobbies, doors);
   if (doors !== undefined && dungeonOfRoom !== undefined) {
@@ -1007,7 +1150,7 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   }
   // OWR's farms and the flute's activation (create_farm_locations,
   // ItemList.py:256-266, :640-700): locations whose events DR sweeps
-  const dynamic = owr ? owrDynamicEvents(data, all) : [];
+  const dynamic = owr ? owrDynamicEvents(data, all, unknown) : [];
   for (const { name, region, req } of dynamic) {
     const at = data.regionNamed(region).name;
     added.set(at, [...(added.get(at) ?? []), name]);
@@ -1030,10 +1173,34 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
     for (const [name, req] of locations)
       locations.set(name, req.replace(item, rule));
   }
-  const marked = markWorlds(data, exits);
-  if (owr) owrTerrainRules(data, exits, marked, mode, options.overworld);
+  // The regions' sides, between what is sure and what may be while a
+  // screen's flip is not known: a link it may have, a region whose type
+  // flips with it
+  const typeOf = regionTypeOf(data, screens);
+  const bounds = sideBounds(
+    data,
+    exits,
+    possible.length === 0
+      ? []
+      : [
+          ...possible.map(([name, to, from]) => ({
+            from: from ?? data.parentOf(name),
+            to,
+          })),
+          ...(["lw", "dw"] as const).flatMap((side) =>
+            dynamicExits(data, mode, (r) => typeOf(r) ?? side),
+          ),
+        ],
+    typeOf,
+  );
+  if (owr)
+    owrTerrainRules(data, exits, bounds, mode, options.overworld, screens);
+  const sure = derivedSettings(data, connections, bounds.lower, mode);
+  const widest = derivedSettings(data, connections, bounds.upper, mode);
+  for (const [name, value] of Object.entries(sure))
+    if (widest[name] !== value) unknown.add(name);
   const derived = {
-    ...derivedSettings(data, connections, marked, mode),
+    ...sure,
     ...(doors === undefined || dungeonOfRoom === undefined
       ? {}
       : shuffledDoorSettings(data, doors, lobbyDoors, dungeonOfRoom, mode)),
@@ -1052,6 +1219,12 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   if (noted !== undefined && !noted.complete) {
     for (const exit of exits) exit.req = everySide(exit.req);
     for (const [name, req] of locations) locations.set(name, everySide(req));
+  }
+  // A screen's flip, or a region's side, not known yet: held in both
+  if (unknown.size > 0) {
+    for (const exit of exits) exit.req = eachValue(exit.req, unknown);
+    for (const [name, req] of locations)
+      locations.set(name, eachValue(req, unknown));
   }
   // In set_rules' order: global_rules (the key logic, the boss items, the
   // spikes' pot), standard_rules, the static key logic's own rules
@@ -1076,7 +1249,16 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
               noted.decoupled,
             )
         : options.connections === undefined
-          ? drKeyLogic(data, all)
+          ? owr && Object.keys(options.overworld ?? {}).length > 0
+            ? owrNotedKeyLogic(
+                data,
+                all,
+                mode,
+                options.overworld ?? {},
+                connections,
+                screens,
+              )
+            : drKeyLogic(data, all)
           : undefined;
   const isStatic = all.staticKeyLogic === true && analysis !== undefined;
   const trCase = isStatic
@@ -1128,10 +1310,25 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   }
   if (isStatic) addStaticKeyRules(data, exits, locations, keys, mode, trCase);
   addBombShopRule(data, exits, mode, version);
-  const bunny = addBunnyRules(data, exits, locations, marked, mode, {
+  // A bunny where it may be one, Link's own only where surely
+  const bunnySides =
+    mode === "inverted"
+      ? { dark: bounds.lower.dark, light: bounds.upper.light }
+      : { dark: bounds.upper.dark, light: bounds.lower.light };
+  const bunny = addBunnyRules(data, exits, locations, bunnySides, mode, {
     added,
+    // owr:Rules.py:2002-2008, with entrances vanilla-like; while the
+    // screen's flip is not known, as if flipped (the cave only asks more)
     moreCaves:
-      owr && isTileSwapped(mode, 0x03)
+      owr &&
+      screens.swapped(0x03) !== false &&
+      [
+        "vanilla",
+        "dungeonssimple",
+        "dungeonsfull",
+        "simple",
+        "district",
+      ].includes(owrShuffleOf(all))
         ? ["Death Mountain Return Cave (right)"]
         : [],
     wallOf: (name) => bunnyWall(data, name, doors),

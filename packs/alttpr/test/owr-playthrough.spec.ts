@@ -4,7 +4,10 @@
 // overworld, doors and entrances vanilla, Open and Inverted, bonk drops
 // shuffled or not, as no OWR race's spoiler is public) and of test/owr-
 // crossed-spoilers/ (… owr-crossed: Open, its edges crossed, grouped and
-// unrestricted, each edge noted as the log pairs it), in the world the app
+// unrestricted, each edge noted as the log pairs it) and of test/owr-mixed-
+// spoilers/ (… owr-mixed: screens flipped by Mixed, Open and Inverted,
+// with crossed edges or shuffled whirlpools, each flip noted from the
+// log's `Maps`), in the world the app
 // solves an OWR run in (drWorld on OWR_DATA, its bonk drops added as the
 // app adds them, `doorAddedOf`).
 //
@@ -24,6 +27,7 @@ import {
   crossingsOf,
   edgePartnersOf,
   factOf,
+  owrScreensOf,
 } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
 import {
@@ -37,8 +41,15 @@ import {
 } from "./dr-playthrough";
 import { eventsOf } from "./dr-state";
 
-/** The sets, by directory: whether their edges are crossed. */
-const SETS = { "owr-crossed-spoilers": true, "owr-spoilers": false } as const;
+/**
+ * The sets, by directory: whether their edges are listed (crossed, or
+ * moved by Mixed's flips) and their screens flipped by Mixed.
+ */
+const SETS = {
+  "owr-crossed-spoilers": { listed: true, mixed: false },
+  "owr-mixed-spoilers": { listed: true, mixed: true },
+  "owr-spoilers": { listed: false, mixed: false },
+} as const;
 
 type Set = keyof typeof SETS;
 
@@ -58,9 +69,15 @@ const read = (path: string) => {
   return readFixture(set, name);
 };
 
-/** Whether a log's edges are crossed: its set's. */
-const crossedSet = (path: string): boolean =>
-  SETS[(path.split("/")[0] ?? "") as Set];
+/** A log's set's kind. */
+const setOf = (path: string) => SETS[(path.split("/")[0] ?? "") as Set];
+
+/** Whether a log's edges are crossed (grouped or unrestricted). */
+const crossedLog = (path: string): boolean => {
+  const { ow_crossed: crossed } = (JSON.parse(read(path)) as { meta: Json })
+    .meta;
+  return crossed === "grouped" || crossed === "unrestricted";
+};
 
 type Json = Readonly<Record<string, unknown>>;
 
@@ -86,6 +103,12 @@ const REVIEWED: Readonly<
 const FARMS: Readonly<Record<string, readonly string[]>> = {
   "owr-crossed-spoilers/avianart-o4mamwuKZ.json": [
     "1:South Pass Area Crab Drop",
+  ],
+  "owr-mixed-spoilers/avianart-mPEeiQvu1.json": [
+    "1:Mountain Pass Area Crab Drop",
+  ],
+  "owr-mixed-spoilers/avianart-t8B3wJpHK.json": [
+    "1:Lost Woods East Area Crab Drop",
   ],
 };
 
@@ -127,11 +150,14 @@ function logOf(name: string): {
   const { Maps: maps, Overworld: edges, Whirlpools: pools, ...rest } = json;
   const { farms, log } = withoutPrizeFarms(jsonLog(rest));
   const { meta } = log;
-  const crossed = crossedSet(name);
-  // Edges listed once crossed (all 141 pairs, connect_two_way's spoiler,
-  // OverworldShuffle.py:721-722); whirlpools and flute spots only where
-  // meta shuffles them
-  expect((edges as readonly unknown[]).length).toBe(crossed ? 141 : 0);
+  const crossed = crossedLog(name);
+  const { listed, mixed } = setOf(name);
+  // Only the Mixed set mixes its kinds
+  if (!mixed) expect(crossed).toBe(listed);
+  // Edges listed once crossed or flipped (all 141 pairs, connect_two_way's
+  // spoiler, OverworldShuffle.py:721-722); whirlpools and flute spots only
+  // where meta shuffles them
+  expect((edges as readonly unknown[]).length).toBe(listed ? 141 : 0);
   expect(meta.ow_crossed !== "none").toBe(crossed);
   expect((pools as readonly unknown[]).length > 0).toBe(
     flag(meta.ow_whirlpool),
@@ -146,7 +172,7 @@ function logOf(name: string): {
     meta.shuffle,
     meta.logic,
     meta.ow_layout,
-    flag(meta.ow_mixed),
+    flag(meta.ow_mixed) === mixed,
     meta.prizeshuffle,
     flag(meta.shuffle_followers),
     flag(meta.bombbag),
@@ -155,7 +181,7 @@ function logOf(name: string): {
     "vanilla",
     "noglitches",
     "vanilla",
-    false,
+    true,
     "none",
     false,
     false,
@@ -211,27 +237,66 @@ const worldOf = (
 describe("the Overworld Randomizer's world against its own seeds' playthroughs", () => {
   const logs = LOGS;
 
-  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed", () => {
+  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped", () => {
     const seen = logs.map((name) => {
       const { meta } = logOf(name).log;
-      return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed}`;
+      return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)}`;
     });
     expect(seen.sort()).toEqual([
-      "inverted false false vanilla none",
-      "inverted false true balanced none",
-      "inverted true false vanilla none",
-      "open false false vanilla grouped",
-      "open false false vanilla none",
-      "open false false vanilla unrestricted",
-      "open false true random none",
-      "open true false vanilla none",
+      "inverted false false vanilla none false",
+      "inverted false false vanilla none true",
+      "inverted false true balanced none false",
+      "inverted true false vanilla none false",
+      "open false false vanilla grouped false",
+      "open false false vanilla grouped true",
+      "open false false vanilla none false",
+      "open false false vanilla none true",
+      "open false false vanilla unrestricted false",
+      "open false true random none false",
+      "open false true vanilla none true",
+      "open true false vanilla none false",
     ]);
+  });
+
+  it("crosses exactly the edges a Mixed seed lists, from its flips alone", () => {
+    const mixed = logs.filter((name) => setOf(name).mixed && !crossedLog(name));
+    expect(mixed.length).toBeGreaterThan(1);
+    for (const name of mixed) {
+      const json = JSON.parse(read(name)) as {
+        meta: Json;
+        Overworld: readonly { entrance: string; exit: string }[];
+      };
+      const listed: Record<string, string> = {};
+      for (const { entrance, exit } of json.Overworld) {
+        listed[entrance] = exit;
+        listed[exit] = entrance;
+      }
+      const { notes } = logOf(name);
+      expect(notes.edges).toBeUndefined();
+      expect(
+        Object.values(notes.flips ?? {}).filter(Boolean).length,
+      ).toBeGreaterThan(10);
+      const screens = owrScreensOf(
+        OWR_DATA,
+        json.meta.mode === "inverted" ? "inverted" : "open",
+        notes,
+      );
+      expect(
+        Object.fromEntries(edgePartnersOf(OWR_DATA, notes, screens)),
+      ).toEqual(listed);
+      // Some cross, as their screens flip apart
+      expect(
+        Object.entries(listed).filter(
+          ([a, b]) => edgePartnersOf(OWR_DATA).get(a) !== b,
+        ).length,
+      ).toBeGreaterThan(0);
+    }
   });
 
   it("notes every edge of a crossed seed both ways, some into the other world", () => {
     for (const name of logs) {
-      const { notes } = logOf(name);
-      if (!crossedSet(name)) {
+      const { log, notes } = logOf(name);
+      if (!crossedLog(name)) {
         expect(notes.edges).toBeUndefined();
         continue;
       }
@@ -243,11 +308,25 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
         ([a, b]) => edgePartnersOf(OWR_DATA).get(a) !== b,
       );
       expect(moved.length, name).toBeGreaterThan(0);
-      // As a player notes them, a crossing per pair: the same links
-      const crossings = crossingsOf(OWR_DATA, edges);
+      // As a player notes them, a crossing per pair: the same links, where
+      // Mixed flipped one screen of a pair turned round by its flips
+      const screens = owrScreensOf(
+        OWR_DATA,
+        log.meta.mode === "inverted" ? "inverted" : "open",
+        notes,
+      );
+      const crossings = crossingsOf(
+        OWR_DATA,
+        edges,
+        notes.flips === undefined ? undefined : screens,
+      );
       expect(Object.keys(crossings)).toHaveLength(67);
+      const seen = {
+        crossings,
+        ...(notes.flips === undefined ? {} : { flips: notes.flips }),
+      };
       expect(
-        Object.fromEntries(edgePartnersOf(OWR_DATA, { crossings })),
+        Object.fromEntries(edgePartnersOf(OWR_DATA, seen, screens)),
       ).toEqual(edges);
     }
   });
