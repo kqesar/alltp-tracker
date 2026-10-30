@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.67.2](https://github.com/kqesar/alltp-tracker/compare/v2.67.1...v2.67.2) (2026-10-30)
+
+
+### 🐛 Bug Fixes
+
+* **web:** stop naming every Lua-bridge emulator BizHawk ([f207fcd](https://github.com/kqesar/alltp-tracker/commit/f207fcd1b19caa8547f0b740003233ab6f0f3094))
+
 ## [2.67.1](https://github.com/kqesar/alltp-tracker/compare/v2.67.0...v2.67.1) (2026-10-30)
 
 
