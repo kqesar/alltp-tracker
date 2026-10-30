@@ -1246,6 +1246,15 @@ The answers that are not `yes` are listed with why: Misery Mire's two-key
 alternative and a key rule that rests on a placement (`maybe`), and a seed
 of DR's unstable `static` key logic, which 1.5.6 does not have and which
 opens Ice Palace with fewer keys (`no`, a logic the app does not model).
+The other way, nothing is `yes` too early: the spheres are first-reachable
+sets, so no location of a later sphere is `yes` with what a sphere starts
+with, asked as DR builds that state: the earlier spheres' items and the
+keys `sweep_for_events(key_only=True)` sweeps (those kept in their
+dungeons, found only where the world says `yes`), no other event. The
+world's own sweep is left out there: it collects an event or a vanilla
+drop's key once reached, as a player does, where a sphere holds it only
+from the next (a keysanity seed's pot key one sphere, the room it opens
+the next).
 
 **Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
 `RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,

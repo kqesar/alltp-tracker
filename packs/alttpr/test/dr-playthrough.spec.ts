@@ -8,7 +8,8 @@
 // 1051-1066). So a location of sphere k is `yes` here with the items of the
 // spheres before it held, unless the reviewed list below says why not; the
 // keys a seed keeps in their dungeons are found as a player finds them, at
-// every place of their dungeon the world does not refuse.
+// every place of their dungeon the world does not refuse. The other way,
+// no location of a later sphere is yes too early (`early`).
 import { readFileSync } from "node:fs";
 import type { State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
@@ -159,6 +160,73 @@ function walk(name: string): {
   return { checked, notYes };
 }
 
+/**
+ * The locations of a later sphere a log's playthrough says yes to too
+ * early, each `sphere:location as of sphere`. create_playthrough's final
+ * spheres (Main.py:747-764) are first-reachable sets: sphere k holds the
+ * required locations that DR's state reaches after the spheres before it,
+ * where that state is their items and, swept at each step, the keys at
+ * reachable event locations, only those kept in their dungeons
+ * (sweep_for_events(key_only=True), BaseClasses.py:1051-1066: small keys
+ * under keyshuffle none, big keys without bigkeyshuffle; a vanilla drop's
+ * key is such an event, Location's forced_item, BaseClasses.py:2272-2278).
+ * No other event is swept: an event, a forced key of a keysanity seed, is
+ * held once a sphere collects it. A location of a later sphere was out of
+ * DR's reach in that state, so the world must not say yes to it there.
+ *
+ * The world's own sweep is not that state: it collects every event and
+ * vanilla drop's key once reached, as a player does, which a sphere holds
+ * only from the next (a keysanity seed's pot key one sphere, the room it
+ * opens the next). So the world is asked without its sweep
+ * (`sweepEvents: false`), on a state never more than DR's: the earlier
+ * spheres' items, and the keys DR sweeps found only where the world says
+ * yes (its yes being what is held to DR's reach).
+ */
+function early(name: string): string[] {
+  const log = textDocument(read(name)) as unknown as Log;
+  const world = drWorld(settingsFor(log.meta), { sweepEvents: false });
+  const id = (location: string) => {
+    const found = world.locationIds.get(location);
+    if (found === undefined) throw new Error(`no location "${location}"`);
+    return found;
+  };
+  const swept = [
+    ...(log.meta.keyshuffle === "none" ? ["Small Key ("] : []),
+    ...(log.meta.bigkeyshuffle === false ? ["Big Key ("] : []),
+  ];
+  const keys = Object.entries(log.Locations).filter(([, item]) =>
+    swept.some((kind) => item.startsWith(kind)),
+  );
+  const spheres: Readonly<Record<string, string>>[] = [];
+  for (let k = 1; log.playthrough[k] !== undefined; k++)
+    spheres.push(log.playthrough[k] as Readonly<Record<string, string>>);
+  const held = [...((log.playthrough["0"] as readonly string[]) ?? [])];
+  const found = new Set<string>();
+  const out: string[] = [];
+  spheres.forEach((sphere, i) => {
+    let solution = solveFacts(world, stateOf(held, log.Special));
+    for (;;) {
+      const more = keys.filter(
+        ([at]) => !found.has(at) && solution.location(id(at)) === "yes",
+      );
+      if (more.length === 0) break;
+      for (const [at, item] of more) {
+        found.add(at);
+        held.push(item);
+      }
+      solution = solveFacts(world, stateOf(held, log.Special));
+    }
+    spheres.slice(i + 1).forEach((later, j) => {
+      for (const location of Object.keys(later))
+        if (solution.location(id(location)) === "yes")
+          out.push(`${i + j + 2}:${location} as of ${i + 1}`);
+    });
+    for (const [at, item] of Object.entries(sphere))
+      if (!found.has(at)) held.push(item);
+  });
+  return out;
+}
+
 describe("DR's world against real seeds' playthroughs", () => {
   const logs = Object.keys(INDEX.logs);
 
@@ -171,5 +239,10 @@ describe("DR's world against real seeds' playthroughs", () => {
       const { checked, notYes } = walk(name);
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
+    });
+
+  for (const name of logs)
+    it(`says yes to no location of a later sphere (${name})`, () => {
+      expect(early(name)).toEqual([]);
     });
 });
