@@ -643,6 +643,18 @@ describe("the DR version a run keeps", () => {
       drVersion: 158,
     });
     expect(doorLogic(with_(DR, { doorVersion: "1.5.8" }))).toBe(true);
+    // The fork's world is OWR 0.8.0.2's, on DR 1.5.7: never more, an older
+    // or unknown base read as 1.5.6; its bonk drops as the run says
+    const owr = with_(DR, { bonkDrops: true, randomizer: "owr" });
+    expect(drSettingsOf(owr)).toMatchObject({
+      bonkDrops: true,
+      drVersion: 156,
+    });
+    for (const doorVersion of ["1.5.7", "1.5.8"] as const)
+      expect(drSettingsOf(with_(owr, { doorVersion }))).toMatchObject({
+        drVersion: 157,
+      });
+    expect(drSettingsOf(DR)).not.toHaveProperty("bonkDrops");
   });
 });
 

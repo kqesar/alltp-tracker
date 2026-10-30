@@ -241,7 +241,7 @@ export const pyramidOpen = (run: RunSettings): boolean => {
  * Murahdahla (:72) ask the pieces the goal asks, which the state holds as
  * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
  * An Overworld Randomizer run adds its bonk drops and reads DR 1.5.7's
- * world, the base of the fork's release the pack reads (0.8.0.2).
+ * world at most, the base of the fork's release the pack reads (0.8.0.2).
  * The same run settings always give the same object, so the world compiled
  * for it can be kept.
  * @param run - A DR run's settings
@@ -257,8 +257,12 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const bossItems = door?.restrictBossItems ?? "none";
   const pyramid = pyramidOpen(run);
   const owr = door?.randomizer === "owr";
-  // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7
-  const version = owr ? "1.5.7" : (door?.doorVersion ?? "1.5.6");
+  // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7: an
+  // older or unknown base reads as 1.5.6, which asks more (static.ts)
+  const version =
+    owr && door.doorVersion !== "1.5.6"
+      ? "1.5.7"
+      : (door?.doorVersion ?? "1.5.6");
   const bonkDrops = owr && door.bonkDrops;
   const key = [
     owr,
