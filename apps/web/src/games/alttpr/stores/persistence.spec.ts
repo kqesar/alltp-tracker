@@ -109,6 +109,24 @@ describe("parseSave", () => {
     );
   });
 
+  it("reads a Door Randomizer run with its small keys alone outside their dungeons", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      dungeonItems: "keys",
+    };
+    expect(
+      parseSave(saveFile({ presetId: "door-randomizer", settings })),
+    ).toMatchObject({ ok: true, progress: { settings } });
+    expect(
+      refusal(
+        saveFile({
+          presetId: "door-randomizer",
+          settings: { ...settings, dungeonItems: "bigkeys" },
+        }),
+      ),
+    ).toMatch(/settings/);
+  });
+
   it("names the field that holds a value the tracker cannot show", () => {
     expect(refusal(saveFile({ items: { flute: 1 } }))).toMatch(
       /items\.flute must be true or false/,

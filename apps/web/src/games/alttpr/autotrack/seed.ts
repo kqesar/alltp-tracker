@@ -223,6 +223,14 @@ const DUNGEON_ITEM_LEVELS: Readonly<
   Partial<Record<string, RunSettings["dungeonItems"]>>
 > = { "0000": "standard", "1100": "mc", "1110": "mcs", "1111": "full" };
 
+/**
+ * The Door Randomizer's mixes beside them: its options are apart
+ * (args.json), so its small keys may leave alone.
+ */
+const DOOR_DUNGEON_ITEM_LEVELS: Readonly<
+  Partial<Record<string, RunSettings["dungeonItems"]>>
+> = { ...DUNGEON_ITEM_LEVELS, "0010": "keys" };
+
 /** The dungeon items a seed shuffles, named, when only some are. */
 const WILD_NAMES = {
   wildBigKeys: "big keys",
@@ -475,12 +483,15 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   if (runGoal === undefined)
     reasons.push(OTHER_GOALS[goal.value] ?? goal.value);
   const wild = { wildBigKeys, wildCompasses, wildKeys, wildMaps };
-  const dungeonItems =
-    DUNGEON_ITEM_LEVELS[
-      [wildMaps, wildCompasses, wildKeys, wildBigKeys]
-        .map((setting) => (setting.value ? 1 : 0))
-        .join("")
-    ];
+  const dungeonItems = (
+    seed.randomizer?.kind === "door"
+      ? DOOR_DUNGEON_ITEM_LEVELS
+      : DUNGEON_ITEM_LEVELS
+  )[
+    [wildMaps, wildCompasses, wildKeys, wildBigKeys]
+      .map((setting) => (setting.value ? 1 : 0))
+      .join("")
+  ];
   if (dungeonItems === undefined) {
     const shuffled = (Object.keys(wild) as (keyof typeof wild)[]).filter(
       (key) => wild[key].value,

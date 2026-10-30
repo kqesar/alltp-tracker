@@ -89,9 +89,13 @@ export type PlayGlitches = Exclude<Glitches, "no_logic">;
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
  * dungeon's own items may lie outside it. Each level lets out the ones below
  * it too (World.php:111-129): maps and compasses (mc), then small keys
- * (mcs), then big keys (full, keysanity).
+ * (mcs), then big keys (full, keysanity). The Door Randomizer and its
+ * Overworld fork shuffle each kind apart (args.json `keyshuffle`,
+ * `bigkeyshuffle`, `mapshuffle`, `compassshuffle`), so a DR run may also
+ * let out its small keys alone (`keys`: keyshuffle wild, the rest kept),
+ * which alttpr.com never rolls.
  */
-export type DungeonItems = "standard" | "mc" | "mcs" | "full";
+export type DungeonItems = "standard" | "mc" | "mcs" | "full" | "keys";
 
 /** alttpr.com's item placement (config/alttp.php:181-184). */
 type ItemPlacement = "advanced" | "basic";
@@ -613,6 +617,7 @@ export const ENEMY_HEALTH_LABELS: Record<EnemyHealth | "default", string> = {
 
 export const DUNGEON_ITEM_LABELS: Record<DungeonItems, string> = {
   full: "Full Shuffle",
+  keys: "Small keys only",
   mc: "MC Shuffle",
   mcs: "MCS Shuffle",
   standard: "Standard",
@@ -624,10 +629,16 @@ export const wildItems = ({
 }: Pick<RunSettings, "dungeonItems">) => ({
   /** Big keys: full shuffle only. */
   bigKeys: dungeonItems === "full",
-  /** Small keys: mcs and full. */
-  keys: dungeonItems === "mcs" || dungeonItems === "full",
-  /** Maps and compasses, which always go together: every level but standard. */
-  mapsAndCompasses: dungeonItems !== "standard",
+  /** Small keys: mcs, full, and a DR run's small keys alone. */
+  keys:
+    dungeonItems === "mcs" ||
+    dungeonItems === "full" ||
+    dungeonItems === "keys",
+  /**
+   * Maps and compasses, which always go together: every alttpr.com level
+   * but standard.
+   */
+  mapsAndCompasses: dungeonItems !== "standard" && dungeonItems !== "keys",
 });
 
 export const PLACEMENT_LABELS: Record<ItemPlacement, string> = {
@@ -766,7 +777,10 @@ export const TUNING = {
   ),
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
-  dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  dungeonItems: ordered(
+    ["standard", "mc", "mcs", "full", "keys"],
+    DUNGEON_ITEM_LABELS,
+  ),
   enemyHealth: ordered<EnemyHealth | "default">(
     ["default", "easy", "hard", "expert"],
     ENEMY_HEALTH_LABELS,
@@ -837,6 +851,30 @@ export const isHidden = (settings: RunSettings, setting: TunableSetting) =>
   (settings.hidden as readonly TunableSetting[] | undefined)?.includes(
     setting,
   ) === true;
+
+/**
+ * Whether a run shows its key cells on its own: its maps and compasses or
+ * its small keys leave their dungeons, so the cells record items found.
+ */
+export const keyCellsShown = (
+  settings: Pick<RunSettings, "dungeonItems">,
+): boolean => {
+  const wild = wildItems(settings);
+  return wild.mapsAndCompasses || wild.keys;
+};
+
+/**
+ * The options a run's summary offers for a tunable setting: `TUNING`'s,
+ * but small keys alone (`keys`) for a Door Randomizer run only, which
+ * alttpr.com never rolls.
+ */
+export const tuningOptionsOf = (
+  settings: RunSettings,
+  setting: TunableSetting,
+): readonly (readonly [boolean | number | string, string])[] =>
+  setting === "dungeonItems" && !isDoorRun(settings)
+    ? TUNING.dungeonItems.filter(([value]) => value !== "keys")
+    : TUNING[setting];
 
 /**
  * A tunable setting's value as its options name it: a boss shuffle, the

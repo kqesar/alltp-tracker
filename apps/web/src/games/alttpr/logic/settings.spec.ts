@@ -254,6 +254,26 @@ describe("counterMax", () => {
     expect(counters("mcs")).toEqual([5, 5, 5, 13, 9, 7, 7, 7, 7, 11]);
   });
 
+  it("counts a Door Randomizer run's small keys alone, its maps, compasses and big keys kept", () => {
+    const dr = {
+      ...getPreset("door-randomizer").settings,
+      dungeonItems: "keys" as const,
+    };
+    // DR's options are apart (args.json): its region flags, keys alone
+    expect(packSettings(dr)).toMatchObject({
+      wildBigKeys: false,
+      wildCompasses: false,
+      wildKeys: true,
+      wildMaps: false,
+    });
+    // Standard's counters, and each dungeon's small keys (MCS less MC)
+    expect(
+      Array.from({ length: 10 }, (_, index) =>
+        counterMax(index, run({ dungeonItems: "keys" })),
+      ),
+    ).toEqual([3, 3, 3, 11, 7, 5, 5, 5, 5, 9]);
+  });
+
   it("counts Ganon's Tower's items: 20 in v31, its 27 locations in Full Shuffle", () => {
     expect(COUNTER_INDICES).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12]);
     expect(counterMax(12, run())).toBe(20);

@@ -169,6 +169,38 @@ for (const width of WIDTHS) {
   });
 }
 
+test("a Door Randomizer run sets its small keys alone outside their dungeons, from the keyboard", async ({
+  page,
+}) => {
+  const dialog = await openDoorRun(page);
+  const items = dialog.getByRole("combobox", { name: "Dungeon items" });
+  await expect(
+    items.getByRole("option", { name: "Small keys only" }),
+  ).toHaveCount(1);
+  await items.focus();
+  await items.selectOption("keys");
+  await expect(items).toHaveValue("keys");
+  // The small keys are items to mark: the key cells show on their own
+  await expect(dialog.getByTestId("key-cells-toggle")).toBeChecked();
+  await auditPage(page);
+  if (process.env.DOOR_SHOTS !== undefined)
+    await dialog.screenshot({
+      path: `${process.env.DOOR_SHOTS}/keys-only-mode-dialog.png`,
+    });
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+  // The grid's key cells at every width; map pins: WCAG 2.5.8's exception
+  await expect(page.getByTestId("small-key-3")).toBeVisible();
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ height: 900, width });
+    await auditPage(page, ".mapspan");
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.screenshot({
+        path: `${process.env.DOOR_SHOTS}/keys-only-board-${width}.png`,
+      });
+  }
+});
+
 test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async ({
   page,
 }) => {

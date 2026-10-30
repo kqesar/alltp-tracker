@@ -25,9 +25,9 @@ import {
   presets,
   type RunSettings,
   sameSettings,
-  TUNING,
   type TunableSetting,
   tunedOf,
+  tuningOptionsOf,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -62,8 +62,7 @@ const SettingSelect = ({
   const presetId = useGameStore((state) => state.presetId);
   const updateSettings = useGameStore((state) => state.updateSettings);
   const hideSetting = useGameStore((state) => state.hideSetting);
-  const options: readonly (readonly [boolean | number | string, string])[] =
-    TUNING[setting];
+  const options = tuningOptionsOf(settings, setting);
   const hidden = isHidden(settings, setting);
   const hideable =
     (HIDEABLE as readonly TunableSetting[]).includes(setting) &&
@@ -189,8 +188,9 @@ const DoorEntranceSelect = ({ id }: { id: string }) => {
 /**
  * The key cells' switch, a display option of this device and not a seed
  * setting: it sits under the run's summary, apart from the selects. A run
- * whose maps and compasses leave their dungeons shows the cells on its own
- * (`applyRun`); in any other the player shows them to track keys by hand.
+ * whose maps and compasses or small keys leave their dungeons shows the
+ * cells on its own (`applyRun`, `keyCellsShown`); in any other the player
+ * shows them to track keys by hand.
  */
 const KeyCellsOption = () => {
   const id = useId();
@@ -211,8 +211,8 @@ const KeyCellsOption = () => {
         <label htmlFor={id}>Show key cells</label>
       </div>
       <p className="run-display__hint" id={`${id}-hint`}>
-        Shown on their own in MC, MCS and Full; elsewhere, to track keys by
-        hand.
+        Shown on their own in MC, MCS and Full and with small keys shuffled
+        alone; elsewhere, to track keys by hand.
       </p>
     </div>
   );

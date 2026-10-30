@@ -34,11 +34,11 @@ import {
   DEFAULT_PRESET_ID,
   getPreset,
   type HiddenSetting,
+  keyCellsShown,
   type RunSettings,
   type SettingsChange,
   type TunableSetting,
   tunedOf,
-  wildItems,
 } from "@/games/alttpr/data/presets";
 import {
   DEFAULT_TRICKS,
@@ -346,7 +346,7 @@ export const isFreshRun = (progress: Progress): boolean => {
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   autoTimer: true,
-  bigKeysVisible: wildItems(getPreset(presetId).settings).mapsAndCompasses,
+  bigKeysVisible: keyCellsShown(getPreset(presetId).settings),
   mapLayout: "auto",
   mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
@@ -555,14 +555,14 @@ export const retune = (
 
 /**
  * The key cells, following the run when its dungeon items start or stop
- * leaving their dungeons; otherwise the player's own choice stands.
+ * leaving their dungeons (`keyCellsShown`); otherwise the player's own
+ * choice stands.
  */
 const keyCellsFor = (state: GameState, settings: RunSettings) => ({
   bigKeysVisible:
-    wildItems(settings).mapsAndCompasses ===
-    wildItems(state.settings).mapsAndCompasses
+    keyCellsShown(settings) === keyCellsShown(state.settings)
       ? state.bigKeysVisible
-      : wildItems(settings).mapsAndCompasses,
+      : keyCellsShown(settings),
 });
 
 /**

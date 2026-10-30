@@ -44,6 +44,7 @@ import {
   glitchesOf,
   logicModelled,
   noLogicRun,
+  wildItems,
 } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
 import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
@@ -161,9 +162,7 @@ export const hiddenReason = (
   ) {
     return "no-timeline";
   }
-  if (settings.dungeonItems === "mcs" || settings.dungeonItems === "full") {
-    return "keysanity";
-  }
+  if (wildItems(settings).keys) return "keysanity";
   if (packSettings(settings).genericKeys) return "generic-keys";
   // DR's own shuffles too (`doorEntrances`: lite, lean, …), which leave
   // alttpr.com's field at none

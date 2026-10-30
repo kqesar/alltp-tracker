@@ -105,7 +105,11 @@ const built = (
     accessibility: known("accessibility", run.accessibility),
     "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
     "crystals.tower": known("crystalsTower", run.crystalsTower),
-    dungeonItems: run.dungeonItems,
+    // A DR run's small keys alone: no level of alttpr.com's, its region
+    // flag (World.php:111-129 sets the flags each level turns on)
+    ...(run.dungeonItems === "keys"
+      ? { dungeonItems: "standard" as const, "region.wildKeys": true }
+      : { dungeonItems: run.dungeonItems }),
     "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
     "enemizer.enemyHealth": enemyHealthOf(run),
     goal: known("goal", GOALS[run.goal]),

@@ -494,6 +494,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   prizeShuffle:none prizeShuffle:dungeon prizeShuffle:nearby prizeShuffle:wild
   shuffleFollowers:false shuffleFollowers:true
   customGoals:false customGoals:true
+  dungeonItems:keys
 `
   .trim()
   .split(/\s+/);

@@ -237,6 +237,17 @@ describe("GameStore", () => {
       crystalsTower: 5,
     };
 
+    it("shows the key cells once a Door Randomizer run's small keys alone leave their dungeons", () => {
+      const state = useGameStore.getState();
+      state.applyRun("door-randomizer", getPreset("door-randomizer").settings);
+      expect(useGameStore.getState().bigKeysVisible).toBe(false);
+      useGameStore.getState().updateSettings({ dungeonItems: "keys" });
+      expect(useGameStore.getState().settings.dungeonItems).toBe("keys");
+      expect(useGameStore.getState().bigKeysVisible).toBe(true);
+      useGameStore.getState().updateSettings({ dungeonItems: "standard" });
+      expect(useGameStore.getState().bigKeysVisible).toBe(false);
+    });
+
     it("starts a run of other settings as one undo step, laying the game on it", () => {
       const state = useGameStore.getState();
       state.handleItemClick("hookshot");

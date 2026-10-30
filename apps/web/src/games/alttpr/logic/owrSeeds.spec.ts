@@ -5,12 +5,14 @@
 // switches to is solved in the fork's own world, on the settings that world
 // was held to there (its mode, its bonk drops, DR 1.5.7, the goal).
 import { avianartReading } from "@alltp/pack-alttpr";
+import { keyHoldingOf } from "@alltp/pack-alttpr/door-world";
 import { describe, expect, it } from "vitest";
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import {
   doorLogic,
   entrancesKnown,
   getPreset,
+  keyCellsShown,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { drSettingsOf } from "@/games/alttpr/logic/settings";
@@ -32,6 +34,7 @@ import invertedBonks from "../../../../../../packs/alttpr/test/owr-spoilers/avia
 const SEEDS = [
   ["n7Bg53tbm", openBonks, false, true],
   ["sLcpC6Z45", swapped, false, false],
+  ["sbuwNOmVF", swappedKeys, false, false],
   ["qzj33CUOO", district, false, false],
   ["p5dYMs8jC", districtMixed, false, false],
   ["2cWVkb9pK", open, false, false],
@@ -88,10 +91,9 @@ describe("an Overworld Randomizer seed started from its permalink", () => {
     },
   );
 
-  it("names what keeps a Swapped seed with small keys alone wild off the board", () => {
-    // The board's dungeon items move maps, compasses, keys and big keys
-    // in alttpr.com's steps: small keys alone are none of them (the
-    // pack's contract walks the seed all the same)
+  it("sets a Swapped seed with small keys alone wild up on the board, the rest kept", () => {
+    // DR's options are apart (args.json): keyshuffle wild, big keys, maps
+    // and compasses in their dungeons, which no level of alttpr.com's is
     const reading = avianartReading(
       { response: { spoiler: JSON.parse(swappedKeys), type: "dr" } },
       "sbuwNOmVF",
@@ -101,9 +103,17 @@ describe("an Overworld Randomizer seed started from its permalink", () => {
       presetId: "open",
       settings: getPreset("open").settings,
     });
-    expect(check).toMatchObject({
-      kind: "unsupported",
-      reasons: [expect.stringMatching(/small keys/)],
+    if (check.kind !== "differs") throw new Error(check.kind);
+    expect(check.settings.dungeonItems).toBe("keys");
+    expect(keyCellsShown(check.settings)).toBe(true);
+    // Into DR's world: the small keys recorded as found, the big key kept
+    // inside (maybe until held, as the pack's contract walks it)
+    expect(drSettingsOf(check.settings)).toMatchObject({
+      wildBigKeys: false,
+      wildCompasses: false,
+      wildKeys: true,
+      wildMaps: false,
     });
+    expect(keyHoldingOf(drSettingsOf(check.settings))).toBe("wild");
   });
 });
