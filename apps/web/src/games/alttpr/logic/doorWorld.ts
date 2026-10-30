@@ -1,5 +1,5 @@
-// The logic of a Door Randomizer run whose doors and entrances are vanilla
-// (doorLogic): the pack's port of DR's own world (packs/alttpr/src/
+// The logic of a Door Randomizer run (doorLogic), on its entrances and
+// doors as noted where DR shuffled them: the pack's port of DR's own world (packs/alttpr/src/
 // door-world/), its rules, crystal switches and key analysis, built for the
 // run's settings. Loaded on demand for such a run (hooks/useDoorLogic.ts),
 // with DR's rules and region graph: no other run downloads them, so
@@ -7,6 +7,7 @@
 
 import type { Settings, State, Tri } from "@alltp/engine";
 import {
+  type DrNotedDoors,
   type DrNotedEntrances,
   type DrWorld,
   drRegionId,
@@ -34,8 +35,21 @@ type Added = readonly { readonly name: string; readonly region: string }[];
 
 const built = new WeakMap<
   Settings,
-  { added: Added; entrances?: DrNotedEntrances; world: DrWorld }
+  {
+    added: Added;
+    doors?: DrNotedDoors;
+    entrances?: DrNotedEntrances;
+    world: DrWorld;
+  }
 >();
+
+/** Whether two runs' noted doors are the same notes of the same shuffle. */
+const sameDoors = (a?: DrNotedDoors, b?: DrNotedDoors) =>
+  a === b ||
+  (a !== undefined &&
+    b !== undefined &&
+    a.notes === b.notes &&
+    JSON.stringify(a.settings) === JSON.stringify(b.settings));
 
 /** Whether two runs' noted entrances are the same notes of the same pool. */
 const sameEntrances = (a?: DrNotedEntrances, b?: DrNotedEntrances) =>
@@ -59,17 +73,24 @@ const worldOf = (
   settings: Settings,
   added: Added,
   entrances?: DrNotedEntrances,
+  doors?: DrNotedDoors,
 ): DrWorld => {
   const found = built.get(settings);
-  if (found?.added === added && sameEntrances(found.entrances, entrances))
+  if (
+    found?.added === added &&
+    sameEntrances(found.entrances, entrances) &&
+    sameDoors(found.doors, doors)
+  )
     return found.world;
   const world = drWorld(settings, {
     dropsAndPots: added,
     ...(entrances === undefined ? {} : { entrances }),
+    ...(doors === undefined ? {} : { doors }),
     unrecorded: UNRECORDED,
   });
   built.set(settings, {
     added,
+    ...(doors === undefined ? {} : { doors }),
     ...(entrances === undefined ? {} : { entrances }),
     world,
   });
@@ -87,6 +108,7 @@ export interface DoorSolver extends OwnWorldSolver {
     added: Added,
     state: State,
     entrances?: DrNotedEntrances,
+    doors?: DrNotedDoors,
   ): DoorRun;
   /**
    * Where a region of DR's stands (a DR location's, by DR's name): maybe
@@ -106,6 +128,6 @@ export const solver: DoorSolver = {
     const id = drRegionId(name);
     return id === undefined ? "maybe" : solution.region(id);
   },
-  solve: (settings, added, state, entrances) =>
-    solveIn(worldOf(settings, added, entrances), state),
+  solve: (settings, added, state, entrances, doors) =>
+    solveIn(worldOf(settings, added, entrances, doors), state),
 };

@@ -34,6 +34,7 @@ import {
 import {
   DOOR_LOCATION_IDS,
   doorShuffleOf,
+  doorShuffleSettingsOf,
 } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
@@ -92,6 +93,11 @@ export type Hidden =
    * shop item), which the run keeps no time for.
    */
   | "door-logic"
+  /**
+   * The log is a Door Randomizer's whose doors were shuffled: the run does
+   * not time where each led.
+   */
+  | "doors"
   /**
    * The board has finds and the run no timeline at all: opened from a
    * shared link that left it out to stay short, or a save from before the
@@ -159,6 +165,7 @@ export const hiddenReason = (
   ) {
     return "entrances";
   }
+  if (doorShuffleSettingsOf(settings) !== undefined) return "doors";
   const logic = log.extra.settings?.logic;
   // No route is promised: "in logic from" has no meaning
   if (

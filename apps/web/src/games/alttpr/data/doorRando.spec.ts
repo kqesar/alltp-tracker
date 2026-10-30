@@ -199,6 +199,23 @@ describe("a Door Randomizer run's logic", () => {
     expect(doorRows(DR)).not.toContain("shuffleLinks");
   });
 
+  it("takes DR's own world for a door shuffle, on the doors noted", () => {
+    for (const doorShuffle of ["basic", "partitioned", "crossed"] as const) {
+      const run = with_(DR, { doorShuffle });
+      expect(doorLogic(run), doorShuffle).toBe(true);
+      expect(unmodelledReasons(run), doorShuffle).toEqual([]);
+      expect(doorNotes(run)[1]).toBe(
+        "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
+      );
+    }
+    // A basic shuffle keeps each boss room in its dungeon
+    expect(
+      doorLogic(
+        with_(DR, { doorShuffle: "basic", restrictBossItems: "mapcompass" }),
+      ),
+    ).toBe(true);
+  });
+
   it("reads a door shuffle's intensity and coupling", () => {
     const basic = with_(DR, { doorShuffle: "basic" });
     // Shown while doors are shuffled, after the shuffle itself
@@ -341,8 +358,14 @@ describe("a Door Randomizer run's logic", () => {
 
   it("names every cause it cannot model, and models none of them", () => {
     const cases: [Partial<RunSettings>, string][] = [
-      [{ doorShuffle: "crossed" }, "Crossed door shuffle"],
-      [{ doorShuffle: "partitioned" }, "Partitioned door shuffle"],
+      [
+        { doorShuffle: "crossed", restrictBossItems: "mapcompass" },
+        "restricted boss items with a crossed door shuffle",
+      ],
+      [
+        { doorShuffle: "partitioned", restrictBossItems: "dungeon" },
+        "restricted boss items with a partitioned door shuffle",
+      ],
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
       [
         { doorEntrances: "district", randomizer: "owr" },

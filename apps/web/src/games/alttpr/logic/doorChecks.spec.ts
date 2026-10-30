@@ -140,4 +140,38 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     useGameStore.getState().noteEntrance("kakariko-well-drop", null);
     expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
   });
+
+  it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      doorShuffle: "basic",
+    });
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
+    expect(solutionOf(state()).door).toBeDefined();
+    const cannonball = "eastern-palace/cannonball-chest";
+    // Intensity not known: read as 3, Eastern's lobby not noted yet
+    expect(checkStates(state())[cannonball]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteDoors({ lobbies: { eastern: "eastern-lobby-s" } });
+    expect(checkStates(state())[cannonball]).toBe("unavailable");
+    // The lobby's bridge into the cannonball room, a plain door both ways
+    useGameStore.getState().noteDoors({
+      kinds: { "eastern-lobby-bridge-n": "normal" },
+      links: {
+        "eastern-cannonball-s": "eastern-lobby-bridge-n",
+        "eastern-lobby-bridge-n": "eastern-cannonball-s",
+      },
+    });
+    expect(checkStates(state())[cannonball]).toBe("available");
+    // Forgotten again: nowhere
+    useGameStore.getState().noteDoors({
+      links: {
+        "eastern-cannonball-s": null,
+        "eastern-lobby-bridge-n": null,
+      },
+    });
+    expect(checkStates(state())[cannonball]).toBe("unavailable");
+  });
 });

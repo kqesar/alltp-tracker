@@ -157,14 +157,16 @@ describe("MapPanel", () => {
       "The logic follows the entrances you noted",
     );
     expect(screen.getByTestId("logic-note-door")).toBeInTheDocument();
-    // A door shuffle is not modelled
+    // A door shuffle: DR's world on the doors noted too
     act(() =>
       useGameStore.getState().updateDoorSettings({ doorShuffle: "basic" }),
     );
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: Basic door shuffle and shuffled key drops with keys outside their dungeons. Every check shows as maybe.",
+      "The logic follows the entrances you noted",
     );
-    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Its doors are shuffled: the logic follows the doors you note in the Doors tab",
+    );
 
     // DR's glitched logics are not alttpr.com's, which the pack ports
     act(() => useGameStore.getState().applyPreset("door-randomizer"));

@@ -185,6 +185,13 @@ describe("comparing a Door Randomizer run", () => {
     expect(hiddenReason(drops, run(), compareReview(drops, run()))).toBe(
       "door-logic",
     );
+    // Doors shuffled: the run does not time where each led
+    useGameStore.setState({
+      settings: { ...store().settings, doorShuffle: "basic" },
+    });
+    expect(hiddenReason(drops, run(), compareReview(drops, run()))).toBe(
+      "doors",
+    );
   });
 });
 

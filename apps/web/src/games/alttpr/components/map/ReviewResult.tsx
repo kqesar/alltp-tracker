@@ -35,6 +35,8 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
     "This run was tracked by hand: its times are when you clicked, so when each item waited is not shown.",
   "door-logic":
     "This is a Door Randomizer seed the tracker does not hold to DR's own rules (an Overworld seed, shuffled bosses), or an item it needed lay in a pot, an enemy drop, a key drop or a shop, which the run keeps no time for: when each place came into logic is not shown.",
+  doors:
+    "Doors were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   entrances:
     "Entrances were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "generic-keys":

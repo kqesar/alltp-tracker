@@ -649,9 +649,15 @@ export const doorReasons = (
   const door = doorOf(settings);
   if (door === null) return [];
   const reasons: string[] = [];
-  if (door.doorShuffle !== "vanilla") {
+  // A pool of dungeons puts a boss room in another dungeon, whose map and
+  // compass its restricted items then ask (Rules.py:809-825 reads the
+  // room's dungeon), which the pack's world reads by the room's own
+  if (
+    (door.doorShuffle === "partitioned" || door.doorShuffle === "crossed") &&
+    door.restrictBossItems !== "none"
+  ) {
     reasons.push(
-      `${doorValueText("doorShuffle", door.doorShuffle)} door shuffle`,
+      `restricted boss items with a ${doorValueText("doorShuffle", door.doorShuffle).toLowerCase()} door shuffle`,
     );
   }
   // OWR's District moves its own overworld's entrances
@@ -698,6 +704,11 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
   if (door === null) return [];
   return [
     `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
+    ...(door.doorShuffle === "vanilla"
+      ? []
+      : [
+          "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
+        ]),
     ...(door.keyLogic === "dangerous"
       ? [
           "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",

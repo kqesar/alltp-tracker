@@ -48,6 +48,7 @@ import {
   doorLocationsOf,
   doorPoolSettingsOf,
   doorShuffleOf,
+  doorShuffleSettingsOf,
 } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
@@ -74,7 +75,11 @@ import {
   worldOf,
 } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-import type { Prefs, Progress } from "@/games/alttpr/stores/persistence";
+import type {
+  DoorNotes,
+  Prefs,
+  Progress,
+} from "@/games/alttpr/stores/persistence";
 
 /**
  * What a location shows while it is not checked: the pack's markerStatus,
@@ -127,7 +132,7 @@ export type Inputs = Pick<
   Progress,
   "items" | "medallions" | "settings" | "smallKeys"
 > &
-  Partial<Pick<Progress, "checked" | "entrances">> &
+  Partial<Pick<Progress, "checked" | "entrances" | "doors">> &
   Partial<Pick<Prefs, "tricks">>;
 
 /** The slices a marker's status reads: the solution's, and what is checked. */
@@ -361,6 +366,9 @@ export const doorAddedOf = (run: RunSettings): readonly DrLocation[] => {
 /** No entrance noted yet: one object, so DR's world is built once for it. */
 const NO_NOTES: Readonly<Record<string, string>> = {};
 
+/** No door noted yet, likewise. */
+const NO_DOORS: DoorNotes = {};
+
 let last:
   | {
       crossed?: CrossedSolver;
@@ -390,12 +398,19 @@ export const solutionOf = (state: Inputs): Solution => {
     crossedLogic(state.settings) || doorShuffle !== undefined
       ? state.entrances
       : undefined;
+  // The doors noted, in a DR run whose doors are shuffled
+  const doorsShuffled = doorLogic(state.settings)
+    ? doorShuffleSettingsOf(state.settings)
+    : undefined;
+  const doors =
+    doorsShuffled === undefined ? undefined : (state.doors ?? NO_DOORS);
   if (
     last !== undefined &&
     last.events === events &&
     last.crossed === crossed &&
     last.door === door &&
     last.inputs.entrances === entrances &&
+    last.inputs.doors === doors &&
     last.inputs.items === state.items &&
     last.inputs.medallions === state.medallions &&
     last.inputs.settings === state.settings &&
@@ -453,6 +468,9 @@ export const solutionOf = (state: Inputs): Solution => {
                   pool: doorPoolSettingsOf(state.settings),
                   shuffle: doorShuffle,
                 },
+            doorsShuffled === undefined || doors === undefined
+              ? undefined
+              : { notes: doors, settings: doorsShuffled },
           ),
           solver: door,
         };
@@ -490,6 +508,7 @@ export const solutionOf = (state: Inputs): Solution => {
     events,
     inputs: {
       ...(entrances === undefined ? {} : { entrances }),
+      ...(doors === undefined ? {} : { doors }),
       items: state.items,
       medallions: state.medallions,
       settings: state.settings,
