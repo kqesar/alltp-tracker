@@ -259,6 +259,18 @@ describe("DR's world on noted entrances", () => {
     const torch = drLocationId("Desert Palace - Big Key Chest");
     expect(solveFacts(vanilla, state(1)).location(torch)).toBe("yes");
     expect(solveFacts(world, state(1)).location(torch)).not.toBe("yes");
+    // Every door noted where it was: Desert Palace stays strict-safe too,
+    // its analysis starting from the portal analyze_portals picks
+    // (DoorShuffle.py:727-735), which the owner chose not to port
+    const whole = drWorld(wild, {
+      entrances: noted(
+        "dungeonssimple",
+        "open",
+        vanillaNotes("dungeonssimple", "open"),
+      ),
+    });
+    expect(solveFacts(whole, state(1)).location(torch)).not.toBe("yes");
+    expect(solveFacts(whole, state(4)).location(torch)).toBe("yes");
   });
 
   it("asks the mirror for the swamp until its doors are known moved", () => {

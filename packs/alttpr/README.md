@@ -1148,7 +1148,17 @@ noted and stand in regions the walk from Link's House and Sanctuary reaches
 other, so its analysis is the whole world's; any other dungeon, Standard's
 castle and every dungeon of a decoupled world keep the strict-safe rule, as
 does a seed of the static key logic, whose Turtle Rock probe reads the
-vanilla world. The bomb shop's Kings Grave case reads the Village of
+vanilla world. Desert Palace, Skull Woods and Turtle Rock keep it even with
+every entrance noted, by the owner's decision (2026-10-30): some of their
+portals open onto ledges the walk reaches only through the dungeon itself
+(`find_inaccessible_regions`), and DR starts their analysis from the portal
+`analyze_portals` marks as the way out (`destination`, waiting on the dungeons
+it depends on), a `random.choice` among a ledge's portals where it has several
+(`DoorShuffle.py:727-735` at 1.5.8), made as the seed is generated and known
+to no run. Porting it would mean reading that choice as every choice and
+porting the delayed origins it feeds; strict-safe stays sound and only asks
+more keys. A vanilla-entrance run is not concerned: its analysis is the whole
+vanilla world's. The bomb shop's Kings Grave case reads the Village of
 Outcasts from 1.5.7 on (`9f688f8`); 1.5.6 read a region DR no longer had,
 which raised wherever the fill came to it, so a 1.5.6 seed never took that
 way and the world does not either. `noted.spec.ts` holds that a world noted
