@@ -97,6 +97,10 @@ describe("a Door Randomizer run's logic", () => {
     expect(
       unmodelledReasons(with_(DR, { ...OWR, shuffleFollowers: true })),
     ).toEqual(["shuffled followers"]);
+    // Keys or items placed nearby: the fork's own placement, not read
+    expect(unmodelledReasons(with_(DR, { ...OWR, nearbyItems: true }))).toEqual(
+      ["dungeon items placed nearby"],
+    );
     // Mixed: its flips noted (none yet: nothing they decide in logic)
     const mixed = with_(DR, { ...OWR, owMixed: true });
     expect(unmodelledReasons(mixed)).toEqual([]);
@@ -907,6 +911,46 @@ describe("doorFromSeed", () => {
     expect(doorFromSeed(moved("wild", false), {})).toMatchObject({
       prizeShuffle: "wild",
     });
+    // FreeItemText's $40: a dungeon item kind placed nearby, a cause the
+    // run then names; its absence none
+    const nearby = (value: boolean) =>
+      doorFromSeed(
+        {
+          ...rom,
+          door: {
+            ...rom.door,
+            overworld: { ...rom.door?.overworld, nearbyItems: known(value) },
+          },
+        } as unknown as SeedSettingsReading,
+        {},
+      );
+    expect(nearby(true)).toMatchObject({ nearbyItems: true });
+    expect(nearby(false)).not.toHaveProperty("nearbyItems");
+    expect(
+      doorFromSeed(
+        {
+          doorExact: {
+            doorShuffle: "vanilla",
+            dropShuffle: "none",
+            enemyShuffle: "none",
+            overworld: {
+              bonkDrops: false,
+              crossed: "none",
+              fluteShuffle: "vanilla",
+              layout: "vanilla",
+              mixed: false,
+              nearbyItems: true,
+              whirlpool: false,
+            },
+            pottery: "none",
+            shopsanity: false,
+            takeAny: "none",
+          },
+          randomizer: { kind: "door", overworld: true, version: "1.5.7" },
+        } as unknown as SeedSettingsReading,
+        {},
+      ),
+    ).toMatchObject({ nearbyItems: true });
     const meta = {
       doorExact: {
         doorEntrances: "lite",

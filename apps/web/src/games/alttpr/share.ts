@@ -495,6 +495,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   shuffleFollowers:false shuffleFollowers:true
   customGoals:false customGoals:true
   dungeonItems:keys
+  nearbyItems:false nearbyItems:true
 `
   .trim()
   .split(/\s+/);
@@ -508,6 +509,7 @@ const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
   "bonkDrops",
   "customGoals",
   "decoupledDoors",
+  "nearbyItems",
   "owMixed",
   "owWhirlpool",
   "potShuffle",

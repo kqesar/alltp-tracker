@@ -146,6 +146,15 @@ export type DoorRunSettings = {
   prizeShuffle?: PrizeShuffle;
   shuffleFollowers?: boolean;
   /**
+   * Whether OWR places a kind of dungeon item nearby (`keyshuffle`,
+   * `bigkeyshuffle`, `mapshuffle` or `compassshuffle` "nearby", args.json:
+   * in a dungeon near its own), a placement the fork's world does not
+   * read: a cause of `doorReasons`. A spoiler's meta names it, the ROM's
+   * FreeItemText tells it (Rom.py:1431); absent is none, the fork's
+   * default, the kinds then read as dungeon items do.
+   */
+  nearbyItems?: boolean;
+  /**
    * Whether OWR's customizer sets a goal (`custom_goals`: GT's entry,
    * Ganon, the pedestal or Murahdahla), whose rule the fork's world does
    * not read (Rules.py:71-73, :368-370, :536-538). A spoiler's meta names
@@ -230,6 +239,7 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   dropShuffle: "none",
   enemyShuffle: "none",
   keyLogic: "partial",
+  nearbyItems: false,
   openPyramid: "auto",
   owCrossed: "none",
   owFluteShuffle: "vanilla",
@@ -320,6 +330,10 @@ export const DOOR_OPTIONS = {
     ["partial", "Partial"],
     ["strict", "Strict"],
     ["static", "Static"],
+  ],
+  nearbyItems: [
+    [false, "Off"],
+    [true, "Nearby"],
   ],
   openPyramid: [
     ["auto", "Auto"],
@@ -421,6 +435,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   dropShuffle: "Enemy drops",
   enemyShuffle: "Enemies",
   keyLogic: "Key logic",
+  nearbyItems: "Nearby dungeon items",
   openPyramid: "Pyramid hole",
   owCrossed: "Crossed overworld",
   owFluteShuffle: "Flute spots",
@@ -462,6 +477,7 @@ const OWR_ROWS = [
   "owFluteShuffle",
   "bonkDrops",
   "prizeShuffle",
+  "nearbyItems",
   "shuffleFollowers",
   "customGoals",
 ] as const satisfies readonly DoorSetting[];
@@ -768,6 +784,9 @@ export const doorReasons = (
       reasons.push("shuffled dungeon prizes");
     if (door.shuffleFollowers === undefined) reasons.push(FOLLOWERS_NOT_KNOWN);
     else if (door.shuffleFollowers) reasons.push("shuffled followers");
+    // Keys or items in a dungeon near their own: the fork's fill, which
+    // its world does not read (args.json `keyshuffle` … "nearby")
+    if (door.nearbyItems) reasons.push("dungeon items placed nearby");
     // A customizer goal replaces GT's entry, Ganon's, the pedestal's or
     // Murahdahla's rule (Rules.py:71-73, :93-95, :368-370, :536-538)
     if (door.customGoals === undefined) reasons.push(GOALS_NOT_KNOWN);
@@ -1119,6 +1138,9 @@ export const doorFromSeed = (
             owMixed: ow.mixed,
             owWhirlpool: ow.whirlpool,
             prizeShuffle: option("prizeShuffle", ow.prizeShuffle),
+            ...(ow.nearbyItems === undefined
+              ? {}
+              : { nearbyItems: ow.nearbyItems }),
             shuffleFollowers: ow.followers ?? own.shuffleFollowers,
           }),
     });
@@ -1171,6 +1193,7 @@ export const doorFromSeed = (
         : "vanilla";
     }
     door.shuffleFollowers = stated(ow.followers, door.shuffleFollowers);
+    door.nearbyItems = stated(ow.nearbyItems, door.nearbyItems);
     const prizes = stated(ow.prizeShuffle, undefined);
     // Kept inside the dungeons: none or dungeon, which the run's own tells
     // apart when it is one of them, else not known
