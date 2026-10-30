@@ -1126,6 +1126,29 @@ exit numbers as the entrance randomizer does (`Rom.py:500-549`), with the
 same slot, bytes and number for every name: `entrances.spec.ts` holds it, so
 autotracking reads where Link went in a DR seed through the same tables.
 
+**Its world on noted entrances** (`drWorld`'s `entrances` option,
+`notedConnections` in `src/door-world/connections.ts`): what the shuffle
+leaves vanilla is linked as the vanilla world links it, each noted entrance
+as DR connects it (a cave's or dungeon's door both ways, but in `insanity`,
+whose exits lead elsewhere unnoted; a hole or a single cave's door one way;
+a door noted to the Inverted save point lets its exit out there), and an
+entrance not noted leads nowhere. What DR derives from the connections
+waits for the notes: the swamp's patch is required once the Dam's or Swamp
+Palace's door is known to lead elsewhere, the mirror asked until then; a
+region's side, which enemy rules read, is held in every side it may still
+take until every moved entrance is noted (`everySide`). DR's key analysis runs
+on the noted connections for each dungeon whose portals and drops are all
+noted and stand in regions the walk from Link's House and Sanctuary reaches
+(`portalsKnown`): such a dungeon starts from all its portals and waits on no
+other, so its analysis is the whole world's; any other dungeon, Standard's
+castle and every dungeon of a decoupled world keep the strict-safe rule, as
+does a seed of the static key logic, whose Turtle Rock probe reads the
+vanilla world. The bomb shop's Kings Grave case reads the Village of
+Outcasts from 1.5.7 on (`9f688f8`); 1.5.6 read a region DR no longer had,
+which raised wherever the fill came to it, so a 1.5.6 seed never took that
+way and the world does not either. `noted.spec.ts` holds that a world noted
+where every entrance was is the vanilla world, in every shuffle and world.
+
 **Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
 `Rules.py` and `Bosses.py` in the engine's language, through the entrance
 randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`, "Its rules" below) under DR's

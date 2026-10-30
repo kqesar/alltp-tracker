@@ -317,6 +317,14 @@ export function drShuffled(
   return moved;
 }
 
+/**
+ * Whether a shuffle leaves what its pools do not name vanilla (`undefined`
+ * vanilla): do_vanilla_connections then links it (:157-158), the Inverted
+ * save point's exit with it (:171-176).
+ */
+export const drKeepsRest = (shuffle: DrShuffle): boolean =>
+  MODES[shuffle].undefined === "vanilla";
+
 /** Whether a shuffle parts a door from its way back (insanity). */
 export const drDecoupled = (shuffle: DrShuffle): boolean =>
   MODES[shuffle].decoupled === "on";

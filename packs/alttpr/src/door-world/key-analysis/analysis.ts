@@ -546,15 +546,23 @@ export function vanillaKeyLogic(
 ): ReadonlyMap<string, KeyLogic> {
   const world = keyWorld(settings);
   const logics = new Map<string, KeyLogic>();
+  // A partly noted world leaves out a dungeon it cannot start
   for (const dungeon of DR_DUNGEON_ORDER)
-    logics.set(dungeon, analyzeDungeon(keyLayout(world, dungeon)));
+    if (settings.partial !== true || world.starts.has(dungeon))
+      logics.set(dungeon, analyzeDungeon(keyLayout(world, dungeon)));
   if (settings.keyShuffle === "universal") return logics;
   const rule = (dungeon: string, door: string) => {
     const found = logics.get(dungeon)?.doorRules.get(door);
     if (found === undefined) throw new RangeError(`No rule for ${door}`);
     return found;
   };
-  if (settings.mode !== "standard" && settings.dropShuffleNone)
+  // The adjustments DR makes by hand, to the dungeons analyzed
+  const has = (dungeon: string) => logics.has(dungeon);
+  if (
+    settings.mode !== "standard" &&
+    settings.dropShuffleNone &&
+    has("Hyrule Castle")
+  )
     for (const door of [
       "Sewers Secret Room Key Door S",
       "Hyrule Dungeon Map Room Key Door S",
@@ -566,10 +574,12 @@ export function vanillaKeyLogic(
         hc.smallKeyNum = 2;
       }
     }
-  const podFront = rule("Palace of Darkness", "PoD Middle Cage N");
-  if (podFront.worstCase === 6) {
-    podFront.worstCase = 1;
-    podFront.smallKeyNum = 1;
+  if (has("Palace of Darkness")) {
+    const podFront = rule("Palace of Darkness", "PoD Middle Cage N");
+    if (podFront.worstCase === 6) {
+      podFront.worstCase = 1;
+      podFront.smallKeyNum = 1;
+    }
   }
   // Mire's blue barriers: two keys from either state (:298-307, 312-316)
   const mire = logics.get("Misery Mire");
@@ -583,9 +593,11 @@ export function vanillaKeyLogic(
       smallKeyNum: 0,
       smallLocation: null,
     });
-  const conveyor = rule("Ganons Tower", "GT Conveyor Star Pits EN");
-  for (const door of ["GT Firesnake Room SW", "GT Tile Room EN"])
-    for (const loc of conveyor.alternateBigKeyLoc)
-      rule("Ganons Tower", door).alternateBigKeyLoc.add(loc);
+  if (has("Ganons Tower")) {
+    const conveyor = rule("Ganons Tower", "GT Conveyor Star Pits EN");
+    for (const door of ["GT Firesnake Room SW", "GT Tile Room EN"])
+      for (const loc of conveyor.alternateBigKeyLoc)
+        rule("Ganons Tower", door).alternateBigKeyLoc.add(loc);
+  }
   return logics;
 }

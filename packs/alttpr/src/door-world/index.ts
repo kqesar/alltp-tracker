@@ -37,7 +37,9 @@ import { addBunnyRules } from "./bunny";
 import {
   type DrConnections,
   type DrDynamicExit,
+  type DrNotedEntrances,
   dynamicExits,
+  notedConnections,
   PORTAL_DOORS,
   vanillaConnections,
 } from "./connections";
@@ -63,6 +65,7 @@ import {
   type KeyLogic,
   vanillaKeyLogic,
 } from "./key-analysis/analysis";
+import { portalsKnown } from "./key-analysis/dungeon";
 import {
   addKeyRules,
   DR_KEY_CODES,
@@ -83,8 +86,12 @@ import {
 } from "./static";
 import { and, maybeOf, or, readFact } from "./text";
 
-export type { DrConnections } from "./connections";
-export { vanillaConnections } from "./connections";
+export type {
+  DrConnections,
+  DrNotedConnections,
+  DrNotedEntrances,
+} from "./connections";
+export { notedConnections, vanillaConnections } from "./connections";
 export type { DrMode } from "./data";
 export { KEY_ITEMS } from "./keys";
 
@@ -113,6 +120,11 @@ export interface DrWorldOptions {
    * (vanillaConnections).
    */
   readonly connections?: DrConnections;
+  /**
+   * A run's shuffled entrances, as noted (notedConnections): the world is
+   * built on them, in place of `connections`.
+   */
+  readonly entrances?: DrNotedEntrances;
   /**
    * Test only: how a key door reads its rule of DR's analysis, the
    * player's reading by default (keys.ts). The key model's soundness spec
@@ -307,7 +319,11 @@ function exitsOf(
  * the Pyramid Fairy's rule gains the case of the door the Big Bomb Shop is
  * entered by, its region's first entrance.
  */
-function addBombShopRule(exits: readonly DrExit[], mode: DrMode): void {
+function addBombShopRule(
+  exits: readonly DrExit[],
+  mode: DrMode,
+  version: number,
+): void {
   const door = exits.find((e) => e.to === "Big Bomb Shop")?.name;
   const inverted = mode === "inverted";
   const { cases, spot } = DR_RULES.bombShop;
@@ -318,8 +334,15 @@ function addBombShopRule(exits: readonly DrExit[], mode: DrMode): void {
       ((c as { when?: string }).when === "setting(invertedMode)") === inverted,
   );
   const target = exits.find((e) => e.name === spot);
-  if (found !== undefined && target !== undefined)
-    target.req = and(target.req, found.req);
+  if (found === undefined || target === undefined) return;
+  // Before 1.5.7 (9f688f8) the Kings Grave case read the region "West Dark
+  // World", which DR's world no longer had: can_reach raised whenever the
+  // fill came to it, so no seed of those releases took that way
+  const req =
+    version < 157 && found.doors.includes("Kings Grave")
+      ? found.req.replace(/reach\(villageOfOutcasts\)/g, "false")
+      : found.req;
+  target.req = and(target.req, req);
 }
 
 /** The worlds' light and dark regions (mark_light_dark_world_regions). */
@@ -366,17 +389,51 @@ function derivedSettings(
         mode === "inverted" ? marked.dark.has(of) : marked.light.has(of);
     else if (kind === "lightWorld") derived[name] = marked.light.has(of);
     else if (kind === "darkWorld") derived[name] = marked.dark.has(of);
-    else if (kind === "swampPatch")
-      // EntranceShuffle2.py:141-143
-      derived[name] = !(
-        connections.get("Dam") === "Dam" &&
-        connections.get("Swamp Palace") === "Swamp Portal"
-      );
-    else if (kind === "door")
+    else if (kind === "swampPatch") {
+      // EntranceShuffle2.py:141-143: required once either door is known to
+      // lead elsewhere; while one is not noted, not required (the mirror
+      // asked), which only asks more
+      const dam = connections.get("Dam");
+      const swamp = connections.get("Swamp Palace");
+      derived[name] =
+        (dam !== undefined && dam !== "Dam") ||
+        (swamp !== undefined && swamp !== "Swamp Portal");
+    } else if (kind === "door")
       derived[name] = DR_RULES.doorData[name]?.vanilla ?? false;
     else throw new RangeError(`No derived setting of kind ${kind}`);
   }
   return derived;
+}
+
+/** A region's side, which enemy rules read (lightWorld_, darkWorld_). */
+const SIDE_READ = /setting\((?:lightWorld|darkWorld)_\w+\)/g;
+
+/**
+ * A rule that reads regions' sides (is_light_world, is_dark_world: Regions.
+ * py:1113-1140), held in every side they may take: what a region is marked
+ * grows with the entrances noted, a cave entered from both worlds is both,
+ * and a rule may read either way. Each read is set true and false in turn
+ * and the rule asks all; past four reads it is maybe.
+ */
+export function everySide(req: string): string {
+  const reads = [...new Set(req.match(SIDE_READ) ?? [])];
+  if (reads.length === 0) return req;
+  if (reads.length > 4) return "maybe";
+  const cases: string[] = [];
+  for (let bits = 0; bits < 1 << reads.length; bits++) {
+    let one = req;
+    reads.forEach((read, i) => {
+      const side = ((bits >> i) & 1) === 1;
+      // A negated read first: the engine takes no `!true`
+      one = one
+        .split(`!${read}`)
+        .join(side ? "false" : "true")
+        .split(read)
+        .join(side ? "true" : "false");
+    });
+    cases.push(one);
+  }
+  return and(...cases);
 }
 
 /** DR's settings beside the pack's, at their defaults (CLI.py, args.json). */
@@ -628,7 +685,10 @@ const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
  * (key-analysis/, vanilla_key_logic, DoorShuffle.py:226-313), once per
  * mode and the settings it reads.
  */
-export function drKeyLogic(settings: Settings): ReadonlyMap<string, KeyLogic> {
+export function drKeyLogic(
+  settings: Settings,
+  noted?: { readonly connections: DrConnections; readonly key: string },
+): ReadonlyMap<string, KeyLogic> {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
   const keys = worldKeys(keyHoldingOf(all), {
@@ -654,13 +714,60 @@ export function drKeyLogic(settings: Settings): ReadonlyMap<string, KeyLogic> {
   const id = JSON.stringify({
     ...analysis,
     forcedDrops: [...analysis.forcedDrops].sort(),
+    noted: noted?.key,
   });
   let found = KEY_LOGIC.get(id);
   if (found === undefined) {
-    found = vanillaKeyLogic(analysis);
+    found = vanillaKeyLogic(
+      noted === undefined
+        ? analysis
+        : { ...analysis, connections: noted.connections, partial: true },
+    );
+    // The vanilla world's few analyses stay; a noted world's, one per note,
+    // only the last few
+    if (noted !== undefined) {
+      const notedIds = [...KEY_LOGIC.keys()].filter((k) =>
+        k.includes('"noted":'),
+      );
+      for (const old of notedIds.slice(0, Math.max(0, notedIds.length - 7)))
+        KEY_LOGIC.delete(old);
+    }
     KEY_LOGIC.set(id, found);
   }
   return found;
+}
+
+/**
+ * DR's key analysis on a shuffled world's noted connections, for the
+ * dungeons whose ways in are all known (portalsKnown): DR analyses its
+ * world once every entrance is linked (vanilla_key_logic, DoorShuffle.py:
+ * 136, after link_entrances_new), which the notes tell only part of. A
+ * dungeon each of whose portals and drops is noted and stands in a region
+ * reached from Link's House or Sanctuary through known entrances starts
+ * and walks as DR's analysis of the whole world has it; any other keeps
+ * the strict-safe rule (keys.ts). Standard's castle keeps it too: its side
+ * portals wait on the escape (is_standard_inaccessible). A decoupled world,
+ * whose exits lead elsewhere unnoted, has none.
+ */
+function notedKeyLogic(
+  settings: Settings,
+  mode: DrMode,
+  entrances: DrNotedEntrances,
+  connections: DrConnections,
+  decoupled: boolean,
+): ReadonlyMap<string, KeyLogic> | undefined {
+  if (decoupled) return undefined;
+  const key = JSON.stringify([
+    entrances.shuffle,
+    entrances.pool,
+    Object.entries(entrances.noted).sort(),
+    settings.drVersion,
+  ]);
+  const known = portalsKnown(mode, connections);
+  if (mode === "standard") known.delete("Hyrule Castle");
+  if (known.size === 0) return new Map();
+  const logic = drKeyLogic(settings, { connections, key });
+  return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
 }
 
 /** The probe's answers, by mode and release. */
@@ -770,7 +877,14 @@ export function drWorld(
     all.dangerousKeyLogic === true,
   );
   const version = Number(all.drVersion);
-  const connections = options.connections ?? vanillaConnections(mode, version);
+  const noted =
+    options.entrances === undefined
+      ? undefined
+      : notedConnections(mode, options.entrances, version);
+  const connections =
+    noted?.connections ??
+    options.connections ??
+    vanillaConnections(mode, version);
   const exits = exitsOf(connections, mode, options);
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)
@@ -805,6 +919,12 @@ export function drWorld(
   }
   const marked = markWorlds(exits);
   const derived = derivedSettings(connections, marked, mode);
+  // A shuffled world's sides are known once every entrance is: until then
+  // a rule reading a region's side holds in each side it may still take
+  if (noted !== undefined && !noted.complete) {
+    for (const exit of exits) exit.req = everySide(exit.req);
+    for (const [name, req] of locations) locations.set(name, everySide(req));
+  }
   // In set_rules' order: global_rules (the key logic, the boss items, the
   // spikes' pot), standard_rules, the static key logic's own rules
   // (Rules.py:56-58 at 1.5.8), the bomb shop, the bunny last. The static
@@ -812,9 +932,23 @@ export function drWorld(
   // 55-57 at 1.5.8), over DR's analysis: none without one (strict-safe)
   const { doorRule } = options;
   const analysis =
-    options.connections === undefined && all.dungeonPotsAndDrops !== true
-      ? drKeyLogic(all)
-      : undefined;
+    all.dungeonPotsAndDrops === true
+      ? undefined
+      : noted !== undefined && options.entrances !== undefined
+        ? // The static key logic's Turtle Rock probe reads the vanilla
+          // world, and its table stands over the analysis: strict-safe
+          all.staticKeyLogic === true
+          ? undefined
+          : notedKeyLogic(
+              all,
+              mode,
+              options.entrances,
+              connections,
+              noted.decoupled,
+            )
+        : options.connections === undefined
+          ? drKeyLogic(all)
+          : undefined;
   const isStatic = all.staticKeyLogic === true && analysis !== undefined;
   const trCase = isStatic
     ? turtleRockCase(turtleRockAccess(mode, version))
@@ -850,7 +984,7 @@ export function drWorld(
     addZeldaPath(exits, locations, path);
   }
   if (isStatic) addStaticKeyRules(exits, locations, keys, mode, trCase);
-  addBombShopRule(exits, mode);
+  addBombShopRule(exits, mode, version);
   addBunnyRules(exits, locations, marked, mode, added);
 
   // The events: each a fact once its location is reached, a flood switch

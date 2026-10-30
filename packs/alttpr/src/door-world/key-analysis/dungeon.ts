@@ -233,6 +233,12 @@ export interface KeyAnalysisSettings {
   readonly dropShuffleNone: boolean;
   /** Where each exit leads: the vanilla world's by default. */
   readonly connections?: DrConnections;
+  /**
+   * A partly noted world's: a dungeon no way in starts (its doors not
+   * noted) is left out rather than looped on, as DR's whole world never
+   * has one (`Infinite loop detected`, DoorShuffle.py:251-252).
+   */
+  readonly partial?: boolean;
 }
 
 /** The crystal states DR's walk carries (CrystalBarrier). */
@@ -434,6 +440,56 @@ function destinations(): Map<string, string> {
     table(name, true);
   table("default_one_way_connections", false);
   return dest;
+}
+
+/**
+ * The dungeons whose ways in a shuffled world's connections all tell, as
+ * DR's key analysis would find them in the whole world: each portal and
+ * each drop region (dungeon_portals, dungeon_drops) entered from a region
+ * of the overworld (or the sewers' drop) that the walk from Link's House
+ * and Sanctuary reaches (find_inaccessible_regions). Such a dungeon's
+ * entrances are all its starts (determine_entrance_list), none waits on
+ * another dungeon (find_enabled_origins, should_delay_processing: there is
+ * no potential origin) and no logical door joins it (add_inaccessible_doors
+ * reads inaccessible regions only); more notes never take a region out of
+ * the walk, so its analysis is the whole world's. Coupled entrances only:
+ * a portal's exit leads back to the door that enters it.
+ */
+export function portalsKnown(
+  mode: DrMode,
+  connections: DrConnections,
+): Set<string> {
+  const dynamic = new Map(dynamicExits(mode).map((e) => [e.name, e.to]));
+  const target = (exit: string) => connections.get(exit) ?? dynamic.get(exit);
+  const exits = exitsByRegion(mode);
+  const entrances = new Map<string, string[]>();
+  for (const [region, list] of exits)
+    for (const exit of list) {
+      const to = target(exit);
+      if (to !== undefined)
+        entrances.set(to, [...(entrances.get(to) ?? []), region]);
+    }
+  const inaccessible = inaccessibleRegions(mode, target, exits, entrances);
+  const known = new Set<string>();
+  for (const dungeon of DR_DUNGEON_ORDER) {
+    const regions = [
+      ...(DUNGEON_DROPS[dungeon] ?? []),
+      ...(DUNGEON_PORTALS[dungeon] ?? []).map((p) => `${p} Portal`),
+    ];
+    const told = regions.every((region) => {
+      const parents = (entrances.get(region) ?? []).filter(
+        (parent) =>
+          (REGION_NAMED.get(parent)?.type !== "dungeon" && parent !== "Menu") ||
+          parent === "Sewer Drop",
+      );
+      return (
+        parents.length > 0 &&
+        parents.every((parent) => !inaccessible.has(parent))
+      );
+    });
+    if (told) known.add(dungeon);
+  }
+  return known;
 }
 
 /**
@@ -688,8 +744,10 @@ function startRegions(
       (DUNGEON_PORTALS[dungeon] ?? []).map(lobbyOf),
     );
     if (origins.length === 0 || delayed(origins, potentialOrigins)) {
-      if (lastKey === dungeon || loops > 1000)
+      if (lastKey === dungeon || loops > 1000) {
+        if (settings.partial === true) continue;
         throw new RangeError(`Infinite loop detected for "${dungeon}"`);
+      }
       queue.push(dungeon);
       lastKey = dungeon;
       loops++;

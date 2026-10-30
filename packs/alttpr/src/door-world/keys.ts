@@ -317,7 +317,8 @@ const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
  * its rule, each big key door and chest the big key, each of Mire's blue
  * barriers its alternative. Without an analysis (`logic` undefined: other
  * connections than the vanilla ones, or pots and drops the analysis does
- * not count), each small key door asks the strict-safe rule.
+ * not count), or for a dungeon it leaves out, each small key door asks the
+ * strict-safe rule.
  */
 export function addKeyRules(
   exits: readonly KeyExit[],
@@ -366,7 +367,10 @@ export function addKeyRules(
       d?.smallKey === true && !UGLY_SMALLS.has(d.name);
     const big = (d: typeof door | undefined) =>
       d !== undefined && (d.bigKey === true || special.has(d.name));
-    if (logic === undefined) {
+    // A dungeon the analysis leaves out (a shuffled world's, its ways in
+    // not all known) asks the strict-safe rule as a world without one does
+    const analysed = logic?.has(dungeon) === true;
+    if (!analysed) {
       if (small(door) || small(controller))
         exit.req = and(exit.req, keys.strictSafeRule(dungeon));
     } else {
@@ -378,7 +382,7 @@ export function addKeyRules(
     // add_rule(…, 'or') (Rules.py:2357-2358)
     const or2 = alternative.get(exit.name);
     if (or2 !== undefined) exit.req = or(exit.req, or2);
-    else if (logic === undefined && ALTERNATIVE_CRYSTAL_DOORS.has(exit.name))
+    else if (!analysed && ALTERNATIVE_CRYSTAL_DOORS.has(exit.name))
       if (keys.holding !== "universal")
         exit.req = or(exit.req, crystalAlternative(keys, "Misery Mire", 2));
   }

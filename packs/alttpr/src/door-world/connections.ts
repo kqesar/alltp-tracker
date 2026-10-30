@@ -6,6 +6,16 @@
 // Inverted swaps :64-78) and link_doors_prep's vanilla doors
 // (DoorShuffle.py:60-133, connect_portal :739-752).
 import {
+  type DrPoolSettings,
+  type DrShuffle,
+  drDecoupled,
+  drEntranceName,
+  drKeepsRest,
+  drShuffled,
+  drTargetName,
+  vanillaEntrances,
+} from "../door-rando/entrances";
+import {
   DOOR_NAMED,
   DR_DOORS,
   DR_PORTALS,
@@ -96,11 +106,17 @@ function linkOverworld(c: Map<string, string>, mode: DrMode): void {
  * entrance stands since 1.5.7 (3c4307e, :171-176 at 1.5.8): a seed of an
  * older or unknown version keeps its save point leading nowhere, as its
  * logic did (`version`, DR's title digits, 156 for 1.5.6).
+ * @param kept - The entrances linked vanilla: every one by default
+ * @param rest - Whether do_vanilla_connections links them, which links the
+ *   save point's exit too; a shuffle's kept pool (do_vanilla_connect) does
+ *   not
  */
 function linkEntrances(
   c: Map<string, string>,
   mode: DrMode,
   version: number,
+  kept: (entrance: string) => boolean = () => true,
+  rest = true,
 ): void {
   for (const [exit, region] of pairsOf(
     "EntranceShuffle2",
@@ -108,71 +124,30 @@ function linkEntrances(
   ))
     c.set(exit, region);
   const inverted = mode === "inverted";
-  const dropMap = new Map(pairsOf("EntranceShuffle2", "drop_map"));
-  const entranceMap = new Map(pairsOf("EntranceShuffle2", "entrance_map"));
-  const singleMap = new Map(pairsOf("EntranceShuffle2", "single_entrance_map"));
-  const subTable = new Map(pairsOf("EntranceShuffle2", "inverted_sub_table"));
-  // The pool: every entrance not named Inverted, Inverted's own names
-  // substituted (:47-56)
-  const pool = [
-    ...[...dropMap.keys(), ...entranceMap.keys()].filter(
-      (name) => !name.startsWith("Inverted"),
-    ),
-    ...singleMap.keys(),
-  ].map((name) => (inverted ? (subTable.get(name) ?? name) : name));
-  const exits = new Set([
-    ...entranceMap.values(),
-    ...dropMap.values(),
-    ...singleMap.values(),
-    "Chris Houlihan Room Exit",
-  ]);
-  const defaultMap = new Map(entranceMap);
-  const oneWayMap = new Map([...dropMap, ...singleMap]);
-  if (inverted) {
-    defaultMap.set("Ganons Tower", "Agahnims Tower Exit");
-    defaultMap.set("Agahnims Tower", "Ganons Tower Exit");
-    defaultMap.set("Old Man Cave (West)", "Bumper Cave Exit (Bottom)");
-    defaultMap.set(
-      "Death Mountain Return Cave (West)",
-      "Bumper Cave Exit (Top)",
-    );
-    defaultMap.set("Bumper Cave (Bottom)", "Old Man Cave Exit (West)");
-    defaultMap.set("Dark Death Mountain Fairy", "Old Man Cave Exit (East)");
-    oneWayMap.delete("Dark Death Mountain Fairy");
-    defaultMap.set(
-      "Old Man Cave (East)",
-      "Death Mountain Return Cave Exit (West)",
-    );
-    oneWayMap.set("Bumper Cave (Top)", "Dark Death Mountain Healer Fairy");
-    defaultMap.delete("Bumper Cave (Top)");
-    oneWayMap.delete("Big Bomb Shop");
-    oneWayMap.set("Links House", "Big Bomb Shop");
-    defaultMap.delete("Links House");
-    defaultMap.set("Big Bomb Shop", "Links House Exit");
-  }
-  // do_vanilla_connections (:162-170)
-  if (exits.has("Chris Houlihan Room Exit")) {
-    c.set(
-      "Chris Houlihan Room Exit",
-      parentOf(inverted ? "Big Bomb Shop" : "Links House"),
-    );
-    exits.delete("Chris Houlihan Room Exit");
-  }
+  const { oneWay, pool, twoWay: twoWays } = vanillaEntrances(inverted);
+  // do_vanilla_connections (:162-170): Chris Houlihan's room back to Link's
+  // House, wherever it leads with it
+  const linksHouse = inverted ? "Big Bomb Shop" : "Links House";
+  if (kept(linksHouse)) c.set("Chris Houlihan Room Exit", parentOf(linksHouse));
   for (const entrance of pool) {
-    const exit = defaultMap.get(entrance);
-    if (exit !== undefined && exits.has(exit)) {
-      twoWay(c, entrance, exit);
-      exits.delete(exit);
-    }
-    const region = oneWayMap.get(entrance);
-    if (region !== undefined && exits.has(region)) {
-      c.set(entrance, region);
-      exits.delete(region);
-    }
+    if (!kept(entrance)) continue;
+    const exit = twoWays.get(entrance);
+    if (exit !== undefined) twoWay(c, entrance, exit);
+    const region = oneWay.get(entrance);
+    if (region !== undefined) c.set(entrance, region);
   }
-  if (inverted && version >= 157 && !c.has(DARK_SANCTUARY_EXIT))
-    c.set(DARK_SANCTUARY_EXIT, parentOf("Dark Sanctuary Hint"));
+  if (
+    inverted &&
+    rest &&
+    version >= 157 &&
+    kept(DARK_SANCTUARY) &&
+    !c.has(DARK_SANCTUARY_EXIT)
+  )
+    c.set(DARK_SANCTUARY_EXIT, parentOf(DARK_SANCTUARY));
 }
+
+/** The Inverted world's save point (EntranceShuffle2.py:171-176). */
+const DARK_SANCTUARY = "Dark Sanctuary Hint";
 
 /** The Inverted world's save point's way out (EntranceShuffle2.py:174). */
 const DARK_SANCTUARY_EXIT = "Dark Sanctuary Hint Exit";
@@ -241,6 +216,77 @@ export function vanillaConnections(mode: DrMode, version = 156): DrConnections {
   linkDoors(c);
   for (const exit of REMOVED_EXITS) c.delete(exit);
   return c;
+}
+
+/** A DR run's shuffled entrances, as the player noted them. */
+export interface DrNotedEntrances {
+  readonly shuffle: DrShuffle;
+  readonly pool: DrPoolSettings;
+  /** Each noted entrance's target, by the entrance randomizer's ids. */
+  readonly noted: Readonly<Record<string, string>>;
+}
+
+/** A shuffled world's connections, and how much of it the notes tell. */
+export interface DrNotedConnections {
+  readonly connections: DrConnections;
+  /** Every entrance the shuffle may move is noted, each way back known. */
+  readonly complete: boolean;
+  /** Its exits lead back elsewhere than their doors (insanity). */
+  readonly decoupled: boolean;
+}
+
+/**
+ * The world's connections in a run whose entrances DR shuffled, as far as
+ * the notes tell: what the shuffle surely leaves vanilla (`drShuffled`) is
+ * linked as the vanilla world links it, each noted entrance as
+ * connect_two_way, connect_entrance and connect_exit do (EntranceShuffle2.
+ * py:1455-1517): a cave's or dungeon's door both ways but in a decoupled
+ * shuffle, where its exit leads elsewhere, unnoted; a hole or a single
+ * cave's door one way. A door noted to the Inverted world's save point also
+ * lets its exit out where that door stands (:220-226). An entrance not
+ * noted leads nowhere, so the world never says yes through a guess.
+ * @param version - The DR release, as vanillaConnections takes it
+ */
+export function notedConnections(
+  mode: DrMode,
+  entrances: DrNotedEntrances,
+  version = 156,
+): DrNotedConnections {
+  const c = new Map<string, string>();
+  linkOverworld(c, mode);
+  const moved = drShuffled(entrances.shuffle, entrances.pool);
+  linkEntrances(
+    c,
+    mode,
+    version,
+    (entrance) => !moved.has(entrance),
+    drKeepsRest(entrances.shuffle),
+  );
+  const decoupled = drDecoupled(entrances.shuffle);
+  const { twoWay: twoWays } = vanillaEntrances(mode === "inverted");
+  const exits = new Set(twoWays.values());
+  const noted = new Set<string>();
+  for (const [id, targetId] of Object.entries(entrances.noted)) {
+    const entrance = drEntranceName(id);
+    const target = drTargetName(targetId);
+    if (entrance === undefined || target === undefined || !moved.has(entrance))
+      continue;
+    if (!PARENT.has(entrance)) continue;
+    noted.add(entrance);
+    if (exits.has(target)) {
+      c.set(entrance, parentOf(target));
+      if (!decoupled) c.set(target, parentOf(entrance));
+    } else c.set(entrance, target);
+    if (mode === "inverted" && target === DARK_SANCTUARY)
+      c.set(DARK_SANCTUARY_EXIT, parentOf(entrance));
+  }
+  linkDoors(c);
+  for (const exit of REMOVED_EXITS) c.delete(exit);
+  return {
+    complete: !decoupled && [...moved].every((e) => noted.has(e)),
+    connections: c,
+    decoupled,
+  };
 }
 
 /** Regions no flute or mirror exit leaves (OverworldShuffle.py:32, :49). */
