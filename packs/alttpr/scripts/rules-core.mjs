@@ -388,6 +388,7 @@ export function numberOf(ctx, expr, otherwise) {
  *   regionOfLocation: ReadonlyMap<string, string>,
  *   regionOfEntrance: ReadonlyMap<string, string>,
  *   bossHelper: (region: string, level?: string) => string,
+ *   bossRuleExtra?: (region: string) => Rule | undefined,
  *   events: ReadonlyMap<string, string>,
  *   heldEvents: Set<string>,
  *   itemNames: ReadonlySet<string>,
@@ -1351,10 +1352,14 @@ export function walkRules(source, ctx) {
       }
       case "set_defeat_dungeon_boss_rule": {
         const spot = spotOf(args[0] ?? found, scope);
+        const region = regionOf(ctx, spot);
+        const extra = ctx.bossRuleExtra?.(region);
         return apply(
           "set",
           spot,
-          atom(`@${ctx.bossHelper(regionOf(ctx, spot))}`),
+          extra === undefined
+            ? atom(`@${ctx.bossHelper(region)}`)
+            : all(atom(`@${ctx.bossHelper(region)}`), extra),
           scope.when,
           line,
         );

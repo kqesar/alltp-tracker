@@ -91,6 +91,17 @@ describe("the Overworld Randomizer's rules (import-dr --owr, stage B)", () => {
     expect(helpers.drFluteActive?.req).toBe("flute >= 2 | ocarinaActivated");
   });
 
+  it("asks Blind's maiden unmasked, as set_defeat_dungeon_boss_rule does", () => {
+    // owr:Rules.py:161-165: Thieves' Town's boss entrance, its boss Blind
+    expect(entrances["Thieves Town Boss"]?.req).toBe(
+      "@drDefeatBlind & maidenUnmasked",
+    );
+    expect(events.maidenUnmasked).toMatchObject({
+      item: "Maiden Unmasked",
+      location: "Revealing Light",
+    });
+  });
+
   it("place the fork's events by its table, each boss kill its own", () => {
     // Regions.py location_events: the followers' quests and the dungeons'
     // switches; Agahnim's are the pack's items

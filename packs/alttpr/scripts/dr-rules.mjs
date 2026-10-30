@@ -1827,11 +1827,40 @@ export function importDrRules(read, world, extras, flavor = "dr") {
     return boss;
   };
 
+  // What set_defeat_dungeon_boss_rule adds for a dungeon beside its boss
+  // (owr:Rules.py:161-165: Thieves' Town's Blind once the maiden is
+  // unmasked), its boss vanilla: boss shuffle is not read
+  const bossExtras = functionBody(
+    rulesSource,
+    "set_defeat_dungeon_boss_rule",
+    "Rules.py",
+  ).body.flatMap((st) => {
+    const dungeon =
+      /^if entrance\.parent_region\.dungeon\.name == '([^']+)'$/.exec(
+        st.text,
+      )?.[1];
+    const add =
+      /^add_rule\(entrance, lambda state: entrance\.parent_region\.dungeon\.boss\.name != '([^']+)' or state\.has\('([^']+)', entrance\.player\)\)$/.exec(
+        st.body[0]?.text ?? "",
+      );
+    return dungeon === undefined || add === null || st.body.length !== 1
+      ? []
+      : [{ boss: add[1], dungeon, item: add[2] }];
+  });
+
   /** @type {DrContext} */
   const ctx = {
     bossHelper: (region, level) =>
       `drDefeat${pascal(bossOfRegion(region, level))}`,
     bossOfRegion,
+    bossRuleExtra: (region) => {
+      const dungeon = dungeonOfRegion.get(region);
+      const found = bossExtras.find((e) => e.dungeon === dungeon);
+      if (found === undefined || found.item === undefined) return undefined;
+      return bossOfRegion(region) === found.boss
+        ? holding(ctx, found.item, 1)
+        : undefined;
+    },
     derived: new Map(),
     dialect: flavor === "owr" ? OWR : DR,
     events,
