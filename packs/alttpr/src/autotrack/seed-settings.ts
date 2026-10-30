@@ -881,15 +881,28 @@ export function decodeSeedSettings(
   const vulnerable = bytesOf(memory, race, "ganon-vulnerable");
   const rom = seedRom(memory);
   const door = rom?.randomizer === "door" ? rom : null;
+  // The Overworld fork writes its goal tables where vt's crystals and
+  // Ganon's mode lie (OWR 0.8.0.2 Rom.py:1289-1385, since 0.6.1.0's custom
+  // goals: pointer words at 0x180198-0x18019F, then the tables), so none of
+  // those bytes is vt's there: unrecognized, never a goal they would spell
+  const fork = door?.overworld === true;
+  const notVt = <T>(id: SeedSettingsRangeId): SeedSetting<T> =>
+    from<T>([id], () => null);
   const reading: SeedSettingsReading = {
-    crystalsGanon: from(["ganon-crystals"], crystals),
-    crystalsTower: from(["tower-crystals"], crystals),
+    crystalsGanon: fork
+      ? notVt("ganon-crystals")
+      : from(["ganon-crystals"], crystals),
+    crystalsTower: fork
+      ? notVt("tower-crystals")
+      : from(["tower-crystals"], crystals),
     goal:
       typeof vulnerable === "string"
         ? unknown(vulnerable)
-        : door === null
-          ? goalOf(memory, race, vulnerable)
-          : doorGoalOf(memory, race, vulnerable),
+        : fork
+          ? UNRECOGNIZED
+          : door === null
+            ? goalOf(memory, race, vulnerable)
+            : doorGoalOf(memory, race, vulnerable),
     goalPieces: from(["goal-items"], ([low, high]) => {
       const pieces = low | (high << 8);
       return pieces >= 1 && pieces <= MAX_GOAL_PIECES ? pieces : null;

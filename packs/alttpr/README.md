@@ -1063,7 +1063,11 @@ which no decoder reads, and dropped the absorbed keys), and so are bank
 $30's settings tables. DR writes no seed type (no `0x180210` in its
 `Rom.py`), so a DR seed's logic is unrecognized, never NoGlitches; its own
 "ganon" goal writes `GanonVulnerableMode` $03 (`Rom.py:1207-1218`), read
-as Ganon. Outside Race Mode, `seed-settings.ts` reads its own tables:
+as Ganon. The Overworld fork, from 0.6.1.0's custom goals on, writes its
+goal tables over vt's crystals and Ganon's mode (pointer words at
+0x180198-0x18019F, then the tables, OWR 0.8.0.2 `Rom.py:1289-1385`): an OR
+ROM's goal and crystals are unrecognized, never read there, and the run
+keeps its own. Outside Race Mode, `seed-settings.ts` reads its own tables:
 `DRMode` (vanilla, basic, or partitioned or crossed, which it does not tell
 apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
 `MultiClientFlagsROM` (drops, shopsanity, take-any, pots, Mystery) and

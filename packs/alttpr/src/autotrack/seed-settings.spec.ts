@@ -535,6 +535,42 @@ describe("decodeSeedSettings, a Door Randomizer seed", () => {
   });
 });
 
+describe("decodeSeedSettings, the Overworld fork's goal tables", () => {
+  it("never reads its goal or crystals at vt's addresses, its goal tables there", () => {
+    // A dungeons goal, GT at 7 crystals, as OWR 0.8.0.2 lays its tables
+    // (Rom.py:1289-1385): pointer words $81A0 $81A3 $81A8 $81AA, then
+    // gt_entry 02 07 FF, ganon_goal 81 82 06 07 FF, ped_pull 81 FF,
+    // murah_goal 00 FF. vt's GT crystals (0x18019A) read $A3, its Ganon
+    // crystals (0x1801A6) $07, a 7 by chance, its Ganon mode (0x1801A8) $81
+    const tables = [
+      0xa0, 0x81, 0xa3, 0x81, 0xa8, 0x81, 0xaa, 0x81, 0x02, 0x07, 0xff, 0x81,
+      0x82, 0x06, 0x07, 0xff, 0x81, 0xff, 0x00, 0xff,
+    ];
+    const writes = Object.fromEntries(
+      tables.map((byte, i) => [0x18_0198 + i, byte]),
+    );
+    // A custom goal's table may hold any byte there: $02 spells Dungeons
+    const custom = { ...writes, [OFFSET.ganonVulnerable]: 0x02 };
+    for (const bytes of [writes, custom]) {
+      const rom = doorImage("OR157_1_1_1", bytes);
+      write(rom, DR.owVersion, "0.8.0.2-u");
+      expect(settings(decode(rom))).toMatchObject({
+        crystalsGanon: "?unrecognized",
+        crystalsTower: "?unrecognized",
+        goal: "?unrecognized",
+      });
+      expect(settings(decode(rom, { race: true }))).toMatchObject({
+        crystalsTower: "?race-mode",
+        goal: "?race-mode",
+      });
+    }
+    // DR itself keeps vt's tables (DR 1.5.8 Rom.py:1208-1221)
+    expect(settings(decode(doorImage("DR156_1_1_1", custom)))).toMatchObject({
+      goal: "dungeons",
+    });
+  });
+});
+
 describe("decodeSeedSettings, the bomb bag of a DR or OWR seed", () => {
   /** The +5 bomb upgrade's entry: item, limit, replacement, filler. */
   const entry = (...bytes: number[]) =>
