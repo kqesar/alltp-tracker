@@ -61,7 +61,7 @@ test("a door shuffle is named and every check left maybe", async ({ page }) => {
     .selectOption("crossed");
   await dialog.getByRole("button", { name: "Close" }).first().click();
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Crossed door shuffle yet: every check shows as maybe.",
+    "Not modelled yet: Crossed door shuffle. Every check shows as maybe.",
   );
 });
 
