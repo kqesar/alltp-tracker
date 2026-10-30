@@ -365,6 +365,8 @@ export const DR_DEFAULTS: Settings = {
   bombBag: false,
   cantTakeDamage: false,
   completionistGoal: false,
+  // key_logic_algorithm dangerous: a door asks its worst case uncapped
+  dangerousKeyLogic: false,
   // dropshuffle and pottery: the enemies' and the pots' vanilla keys are
   // forced items, events DR sweeps (keys.ts)
   dropShuffle: false,
@@ -579,7 +581,8 @@ function addSpikesPotRule(locations: Map<string, string>): void {
 /**
  * How the run holds its small keys (keyshuffle, key_logic_algorithm):
  * strict logic reads its own rule only once keys are wild (Rules.py:
- * 2345-2347); `dangerous` reads as partial, which the app notes.
+ * 2345-2347); `dangerous` is partial's holding, its doors asking their
+ * worst case uncapped (`worldKeys`).
  */
 export function keyHoldingOf(settings: Settings): KeyHolding {
   if (settings.universalKeys === true) return "universal";
@@ -648,6 +651,7 @@ export function drWorld(
       unrecorded: new Set(options.unrecorded),
       wild: all.wildBigKeys === true,
     },
+    all.dangerousKeyLogic === true,
   );
   const connections = options.connections ?? vanillaConnections(mode);
   const exits = exitsOf(connections, mode, options);

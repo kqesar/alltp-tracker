@@ -275,6 +275,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
     found = {
       ...settings,
       bombBag,
+      // key_logic_algorithm: dangerous asks each door's worst case
+      dangerousKeyLogic: keyLogic === "dangerous",
       dropShuffle: drops !== "none",
       dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
       ganonHuntGoal: run.goal === "ganonhunt",
@@ -284,7 +286,6 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       pottery: pottery !== "none",
       restrictBossItems: bossItems !== "none",
       retroBow: settings.rupeeBow,
-      // key_logic_algorithm strict; dangerous reads as partial (doorNotes)
       strictKeyLogic: keyLogic === "strict",
       treasureHunt: hunt ? 1 : 0,
       triforceHuntGoal: run.goal === "triforce-hunt",

@@ -2,8 +2,10 @@
 // analysis of each dungeon (key-analysis/, KeyDoorShuffle.py), attached by
 // add_key_logic_rules (Rules.py:2343-2381): each key door the analysis
 // names asks its own number of keys, partial logic's figure by default
-// (eval_small_key_door_partial_main, :2411-2441), `strict` logic every key
-// of the chests once keys are wild (:2444-2451). What a door asks beside
+// (eval_small_key_door_partial_main, :2411-2441: the worst case capped at
+// `small_key_num`), `dangerous` logic's the worst case uncapped
+// (eval_small_key_door_main, :2393-2395), `strict` logic every key of the
+// chests once keys are wild (:2444-2451). What a door asks beside
 // that number rests on where an item lies (a key in the one location
 // behind the door, the big key behind it): the tracker does not know, so
 // it is `maybe`. With the keys in their dungeons, a door short of its
@@ -175,6 +177,9 @@ export interface WorldKeys {
  *   and the big keys the player has no way to record (by item): a big key
  *   kept in its dungeon, or one not recorded, reads `maybe` until held, as
  *   a small key below its number does (it may lie inside), never `no`
+ * @param dangerous - key_logic_algorithm `dangerous`: a door asks its worst
+ *   case uncapped (eval_small_key_door_main, Rules.py:2393-2395), which
+ *   partial logic caps at `small_key_num` (:2422-2424)
  */
 export function worldKeys(
   holding: KeyHolding,
@@ -183,6 +188,7 @@ export function worldKeys(
     readonly wild: boolean;
     readonly unrecorded?: ReadonlySet<string>;
   } = { wild: true },
+  dangerous = false,
 ): WorldKeys {
   const forced = KEY_DROPS.filter(
     (d) => !(d.pot ? shuffled.pots : shuffled.drops),
@@ -224,7 +230,8 @@ export function worldKeys(
         const n = logic.layout.maxChests;
         return n <= 0 ? "true" : `key${codeOf(dungeon)} >= ${n}`;
       }
-      const n = Math.min(rule.worstCase ?? 0, rule.smallKeyNum);
+      const worst = rule.worstCase ?? 0;
+      const n = dangerous ? worst : Math.min(worst, rule.smallKeyNum);
       if (holding === "dungeon") return or(atLeast(dungeon, n), "maybe");
       const alternatives: string[] = [];
       // AllowSmall: the one location behind the door holds its key

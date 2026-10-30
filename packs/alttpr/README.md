@@ -1169,7 +1169,8 @@ it checks but three of Ganons Tower's, where the port asks a key more and
 DR's own adjustment outdates the validator. `keys.ts` attaches the rules
 as `add_key_logic_rules` does: each key door of the analysis asks partial
 logic's number (the worst case capped, `Rules.py:2411-2441`; `strict`
-logic with wild keys every chest key, `dangerous` read as partial); what a
+logic with wild keys every chest key, `dangerous` logic the worst case
+uncapped, `eval_small_key_door_main`, `:2393-2395`); what a
 placement grants beside it (the key in the one location behind a door,
 the big key behind it) is `maybe`; with the keys in their dungeons a door
 short of its number is `maybe`, never `no` (a key may lie inside), with

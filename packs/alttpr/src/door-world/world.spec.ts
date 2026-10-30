@@ -381,6 +381,22 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(drWorld(settings("open")).locationIds.has("Murahdahla")).toBe(false);
   });
 
+  it("asks a door its worst case under dangerous key logic, partial's number capped", () => {
+    // Ganons Tower's Double Switch EN and its kin: worst case 7, small_key_num
+    // 6 (create_rule); dangerous reads eval_small_key_door_main, uncapped
+    // (Rules.py:2393-2395), partial caps it (:2422-2424)
+    const wild = { ...settings("open"), wildBigKeys: true, wildKeys: true };
+    const firesnake = drLocationId("Ganons Tower - Firesnake Room");
+    const at = (more: Settings, keys: number) =>
+      solveFacts(drWorld({ ...wild, ...more }), {
+        ...everything(OPEN),
+        keyA2: keys,
+      }).location(firesnake);
+    expect(at({}, 3)).toBe("yes");
+    expect(at({ dangerousKeyLogic: true }, 3)).not.toBe("yes");
+    expect(at({ dangerousKeyLogic: true }, 4)).toBe("yes");
+  });
+
   it("puts a boss's items behind its map and compass when restricted", () => {
     const held = { bigKeyP1: 1, bow: 1, heartContainer: 3, keyP1: 2, lamp: 1 };
     const boss = drLocationId("Eastern Palace - Boss");

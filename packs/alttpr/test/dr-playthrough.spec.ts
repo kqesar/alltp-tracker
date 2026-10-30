@@ -78,6 +78,7 @@ function settingsFor(meta: Log["meta"]) {
     ...(meta.keyshuffle === "universal" ? { universalKeys: true } : {}),
     ...(meta.bigkeyshuffle === true ? { wildBigKeys: true } : {}),
     ...(meta.key_logic === "strict" ? { strictKeyLogic: true } : {}),
+    ...(meta.key_logic === "dangerous" ? { dangerousKeyLogic: true } : {}),
     ...(meta.pottery === "keys" ? { potKeys: true } : {}),
     ...(meta.dropshuffle === "keys" ? { dropShuffle: true } : {}),
     ...(meta.accessibility === "locations"

@@ -78,13 +78,21 @@ describe("a Door Randomizer run's logic", () => {
     );
   });
 
-  it("reads strict key logic, notes dangerous, and names static as not modelled", () => {
+  it("reads strict and dangerous key logic, and names static as not modelled", () => {
     expect(drSettingsOf(with_(DR, { keyLogic: "strict" }))).toMatchObject({
       strictKeyLogic: true,
     });
-    expect(drSettingsOf(DR)).toMatchObject({ strictKeyLogic: false });
+    expect(drSettingsOf(DR)).toMatchObject({
+      dangerousKeyLogic: false,
+      strictKeyLogic: false,
+    });
+    // Each door at its worst case, uncapped (Rules.py:2393-2395)
+    expect(drSettingsOf(with_(DR, { keyLogic: "dangerous" }))).toMatchObject({
+      dangerousKeyLogic: true,
+      strictKeyLogic: false,
+    });
     expect(doorNotes(with_(DR, { keyLogic: "dangerous" }), "door")[1]).toBe(
-      "Its dangerous key logic is read as partial: the seed may count on fewer keys than a door shows.",
+      "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
     );
     const fixed = with_(DR, { keyLogic: "static" });
     expect(unmodelledReasons(fixed)).toEqual(["DR's static key logic"]);

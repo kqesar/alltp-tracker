@@ -41,6 +41,9 @@ function settingsFor(seed: Seed): Settings {
     ...settingsOf("open"),
     ...(keysanity ? { wildBigKeys: true, wildKeys: true } : {}),
     ...(s.key_logic_algorithm === "strict" ? { strictKeyLogic: true } : {}),
+    ...(s.key_logic_algorithm === "dangerous"
+      ? { dangerousKeyLogic: true }
+      : {}),
     ...(typeof s.crystals_needed_for_gt === "number"
       ? { crystalsTower: s.crystals_needed_for_gt }
       : {}),
@@ -87,7 +90,7 @@ const SEEDS: readonly (readonly [string, number, number, number])[] = [
   ["partial_key_logic_2.json", 5, 0, 2],
   ["partial_key_logic_3.json", 34, 1, 67],
   ["strict_key_logic.json", 5, 0, 2],
-  // `dangerous`, which the pack reads as partial: more doubt, no more yes
+  // `dangerous`: each door at its worst case, uncapped
   ["default_key_logic.json", 3, 0, 2],
 ];
 

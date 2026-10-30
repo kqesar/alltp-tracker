@@ -417,7 +417,7 @@ export const doorNotes = (
       "Door Randomizer seed: the logic is DR's own (1.5.6).",
       ...(door.keyLogic === "dangerous"
         ? [
-            "Its dangerous key logic is read as partial: the seed may count on fewer keys than a door shows.",
+            "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",
           ]
         : []),
     ];
