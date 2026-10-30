@@ -1007,9 +1007,13 @@ describe("doorFromSeed", () => {
     expect(doorFromSeed(pots, { pottery: "lottery" })).toMatchObject({
       pottery: "lottery",
     });
+    // Not of the kind: cave and key pots, never key pots, which would keep
+    // Lite's and Lean's pottery caves vanilla (EntranceShuffle2.py:
+    // 1064-1066) where cave pots or lottery shuffle them
     expect(doorFromSeed(pots, { pottery: "cave" })).toMatchObject({
-      pottery: "keys",
+      pottery: "cavekeys",
     });
+    expect(doorFromSeed(pots, {})).toMatchObject({ pottery: "cavekeys" });
     const doors = read({ doorShuffle: { known: true, value: "shuffled" } });
     expect(doorFromSeed(doors, { doorShuffle: "partitioned" })).toMatchObject({
       doorShuffle: "partitioned",

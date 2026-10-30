@@ -1101,7 +1101,8 @@ const kept = <T extends string>(value: T, of: readonly T[], or: T): T =>
  * run's own where it does not. Where the ROM tells a kind but not its mode
  * (doors shuffled, pots beyond the caves, take-any caves, a crossed
  * overworld, flute spots moved), the run's mode stands if it is of that
- * kind, else the commonest of it (What I read says the ROM named none).
+ * kind, else the one of it the logic cannot read as asking less (What I
+ * read says the ROM named none).
  * @returns The DR settings to lay, defaults left out; null for a seed whose
  *   randomizer is not known (a header not read)
  */
@@ -1233,7 +1234,11 @@ export const doorFromSeed = (
       pots === undefined
         ? own.pottery
         : pots === "beyond-caves"
-          ? kept(own.pottery, POTS_BEYOND_CAVES, "keys")
+          ? // Cave and key pots when the run's is not of the kind: Lite's
+            // and Lean's pottery caves then shuffle, as DR shuffles them for
+            // any mode but none, keys and dungeon (EntranceShuffle2.py:
+            // 1064-1066), where keys would keep them vanilla
+            kept(own.pottery, POTS_BEYOND_CAVES, "cavekeys")
           : pots,
     shopsanity: stated(rom.shopsanity, own.shopsanity),
     takeAny:
