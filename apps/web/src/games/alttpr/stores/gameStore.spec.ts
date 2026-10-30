@@ -561,6 +561,24 @@ describe("GameStore", () => {
       expect(useGameStore.getState().mapView).toBe("map");
     });
 
+    it("takes no note of this tab's run from a save that holds none", async () => {
+      // An older version's tab starts a New game: its save holds no door,
+      // entrance or overworld notes, nor a seed
+      useGameStore.setState({
+        doors: { links: { a: "b" } },
+        entrances: { "links-house": "links-house" },
+        overworld: { flute: [0x18] },
+      });
+      storeSave({ items: { flute: true } }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      const state = useGameStore.getState();
+      expect(state.items.flute).toBe(true);
+      expect(state.doors).toEqual({});
+      expect(state.entrances).toEqual({});
+      expect(state.overworld).toEqual({});
+      expect(state.seed).toBeNull();
+    });
+
     it("restores the valid fields of a damaged save and resets the rest", async () => {
       storeSave(
         { items: { flute: true }, medallions: "x", smallKeys: [99] },

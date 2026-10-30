@@ -975,10 +975,17 @@ export const useGameStore = create<GameState>()(
           // instead of discarding the whole save.
           return {
             ...current,
-            ...restoreProgress(
-              current,
-              validateProgress(saved, current.settings).value,
-            ),
+            ...restoreProgress(current, {
+              // The notes a save does not hold are the saved run's: none,
+              // never this tab's (an older version's tab writes no door,
+              // entrance or overworld notes, and its New game must not
+              // keep this run's for the next seed)
+              doors: {},
+              entrances: {},
+              overworld: {},
+              seed: null,
+              ...validateProgress(saved, current.settings).value,
+            }),
             ...restorePrefs(current, saved as Partial<Prefs>),
             // The run was replaced from outside (first load, another tab):
             // undoing would now rewind someone else's changes.
