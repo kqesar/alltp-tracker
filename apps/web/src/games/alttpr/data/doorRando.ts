@@ -128,7 +128,9 @@ export type DoorRunSettings = {
   /**
    * Whether the entrance shuffle moves Link's House (`--shufflelinks`,
    * EntranceShuffle2.py:555) and the Tavern's back door (`--shuffletavern`,
-   * :211): a spoiler's meta names them, no ROM table does.
+   * :211): a spoiler's meta names them, no ROM table does. Unset, each
+   * reads as "may be moved" (`DOOR_UNSET`): the logic waits for the
+   * player's note, never assumes the door vanilla.
    */
   shuffleLinks?: boolean;
   shuffleTavern?: boolean;
@@ -137,10 +139,21 @@ export type DoorRunSettings = {
 /** A DR setting's key. */
 export type DoorSetting = keyof DoorRunSettings;
 
+/**
+ * The DR settings a run may leave unset, which no default stands for: what
+ * no ROM table states and a guess would make unsound. Unset, the entrance
+ * shuffle may have moved the door (`doorPoolSettingsOf`).
+ */
+export const DOOR_UNSET = ["shuffleLinks", "shuffleTavern"] as const;
+
+/** A DR setting a run may leave unset. */
+export type DoorUnsetSetting = (typeof DOOR_UNSET)[number];
+
 /** What a DR run's settings are, every default filled in. */
-export type DoorSettings = Required<Omit<DoorRunSettings, "doorEntrances">> & {
-  doorEntrances?: DoorEntrances;
-};
+export type DoorSettings = Required<
+  Omit<DoorRunSettings, "doorEntrances" | DoorUnsetSetting>
+> &
+  Pick<DoorRunSettings, "doorEntrances" | DoorUnsetSetting>;
 
 /** DR's defaults (args.json): what an absent field of a DR run means. */
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
@@ -161,8 +174,6 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   pottery: "none",
   restrictBossItems: "none",
   shopsanity: false,
-  shuffleLinks: false,
-  shuffleTavern: false,
   takeAny: "none",
 };
 
@@ -422,19 +433,25 @@ export const doorPoolSettingsOf = (
           : "open",
     pottery: door.pottery,
     shopsanity: door.shopsanity,
-    shuffleLinks: door.shuffleLinks,
-    shuffleTavern: door.shuffleTavern,
+    // Unset: the shuffle may have moved them, so each waits for a note
+    shuffleLinks: door.shuffleLinks ?? true,
+    shuffleTavern: door.shuffleTavern ?? true,
   };
 };
+
+/** The words of a DR setting left unset (`DOOR_UNSET`). */
+export const DOOR_UNSET_TEXT = "Not known";
 
 /** A DR setting's value in words. */
 export const doorValueText = <K extends DoorSetting>(
   setting: K,
   value: DoorRunSettings[K],
 ): string =>
-  (DOOR_OPTIONS[setting] as readonly (readonly [unknown, string])[]).find(
-    ([option]) => option === value,
-  )?.[1] ?? String(value);
+  value === undefined
+    ? DOOR_UNSET_TEXT
+    : ((DOOR_OPTIONS[setting] as readonly (readonly [unknown, string])[]).find(
+        ([option]) => option === value,
+      )?.[1] ?? String(value));
 
 /**
  * Whether a saved value is DR settings this version knows: each field

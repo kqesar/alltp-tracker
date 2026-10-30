@@ -332,6 +332,19 @@ describe("GameStore", () => {
       expect(store().settings).not.toHaveProperty("playGlitches");
     });
 
+    it("sets a Door Randomizer setting back to unset, as its absence", () => {
+      useGameStore.getState().applyPreset("door-crosskeys");
+      useGameStore.getState().updateDoorSettings({ shuffleLinks: false });
+      expect(useGameStore.getState().settings.shuffleLinks).toBe(false);
+
+      useGameStore.getState().updateDoorSettings({ shuffleLinks: undefined });
+
+      expect(useGameStore.getState().settings).not.toHaveProperty(
+        "shuffleLinks",
+      );
+      expect(useGameStore.getState().past).toHaveLength(3);
+    });
+
     it("records no step for settings that change nothing", () => {
       const past = useGameStore.getState().past;
 

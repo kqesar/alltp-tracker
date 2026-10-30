@@ -296,10 +296,11 @@ export const presets: Preset[] = [
   },
   {
     // Crosskeys rolled on the Door Randomizer (Crosskeys 2026, Hyrule Town
-    // Hall): crossed entrances, every dungeon item wild, doors vanilla. The
-    // Tavern's back door counts as shuffled: race seeds set it (the
-    // recorded avianart meta of test/dr-seeds/C2BdrZOiV), and so read it
-    // leads nowhere until noted, never somewhere it may not
+    // Hall): crossed entrances, every dungeon item wild, doors vanilla.
+    // Link's House and the Tavern's back are left unset: race seeds differ
+    // (avianart's Crosskeys metas of 2026 shuffle neither on 1.5.7 and
+    // 1.5.8, both on some 1.5.6 ones), so each may be moved and leads
+    // nowhere until noted, never somewhere it may not
     description:
       "Crosskeys on the Door Randomizer: Crossworld entrances, keysanity, doors vanilla.",
     id: "door-crosskeys",
@@ -309,7 +310,6 @@ export const presets: Preset[] = [
       dungeonItems: "full",
       entranceShuffle: "crossed",
       randomizer: "dr",
-      shuffleTavern: true,
     },
   },
 ];

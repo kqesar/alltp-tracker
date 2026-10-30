@@ -448,6 +448,9 @@ export const retune = (
     ...(hidden === undefined ? {} : { hidden }),
   };
   if (hidden?.length === 0) delete settings.hidden;
+  // A setting set back to unset (a DR run's `DOOR_UNSET`) is its absence
+  for (const [key, value] of Object.entries(rest))
+    if (value === undefined) delete settings[key as keyof RunSettings];
   // None is said by the glitches' absence, as every preset says it
   if (glitches === "none") delete settings.glitches;
   else if (glitches !== undefined) settings.glitches = glitches;

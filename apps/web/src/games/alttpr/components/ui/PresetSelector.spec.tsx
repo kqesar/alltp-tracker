@@ -326,6 +326,36 @@ describe("PresetSelector", () => {
     expect(updateSettings).not.toHaveBeenCalled();
   });
 
+  it("offers Link's House and the Tavern's back as not known until set", () => {
+    Object.assign(fakeState, {
+      presetId: "door-crosskeys",
+      settings: {
+        ...getPreset("door-crosskeys").settings,
+        shuffleLinks: false,
+      },
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    const tavern = within(dialog).getByRole("combobox", {
+      name: "Back of Tavern",
+    });
+    expect(tavern).toHaveValue("?");
+    expect(
+      within(tavern).getByRole("option", { name: "? Not known" }),
+    ).toBeInTheDocument();
+    const links = within(dialog).getByRole("combobox", {
+      name: "Link's House",
+    });
+    expect(links).toHaveValue("false");
+    fireEvent.change(tavern, { target: { value: "true" } });
+    fireEvent.change(links, { target: { value: "?" } });
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ shuffleTavern: true }],
+      [{ shuffleLinks: undefined }],
+    ]);
+  });
+
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {
     Object.assign(fakeState, {
       presetId: "mystery",

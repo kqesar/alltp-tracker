@@ -126,6 +126,10 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     useGameStore
       .getState()
       .noteEntrance("lost-woods-hideout-drop", "lost-woods-hideout-top");
+    // Link's House left unset may be moved: until its door is noted, Link
+    // leaves it for nowhere, and nothing is in logic
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    useGameStore.getState().noteEntrance("links-house", "links-house-exit");
     expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
     // Noted elsewhere: the Kakariko Well's hole drops there
     useGameStore.getState().noteEntrances({

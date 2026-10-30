@@ -1109,7 +1109,9 @@ leaves by.
 a world, every entrance of `link_entrances_new`'s pool (`:45-80`, Inverted's
 names put in) less what it surely leaves vanilla: Standard's escape and
 Link's House (`do_standard_connections`), Link's House without
-`shufflelinks` and the Tavern's back without `shuffletavern`, the caves of a
+`shufflelinks` and the Tavern's back without `shuffletavern` (no ROM table
+states either: the app passes one a run leaves unset as shuffled, so the
+logic waits for its note), the caves of a
 kept pool whose condition holds (`do_vanilla_connect`: lite's and lean's
 shops, pots' and drops' caves, as the run's shopsanity, pottery, drop and
 enemy shuffles say), and in `dungeonssimple`/`dungeonsfull` every entrance no

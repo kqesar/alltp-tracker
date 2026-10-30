@@ -98,18 +98,20 @@ test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async 
   await dialog.getByRole("button", { name: /^DR Crosskeys/ }).click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
   await page.getByRole("button", { name: /^Mode/ }).click();
-  // The shuffle's own settings, while entrances are shuffled
+  // The shuffle's own settings, while entrances are shuffled: not known
+  // until set, so each may be moved
   await expect(
     dialog.getByRole("combobox", { name: "Back of Tavern" }),
-  ).toHaveValue("true");
+  ).toHaveValue("?");
   await expect(
     dialog.getByRole("combobox", { name: "Link's House" }),
-  ).toHaveValue("false");
+  ).toHaveValue("?");
   await auditPage(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
 
-  // DR's crossed pool: the entrance randomizer's doors and the Tavern's back
-  await expect(page.getByTestId(/^entrance-/)).toHaveCount(139);
+  // DR's crossed pool: the entrance randomizer's doors, Link's House and
+  // the Tavern's back
+  await expect(page.getByTestId(/^entrance-/)).toHaveCount(140);
   await expect(page.getByTestId("logic-note")).toContainText(
     "The logic follows the entrances you noted",
   );

@@ -154,10 +154,15 @@ describe("the entrance assistant's model", () => {
     expect(
       poolOf({ ...dr, doorEntrances: "dungeonssimple" })?.entrances.length,
     ).toBe(28);
-    // Link's House and the Tavern's back, as the run says
+    // Link's House and the Tavern's back: may be moved while unset, kept
+    // where the run says so
     const ids = (settings: typeof dr) =>
       poolOf(settings)?.entrances.map((e) => e.id) ?? [];
-    expect(ids(dr)).not.toContain("links-house");
+    expect(ids(dr)).toContain("links-house");
+    expect(ids(dr)).toContain("tavern-north");
+    expect(
+      ids({ ...dr, shuffleLinks: false, shuffleTavern: false }),
+    ).not.toContain("links-house");
     expect(ids({ ...dr, shuffleLinks: true, shuffleTavern: true })).toContain(
       "links-house",
     );

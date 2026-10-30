@@ -5,11 +5,13 @@ import {
   doorFromSeed,
   doorLocationsOf,
   doorNotes,
+  doorOf,
   doorPoolSettingsOf,
   doorReasons,
   doorRows,
   doorShuffleOf,
   doorTablesOf,
+  doorValueText,
   doorVersionOf,
   isDoorSettings,
   sameDoorSettings,
@@ -145,14 +147,24 @@ describe("a Door Randomizer run's logic", () => {
   });
 
   it("reads Link's House and the Tavern's back into DR's pool", () => {
-    // DR Crosskeys counts the Tavern's back door as moved (race seeds set
-    // it)
+    // Unset (no ROM table states them): each may be moved, so the logic
+    // waits for a note, never assumes them vanilla
     expect(doorPoolSettingsOf(DR_CROSSKEYS)).toMatchObject({
       mode: "open",
-      shuffleLinks: false,
+      shuffleLinks: true,
       shuffleTavern: true,
     });
-    expect(doorPoolSettingsOf(DR).shuffleTavern).toBe(false);
+    expect(doorPoolSettingsOf(DR).shuffleTavern).toBe(true);
+    // Set, as a seed's meta or the player names them
+    expect(
+      doorPoolSettingsOf(
+        with_(DR_CROSSKEYS, { shuffleLinks: false, shuffleTavern: false }),
+      ),
+    ).toMatchObject({ shuffleLinks: false, shuffleTavern: false });
+    // The summary says so; a run name tells a set value only
+    expect(doorValueText("shuffleLinks", undefined)).toBe("Not known");
+    expect(doorValueText("shuffleLinks", false)).toBe("Off");
+    expect(doorOf(DR_CROSSKEYS)).not.toHaveProperty("shuffleLinks");
     expect(
       doorPoolSettingsOf(
         with_(DR_CROSSKEYS, {

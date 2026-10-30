@@ -6,6 +6,8 @@ import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
   DOOR_OPTIONS,
+  DOOR_UNSET,
+  DOOR_UNSET_TEXT,
   type DoorSetting,
   type DoorSettings,
   doorOf,
@@ -94,7 +96,8 @@ const SettingSelect = ({
  * A Door Randomizer run's own setting: its options as DR names them. A
  * change applies at once, the run's progress kept (`updateDoorSettings`),
  * as one undo step: in a race, where the ROM's settings are never read,
- * the player sets them so.
+ * the player sets them so. A setting no ROM states (`DOOR_UNSET`) offers
+ * "Not known" too, its absence, which the logic reads as "may be moved".
  */
 const DoorSettingSelect = ({
   id,
@@ -109,19 +112,25 @@ const DoorSettingSelect = ({
   const updateDoorSettings = useGameStore((state) => state.updateDoorSettings);
   const options: readonly (readonly [boolean | string, string])[] =
     DOOR_OPTIONS[setting];
+  const unsettable = (DOOR_UNSET as readonly DoorSetting[]).includes(setting);
   return (
     <select
       className="run-settings__select"
       data-testid={`run-setting-${setting}`}
       id={id}
       onChange={(event) => {
+        if (event.target.value === HIDDEN) {
+          updateDoorSettings({ [setting]: undefined });
+          return;
+        }
         const picked = options.find(
           ([option]) => String(option) === event.target.value,
         );
         if (picked) updateDoorSettings({ [setting]: picked[0] });
       }}
-      value={String(value)}
+      value={value === undefined ? HIDDEN : String(value)}
     >
+      {unsettable && <option value={HIDDEN}>? {DOOR_UNSET_TEXT}</option>}
       {options.map(([option, words]) => (
         <option key={String(option)} value={String(option)}>
           {words}
