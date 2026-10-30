@@ -470,26 +470,30 @@ for (const width of WIDTHS) {
 
 /**
  * An OWR run of the fork's own District entrance shuffle (Link's House
- * kept, the Tavern's back shuffled), its overworld vanilla.
+ * kept, the Tavern's back shuffled), its overworld vanilla; or of another
+ * of the fork's shuffles (`change`).
  */
-const openOwrEntranceRun = async (page: Page) => {
+const openOwrEntranceRun = async (
+  page: Page,
+  change: Record<string, string> = { doorEntrances: "district" },
+) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
-  await page.evaluate(() => {
+  await page.evaluate((change) => {
     const key = "alltp-tracker-state";
     const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
     saved.state.settings = {
       ...saved.state.settings,
       customGoals: false,
-      doorEntrances: "district",
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
       shuffleLinks: false,
       shuffleTavern: true,
+      ...change,
     };
     localStorage.setItem(key, JSON.stringify(saved));
-  });
+  }, change);
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
@@ -572,6 +576,83 @@ for (const width of WIDTHS) {
       });
       await page.getByTestId("entrances-panel").screenshot({
         path: `${process.env.DOOR_SHOTS}/owr-entrances-panel-${width}.png`,
+      });
+    }
+  });
+}
+
+test("an OWR Lite run notes its entrances in the fork's pool, its kept caves left out", async ({
+  page,
+}) => {
+  await openOwrEntranceRun(page, { doorEntrances: "lite" });
+  // Lite keeps its fixed caves (the fork's EntranceShuffle2.py:2244-2301):
+  // Kakariko's shop and the Desert Fairy stand, the Chicken House moves
+  await expect(page.getByTestId("entrance-kakariko-shop")).toHaveCount(0);
+  await expect(page.getByTestId("entrance-desert-fairy")).toHaveCount(0);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The logic follows the entrances you noted",
+  );
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose a run type" });
+  await expect(dialog.getByRole("combobox", { name: "Entrances" })).toHaveValue(
+    "lite",
+  );
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  await page.getByRole("tab", { name: "Entrances" }).click();
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "0 of 98 entrances noted",
+  );
+  const row = page.getByRole("button", { name: /^Chicken House: not known/ });
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("blind");
+  await page.getByTestId("entrance-option-blinds-hideout").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "1 of 98 entrances noted",
+  );
+  await auditPage(page);
+  await page.getByRole("tab", { name: "Map" }).click();
+  await expect(page.getByTestId("marker-blinds-hideout")).toHaveAccessibleName(
+    "Blind's Hideout (5 checks): available",
+  );
+  await page.reload();
+  await expect(page.getByTestId("entrance-chicken-house")).toHaveAccessibleName(
+    /^Chicken House: leads to Blind's Hideout/,
+  );
+});
+
+for (const width of WIDTHS) {
+  test(`an OWR Lite run's Entrances tab fits at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openOwrEntranceRun(page, { doorEntrances: "lite" });
+    await page.getByTestId("entrance-chicken-house").click();
+    await page.keyboard.type("blind");
+    await page.getByTestId("entrance-option-blinds-hideout").click();
+    // Map pins: WCAG 2.5.8's exception, as in a Crosskeys run
+    await auditPage(page, ".mapspan");
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/owr-lite-map-${width}.png`,
+      });
+    await page.getByRole("tab", { name: "Entrances" }).click();
+    await expect(page.getByTestId("entrances-panel")).toBeVisible();
+    await auditPage(page);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth,
+      ),
+    ).toBe(false);
+    if (process.env.DOOR_SHOTS !== undefined) {
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/owr-lite-entrances-${width}.png`,
+      });
+      await page.getByTestId("entrances-panel").screenshot({
+        path: `${process.env.DOOR_SHOTS}/owr-lite-entrances-panel-${width}.png`,
       });
     }
   });
