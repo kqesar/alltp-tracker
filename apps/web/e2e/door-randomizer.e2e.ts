@@ -467,3 +467,112 @@ for (const width of WIDTHS) {
     }
   });
 }
+
+/**
+ * An OWR run of the fork's own District entrance shuffle (Link's House
+ * kept, the Tavern's back shuffled), its overworld vanilla.
+ */
+const openOwrEntranceRun = async (page: Page) => {
+  const dialog = await openDoorRun(page);
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  await page.evaluate(() => {
+    const key = "alltp-tracker-state";
+    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+    saved.state.settings = {
+      ...saved.state.settings,
+      customGoals: false,
+      doorEntrances: "district",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    };
+    localStorage.setItem(key, JSON.stringify(saved));
+  });
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+};
+
+test("an OWR District run notes its entrances in the fork's pool and logic, from the keyboard", async ({
+  page,
+}) => {
+  await openOwrEntranceRun(page);
+  // The fork's pool: every entrance but Link's House, kept without
+  // shufflelinks
+  await expect(page.getByTestId(/^entrance-/)).toHaveCount(139);
+  await expect(page.getByTestId("entrance-links-house")).toHaveCount(0);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The logic follows the entrances you noted",
+  );
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose a run type" });
+  await expect(dialog.getByRole("combobox", { name: "Entrances" })).toHaveValue(
+    "district",
+  );
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  // Noted from the Entrances tab with the keyboard alone
+  await page.getByRole("tab", { name: "Entrances" }).click();
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "0 of 139 entrances noted",
+  );
+  const row = page.getByRole("button", { name: /^Kakariko Shop: not known/ });
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("blind");
+  await page.getByTestId("entrance-option-blinds-hideout").focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("button", { name: /^Kakariko Shop: leads to/ }),
+  ).toBeVisible();
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "1 of 139 entrances noted",
+  );
+  await auditPage(page);
+  // On the map: Blind's Hideout behind Kakariko's shop, in logic
+  await page.getByRole("tab", { name: "Map" }).click();
+  await expect(page.getByTestId("marker-blinds-hideout")).toHaveAccessibleName(
+    "Blind's Hideout (5 checks): available",
+  );
+  // One undo step; kept across a reload
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByTestId("entrance-kakariko-shop")).toHaveAccessibleName(
+    "Kakariko Shop: not known yet",
+  );
+  await page.getByRole("button", { name: "Redo" }).click();
+  await page.reload();
+  await expect(page.getByTestId("entrance-kakariko-shop")).toHaveAccessibleName(
+    /^Kakariko Shop: leads to Blind's Hideout/,
+  );
+});
+
+for (const width of WIDTHS) {
+  test(`an OWR District run's Entrances tab fits at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openOwrEntranceRun(page);
+    await page.getByTestId("entrance-kakariko-shop").click();
+    await page.keyboard.type("blind");
+    await page.getByTestId("entrance-option-blinds-hideout").click();
+    // Map pins: WCAG 2.5.8's exception, as in a Crosskeys run
+    await auditPage(page, ".mapspan");
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/owr-entrances-map-${width}.png`,
+      });
+    await page.getByRole("tab", { name: "Entrances" }).click();
+    await expect(page.getByTestId("entrances-panel")).toBeVisible();
+    await auditPage(page);
+    if (process.env.DOOR_SHOTS !== undefined) {
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/owr-entrances-${width}.png`,
+      });
+      await page.getByTestId("entrances-panel").screenshot({
+        path: `${process.env.DOOR_SHOTS}/owr-entrances-panel-${width}.png`,
+      });
+    }
+  });
+}
