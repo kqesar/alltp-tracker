@@ -907,15 +907,6 @@ export function drWorld(
 ): DrWorld {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
-  const keys = worldKeys(
-    keyHoldingOf(all),
-    { drops: all.dropShuffle === true, pots: all.potKeys === true },
-    {
-      unrecorded: new Set(options.unrecorded),
-      wild: all.wildBigKeys === true,
-    },
-    all.dangerousKeyLogic === true,
-  );
   const version = Number(all.drVersion);
   const { doors } = options;
   const noted =
@@ -935,6 +926,18 @@ export function drWorld(
     const route = sanctuaryRoute(doors, dungeonOfRoom, lobbies);
     if (route !== undefined && !connections.has(route.name)) exits.push(route);
   }
+  const keys = worldKeys(
+    keyHoldingOf(all),
+    { drops: all.dropShuffle === true, pots: all.potKeys === true },
+    {
+      unrecorded: new Set(options.unrecorded),
+      wild: all.wildBigKeys === true,
+    },
+    all.dangerousKeyLogic === true,
+    dungeonOfRoom === undefined
+      ? undefined
+      : (drop) => dungeonOfRoom.get(drop.region),
+  );
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)
     for (const name of locationsIn(region, mode))

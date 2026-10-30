@@ -119,7 +119,10 @@ export interface DropShuffle {
 /** A dungeon's key drops, each with its fact, the key it holds. */
 export interface KeyDrop {
   readonly location: string;
+  /** The region of DR's world the drop is in. */
+  readonly region: string;
   readonly fact: string;
+  /** The dungeon whose key it holds: its room's (update_forced_keys). */
   readonly dungeon: string;
   readonly big: boolean;
   readonly pot: boolean;
@@ -138,6 +141,7 @@ export const KEY_DROPS: readonly KeyDrop[] = DR_LOCATIONS.filter(
     fact: dropKeyFact(l.name),
     location: l.name,
     pot: l.flag.memory === "pot",
+    region: l.region,
   };
 });
 
@@ -187,6 +191,9 @@ export interface WorldKeys {
  * @param dangerous - key_logic_algorithm `dangerous`: a door asks its worst
  *   case uncapped (eval_small_key_door_main, Rules.py:2399-2400), which
  *   partial logic caps at `small_key_num` (:2428-2430)
+ * @param dungeonOf - The dungeon whose key a forced drop holds, where a door
+ *   shuffle moved its room: update_forced_keys (DoorShuffle.py:1039-1050)
+ *   gives each its room's dungeon's key (its big key, the castle's drop)
  */
 export function worldKeys(
   holding: KeyHolding,
@@ -196,10 +203,14 @@ export function worldKeys(
     readonly unrecorded?: ReadonlySet<string>;
   } = { wild: true },
   dangerous = false,
+  dungeonOf?: (drop: KeyDrop) => string | undefined,
 ): WorldKeys {
   const forced = KEY_DROPS.filter(
     (d) => !(d.pot ? shuffled.pots : shuffled.drops),
-  );
+  ).map((d) => {
+    const dungeon = dungeonOf?.(d) ?? d.dungeon;
+    return dungeon === d.dungeon ? d : { ...d, dungeon };
+  });
   const codeOf = (dungeon: string) => {
     const code = DR_KEY_CODES[dungeon];
     if (code === undefined) throw new RangeError(`No dungeon ${dungeon}`);

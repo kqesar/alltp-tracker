@@ -1200,7 +1200,8 @@ a dashable one bombs or the boots, a trap shuts its way out but for
 pool of dungeons a room is the dungeon's whose portal its layout holds
 (`roomDungeons`: the rooms the noted links join to the lobby's, whichever
 way; `update_forced_keys`), so its key doors take that dungeon's keys, its
-big chest that big key, its drops hold its keys (a boss room never moves:
+big chest that big key, its forced drops hold its keys (the castle's big
+key drop its big key: `worldKeys` gives each its room's dungeon; a boss room never moves:
 DR gives each dungeon its own first, `dungeon_boss_sectors`,
 `DungeonGenerator.py:1320-1322`, so its boss, prize and restricted items
 stay its dungeon's), and in Standard its dark rooms are lit only in the castle's

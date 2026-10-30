@@ -570,6 +570,27 @@ describe("the Door Randomizer's world (door-world)", () => {
     ).toThrow(RangeError);
   });
 
+  it("gives a forced drop its room's dungeon's key, as a door shuffle moves it", () => {
+    // update_forced_keys (DoorShuffle.py:1039-1050): the castle's big key
+    // drop in a room of Eastern's layout holds Eastern's big key
+    const drop = "Hyrule Castle - Big Key Drop";
+    const moved = worldKeys(
+      "wild",
+      { drops: false, pots: false },
+      { wild: true },
+      false,
+      (d) => (d.location === drop ? "Eastern Palace" : undefined),
+    );
+    const fact = moved.forcedDrops.find((d) => d.location === drop)?.fact;
+    if (fact === undefined) throw new Error("no castle big key drop");
+    expect(moved.bigKeyRule("Eastern Palace")).toContain(fact);
+    expect(moved.bigKeyRule("Hyrule Castle")).not.toContain(fact);
+    // Left in its own dungeon without a shuffle
+    const own = worldKeys("wild", { drops: false, pots: false });
+    expect(own.bigKeyRule("Hyrule Castle")).toContain(fact);
+    expect(own.bigKeyRule("Eastern Palace")).not.toContain(fact);
+  });
+
   it("puts a boss's items behind its map and compass when restricted", () => {
     const held = { bigKeyP1: 1, bow: 1, heartContainer: 3, keyP1: 2, lamp: 1 };
     const boss = drLocationId("Eastern Palace - Boss");

@@ -23,7 +23,6 @@
 //   dungeon's key count; partitioned and crossed move it
 //   (shuffle_small_key_doors, :2139-2145), so its door asks the count the
 //   player noted (`keys`), `maybe` until then.
-import { DR_LOCATIONS } from "../door-rando/locations";
 import type { DrNotedDoors } from "./connections";
 import {
   DR_DOORS,
@@ -217,8 +216,7 @@ export function addShuffledDoorRules(
 ): void {
   const special = specialBigKeyDoors(mode);
   const doorNamed = new Map(DR_DOORS.map((d) => [d.name, d]));
-  const smallRule = (dungeon: string) =>
-    strictSafe(keys, doors, dungeon, dungeons);
+  const smallRule = (dungeon: string) => strictSafe(keys, doors, dungeon);
   for (const exit of exits) {
     const door = doorNamed.get(exit.name);
     const dungeon = dungeons.get(exit.from);
@@ -259,7 +257,6 @@ function strictSafe(
   keys: WorldKeys,
   doors: DrNotedDoors,
   dungeon: string,
-  dungeons: ReadonlyMap<string, string>,
 ): string {
   if (doors.settings.shuffle === "basic" || keys.holding === "universal")
     return keys.strictSafeRule(dungeon);
@@ -267,12 +264,9 @@ function strictSafe(
   if (total === undefined) return "maybe";
   if (total <= 0) return "true";
   const key = `key${DR_KEY_CODES[dungeon] ?? ""}`;
+  // Each forced drop holds its room's dungeon's key (worldKeys)
   const facts = keys.forcedDrops
-    .filter(
-      (d) =>
-        !d.big &&
-        dungeons.get(REGION_OF_DROP.get(d.location) ?? "") === dungeon,
-    )
+    .filter((d) => !d.big && d.dungeon === dungeon)
     .map((d) => d.fact);
   const sure = `count(${[key, ...facts].join(", ")}) >= ${total}`;
   const unsure =
@@ -284,11 +278,6 @@ function strictSafe(
         );
   return or(sure, unsure, "maybe");
 }
-
-/** The region of each of DR's own locations (key drops among them). */
-const REGION_OF_DROP: ReadonlyMap<string, string> = new Map(
-  DR_LOCATIONS.map((l) => [l.name, l.region] as const),
-);
 
 /**
  * The derived door settings rules.json reads, in a door-shuffled run:
