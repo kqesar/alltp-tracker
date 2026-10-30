@@ -503,6 +503,31 @@ export const doorCounterExtra = (
   );
 };
 
+/**
+ * Whether a DR run's world counts a dungeon's small keys held by its
+ * enemies or pots on its own: its vanilla key drops the run does not
+ * shuffle, which DR's world gains once their place is reached (the pack's
+ * `dropKey_` facts). The key cell then counts the keys from chests alone,
+ * as DR's HUD does (DungeonCollectedKeys, the base patch's stats.asm:
+ * 129-150), or a key marked would count twice.
+ */
+export const doorDropKeysCounted = (
+  dungeon: DungeonId,
+  settings: DoorRunSettings & { bossShuffle?: string },
+): boolean => {
+  if (!isDoorRun(settings)) return false;
+  const shuffled = new Set(
+    doorLocationsOf(settings).locations.map((location) => location.id),
+  );
+  return DR_LOCATIONS.some(
+    (location) =>
+      location.kind === "keyDrop" &&
+      location.key === "small" &&
+      location.dungeon === dungeon &&
+      !shuffled.has(location.id),
+  );
+};
+
 /** The small keys a dungeon's key drops add to its pool in a DR run. */
 export const doorKeysExtra = (
   dungeon: DungeonId,
