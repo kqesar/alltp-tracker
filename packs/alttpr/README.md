@@ -1251,7 +1251,10 @@ below accessible overworld), then `analyze_dungeon`.
 `key-analysis/noted.ts` (`notedDoorKeyLogic`) runs that analysis, the
 vanilla port's own (`analyzeDungeon` over a `keyWorld` given the noted
 layout: links as `dest`, kinds, traps, rooms' dungeons), on each dungeon
-whose inputs the notes all tell, and its key doors ask DR's rules as with
+whose inputs the notes all tell (each analysis kept by all it reads: the
+run's settings, its starts, each exit of its rooms with its link, kind
+and dest, so a note in one dungeon works that dungeon's out again alone,
+`doorWorld.performance.spec.ts` timing the rebuild), and its key doors ask DR's rules as with
 vanilla doors (`keys.doorRule`; a key door with no rule of it keeps the
 strict-safe one). Told means: intensity 1 or 2 (each portal on its own
 door, the destinations fixed by `link_doors_prep`, `:100-108`), coupled

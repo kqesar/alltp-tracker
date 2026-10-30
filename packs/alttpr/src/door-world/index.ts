@@ -117,6 +117,8 @@ export type {
 export { notedConnections, vanillaConnections } from "./connections";
 export type { DrData, DrMode } from "./data";
 export * from "./doors";
+// Test only: the timing spec forgets the analyses kept to time a rebuild
+export { forgetNotedKeyLogic } from "./key-analysis/noted";
 export { KEY_ITEMS } from "./keys";
 export {
   crossablePairsOf,

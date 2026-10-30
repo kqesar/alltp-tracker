@@ -22,6 +22,7 @@ import {
   KEY_ITEMS,
 } from "./index";
 import type { KeyLogic } from "./key-analysis/analysis";
+import { forgetNotedKeyLogic } from "./key-analysis/noted";
 import { ALTERNATIVE_CRYSTAL_DOORS, UGLY_SMALLS } from "./keys";
 import { OWR_DATA } from "./owr-data";
 
@@ -326,6 +327,34 @@ describe("DR's key analysis on a noted door shuffle", () => {
     const kinds: Record<string, DoorKindNote> = { ...notes.kinds };
     delete kinds[doorId("Hera Lobby Key Stairs")];
     expect(build({ kinds })?.has("Tower of Hera")).toBe(false);
+  });
+
+  it("works a dungeon's analysis out again only when its own layout's notes change", () => {
+    const s = shuffle({ shuffle: "crossed" });
+    const notes = vanillaLayout(s);
+    const build = (kinds: DoorNotes["kinds"]) =>
+      drWorld(settings("open"), {
+        data: DR_DATA,
+        doors: { notes: { ...notes, kinds }, settings: s },
+      }).doorKeyLogic ?? new Map();
+    forgetNotedKeyLogic();
+    const before = build(notes.kinds);
+    // Eastern's big key door noted plain: Eastern's analysis moves, no other
+    const after = build({
+      ...notes.kinds,
+      [doorId("Eastern Big Key NE")]: "normal",
+    });
+    expect(after.get("Eastern Palace")).not.toBe(before.get("Eastern Palace"));
+    expect(after.get("Eastern Palace")?.bkDoors.size).toBeLessThan(
+      before.get("Eastern Palace")?.bkDoors.size ?? 0,
+    );
+    for (const [dungeon, logic] of before)
+      if (dungeon !== "Eastern Palace")
+        expect(after.get(dungeon), dungeon).toBe(logic);
+    // Noted back: the analysis kept is the one first worked out
+    expect(build(notes.kinds).get("Eastern Palace")).toBe(
+      before.get("Eastern Palace"),
+    );
   });
 
   it("runs no analysis from intensity 3, with decoupled doors, shuffled entrances or the fork's world", () => {

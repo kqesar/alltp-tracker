@@ -27,6 +27,7 @@ import {
   kindShuffled,
   lobbyDoors,
 } from "../src/door-world/index";
+import { forgetNotedKeyLogic } from "../src/door-world/key-analysis/noted";
 import { keyDropsOf } from "../src/door-world/keys";
 import { solveFacts } from "../src/facts";
 import { type Medallion, medallionFacts } from "../src/medallions";
@@ -396,6 +397,40 @@ describe("DR's world on shuffled doors against real seeds", () => {
     // escape of the two Standard ones)
     expect(compared).toBe(76);
   });
+
+  it("answers the same with each dungeon's analysis kept as worked out afresh", () => {
+    for (const name of logs) {
+      const json = JSON.parse(read(name)) as Json;
+      const log = logOf(json);
+      const items = [
+        ...((log.playthrough["0"] as readonly string[]) ?? []),
+        ...Object.keys(log.playthrough)
+          .filter((k) => k !== "0")
+          .flatMap((k) =>
+            Object.values(log.playthrough[k] as Record<string, string>),
+          ),
+      ].filter((item) => item !== "Never in logic" && item !== "Triforce");
+      const half = items.slice(0, Math.floor(items.length / 2));
+      // Half the game's items, its keys among them: where key doors decide
+      const answers = (world: ReturnType<typeof worldOf>) => {
+        const solution = solveFacts(world, collect(half));
+        return [...world.locationIds.values()].map((id) =>
+          solution.location(id),
+        );
+      };
+      forgetNotedKeyLogic();
+      const fresh = worldOf(json, log);
+      const kept = worldOf(json, log);
+      // Kept: the very analyses, not worked out again
+      for (const [dungeon, logic] of fresh.doorKeyLogic ?? [])
+        expect(kept.doorKeyLogic?.get(dungeon), `${name}: ${dungeon}`).toBe(
+          logic,
+        );
+      expect(answers(kept), name).toEqual(answers(fresh));
+    }
+    // Two worlds of each of the twelve seeds: past the pack's default
+    // timeout under coverage, not hung
+  }, 120_000);
 
   for (const name of logs)
     it(`says yes to no location of a later sphere (${name})`, () => {

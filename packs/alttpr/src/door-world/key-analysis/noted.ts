@@ -53,6 +53,71 @@ const destinationsOf = (mode: DrMode): ReadonlySet<string> =>
       : ["Skull 2 West", "Turtle Rock Lazy Eyes", "Turtle Rock Eye Bridge"]),
   ]);
 
+/**
+ * The analyses run, by all that one dungeon's reads (the run's settings,
+ * its starts, each exit of its layout's rooms: its link, its kind, its
+ * dest); null where DR could not walk the layout. The last few hundred
+ * kept: a player's notes move one dungeon at a time.
+ */
+const ANALYSES = new Map<string, KeyLogic | null>();
+const ANALYSES_KEPT = 256;
+
+/** Keeps an analysis, the oldest let go past ANALYSES_KEPT. */
+function keep(key: string, analysed: KeyLogic | null): void {
+  ANALYSES.set(key, analysed);
+  for (const old of ANALYSES.keys()) {
+    if (ANALYSES.size <= ANALYSES_KEPT) break;
+    ANALYSES.delete(old);
+  }
+}
+
+/** Test only: forgets the analyses kept, of one dungeon or of all. */
+export function forgetNotedKeyLogic(dungeon?: string): void {
+  const prefix = dungeon === undefined ? "" : `[${JSON.stringify(dungeon)},`;
+  for (const key of [...ANALYSES.keys()])
+    if (key.startsWith(prefix)) ANALYSES.delete(key);
+}
+
+/**
+ * The inaccessible regions (find_inaccessible_regions), by data and mode:
+ * their walk crosses no door nor portal (DoorShuffle.py:3402-3437), so the
+ * door notes never move them, and the entrances are vanilla here.
+ */
+const INACCESSIBLE = new WeakMap<DrData, Map<DrMode, ReadonlySet<string>>>();
+
+function inaccessibleOf(
+  data: DrData,
+  mode: DrMode,
+  connections: DrConnections,
+): ReadonlySet<string> {
+  let byMode = INACCESSIBLE.get(data);
+  if (byMode === undefined) {
+    byMode = new Map();
+    INACCESSIBLE.set(data, byMode);
+  }
+  let found = byMode.get(mode);
+  if (found === undefined) {
+    found = keyWorld({
+      accessibility: "items",
+      bigKeyShuffle: false,
+      connections,
+      data,
+      dropShuffleNone: true,
+      forcedDrops: new Set(),
+      keyShuffle: "none",
+      // No starts worked out: a layout of none
+      layout: {
+        dests: new Map(),
+        dungeons: new Map(),
+        kindOf: () => ({ bigKey: false, blocked: false, smallKey: false }),
+      },
+      mode,
+    }).inaccessible;
+    byMode.set(mode, found);
+  }
+  return found;
+}
+
 /** What notedDoorKeyLogic reads of a door-shuffled run. */
 export interface NotedDoorAnalysis {
   readonly data: DrData;
@@ -126,41 +191,93 @@ export function notedDoorKeyLogic(
       : [];
   });
   if (told.length === 0) return found;
-  const world = keyWorld({
-    ...analysis,
-    connections,
-    data,
-    layout: { dests, dungeons, kindOf },
-    mode,
-  });
   const walk = accessibleEntrances(
     data,
     mode,
     connections,
     settings,
-    world.inaccessible,
+    inaccessibleOf(data, mode, connections),
   );
+  // Each dungeon's analysis reads its own layout, its starts and the run's
+  // settings alone: a note elsewhere leaves it as it was, kept (ANALYSES)
+  const run = JSON.stringify([
+    data.flavor,
+    mode,
+    { ...analysis, forcedDrops: [...analysis.forcedDrops].sort() },
+    settings,
+  ]);
+  const wanted: {
+    readonly dungeon: string;
+    readonly regions: (typeof told)[number]["regions"];
+    readonly starts: readonly string[];
+    readonly key: string;
+  }[] = [];
   for (const { dungeon, regions } of told) {
-    const starts = startsOf(input, world.regions, dungeon, walk);
+    const starts = startsOf(input, dungeon, walk);
     if (starts === undefined) continue;
-    const proposal = proposalOf(world.doors, regions, kindOf);
-    const units = proposal.length;
-    // Notes no generated layout has (a slip, or another run's settings)
-    // stop DR's own walk (find_counter's "Unable to find door
-    // permutation", KeyDoorShuffle.py): such a dungeon stays strict-safe
-    try {
-      const layout = keyLayout(world, dungeon, {
-        // calc_max_chests (KeyDoorShuffle.py:262-265): the vanilla dungeon's
-        // in basic, the key doors less the forced drops in a pool
-        maxChests: (drops) =>
-          settings.shuffle === "basic" ? undefined : Math.max(0, units - drops),
-        proposal,
-        starts,
-      });
-      found.set(dungeon, analyzeDungeon(layout));
-    } catch (error) {
-      if (!(error instanceof RangeError)) throw error;
+    const layout = regions.map((region) => [
+      region.name,
+      region.exits.map((exit) => {
+        const door = data.doorByName.get(exit);
+        const kind = (name: string | undefined) => {
+          if (name === undefined) return null;
+          const { bigKey, blocked, smallKey } = kindOf(name);
+          return `${Number(smallKey)}${Number(bigKey)}${Number(blocked)}`;
+        };
+        return [
+          exit,
+          connections.get(exit) ?? null,
+          door === undefined ? null : kind(exit),
+          dests.get(exit) ?? null,
+          kind(door?.controller),
+        ];
+      }),
+    ]);
+    const key = JSON.stringify([dungeon, run, starts, layout]);
+    wanted.push({ dungeon, key, regions, starts });
+  }
+  const missed = wanted.filter(({ key }) => !ANALYSES.has(key));
+  if (missed.length > 0) {
+    const world = keyWorld({
+      ...analysis,
+      connections,
+      data,
+      layout: { dests, dungeons, kindOf },
+      mode,
+    });
+    for (const { dungeon, key, regions, starts } of missed) {
+      const startRegions = starts.map((name) => world.regions.get(name));
+      const proposal = proposalOf(world.doors, regions, kindOf);
+      const units = proposal.length;
+      let analysed: KeyLogic | null = null;
+      // Notes no generated layout has (a slip, or another run's settings)
+      // stop DR's own walk (find_counter's "Unable to find door
+      // permutation", KeyDoorShuffle.py): such a dungeon stays strict-safe
+      try {
+        if (startRegions.every((r) => r !== undefined)) {
+          const layout = keyLayout(world, dungeon, {
+            // calc_max_chests (KeyDoorShuffle.py:262-265): the vanilla
+            // dungeon's in basic, the key doors less the forced drops in a
+            // pool
+            maxChests: (drops) =>
+              settings.shuffle === "basic"
+                ? undefined
+                : Math.max(0, units - drops),
+            proposal,
+            starts: startRegions as KRegion[],
+          });
+          analysed = analyzeDungeon(layout);
+        }
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+      }
+      keep(key, analysed);
     }
+  }
+  for (const { dungeon, key } of wanted) {
+    const analysed = ANALYSES.get(key);
+    if (analysed !== undefined && analysed !== null)
+      found.set(dungeon, analysed);
   }
   return found;
 }
@@ -304,14 +421,13 @@ function accessibleEntrances(
  * is in where the walk reaches it; a drop is out where the overworld above
  * it is inaccessible. Undefined where the notes do not tell: a drop of its
  * own outside its layout, a walk that may have missed a lobby, a drop whose
- * overworld parents disagree.
+ * overworld parents disagree. By region name.
  */
 function startsOf(
   { data, dungeons, mode }: NotedDoorAnalysis,
-  regions: ReadonlyMap<string, KRegion>,
   dungeon: string,
   walk: Walk,
-): KRegion[] | undefined {
+): string[] | undefined {
   const destinations = destinationsOf(mode);
   const overworld = (name: string) =>
     (walk.parents.get(name) ?? []).filter((parent) => {
@@ -349,13 +465,7 @@ function startsOf(
     if (shut.length > 0 && shut.length < above.length) return undefined;
     if (shut.length === 0) starts.push(drop);
   }
-  const found: KRegion[] = [];
-  for (const name of starts) {
-    const region = regions.get(name);
-    if (region === undefined) return undefined;
-    if (!found.includes(region)) found.push(region);
-  }
-  return found;
+  return [...new Set(starts)];
 }
 
 /**
