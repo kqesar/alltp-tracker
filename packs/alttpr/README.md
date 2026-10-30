@@ -1913,7 +1913,25 @@ save point, which its rules carry; both walks hold but the escape's first
 rooms, whose kill rules read Uncle's item (`maybe` with nothing held: the
 fork counts them in Uncle's own sphere), and the strict-safe castle
 behind shuffled entrances. The Crossed seed found the fork's bunny reading
-(above). The app's side
+(above). The door set (`test/owr-door-spoilers/`, `record-dr-spoilers
+owr-doors`) holds nine seeds of the fork's door shuffle, every door, lobby
+and kind noted from the log (`test/dr-doors.ts`, shared with DR's door
+contract): basic at intensities 1 and 2 (`nrVetY8I2`, `uVQOPwIvs` in
+Standard), partitioned at 3 and 2 (`kxnOoGUE9`, `CTRTq1Rhj` with Mixed),
+crossed at 2 and 3 (`0tUGDpve7`, `pSf43q0bF`), crossed in the Inverted
+world (`tIJDkPsK3`), with Crossed entrances (`61u7cpluY`) and with decoupled
+doors (`x1FHBuUpu`). The fork's door generator is DR 1.5.7's but where it
+reads screens for modes (`find_inaccessible_regions`, the portals'
+destinations, `DoorShuffle.py:103-110`, `:3404-3436`), the bosses' own
+`Spoils` rooms (its data) and its prize shuffle: what the door model reads
+(the pools, the doors each intensity shuffles, the lobbies, the kinds) is
+DR's, the rest feeds the key analysis, which door shuffle leaves
+strict-safe. Each link, lobby and kind is one the model offers, each room
+in the log's `@ Dungeon` (which found the drop-landing rooms, above), no
+location `yes` too early; what is not `yes` in time is a strict-safe key
+door, `yes` with every key held, but Standard's escape (`uVQOPwIvs`: its way
+back through a bombable door, whose bombs the fork's `can_farm_bombs` reads
+maybe before her delivery). The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

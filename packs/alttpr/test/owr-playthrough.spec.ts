@@ -13,7 +13,10 @@
 // the Inverted world, each entrance noted as its `Entrances` says) and of
 // test/owr-standard-spoilers/ (… owr-standard: the Standard world, its
 // overworld and entrances vanilla, with bonk drops, Mixed, or entrances
-// shuffled), in the world the app
+// shuffled) and of test/owr-door-spoilers/ (… owr-doors: its doors
+// shuffled, basic, partitioned and crossed, with Mixed, crossed entrances,
+// decoupled doors, Inverted and Standard, each door noted as its `Doors`,
+// `Lobbies` and `DoorTypes` say, test/dr-doors.ts), in the world the app
 // solves an OWR run in (drWorld on OWR_DATA, its bonk drops added as the
 // app adds them, `doorAddedOf`).
 //
@@ -33,8 +36,14 @@ import {
 } from "../src/door-rando/entrances";
 import rules from "../src/door-rando/owr/rules.json" with { type: "json" };
 import {
+  type DrNotedDoors,
   type DrNotedEntrances,
+  doorNotesFromSpoiler,
+  doorTargets,
   drWorld,
+  isShuffledDoor,
+  kindShuffled,
+  lobbyDoors,
   type OwrNotes,
   owrNotesFromSpoiler,
 } from "../src/door-world/index";
@@ -45,6 +54,16 @@ import {
   owrScreensOf,
 } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
+import { solveFacts } from "../src/facts";
+import { type Medallion, medallionFacts } from "../src/medallions";
+import {
+  doorLog,
+  doorNotesOf,
+  doorShuffleOf,
+  EVERY_KEY,
+  plain,
+  withoutDoors,
+} from "./dr-doors";
 import {
   early,
   flag,
@@ -55,7 +74,7 @@ import {
   settingsFor,
   walk,
 } from "./dr-playthrough";
-import { eventsOf } from "./dr-state";
+import { collect, eventsOf } from "./dr-state";
 
 /**
  * The sets, by directory: whether their edges are crossed and their
@@ -69,10 +88,12 @@ const SETS: Readonly<
       readonly crossed?: boolean;
       readonly mixed?: boolean;
       readonly entrances?: boolean;
+      readonly doors?: boolean;
     }
   >
 > = {
   "owr-crossed-spoilers": { crossed: true, entrances: false, mixed: false },
+  "owr-door-spoilers": { doors: true },
   "owr-entrance-spoilers": { entrances: true },
   "owr-mixed-spoilers": { entrances: false, mixed: true },
   "owr-spoilers": { crossed: false, entrances: false, mixed: false },
@@ -160,14 +181,110 @@ const ESCAPE =
   "Standard's escape: its kill rules read Uncle's item, nothing held in sphere 1";
 
 /**
+ * A door-shuffled log's key doors read strict-safe (shuffle.ts): the fork
+ * analyses the layout it generated (KeyDoorShuffle.py) and asks fewer keys
+ * than all of the dungeon's, which the notes cannot tell; each turns `yes`
+ * once every key is held, which the door tests assert.
+ */
+const DOOR_KEYS =
+  "its key doors strict-safe under door shuffle: every key of the room's dungeon";
+
+/**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
  * answer, each reviewed: every one turns `yes` once the dungeon's keys
  * (its chests' and its pots') are all held (checked 2026-10-30), but
  * Insanity's past an exit (DECOUPLED), which no key opens.
  */
 const REVIEWED: Readonly<
-  Record<string, { readonly why: string; readonly at: Record<string, string> }>
+  Record<
+    string,
+    {
+      readonly why: string;
+      readonly at: Record<string, string>;
+      /** Of `at`, what no key opens (Standard's escape), in a door log. */
+      readonly notKeys?: readonly string[];
+    }
+  >
 > = {
+  "owr-door-spoilers/avianart-0tUGDpve7.json": {
+    at: {
+      "4:Ice Palace - Prize": "maybe",
+      "4:Tower of Hera - Basement Cage": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-61u7cpluY.json": {
+    at: {
+      "3:Desert Palace - Big Key Chest": "maybe",
+      "4:Misery Mire - Compass Chest": "maybe",
+      "4:Thieves' Town - Big Chest": "maybe",
+      "4:Tower of Hera - Prize": "maybe",
+      "5:Agahnim 2": "maybe",
+      "5:Swamp Palace - Prize": "maybe",
+      "6:Ice Palace - Prize": "maybe",
+      "6:Turtle Rock - Compass Chest": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-CTRTq1Rhj.json": {
+    at: {
+      "3:Desert Palace - Map Chest": "maybe",
+      "4:Agahnim 1": "maybe",
+      "11:Ice Palace - Prize": "maybe",
+      "14:Turtle Rock - Prize": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-kxnOoGUE9.json": {
+    at: {
+      "4:Misery Mire - Main Lobby": "maybe",
+      "8:Misery Mire - Prize": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-nrVetY8I2.json": {
+    at: {
+      "2:Sewers - Secret Room - Left": "maybe",
+      "4:Agahnim 1": "maybe",
+      "5:Skull Woods - Prize": "maybe",
+      "7:Ice Palace - Prize": "maybe",
+      "9:Swamp Drain": "maybe",
+      "10:Trench 1 Switch": "maybe",
+      "11:Swamp Palace - Prize": "maybe",
+      "12:Agahnim 2": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-pSf43q0bF.json": {
+    at: {
+      "8:Trench 1 Switch": "maybe",
+      "9:Attic Cracked Floor": "maybe",
+      "9:Ice Palace - Prize": "maybe",
+      "12:Agahnim 2": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-tIJDkPsK3.json": {
+    at: {
+      "7:Palace of Darkness - Prize": "maybe",
+      "8:Desert Ledge": "maybe",
+      "9:Ice Palace - Prize": "maybe",
+      "11:Agahnim 2": "maybe",
+    },
+    why: DOOR_KEYS,
+  },
+  "owr-door-spoilers/avianart-uVQOPwIvs.json": {
+    at: {
+      "1:Zelda Pickup": "maybe",
+      "2:Zelda Drop Off": "maybe",
+      "5:Skull Woods - Prize": "maybe",
+      "6:Swamp Palace - Prize": "maybe",
+      "7:Ice Palace - Prize": "maybe",
+      "8:Turtle Rock - Prize": "maybe",
+    },
+    notKeys: ["1:Zelda Pickup", "2:Zelda Drop Off"],
+    why: `${ESCAPE}; her way back runs through a bombable door, whose bombs the fork's can_farm_bombs reads maybe before her delivery; ${DOOR_KEYS}`,
+  },
   "owr-entrance-spoilers/avianart-1IAKwFudE.json": {
     at: {
       "5:Skull Woods - Prize": "maybe",
@@ -336,6 +453,10 @@ const FARMS: Readonly<Record<string, readonly string[]>> = {
   "owr-crossed-spoilers/avianart-o4mamwuKZ.json": [
     "1:South Pass Area Crab Drop",
   ],
+  "owr-door-spoilers/avianart-uVQOPwIvs.json": [
+    "3:Lost Woods East Area Tree Pull",
+  ],
+  "owr-door-spoilers/avianart-x1FHBuUpu.json": ["1:South Pass Area Crab Drop"],
   "owr-entrance-spoilers/avianart-DLSrm8B0f.json": [
     "1:South Pass Area Crab Drop",
   ],
@@ -426,16 +547,24 @@ function entranceNotesOf(log: Log): DrNotedEntrances {
   return { noted, pool, shuffle: shuffleOf(log) };
 }
 
+/** Whether a log's doors are shuffled: its set's. */
+const doorLogOf = (path: string): boolean => setOf(path).doors === true;
+
 /** A log, its settings those the fork's world holds, and its notes. */
 function logOf(name: string): {
   log: Log;
   notes: OwrNotes;
   farms: readonly string[];
   entrances?: DrNotedEntrances;
+  doors?: DrNotedDoors;
 } {
   const json = JSON.parse(read(name)) as Json;
   const { Maps: maps, Overworld: edges, Whirlpools: pools, ...rest } = json;
-  const { farms, log } = withoutPrizeFarms(jsonLog(rest));
+  const doors = doorLogOf(name);
+  const read0 = jsonLog(withoutDoors(rest));
+  const { farms, log } = withoutPrizeFarms(
+    doors ? doorLog(read0, OWR_DATA) : read0,
+  );
   const { meta } = log;
   const crossed = crossedLog(name);
   const set = setOf(name);
@@ -464,7 +593,7 @@ function logOf(name: string): {
     flag(meta.shuffle_followers),
     flag(meta.bombbag),
   ]).toEqual([
-    "vanilla",
+    doors ? meta.door_shuffle : "vanilla",
     shuffledLog(name),
     "noglitches",
     "vanilla",
@@ -479,13 +608,25 @@ function logOf(name: string): {
     null,
   ]);
   expect((meta.versions as Record<string, string>).Overworld).toBe("0.8.0.2-u");
-  return {
+  if (doors) expect(meta.door_shuffle).not.toBe("vanilla");
+  const read1 = {
     farms,
     log,
     notes: owrNotesFromSpoiler(
       json as Parameters<typeof owrNotesFromSpoiler>[0],
     ),
     ...(shuffledLog(name) ? { entrances: entranceNotesOf(log) } : {}),
+  };
+  if (!doors) return read1;
+  return {
+    ...read1,
+    doors: doorNotesOf(
+      json,
+      meta,
+      OWR_DATA,
+      (notes, settings) =>
+        worldOf({ ...read1, doors: { notes, settings } }, {}).roomDungeons,
+    ),
   };
 }
 
@@ -498,10 +639,12 @@ const worldOf = (
     log,
     notes,
     entrances,
+    doors,
   }: {
     readonly log: Log;
     readonly notes: OwrNotes;
     readonly entrances?: DrNotedEntrances;
+    readonly doors?: DrNotedDoors;
   },
   options: { readonly sweepEvents?: boolean },
 ) => {
@@ -521,6 +664,7 @@ const worldOf = (
       data: OWR_DATA,
       overworld: notes,
       ...(entrances === undefined ? {} : { entrances }),
+      ...(doors === undefined ? {} : { doors }),
       ...(bonks
         ? {
             dropsAndPots: BONK_DROPS.map(({ name, region }) => ({
@@ -537,7 +681,7 @@ const worldOf = (
 describe("the Overworld Randomizer's world against its own seeds' playthroughs", () => {
   const logs = LOGS;
 
-  it("reads Open, Inverted and Standard seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped, entrances shuffled", () => {
+  it("reads Open, Inverted and Standard seeds, doors shuffled, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped, entrances shuffled", () => {
     const seen = logs.map((name) => {
       const { meta } = logOf(name).log;
       return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)} ${meta.shuffle} ${meta.keyshuffle}`;
@@ -546,11 +690,13 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       "inverted false false vanilla none false crossed none",
       "inverted false false vanilla none false lite none",
       "inverted false false vanilla none false vanilla none",
+      "inverted false false vanilla none false vanilla none",
       "inverted false false vanilla none true vanilla none",
       "inverted false true balanced none false vanilla none",
       "inverted true false vanilla none false vanilla none",
       "open false false vanilla grouped false vanilla none",
       "open false false vanilla grouped true vanilla none",
+      "open false false vanilla none false crossed none",
       "open false false vanilla none false crossed none",
       "open false false vanilla none false district none",
       "open false false vanilla none false dungeonsfull none",
@@ -564,8 +710,14 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       "open false false vanilla none false swapped none",
       "open false false vanilla none false swapped wild",
       "open false false vanilla none false vanilla none",
+      "open false false vanilla none false vanilla none",
+      "open false false vanilla none false vanilla none",
+      "open false false vanilla none false vanilla none",
+      "open false false vanilla none false vanilla none",
+      "open false false vanilla none false vanilla none",
       "open false false vanilla none true crossed none",
       "open false false vanilla none true district none",
+      "open false false vanilla none true vanilla none",
       "open false false vanilla none true vanilla none",
       "open false false vanilla unrestricted false crossed none",
       "open false false vanilla unrestricted false vanilla none",
@@ -576,6 +728,7 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       "standard false false vanilla none false dungeonssimple none",
       "standard false false vanilla none false lite none",
       "standard false false vanilla none false vanilla none",
+      "standard false false vanilla none false vanilla none",
       "standard false false vanilla none true vanilla none",
       "standard true false vanilla none false vanilla none",
     ]);
@@ -583,7 +736,7 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
 
   it("offers each entrance a shuffled seed moved, and its target; the rest stand", () => {
     const shuffled = logs.filter(shuffledLog);
-    expect(shuffled).toHaveLength(20);
+    expect(shuffled).toHaveLength(21);
     const maps = vanillaEntrances(false);
     for (const name of shuffled) {
       const { log, notes, entrances } = logOf(name);
@@ -734,5 +887,100 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       expect(
         early(read.log, worldOf(read, { sweepEvents: false }), EVENTS),
       ).toEqual([]);
+    });
+
+  const doorLogs = logs.filter(doorLogOf);
+
+  for (const name of doorLogs)
+    it(`offers each link, lobby and kind a door log made (${name})`, () => {
+      const json = JSON.parse(read(name)) as Json;
+      const settings = doorShuffleOf(json.meta as Log["meta"]);
+      const doors = json.Doors as readonly { entrance: string; exit: string }[];
+      expect(doors.length).toBeGreaterThan(150);
+      for (const { entrance, exit } of doors) {
+        const a = OWR_DATA.doorByName.get(entrance);
+        const b = OWR_DATA.doorByName.get(exit);
+        if (a === undefined || b === undefined) throw new Error(entrance);
+        expect(isShuffledDoor(a, settings, OWR_DATA), entrance).toBe(true);
+        expect(
+          doorTargets(a, settings, OWR_DATA).map((d) => d.name),
+          `${entrance} → ${exit}`,
+        ).toContain(exit);
+      }
+      for (const { door_name, lobby_name } of (json.Lobbies ?? []) as {
+        door_name: string;
+        lobby_name: string;
+      }[])
+        expect(
+          lobbyDoors(lobby_name, settings.shuffle, OWR_DATA).map((d) => d.name),
+        ).toContain(door_name);
+      const notes = doorNotesFromSpoiler(json, settings, OWR_DATA);
+      for (const [id, kind] of Object.entries(notes.kinds ?? {}))
+        if (kind !== "normal")
+          expect(
+            [...OWR_DATA.doorByName.values()].some(
+              (d) => kindShuffled(d, settings) && notes.kinds?.[id] === kind,
+            ),
+          ).toBe(true);
+    });
+
+  for (const name of doorLogs)
+    it(`puts each room in the dungeon a door log does (${name})`, () => {
+      const json = JSON.parse(read(name)) as Json;
+      const log = jsonLog(withoutDoors(json));
+      const world = worldOf(logOf(name), {});
+      const regionOf = new Map(
+        OWR_DATA.regions.flatMap((r) =>
+          r.locations.map((l) => [l, r.name] as const),
+        ),
+      );
+      const wrong: string[] = [];
+      let checked = 0;
+      for (const at of Object.keys(log.Locations)) {
+        const tagged = / @ ([^@]+)$/.exec(at);
+        const region = regionOf.get(plain(at));
+        if (tagged === null || region === undefined) continue;
+        checked++;
+        const found = world.roomDungeons?.get(region);
+        if (found !== tagged[1]) wrong.push(`${at}: ${found}`);
+      }
+      expect(wrong).toEqual([]);
+      if (log.meta.door_shuffle !== "basic")
+        expect(checked).toBeGreaterThan(50);
+    });
+
+  for (const name of doorLogs)
+    it(`turns each door log's key door yes once every key is held (${name})`, () => {
+      const read = logOf(name);
+      const { log } = read;
+      const world = worldOf(read, {});
+      const reviewed = REVIEWED[name];
+      for (const at of Object.keys(reviewed?.at ?? {})) {
+        if (reviewed?.notKeys?.includes(at)) continue;
+        const sphere = Number(at.slice(0, at.indexOf(":")));
+        const location = at.slice(at.indexOf(":") + 1);
+        const items = [
+          ...((log.playthrough["0"] as readonly string[]) ?? []),
+          ...Array.from({ length: sphere - 1 }, (_, i) =>
+            Object.values(log.playthrough[i + 1] as Record<string, string>),
+          ).flat(),
+          ...EVERY_KEY,
+        ].filter((item) => item !== "Never in logic");
+        const state = {
+          ...collect(items, EVENTS),
+          ...medallionFacts({
+            mire: String(log.Special["Misery Mire"]).toLowerCase() as Medallion,
+            turtleRock: String(
+              log.Special["Turtle Rock"],
+            ).toLowerCase() as Medallion,
+          }),
+        };
+        expect(
+          solveFacts(world, state).location(
+            world.locationIds.get(location) ?? "",
+          ),
+          at,
+        ).toBe("yes");
+      }
     });
 });

@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed|owr-entrances|owr-standard]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed|owr-entrances|owr-standard|owr-doors]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -95,6 +95,10 @@ const OUT_OWR_ENTRANCES = join(
 const OUT_OWR_STANDARD = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/owr-standard-spoilers",
+);
+const OUT_OWR_DOORS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-door-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -282,6 +286,34 @@ export const OWR_STANDARD_SEEDS = [
   "mGEeueUjZ",
   "0pr3QtXLU",
   "CK14WlYnG",
+];
+
+/**
+ * The door shuffle set (test/owr-door-spoilers/): avianart.games seeds of
+ * OWR 0.8.0.2 as OWR_SEEDS', their doors shuffled, generated 2026-10-30
+ * (`[{"args":{"branch":"OWR","worldstate":"open","door_shuffle":"basic",
+ * "intensity":2,"spoiler":"full"}}]`, each its `door_shuffle` and
+ * `intensity` named, Open but where said).
+ */
+export const OWR_DOOR_SEEDS = [
+  // basic, intensity 2
+  "nrVetY8I2",
+  // partitioned, intensity 3
+  "kxnOoGUE9",
+  // crossed, intensity 2
+  "0tUGDpve7",
+  // crossed, intensity 3
+  "pSf43q0bF",
+  // crossed, intensity 2, Inverted (`"worldstate":"inverted"`)
+  "tIJDkPsK3",
+  // partitioned, intensity 2, Mixed (`"mixed":true`)
+  "CTRTq1Rhj",
+  // crossed, intensity 2, entrances Crossed (`"entranceshuffle":"crossed"`)
+  "61u7cpluY",
+  // basic, intensity 1, Standard (`"worldstate":"standard"`)
+  "uVQOPwIvs",
+  // crossed, intensity 2, decoupled doors (`"decoupledoors":true`)
+  "x1FHBuUpu",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
@@ -512,6 +544,15 @@ async function main() {
       OUT_OWR_STANDARD,
       await recordAvianart(OWR_STANDARD_SEEDS, OUT_OWR_STANDARD, OWR_KEYS),
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-standard): avianart.games seeds' JSON spoilers of the Overworld Randomizer in its Standard world. Record again, never edit.",
+    );
+  if (only === undefined || only === "owr-doors")
+    writeIndex(
+      OUT_OWR_DOORS,
+      await recordAvianart(OWR_DOOR_SEEDS, OUT_OWR_DOORS, [
+        ...OWR_KEYS,
+        ...DOOR_KEYS,
+      ]),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-doors): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its doors shuffled. Record again, never edit.",
     );
   if (only === undefined || only === "doors")
     writeIndex(
