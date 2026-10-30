@@ -382,6 +382,10 @@ test("an OWR run's whirlpools and flute spots are noted by hand, from the keyboa
   page,
 }) => {
   await openOverworldRun(page);
+  // The note over the map says where the overworld waits
+  await expect(page.getByTestId("logic-note-door")).toContainText(
+    "Its overworld is shuffled (whirlpools and flute spots): the logic follows what you note in the Overworld tab",
+  );
   const pool = page.getByRole("combobox", { name: "C Whirlpool: leads to" });
   await pool.focus();
   await pool.selectOption("Zora Whirlpool");

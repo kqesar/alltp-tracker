@@ -41,6 +41,7 @@ import {
 } from "@alltp/pack-alttpr";
 import type { OwrNotes } from "@alltp/pack-alttpr/door-world";
 import type { OverworldNotes } from "@/games/alttpr/stores/persistence";
+import { listOf } from "@/utils/listOf";
 
 /** Which of DR's generators wrote the seed: DR itself, or its Overworld fork. */
 export type Randomizer = "dr" | "owr";
@@ -870,6 +871,16 @@ export const FOLLOWERS_NOT_KNOWN =
 export const doorNotes = (settings: DoorRunSettings): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
+  const overworld = overworldShufflesOf(settings);
+  const moved =
+    overworld === undefined
+      ? []
+      : [
+          ...(overworld.whirlpools ? ["whirlpools"] : []),
+          ...(overworld.flute ? ["flute spots"] : []),
+          ...(overworld.crossings ? ["edges crossed"] : []),
+          ...(overworld.flips ? ["screens flipped by Mixed"] : []),
+        ];
   return [
     door.randomizer === "owr"
       ? `Overworld Randomizer seed: the logic is the fork's own (${OVERWORLD_RANDOMIZER_VERSION}, on DR 1.5.7).`
@@ -878,6 +889,12 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
       ? []
       : [
           "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
+        ]),
+    // Nothing on the map says why an unnoted overworld reads out of logic
+    ...(moved.length === 0
+      ? []
+      : [
+          `Its overworld is shuffled (${listOf(moved)}): the logic follows what you note in the Overworld tab, and what is not noted there leads nowhere.`,
         ]),
     ...(door.keyLogic === "dangerous"
       ? [

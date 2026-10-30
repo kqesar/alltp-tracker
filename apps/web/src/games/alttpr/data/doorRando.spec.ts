@@ -266,6 +266,23 @@ describe("a Door Randomizer run's logic", () => {
     expect(owrNotesOf(mixed, { flips: { "44": true } })).toEqual({
       flips: { "44": true },
     });
+    // The map says where the overworld waits for its notes
+    expect(doorNotes(mixed)[1]).toBe(
+      "Its overworld is shuffled (screens flipped by Mixed): the logic follows what you note in the Overworld tab, and what is not noted there leads nowhere.",
+    );
+    expect(
+      doorNotes(
+        with_(DR, {
+          ...OWR,
+          owCrossed: "grouped",
+          owFluteShuffle: "random",
+          owWhirlpool: true,
+        }),
+      )[1],
+    ).toBe(
+      "Its overworld is shuffled (whirlpools, flute spots and edges crossed): the logic follows what you note in the Overworld tab, and what is not noted there leads nowhere.",
+    );
+    expect(doorNotes(with_(DR, OWR))).toHaveLength(1);
     expect(overworldShufflesOf(mixed)).toEqual({
       crossings: false,
       flips: true,
