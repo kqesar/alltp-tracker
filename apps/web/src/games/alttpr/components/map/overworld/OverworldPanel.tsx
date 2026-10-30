@@ -3,7 +3,7 @@ import {
   OWR_WHIRLPOOLS,
   overworldShufflesOf,
 } from "@/games/alttpr/data/doorRando";
-import { FLUTE_SCREENS } from "@/games/alttpr/data/owrScreens";
+import { FLUTE_SCREENS, fluteScreenName } from "@/games/alttpr/data/owrScreens";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
 /** The flute's eight spots (shuffle_flute_spots, FluteShuffle.py:54). */
@@ -116,7 +116,7 @@ const OverworldPanel = () => {
           <ul className="entrances__list overworld__screens">
             {FLUTE_SCREENS.map(([screen, stands, flips]) => {
               const on = flute.includes(screen);
-              const name = flipped ? flips : stands;
+              const name = fluteScreenName(flipped ? flips : stands);
               const id = screen.toString(16).padStart(2, "0");
               return (
                 <li className="check-row" key={screen}>

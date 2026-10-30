@@ -117,5 +117,19 @@ describe("the Overworld tab", () => {
     expect(screen.getByTestId("flute-screen-18")).toHaveAccessibleName(
       "Village of Outcasts",
     );
+    expect(screen.getByTestId("flute-screen-28")).toHaveAccessibleName(
+      "Digging Game",
+    );
+  });
+
+  it("names the flute screens as the tracker names places", () => {
+    run({ owFluteShuffle: "random" });
+    render(<OverworldPanel />);
+    expect(screen.getByTestId("flute-screen-2c")).toHaveAccessibleName(
+      "Link's House",
+    );
+    expect(screen.getByTestId("flute-screen-07")).toHaveAccessibleName(
+      "Turtle Rock Pegs",
+    );
   });
 });

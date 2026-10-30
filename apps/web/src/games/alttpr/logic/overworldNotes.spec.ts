@@ -5,7 +5,12 @@ import {
   OWR_FLUTE_SCREENS,
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
-import { FLUTE_SCREENS } from "@/games/alttpr/data/owrScreens";
+import {
+  FLUTE_REGIONS,
+  FLUTE_SCREENS,
+  fluteScreenName,
+  RENAMED_REGIONS,
+} from "@/games/alttpr/data/owrScreens";
 import { withOverworldNotes } from "@/games/alttpr/logic/overworldNotes";
 import { isOverworldNotes } from "@/games/alttpr/stores/persistence";
 
@@ -79,5 +84,19 @@ describe("an OWR run's overworld notes", () => {
           region.replace(/ Area$/, ""),
         ),
       );
+  });
+
+  it("gives each flute screen a player's name, one per screen in each world", () => {
+    // A name for a region no screen names would be stale
+    expect(RENAMED_REGIONS.filter((r) => !FLUTE_REGIONS.includes(r))).toEqual(
+      [],
+    );
+    expect(fluteScreenName("Links House")).toBe("Link's House");
+    expect(fluteScreenName("Dig Game")).toBe("Digging Game");
+    expect(fluteScreenName("Death Mountain TR Pegs")).toBe("Turtle Rock Pegs");
+    for (const side of [1, 2] as const) {
+      const shown = FLUTE_SCREENS.map((entry) => fluteScreenName(entry[side]));
+      expect(new Set(shown).size, String(side)).toBe(shown.length);
+    }
   });
 });

@@ -1,8 +1,10 @@
 // The screens an Overworld Randomizer seed's flute spots may stand on, by
 // the name of the region the bird lands in: flute_data's (FluteShuffle.py:
 // 683-726) light world region, then its region once the screen is flipped
-// (an Inverted world's), each less its " Area". Loaded with the Overworld
-// tab only; its spec holds it to the pack's data and to OWR_FLUTE_SCREENS.
+// (an Inverted world's), each less its " Area", which the player reads by
+// the names the rest of the tracker gives places (`fluteScreenName`).
+// Loaded with the Overworld tab only; its spec holds it to the pack's data
+// and to OWR_FLUTE_SCREENS.
 
 /** Each flute screen: its id, its name as it stands, its name flipped. */
 export const FLUTE_SCREENS: readonly (readonly [number, string, string])[] = [
@@ -47,3 +49,58 @@ export const FLUTE_SCREENS: readonly (readonly [number, string, string])[] = [
   [0x3c, "South Pass", "Dark South Pass"],
   [0x3f, "Octoballoon", "Bomber Corner"],
 ];
+
+/**
+ * The name a player knows each flute screen's region by, where it is not
+ * the fork's: the tracker's own place names (Link's House, the Digging
+ * Game), the side of a screen in brackets.
+ */
+const NAMES: Readonly<Record<string, string>> = {
+  "Broken Bridge Northeast": "Broken Bridge (Northeast)",
+  "C Whirlpool Outer": "C Whirlpool (Outer)",
+  "Catfish Approach Ledge": "Catfish Approach (Ledge)",
+  "Central Bonk Rocks": "Bonk Rocks",
+  "Dark C Whirlpool Outer": "Dark C Whirlpool (Outer)",
+  "Dark Fortune": "Dark Fortune Teller",
+  "Dark Lumberjack": "Dark Lumberjacks",
+  "Dark Witch": "Dark Witch's Hut",
+  "Death Mountain TR Pegs": "Turtle Rock Pegs",
+  "Dig Game": "Digging Game",
+  "East Dark Death Mountain (Bottom)": "East Dark Death Mountain (Lower)",
+  "East Death Mountain (Bottom)": "East Death Mountain (Lower)",
+  "Hammer Bridge South": "Hammer Bridge (South)",
+  "Ice Cave": "Ice Rod Cave",
+  "Ice Lake Southeast Ledge": "Ice Lake (Southeast Ledge)",
+  "Kakariko Fortune": "Kakariko Fortune Teller",
+  "Lake Hylia South Shore": "Lake Hylia (South Shore)",
+  "Links House": "Link's House",
+  "Lost Woods East": "Lost Woods (East)",
+  "Lost Woods Pass West": "Lost Woods Pass (West)",
+  Lumberjack: "Lumberjacks",
+  "Outcast Pond": "Village of Outcasts Pond",
+  "Qirn Jump East Bank": "Qirn Jump (East Bank)",
+  "River Bend East Bank": "River Bend (East Bank)",
+  "Shield Shop Fence": "Shield Shop (Fence)",
+  "Skull Woods Forest": "Skull Woods (Forest)",
+  "Skull Woods Pass West": "Skull Woods Pass (West)",
+  "Stone Bridge South": "Stone Bridge (South)",
+  "West Dark Death Mountain (Top)": "West Dark Death Mountain (Upper)",
+  "West Death Mountain (Bottom)": "West Death Mountain (Lower)",
+  "Zora Approach Ledge": "Zora's Approach (Ledge)",
+  "Zora Waterfall": "Zora's Waterfall",
+};
+
+/** Every region a flute screen names, by the fork's name. */
+export const FLUTE_REGIONS: readonly string[] = FLUTE_SCREENS.flatMap(
+  ([, stands, flipped]) => [stands, flipped],
+);
+
+/** The regions renamed for the player: none but a flute screen's. */
+export const RENAMED_REGIONS: readonly string[] = Object.keys(NAMES);
+
+/**
+ * A flute screen's name for the player.
+ * @param region - The fork's region the bird lands in (less " Area")
+ */
+export const fluteScreenName = (region: string): string =>
+  NAMES[region] ?? region;
