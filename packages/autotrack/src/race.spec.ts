@@ -28,6 +28,8 @@ describe("ALTTPR_RACE_PROFILE", () => {
       .filter(([, c]) => !c.permitted)
       .map(([name]) => name);
     expect(forbidden.sort()).toEqual([
+      // The Overworld Randomizer's bonk drops, which no race reads
+      "bonk-drops",
       "entrances",
       "hud",
       "navigation",

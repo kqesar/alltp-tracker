@@ -980,7 +980,11 @@ const EDGE_NAMES = {
  *   flute_data: the rest of a row is layout);
  * - `bonk`: the bonk drops (Regions.py bonk_prize_table): the region, the
  *   overworld flag (screen, mask: MultiClient.py:978-987 reads
- *   SAVEDATA_START + 0x280 + screen) and whether Agahnim must fall first.
+ *   SAVEDATA_START + 0x280 + screen), whether Agahnim must fall first, and
+ *   where the fork's own world map draws it (`map`, the 4096-pixel world's
+ *   x and y: ow_loc_prize_table, OverworldShuffle.py, else its screen's
+ *   middle as Rom.py's map code falls back to it; none for a drop in a
+ *   cave, which no screen holds).
  * @param {(file: string) => string} read
  */
 function readOverworld(read) {
@@ -1031,6 +1035,38 @@ function readOverworld(read) {
   const regionsSource = read(REGIONS);
   const bonk = assigned(regionsSource, "bonk_prize_table", REGIONS);
   const bonkStart = regionsSource.indexOf("\nbonk_prize_table = {");
+  const overworldSource = read(OVERWORLD);
+  const prizes = assigned(overworldSource, "ow_loc_prize_table", OVERWORLD);
+  const prizesStart = overworldSource.indexOf("\now_loc_prize_table = {");
+  /**
+   * Where the fork's map draws a location of a screen's region: its row of
+   * ow_loc_prize_table, else the screen's middle, a large screen's at its
+   * centre (Rom.py's map code, :1494-1501).
+   * @param {string} name @param {number | undefined} screen
+   */
+  const mapOf = (name, screen) => {
+    const row = /** @type {Record<string, unknown>} */ (prizes.value)[name];
+    if (Array.isArray(row)) {
+      const [x, y] = row;
+      if (typeof x !== "number" || typeof y !== "number")
+        fail(`${OVERWORLD}:${prizes.line}: ${name}'s place`);
+      const at = overworldSource.indexOf(`'${name}'`, prizesStart);
+      return {
+        source: `${OVERWORLD}:${overworldSource.slice(0, at).split("\n").length}`,
+        x,
+        y,
+      };
+    }
+    if (screen === undefined) return undefined;
+    const tile = screen % 0x40;
+    const large = [0x00, 0x03, 0x05, 0x18, 0x1b, 0x1e, 0x30, 0x35];
+    const shift = large.includes(tile) ? 0x100 : 0;
+    return {
+      source: "Rom.py:1494-1501",
+      x: 0x200 * (tile % 0x08) + 0x100 + shift,
+      y: 0x200 * Math.floor(tile / 0x08) + 0x100 + shift,
+    };
+  };
   return {
     bonk: Object.entries(
       /** @type {Record<string, unknown[]>} */ (bonk.value),
@@ -1045,10 +1081,12 @@ function readOverworld(read) {
         typeof region !== "string"
       )
         fail(`${where}: a bonk drop's row`);
+      const map = mapOf(name, typeof screen === "number" ? screen : undefined);
       return {
         aga,
         // MultiClient.py:980-985: only a drop of a screen's region is read
         ...(typeof screen === "number" ? { flag: { mask, screen } } : {}),
+        ...(map === undefined ? {} : { map }),
         name,
         region,
         source: where,
@@ -1074,6 +1112,7 @@ function readOverworld(read) {
     source: {
       bonk: `${REGIONS}:${bonk.line}`,
       flute: `${FLUTE}:${flute.line}`,
+      map: `${OVERWORLD}:${prizes.line}`,
       parallel: `${OW_EDGES}:${parallel.line}`,
       tiles: `${OW_EDGES}:${tiles.line}`,
     },

@@ -1,6 +1,8 @@
 // The Door Randomizer's locations checked: its key drops, pots, enemy drops
 // and shop items, read from the tables its base patch keeps beside the save
-// (memory.ts: `door-pots`, `door-drops`, `door-purchases`). Only the
+// (memory.ts: `door-pots`, `door-drops`, `door-purchases`), and the
+// Overworld Randomizer's bonk drops, from the screens' bytes of the save
+// (`owr-bonks`, outside races only). Only the
 // locations the run's settings make are decoded (door-rando/locations.ts,
 // `drLocationsOf`): v2.0 counts a pot, an enemy drop or a shop item as a
 // location "only ... in modes where they are shuffled", and a bit of such a
@@ -19,12 +21,14 @@ import {
   DOOR_SHOPS_SWITCH,
   MEMORY_RANGE,
   type MemoryRangeId,
+  OWR_BONKS_SWITCH,
 } from "./memory";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
 /** The memory range each kind of flag is read from, and its switch. */
 export const DOOR_FLAG_RANGES = {
   drop: { range: "door-drops", switch: DOOR_DROPS_SWITCH },
+  overworld: { range: "owr-bonks", switch: OWR_BONKS_SWITCH },
   pot: { range: "door-pots", switch: DOOR_POTS_SWITCH },
   purchase: { range: "door-purchases", switch: DOOR_SHOPS_SWITCH },
 } as const satisfies Record<

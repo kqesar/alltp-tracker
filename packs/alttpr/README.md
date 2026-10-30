@@ -509,6 +509,7 @@ entrance, is never read, not even to be discarded):
 | whether the flute was activated | an event at a place in Inverted, not named: the flute is read found, its activation an unknown count (maybe at most) |
 | the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the bomb and arrow capacities, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
 | Link's position, room, dungeon, entrances | the race admins' clarification of June 2026 (below) and "Region endpoints may not be auto-tracked" |
+| the Overworld Randomizer's bonk drops (`owr-bonks`, category `bonk-drops`) | v2.0 names no bonk drop: "Anything not covered in this document is, by default, considered not permitted", and the owner keeps them out of races |
 
 A dungeon location checked says Link cleared it, as a cave's says he was in
 the cave: that is the location tracking v2.0 names, not a display of where
@@ -1516,7 +1517,14 @@ sets from the run's settings, and of categories the race profile permits
 object, a shop item, or an enemy drop" as a location "only ... in modes
 where they are shuffled", so a table is read, in Race Mode too, only while
 the run's settings shuffle what it records, and only the run's own
-locations are laid on the board. Never a door, a room or a transition (the
+locations are laid on the board. The Overworld fork's bonk drops
+(`BONK_DROPS`, kind `bonk`, a run's while `bonkDrops`) are a bit of their
+screen's byte of the save's overworld data (`OVERWORLD_FLAGS + screen`, the
+mask its table gives, as the fork's own client reads it), read through a
+range of their own (`owr-bonks`) behind their switch, of a category the race
+profile forbids (`bonk-drops`): v2.0 names no bonk drop, and the owner
+keeps them out of races, so Race Mode never reads them (the base patch's
+own code was not read: its source is not in the fork's checkout). Never a door, a room or a transition (the
 race admins' June 2026 clarification). Not checked on a real DR ROM yet: a
 sprite's slot being its load order with the overlords left out, and DR's
 item entries taking no slot (`standing_items.asm:403-405`).
@@ -1560,10 +1568,14 @@ spots), and `overworld.json`: each overworld region's screen
 (`OWTileRegions`), each screen edge with its direction, terrain and parallel
 in the other world (`create_owedges`, `parallel_links`), each flute spot's
 region as its screen stands or flipped and its slot, which orders the
-spots (`flute_data`, the layout bytes left out) and the 42 bonk drops (`bonk_prize_table`: region, whether Agahnim must
-fall first, and the overworld flag the game sets, the screen's byte at
-`$7EF280` and the mask, as `MultiClient.py:978-987` reads it; the Good Bee
-Cave's statue has no screen, so no flag). Its pots, enemy drops and shops
+spots (`flute_data`, the layout bytes left out); and `bonk.json`, apart
+so the pack's index can list them without the fork's world: the 42 bonk
+drops (`bonk_prize_table`: region, whether Agahnim must fall first, the
+overworld flag the game sets, the screen's byte at `$7EF280` and the mask,
+as `MultiClient.py:978-987` reads it, and where the fork's own world map
+draws it, the 4096-pixel world's x and y of `ow_loc_prize_table`, or the
+screen's middle where it has none, as `Rom.py:1494-1501` falls back; the
+Good Bee Cave's statue has no screen, so no flag and no place). Its pots, enemy drops and shops
 are DR 1.5.8's exactly, so `locations.json` serves both (the import stops if
 they part). `src/door-rando/owr-data.spec.ts` holds the data: every region
 and door, every table's names, every exit linked but those the fork links in

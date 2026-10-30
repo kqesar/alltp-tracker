@@ -264,6 +264,13 @@ export const DOOR_DROPS_SWITCH = "door-drops";
 export const DOOR_SHOPS_SWITCH = "door-shops";
 
 /**
+ * The switch for the Overworld Randomizer's bonk drops (`owr-bonks`): the
+ * app turns it on while the run shuffles them, never in Race Mode, whose
+ * profile forbids their category (`bonk-drops`).
+ */
+export const OWR_BONKS_SWITCH = "owr-bonks";
+
+/**
  * How often the room's tilemaps are read again when nothing said they
  * changed: they are read on entry and whenever the collision map, the objects
  * or the doors change, which is when the game patches them.
@@ -707,6 +714,20 @@ export const MEMORY_RANGES = [
     "z3:sram.asm:54-69",
     GAME_MS,
   ),
+  // The Overworld Randomizer's bonk drops: a bit of each screen's byte of
+  // the overworld's save data, as the fork's own client reads them
+  // (owr:MultiClient.py:978-987, SAVEDATA_START + 0x280 + screen). Read
+  // apart from `overworld`, under a category Race Mode forbids, and only
+  // while the run shuffles them.
+  range({
+    at: 0x7e_f280,
+    category: "bonk-drops",
+    everyMs: GAME_MS,
+    id: "owr-bonks",
+    optIn: OWR_BONKS_SWITCH,
+    size: 0x82,
+    source: "owr:MultiClient.py:978-987",
+  }),
   // Bow, boomerang, hookshot.
   save("equipment-a", 0x340, 3, "items", "z3:sram.asm:80-85"),
   // Bombs held, a HUD count.

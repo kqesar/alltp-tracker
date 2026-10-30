@@ -628,15 +628,22 @@ function mainOwr(checkout) {
   );
   const overworld =
     world.overworld ?? fail("the fork's overworld was not read");
+  const { bonk: bonkSource, map: mapSource, ...source } = overworld.source;
   writeLines(
     join(OWR_WORLD, "overworld.json"),
-    { generated, source: overworld.source, upstream },
+    { generated, source, upstream },
     {
-      bonk: overworld.bonk,
       edges: overworld.edges,
       flute: overworld.flute,
       tiles: overworld.tiles,
     },
+  );
+  // The bonk drops apart, a file small enough for the pack's index: a run
+  // lists them (locations.ts) without loading the fork's world
+  writeLines(
+    join(OWR_WORLD, "bonk.json"),
+    { generated, source: { bonk: bonkSource, map: mapSource }, upstream },
+    { drops: overworld.bonk },
   );
   process.stdout.write(
     `${OWR_WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${overworld.edges.length} edges, ${overworld.bonk.length} bonk drops\n`,

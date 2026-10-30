@@ -2,6 +2,7 @@
 // --owr wrote it (src/door-rando/owr/*.json), at the release upstream.json
 // pins (doorRandomizer.overworld): a bundle of its own, which drWorld builds
 // on (`options.data`). Its own module, so only an OWR run downloads it.
+import bonkData from "../door-rando/owr/bonk.json" with { type: "json" };
 import connectionData from "../door-rando/owr/connections.json" with {
   type: "json",
 };
@@ -16,7 +17,8 @@ import { type DrData, drDataOf } from "./data";
 /** The Overworld Randomizer's world at the release upstream.json pins. */
 export const OWR_DATA: DrData = drDataOf("owr", {
   doors: doorData,
-  overworld: overworldData,
+  // The bonk drops, a file of their own the pack's index lists them from
+  overworld: { ...overworldData, bonk: bonkData.drops },
   regions: regionData,
   rules: ruleData,
   tables: [connectionData],

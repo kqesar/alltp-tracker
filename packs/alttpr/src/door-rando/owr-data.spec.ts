@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import manifest from "../../upstream.json" with { type: "json" };
+import bonkData from "./owr/bonk.json" with { type: "json" };
 import connections from "./owr/connections.json" with { type: "json" };
 import doorData from "./owr/doors.json" with { type: "json" };
 import overworld from "./owr/overworld.json" with { type: "json" };
@@ -267,19 +268,20 @@ describe("the Overworld Randomizer's world data (import-dr --owr)", () => {
 
   it("reads the bonk drops with their regions and overworld flags", () => {
     const tiles = overworld.tiles as Record<string, number>;
-    expect(overworld.bonk).toHaveLength(42);
-    for (const drop of overworld.bonk) {
+    const bonk = bonkData.drops;
+    expect(bonk).toHaveLength(42);
+    for (const drop of bonk) {
       expect(regionNamed.has(drop.region), drop.name).toBe(true);
       if ("flag" in drop && drop.flag !== undefined)
         expect(drop.flag.screen).toBe(tiles[drop.region]);
     }
     // The cave's statue has no screen: MultiClient.py:980-985 reads none
-    expect(
-      overworld.bonk.filter((drop) => !("flag" in drop)).map((d) => d.name),
-    ).toEqual(["Cold Fairy Statue"]);
-    expect(overworld.bonk.filter((drop) => drop.aga)).toHaveLength(8);
+    expect(bonk.filter((drop) => !("flag" in drop)).map((d) => d.name)).toEqual(
+      ["Cold Fairy Statue"],
+    );
+    expect(bonk.filter((drop) => drop.aga)).toHaveLength(8);
     // Each (screen, mask) once
-    const flags = overworld.bonk.flatMap((drop) =>
+    const flags = bonk.flatMap((drop) =>
       "flag" in drop && drop.flag !== undefined
         ? [`${drop.flag.screen}:${drop.flag.mask}`]
         : [],
@@ -287,12 +289,40 @@ describe("the Overworld Randomizer's world data (import-dr --owr)", () => {
     expect(new Set(flags).size).toBe(flags.length);
   });
 
+  it("places each bonk drop where the fork's own map draws it", () => {
+    // ow_loc_prize_table (OverworldShuffle.py:2437): the 4096-pixel world's
+    // x and y; a drop it lacks at its screen's middle (Rom.py:1494-1501);
+    // the cave's statue nowhere
+    const placed = bonkData.drops.filter((drop) => "map" in drop);
+    expect(placed).toHaveLength(41);
+    for (const drop of placed) {
+      const { map } = drop as { map: { x: number; y: number; source: string } };
+      expect(map.x, drop.name).toBeGreaterThanOrEqual(0);
+      expect(map.x, drop.name).toBeLessThan(0x1000);
+      expect(map.y, drop.name).toBeLessThan(0x1000);
+      expect(map.source).toMatch(
+        /^(OverworldShuffle\.py:\d+|Rom\.py:1494-1501)$/,
+      );
+    }
+    const at = (name: string) =>
+      bonkData.drops.find((drop) => drop.name === name) as
+        | { map?: { x: number; y: number; source: string } }
+        | undefined;
+    expect(at("Pyramid Tree")?.map).toMatchObject({ x: 0x738, y: 0x908 });
+    // Kakariko's pond, screen 0x12 (a small one): its middle
+    expect(at("Kakariko Pond Tree")?.map).toEqual({
+      source: "Rom.py:1494-1501",
+      x: 0x500,
+      y: 0x500,
+    });
+  });
+
   it("cites a line for every region, door, edge and drop", () => {
     for (const entry of [...regions, ...doors, ...portals])
       expect(entry.source).toMatch(/^(Regions|Doors)\.py:\d+$/);
     for (const edge of overworld.edges)
       expect(edge.source).toMatch(/^OWEdges\.py:\d+$/);
-    for (const drop of overworld.bonk)
+    for (const drop of bonkData.drops)
       expect(drop.source).toMatch(/^Regions\.py:\d+$/);
     expect(regionData.upstream).toMatchObject({
       repo: "codemann8/ALttPDoorRandomizer",

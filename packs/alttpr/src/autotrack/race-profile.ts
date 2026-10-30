@@ -97,6 +97,12 @@ const STRICT =
  */
 export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
+    // The Overworld Randomizer's bonk drops: v2.0 names no such location,
+    // and the owner keeps them out of races (in doubt, forbidden)
+    "bonk-drops": {
+      permitted: false,
+      rule: "Anything not covered in this document is, by default, considered not permitted: v2.0 names no bonk drop, so Race Mode never reads the Overworld Randomizer's.",
+    },
     "boss-kills": {
       permitted: true,
       rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). This includes not auto-tracking who the dungeon boss is in Enemizer modes before the boss is defeated.",

@@ -118,7 +118,10 @@ export interface OwrEdge {
   readonly source: string;
 }
 
-/** What the Overworld Randomizer adds to the world (overworld.json). */
+/**
+ * What the Overworld Randomizer adds to the world (overworld.json, its bonk
+ * drops bonk.json).
+ */
 export interface OwrOverworld {
   /** Each overworld region's screen (OWTileRegions). */
   readonly tiles: Readonly<Record<string, number>>;
@@ -135,6 +138,8 @@ export interface OwrOverworld {
     readonly region: string;
     readonly aga: boolean;
     readonly flag?: { readonly screen: number; readonly mask: number };
+    /** Where the fork's world map draws it, in the 4096-pixel world. */
+    readonly map?: { readonly x: number; readonly y: number };
     readonly source: string;
   }[];
 }

@@ -219,6 +219,8 @@ describe("MEMORY_RANGES", () => {
       "dark-room-art-bg1:navigation",
       "dark-room-dark:navigation",
       "dark-room-art-palette:navigation",
+      // The Overworld Randomizer's bonk drops, kept out of races
+      "owr-bonks:bonk-drops",
       "bomb-count:hud",
       "bottle-index:hud",
       // The bomb and arrow capacities: v2.0 names no capacity upgrade
@@ -239,7 +241,7 @@ describe("MEMORY_RANGES", () => {
     ]);
   });
 
-  it("overlaps only where a permitted room sits inside the dungeon rooms", () => {
+  it("overlaps only where a permitted room sits inside the dungeon rooms, and the bonk drops' screens", () => {
     const pairs: string[] = [];
     MEMORY_RANGES.forEach((a, i) => {
       for (const b of MEMORY_RANGES.slice(i + 1)) {
@@ -263,6 +265,9 @@ describe("MEMORY_RANGES", () => {
       "dungeon-rooms/thieves-town-boss-room",
       "dungeon-rooms/eastern-palace-boss-room",
       "dungeon-rooms/ice-palace-boss-room",
+      // The bonk drops' bits of the screens' bytes, under a category of
+      // their own that Race Mode forbids
+      "overworld/owr-bonks",
     ]);
   });
 
@@ -414,7 +419,9 @@ describe("MEMORY_RANGES", () => {
     // 70 bytes in three more pieces, every 10 s. A Door Randomizer seed's
     // pots, enemy drops and shop slots, all three switches on, join the race
     // phase (they are v2.0's locations): 1,280 bytes in six more pieces
-    // (usb2snes cuts a span into 255-byte ones).
+    // (usb2snes cuts a span into 255-byte ones). The Overworld fork's bonk
+    // drops, switch on, join the casual phase alone: the screens' 130 bytes
+    // again, in a piece of their own.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -425,9 +432,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 508, pieces: 23 },
+      casual: { bytes: 638, pieces: 24 },
       race: { bytes: 2073, pieces: 26 },
-      ranges: { casual: 37, race: 41 },
+      ranges: { casual: 38, race: 41 },
     });
   });
 });

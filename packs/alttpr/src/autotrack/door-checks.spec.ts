@@ -3,10 +3,12 @@ import {
   DR_LOCATIONS,
   DR_TABLES,
   drLocationsOf,
+  OVERWORLD_FLAGS,
 } from "../door-rando/locations";
 import type { MemoryView } from "./decode";
 import { decodeDoorChecks, doorSwitches } from "./door-checks";
 import { MEMORY_RANGE, type MemoryRangeId } from "./memory";
+import { ALTTPR_RACE_PROFILE } from "./race-profile";
 
 const TABLES = ["door-pots", "door-drops", "door-purchases"] as const;
 
@@ -43,7 +45,52 @@ const KEYDROP = drLocationsOf({
   takeAny: "none",
 }).locations;
 
+/** An Overworld Randomizer seed with its bonk drops shuffled. */
+const BONKS = drLocationsOf({
+  bonkDrops: true,
+  bossShuffle: false,
+  dropShuffle: "none",
+  enemyShuffle: false,
+  potShuffle: false,
+  pottery: "none",
+  shopsanity: false,
+  takeAny: "none",
+});
+
 describe("decodeDoorChecks", () => {
+  it("checks a bonk drop by its screen's bit, outside races only", () => {
+    // The Lost Woods' hideout tree: screen $00, bit $10 (owr:MultiClient.py:
+    // 978-987); the pyramid's tree: screen $5B
+    const screens = new Uint8Array(MEMORY_RANGE["owr-bonks"].size);
+    screens[0x00] = 0x10;
+    screens[0x5b] = 0x10 | 0x40;
+    const memory = view({ "owr-bonks": screens });
+    const options = { race: false, unflagged: BONKS.unflagged };
+    const { checked, unsettled } = decodeDoorChecks(
+      memory,
+      BONKS.locations,
+      options,
+    );
+    expect([...checked].sort()).toEqual([
+      "lost-woods-hideout-tree",
+      "pyramid-tree",
+    ]);
+    expect(unsettled.size).toBe(0);
+    expect(MEMORY_RANGE["owr-bonks"]).toMatchObject({
+      bus: OVERWORLD_FLAGS,
+      category: "bonk-drops",
+    });
+    // Race Mode: forbidden, the whole category (the owner's decision)
+    expect(ALTTPR_RACE_PROFILE.categories["bonk-drops"]?.permitted).toBe(false);
+    const race = decodeDoorChecks(memory, BONKS.locations, {
+      ...options,
+      race: true,
+    });
+    expect(race.checked.size).toBe(0);
+    expect(new Set(race.unsettled.values())).toEqual(new Set(["race-mode"]));
+    expect(doorSwitches(BONKS.locations)).toEqual(new Set(["owr-bonks"]));
+  });
+
   it("reads the three tables where the memory map reads them", () => {
     expect(MEMORY_RANGE["door-pots"]).toMatchObject({
       bus: DR_TABLES.pot.bus,

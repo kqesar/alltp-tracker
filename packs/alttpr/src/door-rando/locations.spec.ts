@@ -3,6 +3,7 @@ import { locationId } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { DUNGEON_IDS } from "../dungeons";
 import {
+  BONK_DROPS,
   DR_LOCATIONS,
   DR_TABLES,
   DR_UPSTREAM,
@@ -11,7 +12,12 @@ import {
   drFlagAddress,
   drKeysAdded,
   drLocationsOf,
+  NO_SCREEN,
+  OVERWORLD_FLAGS,
 } from "./locations";
+
+/** A flag that stands for none, where the test's find came up empty. */
+const NO_FLAG = { mask: 0, memory: "overworld", screen: NO_SCREEN } as const;
 
 const upstream = JSON.parse(
   readFileSync(new URL("../../upstream.json", import.meta.url), "utf8"),
@@ -46,6 +52,49 @@ const NONE: DrModes = {
   shopsanity: false,
   takeAny: "none",
 };
+
+describe("the Overworld Randomizer's bonk drops", () => {
+  it("are a run's locations while it shuffles them, each its own id", () => {
+    expect(drLocationsOf(NONE).locations).toEqual([]);
+    const { locations, unflagged } = drLocationsOf({
+      ...NONE,
+      bonkDrops: true,
+    });
+    expect(locations).toHaveLength(42);
+    expect(locations.every((l) => l.kind === "bonk")).toBe(true);
+    expect(locations.map((l) => l.id)).toEqual(BONK_DROPS.map((l) => l.id));
+    // No id another location of the pack has
+    const ids = new Set([...DR_LOCATIONS.map((l) => l.id)]);
+    for (const { id, name } of BONK_DROPS) {
+      expect(id).toBe(locationId(name));
+      expect(ids.has(id), id).toBe(false);
+      ids.add(id);
+    }
+    // The cave's statue: no screen, never read
+    expect([...unflagged]).toEqual(["cold-fairy-statue"]);
+    expect(BONK_DROPS.filter((l) => l.bonk?.aga)).toHaveLength(8);
+  });
+
+  it("flags each by a bit of its screen's byte, once", () => {
+    // owr:MultiClient.py:978-987: SAVEDATA_START + 0x280 + screen
+    const tree = BONK_DROPS.find((l) => l.name === "Lost Woods Hideout Tree");
+    expect(tree?.flag).toEqual({ mask: 0x10, memory: "overworld", screen: 0 });
+    expect(drFlagAddress(tree?.flag ?? NO_FLAG)).toEqual({
+      bus: OVERWORLD_FLAGS,
+      mask: 0x10,
+      size: 1,
+    });
+    const seen = new Set<string>();
+    for (const { flag, name } of BONK_DROPS) {
+      if (flag.memory !== "overworld" || flag.screen === NO_SCREEN) continue;
+      const { bus, mask } = drFlagAddress(flag);
+      expect(bus, name).toBeLessThan(OVERWORLD_FLAGS + 0x82);
+      expect(seen.has(`${bus}:${mask}`), name).toBe(false);
+      seen.add(`${bus}:${mask}`);
+    }
+    expect(seen.size).toBe(41);
+  });
+});
 
 describe("DR_LOCATIONS", () => {
   it("is read from the release upstream.json pins", () => {
@@ -110,6 +159,7 @@ describe("DR_LOCATIONS", () => {
   it("flags each within the base patch's tables, once", () => {
     const seen = new Set<string>();
     for (const { flag, name } of DR_LOCATIONS) {
+      if (flag.memory === "overworld") throw new RangeError(name);
       const { bus, size } = drFlagAddress(flag);
       const table = DR_TABLES[flag.memory];
       expect(bus, name).toBeGreaterThanOrEqual(table.bus);

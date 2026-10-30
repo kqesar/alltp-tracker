@@ -1,7 +1,9 @@
 // The Door Randomizer's locations alttpr.com never had: the keys enemies and
 // pots hold (key drops), the pots of its pottery modes, the enemies of its
 // underworld drop shuffle, and the shops' items of shopsanity and take-any,
-// each with the bit DR's base patch sets once it is collected.
+// each with the bit DR's base patch sets once it is collected; and the
+// Overworld Randomizer's bonk drops (owr/bonk.json, written by import-dr
+// --owr), with the bit of their screen's byte.
 //
 // locations.json is written by scripts/import-dr.mjs from DR at the release
 // upstream.json pins (`doorRandomizer`), never by hand. This module says
@@ -14,6 +16,7 @@
 import { locationId } from "@alltp/engine";
 import type { DungeonId } from "../dungeons";
 import data from "./locations.json" with { type: "json" };
+import bonkData from "./owr/bonk.json" with { type: "json" };
 
 /** Where DR's location table was read: its repo, release and commit. */
 export const DR_UPSTREAM: {
@@ -34,7 +37,9 @@ export type DrLocationKind =
   /** A shop's item under shopsanity. */
   | "shop"
   /** An item of the old man's sword cave or a take-any cave. */
-  | "takeAny";
+  | "takeAny"
+  /** An Overworld Randomizer bonk drop: a tree, a rock pile, a statue. */
+  | "bonk";
 
 /**
  * The base patch's memory that says a location was collected: a bit of a
@@ -56,6 +61,16 @@ export type DrFlag =
       readonly memory: "purchase";
       /** The shop's sram index plus the item's slot. */
       readonly index: number;
+    }
+  | {
+      /** A screen's byte of the overworld's save data ($7EF280 on). */
+      readonly memory: "overworld";
+      /**
+       * The screen, $00-$81; `NO_SCREEN` for a drop no screen holds (in a
+       * cave), which is never read (`unflagged`).
+       */
+      readonly screen: number;
+      readonly mask: number;
     };
 
 /** One DR location. */
@@ -82,6 +97,15 @@ export interface DrLocation {
   readonly bossRoom?: boolean;
   /** A take-any item: its shop's own sram index. */
   readonly takeAny?: { readonly sram: number };
+  /**
+   * A bonk drop: whether Agahnim must fall first, and where the
+   * Overworld Randomizer's world map draws it (the 4096-pixel world's x
+   * and y, its light or dark half by its region), if a screen holds it.
+   */
+  readonly bonk?: {
+    readonly aga: boolean;
+    readonly map?: { readonly x: number; readonly y: number };
+  };
   /** Where DR defines it: `file:line` in its checkout. */
   readonly source: string;
 }
@@ -89,6 +113,43 @@ export interface DrLocation {
 const REGIONS: Readonly<
   Record<string, { readonly cave: boolean; readonly dungeon: string | null }>
 > = data.regions;
+
+/** A bonk drop's screen when no screen holds it (a cave's). */
+export const NO_SCREEN = -1;
+
+/**
+ * The Overworld Randomizer's bonk drops (owr:Regions.py bonk_prize_table,
+ * owr/bonk.json): a run's locations while it shuffles them (`bonkDrops`).
+ * A drop's flag is the bit of its screen's byte the fork's own client reads
+ * (owr:MultiClient.py:978-987); the Cold Fairy's statue, in a cave, has
+ * none, so it is never read.
+ */
+export const BONK_DROPS: readonly DrLocation[] = bonkData.drops.map(
+  (drop): DrLocation => ({
+    bonk: {
+      aga: drop.aga,
+      ...(drop.map === undefined
+        ? {}
+        : { map: { x: drop.map.x, y: drop.map.y } }),
+    },
+    cave: drop.flag === undefined,
+    dungeon: null,
+    // The cave's statue has no flag: no memory says it was taken
+    flag:
+      drop.flag === undefined
+        ? { mask: 0, memory: "overworld", screen: NO_SCREEN }
+        : {
+            mask: drop.flag.mask,
+            memory: "overworld",
+            screen: drop.flag.screen,
+          },
+    id: locationId(drop.name),
+    kind: "bonk",
+    name: drop.name,
+    region: drop.region,
+    source: drop.source,
+  }),
+);
 
 /** Every DR location, key drops first, then pots, enemies and shops. */
 export const DR_LOCATIONS: readonly DrLocation[] = data.locations.map(
@@ -133,6 +194,8 @@ export interface DrModes {
   readonly enemyShuffle: boolean;
   /** Bosses shuffled (`shufflebosses` other than none). */
   readonly bossShuffle: boolean;
+  /** The Overworld Randomizer's bonk drops shuffled (`bonk_drops`). */
+  readonly bonkDrops?: boolean;
 }
 
 /** Why a seed's list may lack some of its locations. */
@@ -206,7 +269,7 @@ export function drLocationsOf(modes: DrModes): DrLocationSet {
   const partial = new Set<DrPartial>();
   const unflagged = new Set<string>();
   const potKeys = !["none", "cave"].includes(modes.pottery);
-  const locations = DR_LOCATIONS.filter((location) => {
+  const locations: DrLocation[] = DR_LOCATIONS.filter((location) => {
     if (location.kind === "keyDrop") {
       if (location.flag.memory === "drop") return modes.dropShuffle !== "none";
       if (potKeys && modes.potShuffle) unflagged.add(location.id);
@@ -242,6 +305,12 @@ export function drLocationsOf(modes: DrModes): DrLocationSet {
     partial.add("boss-rooms");
   if (modes.pottery === "nonempty" && modes.potShuffle)
     partial.add("pot-contents");
+  if (modes.bonkDrops === true)
+    for (const drop of BONK_DROPS) {
+      if (drop.flag.memory === "overworld" && drop.flag.screen === NO_SCREEN)
+        unflagged.add(drop.id);
+      locations.push(drop);
+    }
   return { locations, partial: [...partial], unflagged };
 }
 
@@ -269,6 +338,9 @@ export function drKeysAdded(
  * PurchaseCounts, a byte a shop slot. Saved with the file in the expanded
  * SRAM, live in WRAM bank $7F.
  */
+/** The save's overworld data, a byte a screen (z3:sram.asm:54-69). */
+export const OVERWORLD_FLAGS = 0x7e_f280;
+
 export const DR_TABLES = {
   drop: { bus: 0x7f_6268, size: 592 },
   pot: { bus: 0x7f_6018, size: 592 },
@@ -291,6 +363,10 @@ export function drFlagAddress(flag: DrFlag): {
   if (flag.memory === "purchase") {
     return { bus: DR_TABLES.purchase.bus + flag.index, mask: 0xff, size: 1 };
   }
+  // A screen's byte of the save's overworld data (SAVEDATA_START + 0x280,
+  // owr:MultiClient.py:978-987)
+  if (flag.memory === "overworld")
+    return { bus: OVERWORLD_FLAGS + flag.screen, mask: flag.mask, size: 1 };
   return {
     bus: DR_TABLES[flag.memory].bus + flag.room * 2,
     mask: 0x8000 >> flag.bit,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import bonkData from "./owr/bonk.json" with { type: "json" };
 import overworld from "./owr/overworld.json" with { type: "json" };
 import regionData from "./owr/regions.json" with { type: "json" };
 import rules from "./owr/rules.json" with { type: "json" };
@@ -123,7 +124,7 @@ describe("the Overworld Randomizer's rules (import-dr --owr, stage B)", () => {
   });
 
   it("give each bonk drop its rule while they are shuffled", () => {
-    for (const drop of overworld.bonk) {
+    for (const drop of bonkData.drops) {
       const req = locations[drop.name]?.req ?? "";
       expect(req, drop.name).toContain("@drCanCollectBonkdrops");
       expect(req, drop.name).toContain("!setting(bonkDrops)");
