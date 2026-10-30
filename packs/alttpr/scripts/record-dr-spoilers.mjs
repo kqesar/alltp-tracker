@@ -4,7 +4,9 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances]
+//
+// With no argument it records both sets; with one, that set alone.
 //
 // Where they come from. An avianart permalink of a race seed keeps its
 // spoiler's `meta` alone (`response.spoiler` has no other key: checked on
@@ -20,9 +22,28 @@
 // - the sections the parser reads: Requirements, Locations, Shops, Bosses and
 //   Playthrough, in their order; the rest (Bottle Refills, Entrances, Drops,
 //   Prize Packs, In-Game Text, Unreachable Items, Paths) is dropped.
+// A log whose entrances are shuffled keeps its Entrances section too, which
+// the entrance contract notes (test/dr-entrance-playthrough.spec.ts).
 // `index.json` says, per file, the race, the address, the day it was
 // recorded, the full file's SHA-256 and the sections kept. Never edit the
 // fixtures by hand: record them again.
+//
+// The shuffled-entrance set (test/dr-entrance-spoilers/) holds every spoiler
+// race of racetime.gg's alttpr category whose DR log shuffles entrances, as
+// of 2026-10-30 but one whose log has no playthrough: the five below, all
+// Crosskeys (crossed entrances, keysanity) on DR 1.4.8 and 1.4.8.1 (the 343
+// other DR spoiler races posted since May 2023 keep their entrances vanilla). Crossed is the shuffle players
+// race on DR (Crosskeys: the 2026 tournament on Hyrule Town Hall, ~400 of
+// the DR races listed since August 2025). Swapped is raced too, rarely
+// (swapkeys, 10 of the 1,112 avianart race seeds those races link), but on
+// the Overworld fork (avianart's swapkeys preset rolls OWR 0.8.0.2), whose
+// rules the tracker does not model: no fixture holds it. No spoiler of a
+// 1.5.x shuffled-entrance race is public (race seeds' permalinks keep their
+// meta alone), so the set adds an avianart.games seed of the crosskeys
+// preset, generated for these fixtures with the site's own Generate (not a
+// race): its permalink serves DR's JSON spoiler whole, cut to what the
+// contract reads: meta, Entrances, the locations by region, Special,
+// Starting Inventory, Shops, Bosses and the playthrough.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -32,6 +53,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const OUT = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/dr-spoilers",
+);
+const OUT_ENTRANCES = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/dr-entrance-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -60,6 +85,55 @@ export const RACES = [
   "alttpr/wonderful-lumberjack-2747",
 ];
 
+/** Spoiler races whose DR log shuffles entrances (all Crosskeys). */
+export const ENTRANCE_RACES = [
+  // (DR 1.4.7.2-u's alttpr/bonus-boots-5447 is left out: its log's
+  // Playthrough holds no sphere)
+  // DR 1.4.8-u
+  "alttpr/zany-silvers-3916",
+  // DR 1.4.8.1-u
+  "alttpr/cunning-validation-2430",
+  "alttpr/comic-chestgame-8086",
+  "alttpr/kind-hera-6525",
+  "alttpr/smelly-pieceofheart-6451",
+];
+
+/**
+ * avianart.games seeds of the preset players race with shuffled entrances,
+ * generated on 2026-10-30 for these fixtures (DR 1.5.8-u, not races).
+ */
+export const AVIANART_SEEDS = [
+  // "crosskeys": crossed entrances, keysanity, doors vanilla
+  "7E8eFbBNH",
+];
+
+/** The keys of DR's JSON spoiler the contract reads (to_json). */
+export const KEPT_KEYS = [
+  "meta",
+  "Entrances",
+  "Light World",
+  "Dark World",
+  "Caves",
+  "Hyrule Castle",
+  "Eastern Palace",
+  "Desert Palace",
+  "Tower of Hera",
+  "Agahnims Tower",
+  "Palace of Darkness",
+  "Thieves Town",
+  "Skull Woods",
+  "Swamp Palace",
+  "Ice Palace",
+  "Misery Mire",
+  "Turtle Rock",
+  "Ganons Tower",
+  "Starting Inventory",
+  "Special",
+  "Shops",
+  "Bosses",
+  "playthrough",
+];
+
 /** The sections of DR's text log the parser reads (src/spoiler/dr.ts). */
 export const KEPT_SECTIONS = [
   "Requirements",
@@ -81,6 +155,11 @@ export function cutLog(text) {
   if (!/^ALttP (?:Dungeon|Overworld) Randomizer/.test(lines[0] ?? "")) {
     throw new Error("not a Door Randomizer text log");
   }
+  // Its Entrances too where they are shuffled
+  const shuffled = lines.some((line) =>
+    /^Entrance Shuffle:\s+(?!vanilla\s*$)\S/.test(line),
+  );
+  const sections = shuffled ? ["Entrances", ...KEPT_SECTIONS] : KEPT_SECTIONS;
   /** @type {string[]} */
   const out = [];
   let at = 0;
@@ -98,7 +177,7 @@ export function cutLog(text) {
     const heading = HEADING.exec(line)?.[1];
     if (heading !== undefined && (lines[at - 1] ?? "") === "") {
       const name = heading.startsWith("Bosses") ? "Bosses" : heading;
-      keep = KEPT_SECTIONS.includes(name);
+      keep = sections.includes(name);
       if (keep) {
         kept.push(heading);
         if (out.at(-1) !== "") out.push("");
@@ -120,12 +199,17 @@ const get = async (url) => {
 const POSTED =
   /(https:\/\/botofmudora\.s3[^\s"<]*\/seeds\/[0-9a-f-]+\/)DR_(\d+)_Spoiler_[^\s"<]*\.json/;
 
-async function main() {
-  mkdirSync(OUT, { recursive: true });
+/**
+ * Records spoiler races' text logs into `out`, with their index.
+ * @param {readonly string[]} races
+ * @param {string} out
+ */
+async function recordRaces(races, out) {
+  mkdirSync(out, { recursive: true });
   const recorded = new Date().toISOString().slice(0, 10);
   /** @type {Record<string, unknown>} */
   const index = {};
-  for (const race of RACES) {
+  for (const race of races) {
     const log = await get(`https://racetime.gg/${race}/log`);
     const posted = POSTED.exec(log);
     if (posted === null) throw new Error(`${race}: no spoiler log posted`);
@@ -133,7 +217,7 @@ async function main() {
     const url = `${posted[1]}${name}`;
     const full = await get(url);
     const { kept, text } = cutLog(full);
-    writeFileSync(join(OUT, name), text);
+    writeFileSync(join(out, name), text);
     index[name] = {
       address: url,
       kept,
@@ -144,18 +228,70 @@ async function main() {
     };
     process.stdout.write(`${name}: ${text.length} of ${full.length} bytes\n`);
   }
+  return index;
+}
+
+/**
+ * Records avianart.games seeds' JSON spoilers, cut to `KEPT_KEYS`.
+ * @param {readonly string[]} hashes
+ */
+async function recordAvianart(hashes) {
+  const recorded = new Date().toISOString().slice(0, 10);
+  /** @type {Record<string, unknown>} */
+  const index = {};
+  for (const hash of hashes) {
+    const url = `https://avianart.games/api.php?action=permlink&hash=${hash}`;
+    const json = JSON.parse(await get(url));
+    const spoiler = json?.response?.spoiler;
+    if (spoiler === undefined || spoiler.playthrough === undefined)
+      throw new Error(`${hash}: no whole spoiler (a race seed's?)`);
+    const kept = KEPT_KEYS.filter((key) => key in spoiler);
+    const name = `avianart-${hash}.json`;
+    writeFileSync(
+      join(OUT_ENTRANCES, name),
+      `${JSON.stringify(Object.fromEntries(kept.map((key) => [key, spoiler[key]])), null, 2)}\n`,
+    );
+    index[name] = {
+      address: `https://avianart.games/perm/${hash}`,
+      kept,
+      recorded,
+      sha256: createHash("sha256")
+        .update(JSON.stringify(spoiler))
+        .digest("hex"),
+      version: String(spoiler.meta?.version),
+    };
+    process.stdout.write(`${name}\n`);
+  }
+  return index;
+}
+
+/**
+ * @param {string} out
+ * @param {Record<string, unknown>} logs
+ * @param {string} how
+ */
+const writeIndex = (out, logs, how) =>
   writeFileSync(
-    join(OUT, "index.json"),
-    `${JSON.stringify(
-      {
-        generated:
-          "By packs/alttpr/scripts/record-dr-spoilers.mjs from real spoiler races. Record again, never edit.",
-        logs: index,
-      },
-      null,
-      2,
-    )}\n`,
+    join(out, "index.json"),
+    `${JSON.stringify({ generated: how, logs }, null, 2)}\n`,
   );
+
+async function main() {
+  const only = process.argv[2];
+  if (only === undefined || only === "vanilla")
+    writeIndex(
+      OUT,
+      await recordRaces(RACES, OUT),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs from real spoiler races. Record again, never edit.",
+    );
+  if (only === undefined || only === "entrances") {
+    const races = await recordRaces(ENTRANCE_RACES, OUT_ENTRANCES);
+    writeIndex(
+      OUT_ENTRANCES,
+      { ...races, ...(await recordAvianart(AVIANART_SEEDS)) },
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (vanilla|entrances): spoiler races' DR text logs and avianart.games seeds' JSON spoilers, entrances shuffled. Record again, never edit.",
+    );
+  }
 }
 
 if (

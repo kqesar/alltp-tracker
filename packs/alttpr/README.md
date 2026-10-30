@@ -1148,10 +1148,13 @@ noted and stand in regions the walk from Link's House and Sanctuary reaches
 other, so its analysis is the whole world's; any other dungeon, Standard's
 castle and every dungeon of a decoupled world keep the strict-safe rule, as
 does a seed of the static key logic, whose Turtle Rock probe reads the
-vanilla world. Desert Palace, Skull Woods and Turtle Rock keep it even with
-every entrance noted, by the owner's decision (2026-10-30): some of their
-portals open onto ledges the walk reaches only through the dungeon itself
-(`find_inaccessible_regions`), and DR starts their analysis from the portal
+vanilla world. Desert Palace, Skull Woods and Turtle Rock keep it, by the
+owner's decision (2026-10-30), wherever one of their portals opens onto a
+ledge the walk reaches only through the dungeon itself
+(`find_inaccessible_regions`), as in the vanilla layout, every entrance
+noted (a shuffle that puts each of their portals where the walk reaches it
+has them analysed as any other, the Crosskeys races of
+`test/dr-entrance-spoilers/` among them): DR then starts their analysis from the portal
 `analyze_portals` marks as the way out (`destination`, waiting on the dungeons
 it depends on), a `random.choice` among a ledge's portals where it has several
 (`DoorShuffle.py:727-735` at 1.5.8), made as the seed is generated and known
@@ -1385,6 +1388,21 @@ The answers that are not `yes` are listed with why: Misery Mire's two-key
 alternative and a key rule that rests on a placement (`maybe`). The seed
 of DR's `static` key logic (an unstable 1.5.6 build's) is held whole in
 its own world, below.
+**Real seeds, entrances shuffled** (`test/dr-entrance-playthrough.spec.ts`):
+the same contract, each entrance noted as the log says, as a player notes
+it, on every spoiler race of racetime.gg's alttpr category whose DR log
+shuffles entrances and has a playthrough (five Crosskeys races, DR 1.4.8 and
+1.4.8.1, `test/dr-entrance-spoilers/`, below) and an avianart.games Crosskeys
+seed of DR 1.5.8 generated for it (no 1.5.x race's spoiler is public).
+Crossed is the shuffle raced on DR; Swapped is raced on the Overworld fork
+(avianart's swapkeys rolls OWR), which the tracker does not model. The pool
+(`drEntrancePool`) offers each door the log moved with the target it took,
+and keeps no door DR moved. The answers that are not `yes` are each a key
+door read strict-safe (a dungeon whose portals the walk does not all reach:
+Desert Palace, Hyrule Castle, Turtle Rock) or Misery Mire's two-key
+alternative, `maybe`; nothing is `yes` too early. The text log's 1.4.x header
+names the crystals goal, Fast Ganon's (`settingsFor`).
+
 The other way, nothing is `yes` too early: the spheres are first-reachable
 sets, so no location of a later sphere is `yes` with what a sphere starts
 with, asked as DR builds that state: the earlier spheres' items and the
@@ -2723,5 +2741,16 @@ room's bot posted in its chat log and fetches DR's text beside it;
 Why not avianart: a race seed's permalink keeps the spoiler's `meta` alone
 (`test/dr-seeds/avianart-*.json`, which the specs read as a `stripped` log),
 and every DR permalink of the study is a race seed's. The JSON form is held to
-documents the specs build from those logs in `to_json`'s shape; no real DR
-JSON with placements is stored.
+documents the specs build from those logs in `to_json`'s shape; the one real
+DR JSON with placements stored is the entrance set's avianart seed, below.
+
+`test/dr-entrance-spoilers/` holds the shuffled-entrance set, recorded by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers entrances`: the text
+logs of five Crosskeys spoiler races (DR 1.4.8 and 1.4.8.1; their
+`Entrances` section kept beside the others, `<=>` both ways, `=>` in, `<=`
+out), and the JSON spoiler of an avianart.games seed of its crosskeys preset
+(DR 1.5.8-u, generated on 2026-10-30 for the set, not a race), cut to
+`meta`, `Entrances`, the locations by region, `Special`, `Starting
+Inventory`, `Shops`, `Bosses` and `playthrough`. The script's
+`ENTRANCE_RACES` and `AVIANART_SEEDS` say which is which and why the set is
+what it is (no 1.5.x race spoiler public; Swapped raced on OWR only).
