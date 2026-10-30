@@ -46,6 +46,7 @@ import {
   flag,
   jsonLog,
   type Log,
+  notYesWithEveryKey,
   poolOf,
   readFixture,
   settingsFor,
@@ -506,9 +507,12 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
     it(`reaches each sphere with the spheres before it (${name})`, () => {
       const read = logOf(name);
       expect(read.farms).toEqual(FARMS[name] ?? []);
-      const { checked, notYes } = walk(read.log, worldOf(read, {}), EVENTS);
+      const world = worldOf(read, {});
+      const { checked, notYes } = walk(read.log, world, EVENTS);
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
+      // Each a key door's, as reviewed: yes once every key is held
+      expect(notYesWithEveryKey(read.log, world, notYes, EVENTS)).toEqual([]);
     });
 
   for (const name of logs)

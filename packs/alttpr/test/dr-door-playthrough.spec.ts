@@ -28,19 +28,17 @@ import {
   lobbyDoors,
 } from "../src/door-world/index";
 import { keyDropsOf } from "../src/door-world/keys";
-import { solveFacts } from "../src/facts";
-import { type Medallion, medallionFacts } from "../src/medallions";
 import {
   early,
   entranceNotesOf,
   flag,
   jsonLog,
   type Log,
+  notYesWithEveryKey,
   readFixture,
   settingsFor,
   walk,
 } from "./dr-playthrough";
-import { collect } from "./dr-state";
 
 const read = (name: string) => readFixture("dr-door-spoilers", name);
 
@@ -269,12 +267,6 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   },
 };
 
-/** Every key and big key DR's items name, thirty of each small key. */
-const EVERY_KEY = Object.values(KEY_NAMES).flatMap((word) => [
-  ...Array.from({ length: 30 }, () => `Small Key (${word})`),
-  `Big Key (${word})`,
-]);
-
 describe("DR's world on shuffled doors against real seeds", () => {
   const logs = Object.keys(INDEX.logs);
 
@@ -360,32 +352,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
       expect(checked).toBeGreaterThan(15);
       expect(notYes).toEqual(REVIEWED[name] ?? {});
       // Each a key door's: yes once every key is held
-      for (const at of Object.keys(notYes)) {
-        const sphere = Number(at.slice(0, at.indexOf(":")));
-        const location = at.slice(at.indexOf(":") + 1);
-        const items = [
-          ...((log.playthrough["0"] as readonly string[]) ?? []),
-          ...Array.from({ length: sphere - 1 }, (_, i) =>
-            Object.values(log.playthrough[i + 1] as Record<string, string>),
-          ).flat(),
-          ...EVERY_KEY,
-        ].filter((item) => item !== "Never in logic");
-        const state = {
-          ...collect(items),
-          ...medallionFacts({
-            mire: String(log.Special["Misery Mire"]).toLowerCase() as Medallion,
-            turtleRock: String(
-              log.Special["Turtle Rock"],
-            ).toLowerCase() as Medallion,
-          }),
-        };
-        expect(
-          solveFacts(world, state).location(
-            world.locationIds.get(location) ?? "",
-          ),
-          at,
-        ).toBe("yes");
-      }
+      expect(notYesWithEveryKey(log, world, notYes)).toEqual([]);
     });
 
   for (const name of logs)

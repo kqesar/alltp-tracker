@@ -268,6 +268,57 @@ export function walk(
   return { checked, notYes };
 }
 
+/** The words DR's keys name each dungeon by (`Small Key (Escape)`). */
+const KEY_WORDS = [
+  "Agahnims Tower",
+  "Desert Palace",
+  "Eastern Palace",
+  "Escape",
+  "Ganons Tower",
+  "Ice Palace",
+  "Misery Mire",
+  "Palace of Darkness",
+  "Skull Woods",
+  "Swamp Palace",
+  "Thieves Town",
+  "Tower of Hera",
+  "Turtle Rock",
+];
+
+/** Every key and big key DR's items name, thirty of each small key. */
+export const EVERY_KEY: readonly string[] = KEY_WORDS.flatMap((word) => [
+  ...Array.from({ length: 30 }, () => `Small Key (${word})`),
+  `Big Key (${word})`,
+]);
+
+/**
+ * Of a walk's answers not `yes`, those still not `yes` once every key is
+ * held besides the items of the spheres before: a reviewed answer of a key
+ * door read strict-safe turns `yes` then, so one that does not has some
+ * other cause, which a review must name.
+ */
+export function notYesWithEveryKey(
+  log: Log,
+  world: Parameters<typeof solveFacts>[0] & PlaythroughWorld,
+  notYes: Readonly<Record<string, string>>,
+  events?: WalkEvents,
+): string[] {
+  const id = idIn(world);
+  return Object.keys(notYes).filter((at) => {
+    const sphere = Number(at.slice(0, at.indexOf(":")));
+    const location = at.slice(at.indexOf(":") + 1);
+    const items = [
+      ...((log.playthrough["0"] as readonly string[]) ?? []),
+      ...spheresOf(log)
+        .slice(0, sphere - 1)
+        .flatMap((s) => Object.values(s)),
+      ...EVERY_KEY,
+    ].filter((item) => item !== "Never in logic");
+    const state = stateOf(items, log.Special, events);
+    return solveFacts(world, state).location(id(location)) !== "yes";
+  });
+}
+
 /**
  * The locations of a later sphere a log's playthrough says yes to too
  * early, each `sphere:location as of sphere`. create_playthrough's final
