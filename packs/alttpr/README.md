@@ -1246,7 +1246,13 @@ from the connections (the worlds' light and dark regions, the swamp patch,
 the doors' vanilla flags) and sweeps DR's events as facts (`src/facts.ts`,
 shared with the entrance randomizer's world). `bunny.ts` ports
 `set_bunny_rules`, but the door kinds `RoomData.py` holds (dashable,
-bombable, hidden walls), which the import does not read yet.
+bombable, hidden walls), which the import does not read yet. Each rule it
+finds is a helper of the world's own (`@bunny<n>`, compiled once and
+memoized like DR's helpers), as DR's paths share the rules they capture
+(`path + [entrance.access_rule]`): written out as text, a dungeon whose
+rooms lie on both sides of a shuffled world (Turtle Rock of a Crosskeys
+race) copied each earlier rule into the next, sevenfold a room, until the
+world ran out of memory.
 `crystal.ts` carries the crystal switches' states as DR's traversal does
 (`traverse_world`, `BaseClasses.py:628-714`): a dungeon region a node per
 state some path brings it in, a region reached in both split in two copies

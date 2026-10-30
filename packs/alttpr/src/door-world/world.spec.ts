@@ -1,5 +1,6 @@
 import type { Settings, State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import ruleData from "../door-rando/world/rules.json" with { type: "json" };
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { OPEN, settingsFromUpstream } from "../settings";
@@ -335,7 +336,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       },
     ];
     const both = ["Paradox Shop", "Paradox Cave Front"];
-    addBunnyRules(
+    const helpers = addBunnyRules(
       exits,
       new Map(),
       {
@@ -345,9 +346,64 @@ describe("the Door Randomizer's world (door-world)", () => {
       "open",
     );
     // can_reach(entrance) and the path's rules, its own among them
-    // (path_to_access_rule, Rules.py:2069-2070)
-    expect(exits[0]?.req).toBe(
-      "((moonPearl) | ((reach(eastDeathMountainBottom)) & (hammer) & (hammer)))",
+    // (path_to_access_rule, Rules.py:2069-2070), a helper of its own
+    expect(exits[0]?.req).toBe("(@bunny0)");
+    expect(helpers.get("bunny0")).toBe(
+      "(moonPearl) | ((reach(eastDeathMountainBottom)) & (hammer) & (hammer))",
+    );
+  });
+
+  it("keeps a bunny's rules apart, as DR's paths share them", () => {
+    // A chain of rooms on both sides of the world, each left by a door a
+    // bunny cannot pass (bunny_impassible_doors): each door's rule reads
+    // the rule of the door before it, grown by its own bunny rule. Copied
+    // as text it doubled a door (2^18 times over here); as a helper read by
+    // name, each rule stays the size of its own path
+    const doors = (
+      ruleData as unknown as {
+        bunny: { impassableDoors: { value: readonly string[] } };
+      }
+    ).bunny.impassableDoors.value.slice(0, 18);
+    const rooms = DR_REGIONS.filter((r) => r.type === "dungeon")
+      .slice(0, doors.length + 1)
+      .map((r) => r.name);
+    const exits = [
+      {
+        from: "East Death Mountain (Bottom)",
+        name: "A way in",
+        req: "true",
+        to: rooms[0] as string,
+      },
+      ...doors.map((name, i) => ({
+        from: rooms[i] as string,
+        name,
+        req: "hammer",
+        to: rooms[i + 1] as string,
+      })),
+    ];
+    const helpers = addBunnyRules(
+      exits,
+      new Map(),
+      {
+        dark: new Set(rooms),
+        light: new Set([...rooms, "East Death Mountain (Bottom)"]),
+      },
+      "open",
+    );
+    const longest = Math.max(
+      ...exits.map((e) => e.req.length),
+      ...[...helpers.values()].map((h) => h.length),
+    );
+    expect(longest).toBeLessThan(2_000);
+    // The last door: the pearl, or the way from Link's own side through
+    // each door before it, by its rule
+    const last = exits.at(-1)?.req ?? "";
+    expect(last).toBe(`(hammer) & (@bunny${doors.length - 1})`);
+    expect(helpers.get(`bunny${doors.length - 1}`)).toContain(
+      "reach(eastDeathMountainBottom)",
+    );
+    expect(helpers.get(`bunny${doors.length - 1}`)).toContain(
+      `@bunny${doors.length - 2}`,
     );
   });
 

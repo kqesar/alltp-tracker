@@ -496,6 +496,7 @@ function graph(
   reached: ReadonlySet<string>,
   extra: ReadonlyMap<string, readonly Location[]>,
   added: ReadonlyMap<string, readonly string[]>,
+  helperBodies: readonly string[] = [],
 ): {
   world: World;
   locationIds: Map<string, string>;
@@ -512,6 +513,7 @@ function graph(
   for (const req of [
     ...exits.map((e) => e.req),
     ...Object.values(DR_RULES.helpers).map((h) => h.req),
+    ...helperBodies,
   ])
     for (const m of req.matchAll(CRYSTAL_READ)) crystalRead.add(m[0]);
   const crystalFacts: { item: string; location: string }[] = [];
@@ -985,7 +987,8 @@ export function drWorld(
   }
   if (isStatic) addStaticKeyRules(exits, locations, keys, mode, trCase);
   addBombShopRule(exits, mode, version);
-  addBunnyRules(exits, locations, marked, mode, added);
+  const bunny = addBunnyRules(exits, locations, marked, mode, added);
+  const bunnyBodies = [...bunny.values()];
 
   // The events: each a fact once its location is reached, a flood switch
   // once its trench's key is too
@@ -1026,6 +1029,9 @@ export function drWorld(
   // The regions a rule reads the reach of where only a fact can stand
   const reached = new Set([
     ...HELPERS_REACH,
+    ...bunnyBodies.flatMap((req) =>
+      [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
+    ),
     ...exits
       .filter((e) => e.blocked !== true)
       .flatMap((e) => [...e.req.matchAll(REACH)].map((m) => m[1] ?? "")),
@@ -1038,6 +1044,7 @@ export function drWorld(
     reached,
     extra,
     added,
+    bunnyBodies,
   );
   const events = Object.entries(DR_RULES.events).flatMap(
     ([item, { location }]) => {
@@ -1059,9 +1066,23 @@ export function drWorld(
   ].map((fact) => ({ ...fact, maybe: maybeOf(fact.item) }));
   const crystalItems = [
     ...exits.map((e) => e.req),
+    ...bunnyBodies,
     ...Object.values(DR_RULES.helpers).map((h) => h.req),
   ].flatMap((req) => [...req.matchAll(CRYSTAL_READ)].map((m) => m[0]));
-  const compiled = compileWorld(world, LOADED_RULES, {
+  // The bunny's helpers beside DR's, read as an exit reads a rule
+  const rules =
+    bunny.size === 0
+      ? LOADED_RULES
+      : {
+          groups: LOADED_RULES.groups,
+          helpers: new Map([
+            ...LOADED_RULES.helpers,
+            ...[...bunny].map(
+              ([name, req]) => [name, parse(exitRule(req))] as const,
+            ),
+          ]),
+        };
+  const compiled = compileWorld(world, rules, {
     items: [
       ...new Set([
         ...STATE_NAMES,

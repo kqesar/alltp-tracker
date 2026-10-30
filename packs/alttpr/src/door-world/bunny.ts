@@ -4,6 +4,15 @@
 // take the moon pearl, or a path from a region wholly on Link's own side
 // of the world, each entrance on it passable (get_rule_to_add, :2083-2165).
 //
+// Each rule found is a helper of its own (`@bunny<n>`), its text what the
+// rule is when found: DR's paths capture each entrance's rule as a function
+// (`path + [entrance.access_rule]`, :2108), so a rule grown by an earlier
+// bunny rule is shared, not copied. Written out as text it would be copied
+// at each step: a dungeon whose regions lie on both sides of a shuffled
+// world (Turtle Rock entered from the Light World and the Dark World, in a
+// Crosskeys race of DR 1.4.8.1) grew sevenfold a room, to 157 million
+// characters at its boss, and the world ran out of memory.
+//
 // Not ported: the doors a bunny cannot pass by their kind in the room's
 // data (dashable, bombable, hidden walls, :2175-2180), which RoomData.py
 // holds and import-dr does not read yet.
@@ -39,6 +48,8 @@ const PEARL = "moonPearl";
  * Adds the bunny's rules to the exits and locations, as set_bunny_rules
  * does last: each rule a path reads is the one its entrance has when the
  * path is found, as DR's lambdas capture them.
+ * @returns The helpers the rules call, by name (`bunny<n>`), each a rule
+ *   that reads only those before it
  * @param exits - The world's exits, the trapped dungeon doors left out
  * @param locations - Each location's rule, by name
  * @param added - The locations added to regions beside their own (the
@@ -53,7 +64,9 @@ export function addBunnyRules(
   },
   mode: DrMode,
   added: ReadonlyMap<string, readonly string[]> = new Map(),
-): void {
+): Map<string, string> {
+  /** The rules found, each a helper read by name, in the order found. */
+  const helpers = new Map<string, string>();
   const inverted = mode === "inverted";
   const isBunny = (region: string) =>
     inverted ? marked.light.has(region) : marked.dark.has(region);
@@ -98,7 +111,11 @@ export function addBunnyRules(
           options.push(and(`reach(${idOf(from)})`, entrance.req, ...newPath));
       }
     }
-    return or(...options);
+    const rule = or(...options);
+    if (rule === PEARL) return PEARL;
+    const name = `bunny${helpers.size}`;
+    helpers.set(name, rule);
+    return `@${name}`;
   };
   const add = (exit: BunnyExit, rule: string) => {
     exit.req = and(exit.req, rule);
@@ -146,4 +163,5 @@ export function addBunnyRules(
       );
     }
   }
+  return helpers;
 }
