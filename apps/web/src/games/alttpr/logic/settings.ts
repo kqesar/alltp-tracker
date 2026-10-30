@@ -20,6 +20,7 @@ import {
   doorCounterExtra,
   doorKeysExtra,
   doorOf,
+  doorShuffleOf,
   isDoorRun,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -271,9 +272,13 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       ? "1.5.7"
       : (door?.doorVersion ?? "1.5.6");
   const bonkDrops = owr && door.bonkDrops;
+  // The fork's entrance shuffle its rules and groups read (`shuffle_<mode>`,
+  // OWR_DEFAULTS): District or Swapped, the ones its world holds
+  const entrances = owr ? doorShuffleOf(run) : undefined;
   const key = [
     owr,
     bonkDrops,
+    entrances,
     pottery,
     drops,
     keyLogic,
@@ -297,6 +302,7 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       bombBag,
       // OWR's bonk drops shuffled (shuffle_bonk_drops), its rules' own
       ...(owr ? { bonkDrops } : {}),
+      ...(entrances === undefined ? {} : { [`shuffle_${entrances}`]: true }),
       // key_logic_algorithm: dangerous asks each door's worst case
       dangerousKeyLogic: keyLogic === "dangerous",
       dropShuffle: drops !== "none",

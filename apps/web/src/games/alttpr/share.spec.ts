@@ -1026,6 +1026,34 @@ describe("the settings in a link (link 4)", () => {
     expect(runOf(unpacked.save).overworld).toEqual(overworld);
   });
 
+  it("carries an OWR District or Swapped run's entrance notes with its overworld's", () => {
+    for (const doorEntrances of ["district", "swapped"] as const) {
+      const settings = {
+        ...getPreset("door-randomizer").settings,
+        doorEntrances,
+        owMixed: true,
+        randomizer: "owr",
+        shuffleLinks: false,
+        shuffleTavern: true,
+      };
+      const entrances = {
+        "big-bomb-shop": "library",
+        "lost-woods-hideout-drop": "kakariko-well-top",
+      };
+      const overworld = { flips: { "44": true } };
+      const save = withProgress(runWith(settings, "door-randomizer"), {
+        entrances,
+        overworld,
+      });
+      const unpacked = unpackLink(packLink(save));
+      if (!unpacked.ok) throw new Error(unpacked.reason);
+      const back = JSON.parse(unpacked.save).progress;
+      expect(back.settings).toEqual(settings);
+      expect(back.entrances).toEqual(entrances);
+      expect(runOf(unpacked.save)).toMatchObject({ entrances, overworld });
+    }
+  });
+
   it("holds every option the tracker has, each once, each setting's own", () => {
     const options = [
       ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),

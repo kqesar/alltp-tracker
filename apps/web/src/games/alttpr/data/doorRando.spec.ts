@@ -212,7 +212,7 @@ describe("a Door Randomizer run's logic", () => {
       "Door Randomizer seed: the logic is DR's own (1.5.8).",
     ]);
     // Every DR shuffle, in every world, with its keys anywhere; DR's own
-    // shuffles by `doorEntrances`, OWR's District not
+    // shuffles by `doorEntrances`
     for (const run of [
       with_(DR_CROSSKEYS, { dungeonItems: "standard", mode: "inverted" }),
       with_(DR, { entranceShuffle: "insanity" }),
@@ -224,13 +224,32 @@ describe("a Door Randomizer run's logic", () => {
       expect(entrancesKnown(run)).toBe(true);
     }
     expect(doorShuffleOf(with_(DR, { doorEntrances: "lite" }))).toBe("lite");
-    const district = with_(DR, {
-      doorEntrances: "district",
-      randomizer: "owr",
-    });
-    expect(doorShuffleOf(district)).toBeUndefined();
-    expect(doorLogic(district)).toBe(false);
-    expect(entrancesKnown(district)).toBe(false);
+    // The fork's own District and Swapped, in its own world (EntranceShuffle2
+    // .py:2566-2743); its other shuffles, whose pools it builds its own
+    // way, not
+    for (const shuffle of ["district", "swapped"] as const) {
+      const run = with_(DR, { ...OWR, doorEntrances: shuffle });
+      expect(doorShuffleOf(run)).toBe(shuffle);
+      expect(doorLogic(run)).toBe(true);
+      expect(unmodelledReasons(run)).toEqual([]);
+      expect(entrancesKnown(run)).toBe(true);
+    }
+    for (const change of [
+      { doorEntrances: "lite" as const },
+      { entranceShuffle: "crossed" as const },
+    ]) {
+      const run = with_(DR, { ...OWR, ...change });
+      expect(doorShuffleOf(run)).toBeUndefined();
+      expect(doorLogic(run)).toBe(false);
+      expect(entrancesKnown(run)).toBe(false);
+      expect(unmodelledReasons(run)).toContain(
+        "the Overworld Randomizer's entrance shuffles",
+      );
+    }
+    // District is the fork's alone
+    expect(doorShuffleOf(with_(DR, { doorEntrances: "district" }))).toBe(
+      undefined,
+    );
     expect(doorShuffleOf(getPreset("open").settings)).toBeUndefined();
     // Not known yet: no logic
     expect(
@@ -535,10 +554,6 @@ describe("a Door Randomizer run's logic", () => {
   it("names every cause it cannot model, and models none of them", () => {
     const cases: [Partial<RunSettings>, string][] = [
       [{ enemyShuffle: "shuffled" }, "shuffled enemies"],
-      [
-        { doorEntrances: "district", randomizer: "owr" },
-        "the Door Randomizer's District entrance shuffle",
-      ],
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
       [{ owMixed: true, randomizer: "dr" }, "a mixed overworld"],
     ];

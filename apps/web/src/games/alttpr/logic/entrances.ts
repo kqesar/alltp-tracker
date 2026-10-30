@@ -16,6 +16,7 @@ import {
   linksOf,
   type MapMarker,
   type OverworldEntrance,
+  owrEntrancePool,
   PLACE_OF_LOCATION,
 } from "@alltp/pack-alttpr";
 import {
@@ -48,10 +49,23 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   const door = doorShuffleOf(settings);
   if (door !== undefined) {
     const read = doorPoolSettingsOf(settings);
-    const key = JSON.stringify([door, read]);
+    // The fork's start house is the Big Bomb Shop where its screen flips
+    // (is_bombshop_start): Inverted's, not known once Mixed may flip it
+    const bombShopStart =
+      settings.owMixed === true ? undefined : read.mode === "inverted";
+    const key = JSON.stringify([
+      door,
+      read,
+      settings.randomizer,
+      bombShopStart,
+    ]);
     let found = doorPools.get(key);
     if (found === undefined) {
-      found = drEntrancePool(door, read);
+      found =
+        door === "district" ||
+        (door === "swapped" && settings.randomizer === "owr")
+          ? owrEntrancePool(door, { ...read, bombShopStart })
+          : drEntrancePool(door, read);
       doorPools.set(key, found);
     }
     return found;

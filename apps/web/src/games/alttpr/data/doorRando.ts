@@ -32,6 +32,7 @@ import {
   NO_SCREEN,
   OVERWORLD_RANDOMIZER_VERSION,
   type OwrFlipGroup,
+  type OwrShuffle,
   owrFlipGroups,
   type PotteryMode,
   type SeedSetting,
@@ -627,15 +628,22 @@ const DR_SHUFFLES: readonly string[] = [
 ];
 
 /**
- * A DR run's entrance shuffle as the pack's DR pools name it: its own
- * (`doorEntrances`) or alttpr.com's of the same name; undefined for vanilla
- * entrances, an alttpr.com run and OWR's District, whose overworld is its
- * own.
+ * A DR run's entrance shuffle as the pack's pools name it: DR's own
+ * (`doorEntrances`) or alttpr.com's of the same name, read by DR's pools;
+ * for an OWR run, the fork's own District and Swapped (`doorEntrances`,
+ * the pack's `owrEntrancePool`). Undefined for vanilla entrances, an
+ * alttpr.com run and an OWR run's other shuffles, whose pools the fork
+ * builds its own way.
  */
 export const doorShuffleOf = (
   settings: DoorRunSettings & { entranceShuffle?: string },
-): DrShuffle | undefined => {
+): DrShuffle | OwrShuffle | undefined => {
   if (settings.randomizer === undefined) return undefined;
+  if (settings.randomizer === "owr")
+    return settings.doorEntrances === "district" ||
+      settings.doorEntrances === "swapped"
+      ? settings.doorEntrances
+      : undefined;
   if (settings.doorEntrances !== undefined)
     return settings.doorEntrances === "district"
       ? undefined
@@ -722,12 +730,6 @@ export const doorReasons = (
   const door = doorOf(settings);
   if (door === null) return [];
   const reasons: string[] = [];
-  // OWR's District moves its own overworld's entrances
-  if (door.doorEntrances === "district") {
-    reasons.push(
-      `the Door Randomizer's ${doorValueText("doorEntrances", door.doorEntrances)} entrance shuffle`,
-    );
-  }
   // vt's rules leave out the doors a vanilla drop key opens: with keys out
   // of their dungeons, the key model would count too few keys
   if (keyDropsShuffled(door) && keysWild) {
@@ -1468,8 +1470,9 @@ export const overworldShufflesOf = (
 /**
  * The groups of screens an OWR run's Mixed flips together (the pack's
  * `owrFlipGroups`, define_tile_groups): those that may flip, by the run's
- * world, crossed overworld and whirlpools (its entrances vanilla, the only
- * ones the fork's world holds). Empty outside a Mixed OWR run.
+ * world, crossed overworld, whirlpools and entrance shuffle (vanilla, or
+ * District and Swapped, the ones the fork's world holds). Empty outside a
+ * Mixed OWR run.
  */
 export const flipGroupsOf = (
   settings: DoorRunSettings & { mode?: string },
@@ -1484,7 +1487,7 @@ export const flipGroupsOf = (
         : settings.mode === "standard"
           ? "standard"
           : "open",
-    shuffle: "vanilla",
+    shuffle: doorShuffleOf(settings) ?? "vanilla",
     whirlpools: door.owWhirlpool,
   }).filter((group) => group.canFlip);
 };

@@ -13,6 +13,7 @@ import {
 } from "@/games/alttpr/autotrack/fixtures";
 import { createFollower } from "@/games/alttpr/autotrack/follow";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { ACTIVATION } from "@/games/alttpr/logic/packItems";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -845,6 +846,33 @@ describe("the doors Link goes through", () => {
     follower.read(readingOf(goIn(memory, "Kakariko Shop", "Chicken House")));
     await vi.waitFor(() =>
       expect(notes()).toEqual({ "kakariko-shop": "chicken-house" }),
+    );
+  });
+
+  it("notes a door of an OWR District run as of DR's, in Race Mode never", async () => {
+    // The fork's ROM tables are DR's (the pack's entrances.spec.ts)
+    const owr = () => {
+      store().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        doorEntrances: "district",
+        randomizer: "owr",
+      });
+      return {
+        follower: createFollower(),
+        memory: seedMemory({ race: false }),
+      };
+    };
+    const raced = owr();
+    goIn(raced.memory, "Light Hype Fairy", "Blinds Hideout");
+    raced.follower.read(readingOf(raced.memory, { race: true }));
+    await settle();
+    expect(notes()).toEqual({});
+    const { follower, memory } = owr();
+    follower.read(
+      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
+    );
+    await vi.waitFor(() =>
+      expect(notes()).toEqual({ "light-hype-fairy": "blinds-hideout" }),
     );
   });
 

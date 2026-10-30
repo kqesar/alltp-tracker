@@ -326,6 +326,39 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
   });
 
+  it("reads an OWR District run's world on the entrances noted, a door not noted leading nowhere", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      doorEntrances: "district",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    // Link's House stands (no shufflelinks); the hideout's hole is moved,
+    // so it leads nowhere until noted
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    useGameStore
+      .getState()
+      .noteEntrance("lost-woods-hideout-drop", "lost-woods-hideout-top");
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    // Noted elsewhere: Kakariko Well's hole drops there instead
+    useGameStore.getState().noteEntrances({
+      "kakariko-well-drop": "lost-woods-hideout-top",
+      "lost-woods-hideout-drop": null,
+    });
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    useGameStore.getState().undo();
+    useGameStore.getState().noteEntrance("lost-woods-hideout-drop", null);
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+  });
+
   it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,

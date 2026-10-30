@@ -182,6 +182,48 @@ describe("the entrance assistant's model", () => {
     ).toEqual({});
   });
 
+  it("has the fork's own pool for an OWR run's District or Swapped", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      customGoals: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: false,
+    } as const;
+    const ids = (settings: Partial<typeof owr> & Record<string, unknown>) =>
+      poolOf({ ...owr, ...settings })?.entrances.map((e) => e.id) ?? [];
+    const district = poolOf({ ...owr, doorEntrances: "district" });
+    expect(district?.shuffle).toBe("district");
+    expect(district?.decoupled).toBe(false);
+    // The fork's names, no Inverted one: its Inverted world flips screens
+    expect(ids({ doorEntrances: "swapped", mode: "inverted" })).not.toContain(
+      "inverted-pyramid-hole",
+    );
+    // Without shufflelinks the start house's door stands: Link's House, the
+    // Big Bomb Shop in Inverted, neither while Mixed may flip its screen
+    expect(ids({ doorEntrances: "district" })).not.toContain("links-house");
+    expect(ids({ doorEntrances: "district" })).toContain("big-bomb-shop");
+    expect(ids({ doorEntrances: "district", mode: "inverted" })).not.toContain(
+      "big-bomb-shop",
+    );
+    expect(ids({ doorEntrances: "district", owMixed: true })).toEqual(
+      expect.arrayContaining(["links-house", "big-bomb-shop"]),
+    );
+    expect(ids({ doorEntrances: "district" })).not.toContain("tavern-north");
+    // A door seen in the game notes it, as in DR's pool
+    if (district === null || district === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(district, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // DR's own Swapped keeps DR's pool
+    expect(
+      poolOf({ ...owr, doorEntrances: "swapped", randomizer: "dr" })?.entrances
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
   it("moves the checks inside a place above the door noted to lead there", () => {
     const blinds = MARKERS.find((m) => m.id === "blinds-hideout");
     const tomb = MARKERS.find((m) => m.id === "kings-tomb");
