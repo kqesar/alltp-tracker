@@ -220,10 +220,11 @@ export function owrNotesComplete(
   screens: OwrScreens,
 ): boolean {
   const { crossings, flips, flute, whirlpools } = notes;
+  const forced = forcedWhirlpoolsOf(data, notes, screens);
   return (
     (whirlpools === undefined ||
       [...whirlpoolsOf(data).keys()].every(
-        (w) => whirlpools[w] !== undefined,
+        (w) => whirlpools[w] !== undefined || forced.has(w),
       )) &&
     (flute === undefined || flute.length === 8) &&
     (notes.edges !== undefined ||
@@ -514,6 +515,51 @@ export const whirlpoolsOf = (
 export type OwrPossibleLinks = [exit: string, region: string, from?: string][];
 
 /**
+ * The whirlpools a shuffle pairs with no choice (OverworldShuffle.py:
+ * 370-413), both ways: Polar with Mixed links the two dark world ones
+ * (:376-378); an overworld not crossed (or Polar's without Mixed) shuffles
+ * each world's whirlpools apart, by the world their regions are in once
+ * Mixed flipped them (:380-391, after update_world_regions), so a pool of
+ * two pairs them (the dark world's two without Mixed). Grouped and
+ * unrestricted mix them freely: none. Read only while every whirlpool's
+ * world is known.
+ */
+export function forcedWhirlpoolsOf(
+  data: DrData,
+  notes: OwrNotes,
+  screens: OwrScreens,
+): ReadonlyMap<string, string> {
+  const forced = new Map<string, string>();
+  if (notes.whirlpools === undefined) return forced;
+  const pair = (a: string, b: string) => {
+    forced.set(a, b);
+    forced.set(b, a);
+  };
+  const pools = data.tableOf<unknown>(
+    "OverworldShuffle.py",
+    "default_whirlpool_connections",
+  ) as unknown as readonly (readonly [Whirlpool, Whirlpool])[];
+  const mixed = notes.flips !== undefined;
+  const crossed = notes.crossings !== undefined || notes.edges !== undefined;
+  if (notes.polar === true && mixed) {
+    for (const [[owid, from], [, to]] of pools)
+      if (owid === 0x55) pair(from, to);
+    return forced;
+  }
+  if (crossed) return forced;
+  const typeOf = regionTypeOf(data, screens);
+  const byWorld = new Map<DrRegion["type"] | undefined, string[]>();
+  for (const [, name, region] of pools.flat()) {
+    const type = typeOf(data.regionNamed(region));
+    byWorld.set(type, [...(byWorld.get(type) ?? []), name]);
+  }
+  if (byWorld.has(undefined)) return forced;
+  for (const names of byWorld.values())
+    if (names.length === 2) pair(names[0] ?? "", names[1] ?? "");
+  return forced;
+}
+
+/**
  * The flute spots by number (shuffle_flute_spots, FluteShuffle.py:36-50,
  * :178-182): the spots' screens sorted by slot (sort_flute_spots,
  * :655-657; Death Mountain's slot is 0x04 once its screen flips), each
@@ -663,9 +709,13 @@ export function linkOwrOverworld(
     }
   } else {
     // Shuffled: a noted whirlpool into its partner's region (connect_
-    // whirlpool, OverworldShuffle.py:359-367), one not noted nowhere
+    // whirlpool, OverworldShuffle.py:359-367), one not noted nowhere, but
+    // a pair its pool forces
     const known = whirlpoolsOf(data);
-    for (const [from, to] of Object.entries(notes.whirlpools)) {
+    for (const [from, to] of [
+      ...Object.entries(notes.whirlpools),
+      ...forcedWhirlpoolsOf(data, notes, screens),
+    ]) {
       const target = known.get(to);
       if (!known.has(from) || target === undefined)
         throw new RangeError(`No whirlpool "${known.has(from) ? to : from}"`);

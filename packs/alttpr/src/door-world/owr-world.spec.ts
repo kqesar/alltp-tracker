@@ -17,6 +17,7 @@ import {
   crossingsOf,
   edgePartnersOf,
   fluteSpots,
+  forcedWhirlpoolsOf,
   isTileSwapped,
   linkOwrEntrances,
   OWR_DEFAULTS,
@@ -112,6 +113,44 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
     expect(flute.get("Flute Spot 1")).toBe("East Death Mountain (Bottom)");
     expect(flute.get("Flute Spot 2")).toBe(overworld?.flute["48"]?.regions[0]);
     expect(flute.has("Flute Spot 3")).toBe(false);
+  });
+
+  it("pairs the dark world's two whirlpools with no note while the overworld is not crossed", () => {
+    const where = whirlpoolsOf(OWR_DATA);
+    const qirn = where.get("Qirn Jump Whirlpool")?.region;
+    const bomber = where.get("Bomber Corner Whirlpool")?.region;
+    // OverworldShuffle.py:380-391: each world's pool apart, the dark one two
+    for (const mode of ["open", "inverted"] as const) {
+      const c = vanillaConnections(OWR_DATA, mode, 157, undefined, {
+        whirlpools: {},
+      });
+      expect(c.get("Qirn Jump Whirlpool")).toBe(bomber);
+      expect(c.get("Bomber Corner Whirlpool")).toBe(qirn);
+      expect(c.has("C Whirlpool")).toBe(false);
+    }
+    // Crossed: the pools mixed, nothing forced
+    expect(
+      vanillaConnections(OWR_DATA, "open", 157, undefined, {
+        crossings: {},
+        whirlpools: {},
+      }).has("Qirn Jump Whirlpool"),
+    ).toBe(false);
+    // Polar with Mixed links the two (:376-378), whatever the flips
+    const polar = { flips: {}, polar: true, whirlpools: {} };
+    expect(
+      forcedWhirlpoolsOf(
+        OWR_DATA,
+        polar,
+        owrScreensOf(OWR_DATA, "open", polar),
+      ).get("Bomber Corner Whirlpool"),
+    ).toBe("Qirn Jump Whirlpool");
+    // Mixed without crossing: by the flipped regions' worlds, none while a
+    // whirlpool's screen is not known
+    const mixed = { flips: {}, whirlpools: {} };
+    expect(
+      forcedWhirlpoolsOf(OWR_DATA, mixed, owrScreensOf(OWR_DATA, "open", mixed))
+        .size,
+    ).toBe(0);
   });
 
   it("links a crossed overworld's edges as noted, the rest nowhere", () => {

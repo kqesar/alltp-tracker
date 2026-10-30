@@ -1678,7 +1678,12 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   partner's region (connect_whirlpool, `OverworldShuffle.py:359-367`), the
   noted screens' spots in slot order (`FluteShuffle.py:178-182`), and a
   whirlpool or spot not noted leads nowhere, which never opens a way too
-  early. A crossed overworld's edges (`ow_crossed` grouped or unrestricted,
+  early, but a pair the shuffle leaves no choice for (`forcedWhirlpoolsOf`,
+  `OverworldShuffle.py:370-413`): an overworld not crossed shuffles each
+  world's whirlpools apart, by their regions' worlds once Mixed flipped
+  them, so a pool of two (the dark world's Qirn Jump and Bomber Corner
+  without Mixed) is linked with no note, and Polar with Mixed links those
+  two outright (`:376-378`). A crossed overworld's edges (`ow_crossed` grouped or unrestricted,
   `OverworldShuffle.py:246-345`; Polar crosses nothing without Mixed) are
   linked the same way: each noted edge into its partner's region, both ways
   (connect_two_way, `:702-725`), an edge not noted nowhere; the terrain
