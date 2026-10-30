@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  BAG_BOMBS,
   BOTTLE_CONTENTS,
   BOTTLE_SLOTS,
   bottleAfter,
   bottleSlotOf,
+  CAPACITIES,
   capacityAfter,
+  capacityOf,
   crystalGoalAfter,
   defaultItemGrid,
   hasPieces,
@@ -409,6 +412,17 @@ describe("the capacities", () => {
     // A value off the steps (a customized seed's) steps from the nearest
     expect(capacityAfter("bombcapacity", 99, -1)).toBe(45);
     expect(capacityAfter("bombcapacity", 0, 1)).toBe(15);
+  });
+
+  it("step a bomb-bag run's bombs a bag at a time: 0, 10, 20 (BAG_BOMBS)", () => {
+    expect(capacityAfter("bombcapacity", 0, 1, true)).toBe(10);
+    expect(capacityAfter("bombcapacity", 10, 1, true)).toBe(20);
+    expect(capacityAfter("bombcapacity", 20, 1, true)).toBe(0);
+    expect(capacityAfter("bombcapacity", 0, -1, true)).toBe(20);
+    // The arrows keep their steps
+    expect(capacityAfter("arrowcapacity", 30, 1, true)).toBe(35);
+    expect(capacityOf("bombcapacity", true)).toBe(BAG_BOMBS);
+    expect(capacityOf("bombcapacity")).toBe(CAPACITIES.bombcapacity);
   });
 });
 

@@ -111,8 +111,8 @@ export type Doubt =
   /** A rule takes the flute activated, which Race Mode does not read. */
   | { readonly kind: "flute" }
   /**
-   * A rule takes a Door Randomizer seed's bomb bag, its +10 upgrade, which
-   * no cell records (or the bag not known, read as on).
+   * A rule takes a Door Randomizer seed's bomb bag, its +10 upgrade, with
+   * the bag not known (read as on): known on, the bombs cell tells it.
    */
   | { readonly kind: "bombBag" }
   /**

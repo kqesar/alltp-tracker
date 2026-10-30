@@ -559,13 +559,9 @@ describe("a Door Randomizer run", () => {
         },
       );
     expect(solutionOf(run(false)).tris[CHEST]).toBe("yes");
-    for (const bag of [undefined, true]) {
-      const analysis = analysisOf(run(bag));
-      expect(analysis.solution.tris[CHEST], String(bag)).toBe("maybe");
-      expect(analysis.missing.get(CHEST)?.doubts).toEqual([
-        { kind: "bombBag" },
-      ]);
-    }
+    const analysis = analysisOf(run(undefined));
+    expect(analysis.solution.tris[CHEST]).toBe("maybe");
+    expect(analysis.missing.get(CHEST)?.doubts).toEqual([{ kind: "bombBag" }]);
     // Nothing else moves: the rest of the map reads as with no bag
     const off = solutionOf(run(false)).tris;
     const unknown = solutionOf(run(undefined)).tris;
@@ -575,6 +571,40 @@ describe("a Door Randomizer run", () => {
         !(off[id] === "yes" && unknown[id] === "maybe"),
     );
     expect(moved).toEqual([]);
+  });
+
+  it("reads a bag known on from the bombs cell: no bombs out of logic, a bag in it", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    const CHEST = "eastern-palace/big-key-chest";
+    const run = (bombcapacity: number) =>
+      inputsOf(
+        { bombcapacity, lantern: true },
+        {
+          preset: "door-randomizer",
+          settings: { ...getPreset("door-randomizer").settings, bombBag: true },
+          smallKeys: Array(13).fill(9),
+        },
+      );
+    // None to start with (InitialSram.py:68): the bag is what it waits for
+    const none = analysisOf(run(0));
+    expect(none.solution.tris[CHEST]).toBe("no");
+    expect(waysText(none.missing.get(CHEST)?.inLogic ?? NONE)).toContain(
+      "Bomb Bag, or Bow",
+    );
+    // A bag found (10, or both: 20): bombs, in logic
+    expect(solutionOf(run(10)).tris[CHEST]).toBe("yes");
+    expect(solutionOf(run(20)).tris[CHEST]).toBe("yes");
+    // The bag not known: the cell's 10 says nothing, maybe still
+    const unknown = inputsOf(
+      { bombcapacity: 10, lantern: true },
+      {
+        preset: "door-randomizer",
+        settings: { ...getPreset("door-randomizer").settings },
+        smallKeys: Array(13).fill(9),
+      },
+    );
+    expect(solutionOf(unknown).tris[CHEST]).toBe("maybe");
   });
 
   it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:73-74)", async () => {

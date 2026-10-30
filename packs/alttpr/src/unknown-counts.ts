@@ -4,7 +4,8 @@
 // whether the flute was activated (canFly, ItemCollection.php:415-428), which
 // Race Mode never reads, and the Door Randomizer's +10 bomb upgrade, the bomb
 // bag of a `--bombbag` seed (can_use_bombs, dr:BaseClasses.py:1208-1209,
-// owr:BaseClasses.py:1367), which no cell records.
+// owr:BaseClasses.py:1367), which a tracker knows only from the bombs it
+// records in a run known to have the bag (none until one is found).
 // A player sees them on the HUD but may leave them unrecorded, and a rule
 // that asks for them must not then read "none found": that would put every
 // dungeon of the basic placement out of logic for good.

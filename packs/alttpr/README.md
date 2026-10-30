@@ -195,9 +195,9 @@ A tracker that never records hearts would hold every one of them out of
 logic for good, whatever the player holds; `canKillEscapeThings` has the
 same edge for the uncle's `TenBombs`, and the Door Randomizer's
 `can_use_bombs` (dr:`BaseClasses.py:1209`, owr:`:1367`) for the +10 bomb
-upgrade, a `--bombbag` seed's bag, which no cell records
-(`bombUpgradeUnknown`; the app reads a bag not known as on, so a check that
-wants bombs is maybe either way).
+upgrade, a `--bombbag` seed's bag (`bombUpgradeUnknown`; the app reads a
+bag not known as on, so a check that wants bombs is maybe, and a bag known
+on from the bombs cell: none until a bag, so its count tells the upgrade).
 
 The engine has no unknown item count (only unknown settings, folded at
 compile time), so the pack carries the knowledge in the state, as it does

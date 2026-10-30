@@ -332,6 +332,31 @@ describe("GameStore", () => {
       expect(store().settings).not.toHaveProperty("playGlitches");
     });
 
+    it("starts a bomb-bag run's bombs at none, and steps them a bag at a time", () => {
+      const store = () => useGameStore.getState();
+      store().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        bombBag: true,
+      });
+      expect(store().items.bombcapacity).toBe(0);
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(10);
+      // Turned off, the run's own 10; on again, none: a 10 kept would say
+      // the bag found
+      store().updateDoorSettings({ bombBag: false });
+      expect(store().items.bombcapacity).toBe(10);
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(15);
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(0);
+      // Not known: the cell is left as it is
+      store().handleItemClick("bombcapacity");
+      store().updateDoorSettings({ bombBag: undefined });
+      expect(store().items.bombcapacity).toBe(10);
+      store().applyPreset("door-randomizer");
+      expect(store().items.bombcapacity).toBe(10);
+    });
+
     it("sets a Door Randomizer setting back to unset, as its absence", () => {
       useGameStore.getState().applyPreset("door-crosskeys");
       useGameStore.getState().updateDoorSettings({ shuffleLinks: false });

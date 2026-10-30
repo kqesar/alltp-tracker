@@ -1,4 +1,5 @@
-import { CAPACITIES } from "@/games/alttpr/data/items";
+import { isBagRun } from "@/games/alttpr/data/doorRando";
+import { capacityOf } from "@/games/alttpr/data/items";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -17,8 +18,10 @@ type BombsCellProps = {
  * The bombs and how many Link can hold, as a count in the corner, green at
  * the most a seed gives (50). A click adds an upgrade of 5, round from 50 to
  * the 10 a run starts with; a right-click or "-" takes one off
- * (`capacityAfter`). Autotracking reads it outside Race Mode only: v2.0 does
- * not name the capacity upgrades, and what it does not name it forbids.
+ * (`capacityAfter`). A bomb-bag run starts with none and steps a bag at a
+ * time up to 20 (BAG_BOMBS), so the cell tells the bag found. Autotracking
+ * reads it outside Race Mode only: v2.0 does not name the capacity
+ * upgrades, and what it does not name it forbids.
  */
 export const BombsCell = ({ row, col }: BombsCellProps) => {
   const capacity = useGameStore((state) => Number(state.items[ID]));
@@ -30,7 +33,9 @@ export const BombsCell = ({ row, col }: BombsCellProps) => {
       useControlShortcuts(ID).aria,
     ),
   );
-  const most = capacity >= (CAPACITIES[ID]?.top ?? Number.POSITIVE_INFINITY);
+  const bag = useGameStore((state) => isBagRun(state.settings));
+  const most =
+    capacity >= (capacityOf(ID, bag)?.top ?? Number.POSITIVE_INFINITY);
 
   return (
     <button

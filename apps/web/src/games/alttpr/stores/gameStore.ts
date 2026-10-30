@@ -8,9 +8,11 @@ import {
   DOOR_OPTIONS,
   type DoorRunSettings,
   type DoorSetting,
+  isBagRun,
 } from "@/games/alttpr/data/doorRando";
 import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
+  BAG_BOMBS,
   bottleAfter,
   bottleSlotOf,
   CAPACITIES,
@@ -303,6 +305,8 @@ export const createProgress = (
   items: {
     ...initialItems,
     ...fullCounters(settings),
+    // A bomb-bag run starts with no bombs (BAG_BOMBS)
+    ...(isBagRun(settings) ? { bombcapacity: BAG_BOMBS.start } : {}),
     // A ganonhunt asks for its own count of pieces (the pack's GANONHUNT)
     ...(settings.goal === "ganonhunt"
       ? { goalpieces: GANONHUNT.required }
@@ -455,6 +459,24 @@ const dated = (
       };
 
 /**
+ * The bombs a run's capacity becomes when its bomb bag turns known on or
+ * stops being so; undefined when it stays. Turned on, they are none
+ * (BAG_BOMBS): a run's 10 to start with would say the bag found, which
+ * autotracking reads again outside Race Mode. Turned off, none read back as
+ * the 10 every other run starts with.
+ */
+const bagBombs = (
+  progress: Progress,
+  settings: RunSettings,
+): number | undefined => {
+  const bag = isBagRun(settings);
+  if (bag === isBagRun(progress.settings)) return undefined;
+  if (bag) return BAG_BOMBS.start;
+  const start = CAPACITIES.bombcapacity?.start ?? 0;
+  return Math.max(start, Number(progress.items.bombcapacity ?? 0));
+};
+
+/**
  * A run with some of its settings changed, its progress kept: a setting
  * changed is no longer hidden, and a change of dungeon items keeps each
  * counter's items found (its top less what it has left), counted again
@@ -506,6 +528,7 @@ export const retune = (
   else if (enemyHealth !== undefined) settings.enemyHealth = enemyHealth;
   // A swordless run's swords are nowhere
   if (settings.swordless) delete settings.swords;
+  const bombs = bagBombs(progress, settings);
   // Each counter keeps its items found when its top moves: dungeon items
   // let out or kept, a Door Randomizer run's locations added or taken away
   if (
@@ -514,9 +537,12 @@ export const retune = (
         counterMax(index, settings) === counterMax(index, progress.settings),
     )
   ) {
-    return { settings };
+    return bombs === undefined
+      ? { settings }
+      : { items: { ...progress.items, bombcapacity: bombs }, settings };
   }
   const items = { ...progress.items } as Record<string, boolean | number>;
+  if (bombs !== undefined) items.bombcapacity = bombs;
   for (const index of COUNTER_INDICES) {
     const id = `chest${index}`;
     const found =
@@ -706,12 +732,18 @@ export const useGameStore = create<GameState>()(
             }
 
             // A capacity steps 5 at a time between the start and the most a
-            // seed gives (capacityAfter)
+            // seed gives, a bomb-bag run's bombs a bag at a time
+            // (capacityAfter)
             if (Object.hasOwn(CAPACITIES, item)) {
               return record(state, {
                 items: {
                   ...state.items,
-                  [item]: capacityAfter(item, current, direction),
+                  [item]: capacityAfter(
+                    item,
+                    current,
+                    direction,
+                    isBagRun(state.settings),
+                  ),
                 },
               });
             }

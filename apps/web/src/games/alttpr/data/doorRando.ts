@@ -244,6 +244,13 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
 export const isDoorRun = (settings: DoorRunSettings): boolean =>
   settings.randomizer !== undefined;
 
+/**
+ * Whether a run is known to have DR's bomb bag on: its bombs start at none
+ * and the bombs cell then tells the bag found (BAG_BOMBS). Not known is no.
+ */
+export const isBagRun = (settings: DoorRunSettings): boolean =>
+  isDoorRun(settings) && settings.bombBag === true;
+
 /** A DR run's settings with its defaults; null for an alttpr.com run. */
 export const doorOf = (settings: DoorRunSettings): DoorSettings | null =>
   settings.randomizer === undefined

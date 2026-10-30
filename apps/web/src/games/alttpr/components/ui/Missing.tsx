@@ -43,7 +43,7 @@ export const doubtText = (doubt: Doubt): string => {
     case "flute":
       return "it takes the flute activated, which Race Mode does not read";
     case "bombBag":
-      return "it takes bombs, and with a bomb bag (or one not known) the bag, which no cell records";
+      return "it takes bombs, and the run's bomb bag is not set: with one, its bombs cell would tell the bag found";
     case "glitches":
       return "a glitched logic has it, and the seed's glitches are not set";
   }

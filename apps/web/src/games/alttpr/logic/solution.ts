@@ -42,6 +42,7 @@ import {
   toState,
   trickFiller,
   trickState,
+  UNKNOWN_COUNTS,
 } from "@alltp/pack-alttpr";
 import type { OwrNotes } from "@alltp/pack-alttpr/door-world";
 import { BOSS_STATES, DUNGEON_INDICES } from "@/games/alttpr/constants";
@@ -50,10 +51,15 @@ import {
   doorPoolSettingsOf,
   doorShuffleOf,
   doorShuffleSettingsOf,
+  isBagRun,
   owrNotesOf,
   type Randomizer,
 } from "@/games/alttpr/data/doorRando";
-import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
+import {
+  BAG_BOMBS,
+  items as freshItems,
+  type ItemState,
+} from "@/games/alttpr/data/items";
 import {
   crossedLogic,
   doorLogic,
@@ -333,15 +339,28 @@ export const setDoorSolver = (
  * number as maybe while the keys stay in their dungeons, never no. The
  * Triforce pieces a hunt asks, once found (the pack's `ganonhuntPieces`),
  * are one piece, all that the world's `treasureHunt` of 1 asks
- * (drSettingsOf).
+ * (drSettingsOf). A run known to have the bomb bag tells it found by its
+ * bombs (BAG_BOMBS: none until a bag): the +10 upgrade can_use_bombs asks
+ * (dr:BaseClasses.py:1209, owr:BaseClasses.py:1367) is then known, held
+ * once the capacity reaches 10; with the bag not known it stays unknown
+ * (the pack's `bombUpgradeUnknown`), as a run's 10 bombs to start with
+ * would then say nothing.
  * @param recorded - The pack's state of what the player recorded
  * @param keys - The small keys held, by dungeon
+ * @param bombs - A bomb-bag run's bombs capacity; none when not known on
  */
 export const doorStateOf = (
   recorded: State,
   keys: Readonly<Partial<Record<DungeonId, number>>>,
+  bombs?: number,
 ): State => {
   const state: Record<string, State[string]> = { ...recorded };
+  if (bombs !== undefined) {
+    delete state[UNKNOWN_COUNTS.bombUpgrade.fact];
+    const bags = Math.floor(Math.min(BAG_BOMBS.top, bombs) / BAG_BOMBS.step);
+    if (bags > 0) state.bombUpgrade = bags;
+    else delete state.bombUpgrade;
+  }
   for (const id of KEY_DUNGEONS) {
     const held = keys[id] ?? 0;
     const item = `key${dungeon(id).code}`;
@@ -489,7 +508,13 @@ export const solutionOf = (state: Inputs): Solution => {
           ...door.solve(
             drSettingsOf(state.settings),
             doorAddedOf(state.settings),
-            doorStateOf(recorded, keysOf(state)),
+            doorStateOf(
+              recorded,
+              keysOf(state),
+              isBagRun(state.settings)
+                ? Number(state.items.bombcapacity ?? 0)
+                : undefined,
+            ),
             doorShuffle === undefined
               ? undefined
               : {
