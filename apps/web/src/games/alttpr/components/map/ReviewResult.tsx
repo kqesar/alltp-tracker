@@ -53,6 +53,8 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
     "Nothing the seed needed has a time on this run, so when each item waited is not shown.",
   "not-modelled":
     "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a logic other than the run's Glitches, or a mode it does not model), so when each place came into logic is not shown.",
+  overworld:
+    "Whirlpools or flute spots were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "race-mode":
     "Only places outside dungeons have times in this run (autotracked in Race Mode by an earlier version of the tracker, which did not read a dungeon's chests), so most needed items are matched by the item, not by its place: when each waited is not shown.",
 };

@@ -192,6 +192,27 @@ describe("comparing a Door Randomizer run", () => {
     expect(hiddenReason(drops, run(), compareReview(drops, run()))).toBe(
       "doors",
     );
+    // An OWR seed's whirlpools or flute spots shuffled: the sweep has no
+    // time for where each led (it would read them vanilla)
+    for (const change of [
+      { owWhirlpool: true },
+      { owFluteShuffle: "random" },
+    ] as const) {
+      useGameStore.setState({
+        settings: {
+          ...store().settings,
+          doorShuffle: "vanilla",
+          owFluteShuffle: "vanilla",
+          owWhirlpool: false,
+          randomizer: "owr",
+          ...change,
+        },
+      });
+      expect(
+        hiddenReason(drops, run(), compareReview(drops, run())),
+        JSON.stringify(change),
+      ).toBe("overworld");
+    }
   });
 });
 

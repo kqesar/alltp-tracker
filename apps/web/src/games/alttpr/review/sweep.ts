@@ -35,6 +35,7 @@ import {
   DOOR_LOCATION_IDS,
   doorShuffleOf,
   doorShuffleSettingsOf,
+  owrNotesOf,
 } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
@@ -99,6 +100,11 @@ export type Hidden =
    */
   | "doors"
   /**
+   * The log is an Overworld Randomizer's whose whirlpools or flute spots
+   * were shuffled: the run does not time where each led.
+   */
+  | "overworld"
+  /**
    * The board has finds and the run no timeline at all: opened from a
    * shared link that left it out to stay short, or a save from before the
    * tracker kept one.
@@ -126,6 +132,9 @@ const LOG_LOGIC: Readonly<Record<Glitches | "none", string>> = {
   none: "NoGlitches",
   overworld_glitches: "OverworldGlitches",
 };
+
+/** No overworld notes: what an OWR run's shuffles read before any note. */
+const NO_OVERWORLD_NOTES = {};
 
 const required = (rows: readonly ReviewRow[]) =>
   rows.filter(({ entry }) => entry.placement.sphere !== null);
@@ -166,6 +175,11 @@ export const hiddenReason = (
     return "entrances";
   }
   if (doorShuffleSettingsOf(settings) !== undefined) return "doors";
+  // The sweep solves the fork's world without the player's notes, which
+  // hold no time: its shuffled whirlpools and flute spots would read vanilla
+  const overworld = owrNotesOf(settings, NO_OVERWORLD_NOTES);
+  if (overworld?.whirlpools !== undefined || overworld?.flute !== undefined)
+    return "overworld";
   const logic = log.extra.settings?.logic;
   // No route is promised: "in logic from" has no meaning
   if (
