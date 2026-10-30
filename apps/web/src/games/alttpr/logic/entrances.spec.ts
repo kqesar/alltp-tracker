@@ -226,6 +226,13 @@ describe("the entrance assistant's model", () => {
     expect(
       gameNotes(district, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
     ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // Walking out of Link's House, Mixed possibly flipping its screen: the
+    // door noted as the game shows it (entrance 1 from the door of slot 0)
+    const mixed = poolOf({ ...owr, doorEntrances: "district", owMixed: true });
+    if (mixed === null || mixed === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(mixed, {}, [{ entrance: 1, kind: "door", slot: 0 }]),
+    ).toEqual({ "links-house": "links-house-exit" });
     // DR's own Swapped keeps DR's pool
     expect(
       poolOf({ ...owr, doorEntrances: "swapped", randomizer: "dr" })?.entrances

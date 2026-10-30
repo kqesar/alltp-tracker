@@ -2102,7 +2102,9 @@ entrance), a few hundred bytes: the session's chunk never loads `er.json`.
 `linksOf` (in `src/entrances.ts`, loaded with the entrance tables) names the
 facts: the entrance's id, and its target's, or a few alike that the game
 loads by one entrance (the healer fairies, some shops, the fortune
-tellers). Memory keeps only the last door each way: a door taken while the
+tellers), and Link's House and the Tavern's back, which only DR's and
+its fork's pools shuffle (entrances 1 and 0x43; another pool drops them).
+Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 
 ### Its rules
