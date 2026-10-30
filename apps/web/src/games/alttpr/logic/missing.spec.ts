@@ -538,6 +538,37 @@ describe("a Door Randomizer run", () => {
       goModeStatusOf(inputs)?.steps.map(({ location }) => location),
     ).toEqual(["agahnim-2", "ganon"]);
   });
+
+  it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:70-71)", async () => {
+    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    setDoorSolver(solver);
+    // Every cell at its top, every dungeon beaten for its crystal
+    const full = Object.fromEntries(
+      Object.entries(freshItems).map(([id, fresh]) => [
+        id,
+        typeof fresh === "boolean" ? true : itemsMax[id],
+      ]),
+    );
+    const hunt = (triforce: number): Inputs => ({
+      ...inputsOf(
+        { ...full, goalpieces: 40, triforce },
+        {
+          settings: {
+            ...getPreset("door-randomizer").settings,
+            goal: "ganonhunt",
+          },
+          smallKeys: Array(13).fill(9),
+        },
+      ),
+      medallions: Array(10).fill(1),
+    });
+    // Every crystal, a beam sword and a fire source: the pieces alone
+    expect(solutionOf(hunt(39)).door).toBeDefined();
+    expect(solutionOf(hunt(39)).tris.ganon).not.toBe("yes");
+    expect(goModeStatusOf(hunt(39))?.tri).not.toBe("yes");
+    expect(solutionOf(hunt(40)).tris.ganon).toBe("yes");
+    expect(goModeStatusOf(hunt(40))?.tri).toBe("yes");
+  });
 });
 
 describe("a run with shuffled entrances, its keys in their dungeons", () => {

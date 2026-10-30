@@ -11,7 +11,7 @@
 // Pure: `sweepRun` is a generator that yields after each solve, so the page
 // runs it in slices (useSweep.ts).
 
-import type { Settings, State, Tri } from "@alltp/engine";
+import type { Settings, Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   type AlttprSpoilerLog,
@@ -46,6 +46,7 @@ import { findIcon, findName, splitName } from "@/games/alttpr/logic/runLog";
 import { drSettingsOf, packSettings } from "@/games/alttpr/logic/settings";
 import {
   doorAddedOf,
+  doorStateOf,
   fillerOf,
   trackerInput,
 } from "@/games/alttpr/logic/solution";
@@ -536,13 +537,7 @@ export function* sweepRun(
     if (door === undefined || doorSettings === undefined)
       return solveWithKeys(filler, toState(input, seedSettings)).locations();
     // DR's dungeons hold more keys than vt's pools: each as the log counts
-    const state: Record<string, State[string]> = {
-      ...toState(input, seedSettings),
-    };
-    for (const d of DUNGEONS) {
-      const keys = input.keys?.[d.id] ?? 0;
-      if (keys > 0) state[`key${d.code}`] = keys;
-    }
+    const state = doorStateOf(toState(input, seedSettings), input.keys ?? {});
     return door
       .solve(doorSettings, doorAddedOf(run.settings), state)
       .solution.locations();

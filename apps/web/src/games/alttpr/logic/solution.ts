@@ -303,21 +303,37 @@ export const setDoorSolver = (solver: DoorSolver): void => {
 
 /**
  * The state of a Door Randomizer run: the pack's of what the player
- * recorded, and every dungeon's small keys as recorded, whether they are
- * wild or not and beyond vt's pools (DR's dungeons hold their drops' keys
- * too, Eastern Palace's among them): DR's world reads a key door below its
- * number as maybe while the keys stay in their dungeons, never no.
+ * recorded, and every dungeon's small keys as given, whether they are wild
+ * or not and beyond vt's pools (DR's dungeons hold their drops' keys too,
+ * Eastern Palace's among them): DR's world reads a key door below its
+ * number as maybe while the keys stay in their dungeons, never no. The
+ * Triforce pieces a hunt asks, once found (the pack's `ganonhuntPieces`),
+ * are one piece, all that the world's `treasureHunt` of 1 asks
+ * (drSettingsOf).
+ * @param recorded - The pack's state of what the player recorded
+ * @param keys - The small keys held, by dungeon
  */
-const doorStateOf = (recorded: State, inputs: Inputs): State => {
+export const doorStateOf = (
+  recorded: State,
+  keys: Readonly<Partial<Record<DungeonId, number>>>,
+): State => {
   const state: Record<string, State[string]> = { ...recorded };
-  KEY_DUNGEONS.forEach((id, index) => {
-    const keys = inputs.smallKeys[index] ?? 0;
+  for (const id of KEY_DUNGEONS) {
+    const held = keys[id] ?? 0;
     const item = `key${dungeon(id).code}`;
-    if (keys > 0) state[item] = keys;
+    if (held > 0) state[item] = held;
     else delete state[item];
-  });
+  }
+  if (recorded.ganonhuntPieces === 1) state.triforcePiece = 1;
+  else delete state.triforcePiece;
   return state;
 };
+
+/** The small keys recorded, by dungeon. */
+const keysOf = (inputs: Inputs): Partial<Record<DungeonId, number>> =>
+  Object.fromEntries(
+    KEY_DUNGEONS.map((id, index) => [id, inputs.smallKeys[index] ?? 0]),
+  );
 
 const added = new WeakMap<readonly DrLocation[], DrLocation[]>();
 
@@ -411,7 +427,7 @@ export const solutionOf = (state: Inputs): Solution => {
           ...door.solve(
             drSettingsOf(state.settings),
             doorAddedOf(state.settings),
-            doorStateOf(recorded, state),
+            doorStateOf(recorded, keysOf(state)),
           ),
           solver: door,
         };

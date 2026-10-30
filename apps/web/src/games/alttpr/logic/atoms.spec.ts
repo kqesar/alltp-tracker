@@ -21,7 +21,7 @@ import {
   toState,
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
-import { drWorld, KEY_ITEMS } from "@alltp/pack-alttpr/door-world";
+import { drWorld } from "@alltp/pack-alttpr/door-world";
 import { describe, expect, it } from "vitest";
 import { items, itemsMax } from "@/games/alttpr/data/items";
 import {
@@ -29,8 +29,16 @@ import {
   HIDEABLE,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
-import { drSettingsOf, packSettings } from "@/games/alttpr/logic/settings";
-import { fillerOf, trackerInput } from "@/games/alttpr/logic/solution";
+import {
+  drSettingsOf,
+  KEY_DUNGEONS,
+  packSettings,
+} from "@/games/alttpr/logic/settings";
+import {
+  doorStateOf,
+  fillerOf,
+  trackerInput,
+} from "@/games/alttpr/logic/solution";
 
 /**
  * What no cell reaches, and why that is right. Anything else the rules read
@@ -228,25 +236,25 @@ const WORLDS = (["open", "standard", "inverted"] as const).flatMap((mode) =>
       ]);
     }
     const full = fullBoard(run);
-    const door = doorRun(mode, dungeonItems);
-    const dr = drWorld(drSettingsOf(door), { unrecorded: ["bigKeyH2"] });
-    return [
-      ...worlds.map(([name, world, facts]) => ({ facts, full, name, world })),
-      {
+    // DR's world for its goal and for a ganonhunt's, whose Ganon asks the
+    // pieces (doorStateOf)
+    const doors = (["ganon", "ganonhunt"] as const).map((goal) => {
+      const door = { ...doorRun(mode, dungeonItems), goal };
+      const dr = drWorld(drSettingsOf(door), { unrecorded: ["bigKeyH2"] });
+      return {
         facts: dr.facts.flatMap(({ item, maybe }) => [item, maybe ?? item]),
         // Every dungeon's keys, as DR's world reads the recorded ones
-        full: {
-          ...fullBoard(door),
-          ...Object.fromEntries(
-            KEY_ITEMS.filter((item) => item.startsWith("key")).map((item) => [
-              item,
-              9,
-            ]),
-          ),
-        },
-        name: `${mode} ${dungeonItems} door`,
+        full: doorStateOf(
+          fullBoard(door),
+          Object.fromEntries(KEY_DUNGEONS.map((id) => [id, 9])),
+        ),
+        name: `${mode} ${dungeonItems} door${goal === "ganon" ? "" : ` ${goal}`}`,
         world: dr.compiled,
-      },
+      };
+    });
+    return [
+      ...worlds.map(([name, world, facts]) => ({ facts, full, name, world })),
+      ...doors,
     ];
   }),
 );

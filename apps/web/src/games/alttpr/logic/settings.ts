@@ -218,7 +218,9 @@ const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
  * drops' and pots' keys shuffled, the pots, whether pots or drops join the
  * dungeons beyond their keys (the key analysis then left out), the pyramid
  * a fast Ganon opens (open_pyramid auto, is_pyramid_open, BaseClasses.py:
- * 300-311), a triforce hunt.
+ * 300-311), a triforce hunt, a ganonhunt: Ganon (Rules.py:70-71) and
+ * Murahdahla (:69) ask the pieces the goal asks, which the state holds as
+ * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
  * The same run settings always give the same object, so the world compiled
  * for it can be kept.
  * @param run - A DR run's settings
@@ -237,16 +239,19 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   }
   let found = byKey.get(key);
   if (found === undefined) {
+    const hunt = run.goal === "ganonhunt" || run.goal === "triforce-hunt";
     found = {
       ...settings,
       dropShuffle: drops !== "none",
       dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
+      ganonHuntGoal: run.goal === "ganonhunt",
       openPyramid: settings.fastGanonGoal,
       potKeys: pottery !== "none" && pottery !== "cave",
       pottery: pottery !== "none",
       retroBow: settings.rupeeBow,
       // key_logic_algorithm strict; dangerous reads as partial (doorNotes)
       strictKeyLogic: keyLogic === "strict",
+      treasureHunt: hunt ? 1 : 0,
       triforceHuntGoal: run.goal === "triforce-hunt",
       universalKeys: settings.genericKeys,
     };
