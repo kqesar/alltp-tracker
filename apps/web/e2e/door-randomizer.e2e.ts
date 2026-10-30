@@ -475,7 +475,7 @@ for (const width of WIDTHS) {
  */
 const openOwrEntranceRun = async (
   page: Page,
-  change: Record<string, string> = { doorEntrances: "district" },
+  change: Record<string, string | boolean> = { doorEntrances: "district" },
 ) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
@@ -581,10 +581,16 @@ for (const width of WIDTHS) {
   });
 }
 
+/**
+ * An OWR Lite run whose take-any caves and bonk drops are stated (none,
+ * off): Lite keeps their caves where they stand.
+ */
+const LITE = { bonkDrops: false, doorEntrances: "lite", takeAny: "none" };
+
 test("an OWR Lite run notes its entrances in the fork's pool, its kept caves left out", async ({
   page,
 }) => {
-  await openOwrEntranceRun(page, { doorEntrances: "lite" });
+  await openOwrEntranceRun(page, LITE);
   // Lite keeps its fixed caves (the fork's EntranceShuffle2.py:2244-2301):
   // Kakariko's shop and the Desert Fairy stand, the Chicken House moves
   await expect(page.getByTestId("entrance-kakariko-shop")).toHaveCount(0);
@@ -627,7 +633,7 @@ for (const width of WIDTHS) {
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOwrEntranceRun(page, { doorEntrances: "lite" });
+    await openOwrEntranceRun(page, LITE);
     await page.getByTestId("entrance-chicken-house").click();
     await page.keyboard.type("blind");
     await page.getByTestId("entrance-option-blinds-hideout").click();

@@ -246,11 +246,18 @@ describe("the entrance assistant's model", () => {
     // take-any caves by the run's take_any, the Good Bee Cave by its bonk
     // drops, the shops by its shopsanity
     expect(ids({ doorEntrances: "lite" })).not.toContain("archery-game");
-    expect(ids({ doorEntrances: "lite" })).not.toContain("desert-fairy");
+    // Unstated, either may move its caves: they wait for a note
+    expect(ids({ doorEntrances: "lite" })).toContain("desert-fairy");
+    expect(ids({ doorEntrances: "lite", takeAny: "none" })).not.toContain(
+      "desert-fairy",
+    );
     expect(ids({ doorEntrances: "lite", takeAny: "fixed" })).toContain(
       "desert-fairy",
     );
-    expect(ids({ doorEntrances: "lite" })).not.toContain("good-bee-cave");
+    expect(ids({ doorEntrances: "lite" })).toContain("good-bee-cave");
+    expect(ids({ bonkDrops: false, doorEntrances: "lite" })).not.toContain(
+      "good-bee-cave",
+    );
     expect(ids({ bonkDrops: true, doorEntrances: "lite" })).toContain(
       "good-bee-cave",
     );

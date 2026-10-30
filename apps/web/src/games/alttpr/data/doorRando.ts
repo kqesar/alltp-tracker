@@ -674,8 +674,17 @@ export const doorPoolSettingsOf = (
     // Unset: the shuffle may have moved them, so each waits for a note
     shuffleLinks: door.shuffleLinks ?? true,
     shuffleTavern: door.shuffleTavern ?? true,
+    // The fork's kept caves read its bonk drops and take-any caves as the
+    // run states them: unstated, either may move a cave (owrShuffled)
     ...(settings.randomizer === "owr"
-      ? { bonkDrops: door.bonkDrops, takeAny: door.takeAny }
+      ? {
+          ...(settings.bonkDrops === undefined
+            ? {}
+            : { bonkDrops: settings.bonkDrops }),
+          ...(settings.takeAny === undefined
+            ? {}
+            : { takeAny: settings.takeAny }),
+        }
       : {}),
   };
 };
