@@ -230,7 +230,11 @@ export function worldKeys(
         const n = logic.layout.maxChests;
         return n <= 0 ? "true" : `key${codeOf(dungeon)} >= ${n}`;
       }
-      const worst = rule.worstCase ?? 0;
+      // Every door the analysis walks gets one (analyze_dungeon): a rule
+      // without it would open the door for nothing
+      const worst = rule.worstCase;
+      if (worst === undefined)
+        throw new RangeError(`No worst case for a door of ${dungeon}`);
       const n = dangerous ? worst : Math.min(worst, rule.smallKeyNum);
       if (holding === "dungeon") return or(atLeast(dungeon, n), "maybe");
       const alternatives: string[] = [];

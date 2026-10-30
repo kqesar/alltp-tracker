@@ -11,7 +11,14 @@ import {
   vanillaConnections,
 } from "./connections";
 import { DR_REGIONS, pairsOf, REGION_NAMED } from "./data";
-import { DR_DEFAULTS, drLocationId, drWorld, markWorlds } from "./index";
+import {
+  DR_DEFAULTS,
+  drKeyLogic,
+  drLocationId,
+  drWorld,
+  markWorlds,
+} from "./index";
+import { worldKeys } from "./keys";
 import { zeldaPath } from "./standard";
 
 const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
@@ -395,6 +402,22 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(at({}, 3)).toBe("yes");
     expect(at({ dangerousKeyLogic: true }, 3)).not.toBe("yes");
     expect(at({ dangerousKeyLogic: true }, 4)).toBe("yes");
+  });
+
+  it("refuses a door rule without its worst case, never opening the door", () => {
+    const logic = drKeyLogic(settings("open")).get("Agahnims Tower");
+    const [first] = logic?.doorRules.values() ?? [];
+    if (logic === undefined || first === undefined)
+      throw new Error("no rule for Agahnim's Tower");
+    const keys = worldKeys("dungeon", { drops: false, pots: false });
+    expect(keys.doorRule("Agahnims Tower", first, logic)).toContain("keyA1");
+    expect(() =>
+      keys.doorRule(
+        "Agahnims Tower",
+        { ...first, worstCase: undefined },
+        logic,
+      ),
+    ).toThrow(RangeError);
   });
 
   it("puts a boss's items behind its map and compass when restricted", () => {
