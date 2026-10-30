@@ -33,7 +33,7 @@ import { readCommit } from "./import-upstream-tests.mjs";
 import { assigned, expression, literal, tokens } from "./python.mjs";
 
 export const DR_REPO = "aerinon/ALttPDoorRandomizer";
-export const DR_VERSION = "1.5.6";
+export const DR_VERSION = "1.5.8";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "../src/door-rando/locations.json");

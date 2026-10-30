@@ -31,11 +31,25 @@ export const DOOR_RANDOMIZER_TITLE =
 
 /**
  * The Door Randomizer version the tracker's DR data is read from (the pack's
- * upstream.json, `doorRandomizer`): what Hyrule Town Hall ran for the
- * Crosskeys and Enemizer races of 2026 (the study of 2026-10-29). A seed of
- * another version is still tracked; "What I read" says it differs.
+ * upstream.json, `doorRandomizer`): the release after the 1.5.7 builds most
+ * of the recorded races of 2026 ran (`test/dr-spoilers/index.json`). A seed
+ * of another version is still tracked; "What I read" says when its
+ * locations may differ (`DOOR_RANDOMIZER_SAME_LOCATIONS`).
  */
-export const DOOR_RANDOMIZER_VERSION = "1.5.6";
+export const DOOR_RANDOMIZER_VERSION = "1.5.8";
+
+/**
+ * The Door Randomizer versions whose locations and flags are the tracker's
+ * DR data's: from 1.5.6 to 1.5.8, the files they are read from
+ * (`Regions.py`, `PotShuffle.py`, `source/dungeon/EnemyList.py`,
+ * `Dungeons.py`, `ItemList.py`) and the base patch (`data/base2current.bps`)
+ * do not change.
+ */
+export const DOOR_RANDOMIZER_SAME_LOCATIONS: ReadonlySet<string> = new Set([
+  "1.5.6",
+  "1.5.7",
+  "1.5.8",
+]);
 
 /** Which randomizer wrote a seed, by its title. */
 export type SeedRom =

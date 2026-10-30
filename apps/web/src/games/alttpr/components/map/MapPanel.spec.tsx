@@ -161,7 +161,7 @@ describe("MapPanel", () => {
     act(() => useGameStore.getState().applyPreset("door-randomizer"));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
-      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
     );
 
     // Its Overworld fork's rules are its own: not modelled

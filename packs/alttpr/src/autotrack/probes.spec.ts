@@ -5,6 +5,7 @@ import {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,
+  DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
   probeRaceFlag,
   seedRomOf,
@@ -132,7 +133,10 @@ describe("checkGame", () => {
       seed: "7P4KZ0QW3B",
     });
     expect(seedRomOf("THE LEGEND OF ZELDA  ")).toBeNull();
-    expect(DOOR_RANDOMIZER_VERSION).toBe("1.5.6");
+    expect(DOOR_RANDOMIZER_VERSION).toBe("1.5.8");
+    expect([...DOOR_RANDOMIZER_SAME_LOCATIONS]).toContain(
+      DOOR_RANDOMIZER_VERSION,
+    );
   });
 
   it("calls a header of zeros unreadable rather than another game", () => {

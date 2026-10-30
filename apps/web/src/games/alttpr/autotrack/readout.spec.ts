@@ -550,13 +550,17 @@ describe("a Door Randomizer seed's readout", () => {
       Randomizer: "Door Randomizer 1.5.6",
       Seed: "1_1_367825107",
     });
+    // 1.5.6 to 1.5.8 hold the same locations: no warning
     expect(rows(doorMemory("DR158_1_1_1", "1.5.8-u")).Randomizer).toBe(
-      "Door Randomizer 1.5.8 (the tracker reads DR 1.5.6: this version's locations may differ)",
+      "Door Randomizer 1.5.8",
+    );
+    expect(rows(doorMemory("DR155_1_1_1", "1.5.5-u")).Randomizer).toBe(
+      "Door Randomizer 1.5.5 (the tracker reads DR 1.5.8: this version's locations may differ)",
     );
     // In Race Mode the title alone: the version it names, no setting
-    const race = rows(doorMemory("DR157_1_1_1", "1.5.7-u"), true);
+    const race = rows(doorMemory("DR159_1_1_1", "1.5.9-u"), true);
     expect(race.Randomizer).toBe(
-      "Door Randomizer 1.5.7 (the tracker reads DR 1.5.6: this version's locations may differ)",
+      "Door Randomizer 1.5.9 (the tracker reads DR 1.5.8: this version's locations may differ)",
     );
     expect(race["Door shuffle"]).toBe("not read in Race Mode");
   });

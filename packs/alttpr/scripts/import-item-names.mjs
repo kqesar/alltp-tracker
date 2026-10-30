@@ -32,7 +32,7 @@
 //                    Magic, Fairy or Bee Trap its pots and enemies drop),
 //                    which a log shows by name. Its Items.py is the entrance
 //                    randomizer's with a price after the code and a dungeon
-//                    byte after a prize's sprite bytes (DR 1.5.6 Items.py:23).
+//                    byte after a prize's sprite bytes (DR 1.5.8 Items.py:23).
 // The output is deterministic; the repository's Biome then sorts its keys and
 // formats it, as the checks want it.
 

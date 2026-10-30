@@ -114,6 +114,7 @@ export {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,
+  DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
   type GameCheckCode,
   probeRaceFlag,

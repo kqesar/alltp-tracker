@@ -54,40 +54,43 @@ describe("the Door Randomizer's rules (import-dr, stage B)", () => {
   });
 
   it("leave out only what is code, each with its line and why", () => {
-    // Reviewed, by why: the bomb shop's impossible cases (2027-2032); boss
-    // items restricted to the map and compass (815-822); the save-and-quit
-    // points (195-196) and Uncle's (1503-1504); the shuffled entrances'
-    // escape portals (1511-1512); Zelda's path (1569-1572); the shuffled
-    // doors' bombable walls (892-893); the hidden pits' key door once doors
-    // shuffle (461-465) and the key logic (801); Mire's spike pot where pot
-    // shuffle lands it (527-528); pot_rules' blocks comprehension (951, read
+    // Reviewed, by why: the bomb shop's impossible cases (2031-2036); boss
+    // items restricted to the map and compass (818-825); the save-and-quit
+    // points (198-199) and Uncle's (1507-1508); the shuffled entrances'
+    // escape portals (1515-1516); Zelda's path (1573-1576); the shuffled
+    // doors' bombable walls (895-896); the hidden pits' key door once doors
+    // shuffle (464-468) and the key logic (804); Mire's spike pot where pot
+    // shuffle lands it (530-531); pot_rules' blocks comprehension (954, read
     // from the pots' data) and the two Dark Lake Hylia spike cave pots of an
-    // f-string (971-972: absent from the vanilla pots); triforce hunt's
-    // Murahdahla (69, a location ItemList.py adds); the bunny (90)
+    // f-string (974-975: absent from the vanilla pots); triforce hunt's
+    // Murahdahla (72, a location ItemList.py adds); the bunny (93); the
+    // static key logic's rules (56-58, StaticKeyLogic.py), which the world
+    // does not model yet
     const why = new Map<string, number[]>();
     for (const { line, why: reason } of rules.unported)
       why.set(reason, [...(why.get(reason) ?? []), line]);
     expect(Object.fromEntries(why)).toEqual({
-      "a bomb shop case other than an added rule": [2030],
-      "a call of add_mc_rule": [821, 822],
-      "a loop": [815],
-      "a loop over no list": [196, 893],
-      "a save-and-quit point: what reaches a region": [195],
-      "a spot other than an entrance or a location": [1512, 1512],
-      "an assignment": [461, 462, 464, 465, 527, 1504, 1511, 1511],
-      "an assignment with ,": [1569],
-      "an assignment with Exception": [2027, 2032],
-      "no location Murahdahla": [69],
-      "Standard's save-and-quit to Uncle: an exit the world adds": [1503],
-      "the attribute pot": [528],
-      "the bunny's paths, by which regions the entrances make dark": [90],
+      "a bomb shop case other than an added rule": [2034],
+      "a call of add_mc_rule": [824, 825],
+      "a loop": [818],
+      "a loop over no list": [199, 896],
+      "a save-and-quit point: what reaches a region": [198],
+      "a spot other than an entrance or a location": [1516, 1516],
+      "an assignment": [464, 465, 467, 468, 530, 1508, 1515, 1515],
+      "an assignment with ,": [1573],
+      "an assignment with Exception": [2031, 2036],
+      "key_logic_algorithm compared with static": [56],
+      "no location Murahdahla": [72],
+      "Standard's save-and-quit to Uncle: an exit the world adds": [1507],
+      "the attribute pot": [531],
+      "the bunny's paths, by which regions the entrances make dark": [93],
       "the key logic: KeyDoorShuffle's analysis of each dungeon (keys, §2.5 of the design)":
-        [801],
-      "the name loc": [972, 972],
-      "unread: Rules.py:892: expected , or ]": [892],
-      "unread: Rules.py:951: expected , or ]": [951],
-      "unread: Rules.py:971: expected , or )": [971, 971],
-      "unread: Rules.py:1567: expected ], not :": [1570, 1572],
+        [804],
+      "the name loc": [975, 975],
+      "unread: Rules.py:895: expected , or ]": [895],
+      "unread: Rules.py:954: expected , or ]": [954],
+      "unread: Rules.py:974: expected , or )": [974, 974],
+      "unread: Rules.py:1571: expected ], not :": [1574, 1576],
     });
   });
 
@@ -100,11 +103,11 @@ describe("the Door Randomizer's rules (import-dr, stage B)", () => {
       string,
       { req: string; sprite: string }
     >;
-    // Every kill room and kill chest of Rules.py:1402 and :1478, each with
-    // the sprites it reads
-    expect(Object.keys(kill)).toHaveLength(42);
+    // Every kill room and kill chest of Rules.py:1405 and :1481, each with
+    // the sprites it reads; 1.5.8 adds Eastern Palace's big key chest
+    expect(Object.keys(kill)).toHaveLength(43);
     for (const [region, room] of Object.entries(kill)) {
-      expect(room.source, region).toMatch(/^Rules\.py:(1402|1478)$/);
+      expect(room.source, region).toMatch(/^Rules\.py:(1405|1481)$/);
       for (const sprite of room.sprites)
         expect(sprite).toMatch(/^source\/dungeon\/EnemyList\.py:\d+$/);
     }

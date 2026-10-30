@@ -1,7 +1,7 @@
 // DR's key analysis on the vanilla world (analysis.ts), held to what
 // KeyDoorShuffle.py's own validator expects of it
 // (test/dr-upstream/vanilla-key-logic.json, written by import-dr.mjs from
-// validate_vanilla_key_logic, :1919-2093). No code of DR calls that
+// validate_vanilla_key_logic, :2019-2193). No code of DR calls that
 // validator, so a check it fails on DR's own code is listed below with why.
 import { describe, expect, it } from "vitest";
 import fixture from "../../../test/dr-upstream/vanilla-key-logic.json" with {
@@ -42,18 +42,18 @@ const ruleOf = (mode: Mode, dungeon: string, door: string): DoorRule => {
  * each with why. All three are Ganons Tower's: its doors' numbers here
  * are DR's code's, a key above what the validator once expected, and
  * upstream doubts its own figures there ("should be 7?", "not sure about
- * this 6", :2071-2072).
+ * this 6", :2171-2172).
  */
 const STALE: Readonly<Record<string, string>> = {
-  "val_ganons:2068":
-    "GT Hookshot ES: 8 keys and the map chest allowed to hold its own key here, 7 and no allowance in the validator; the counters spend every other GT door first; a location with no allowance cannot be, check_for_self_lock_key sets both or neither (:871-874)",
-  "val_ganons:2069":
+  "val_ganons:2168":
+    "GT Hookshot ES: 8 keys and the map chest allowed to hold its own key here, 7 and no allowance in the validator; the counters spend every other GT door first; a location with no allowance cannot be, check_for_self_lock_key sets both or neither (:872-875)",
+  "val_ganons:2169":
     "GT Tile Room EN: 7 here; and vanilla_key_logic adds the Conveyor Star Pits door's big key locations to it (DoorShuffle.py:305-309) after the validator's era",
-  "val_ganons:2070":
+  "val_ganons:2170":
     "GT Firesnake Room SW: 8 here; the same adjustment adds the Conveyor Star Pits door's big key locations (DoorShuffle.py:305-307)",
 };
 
-/** What the validator asserts of a rule (val_rule, :2082-2092). */
+/** What the validator asserts of a rule (val_rule, :2182-2192). */
 const ruleHolds = (
   rule: DoorRule | undefined,
   check: (typeof fixture.dungeons)[number]["checks"][number],

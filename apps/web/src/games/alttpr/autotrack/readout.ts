@@ -4,6 +4,7 @@
 // names are upstream's, rebuilt from the pack's ids.
 
 import {
+  DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
   DR_LOCATIONS,
   type DrLocation,
@@ -474,8 +475,9 @@ const DROP_WORDS = { keys: "Keys", none: "None", underworld: "Underworld" };
 
 /**
  * A Door Randomizer seed's lines: the randomizer and its version, which
- * says so when it is not the one the tracker's DR data was read from (its
- * locations and their flags may then differ), then its own settings. None
+ * says so when its locations and their flags may not be those of the
+ * tracker's DR data (a version outside DOOR_RANDOMIZER_SAME_LOCATIONS), then
+ * its own settings. None
  * for an alttpr.com seed.
  */
 const doorRows = (seed: SeedSettingsReading): Readout["seed"] => {
@@ -487,7 +489,7 @@ const doorRows = (seed: SeedSettingsReading): Readout["seed"] => {
     ? "Overworld Randomizer, on the Door Randomizer"
     : "Door Randomizer";
   const differs =
-    version !== null && version !== DOOR_RANDOMIZER_VERSION
+    version !== null && !DOOR_RANDOMIZER_SAME_LOCATIONS.has(version)
       ? ` (the tracker reads DR ${DOOR_RANDOMIZER_VERSION}: this version's locations may differ)`
       : "";
   const rows: { label: string; value: string }[] = [

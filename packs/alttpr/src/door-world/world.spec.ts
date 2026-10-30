@@ -185,6 +185,40 @@ describe("the Door Randomizer's world (door-world)", () => {
     );
   });
 
+  it("puts Eastern Palace's big key chest behind its room's enemies (1.5.8)", () => {
+    // kill_chests' 'Eastern Big Key' (Rules.py:1483 at 1.5.8): the chest
+    // once the room's enemies can be beaten. Bombs beat them, which DR
+    // gives for free unless the bomb bag is on (can_use_bombs)
+    const chest = drLocationId("Eastern Palace - Big Key Chest");
+    const world = drWorld(
+      { ...settings("open"), bombBag: true },
+      { sweepEvents: false },
+    );
+    const held = { heartContainer: 3, keyP1: 2, lamp: 1 };
+    expect(solveFacts(world, held).location(chest)).toBe("no");
+    expect(solveFacts(world, { ...held, hammer: 1 }).location(chest)).toBe(
+      "yes",
+    );
+    expect(solveFacts(world, { ...held, bombUpgrade: 1 }).location(chest)).toBe(
+      "yes",
+    );
+  });
+
+  it("drops from the Old Man's ledge into his dark room, lamp in hand (1.5.8)", () => {
+    // mandatory_connections (EntranceShuffle2.py:2344 at 1.5.8) and the
+    // dark room's entrances (Rules.py:1351)
+    expect(vanillaConnections("open").get("Old Man Cave Dropdown")).toBe(
+      "Old Man Cave (West)",
+    );
+    const world = drWorld(settings("open"), {
+      probes: ["Old Man Cave Dropdown"],
+    });
+    const drop = "exit:Old Man Cave Dropdown";
+    const held = { glove: 1, heartContainer: 3 };
+    expect(solveFacts(world, held).location(drop)).toBe("no");
+    expect(solveFacts(world, { ...held, lamp: 1 }).location(drop)).toBe("yes");
+  });
+
   it("reads each key holding as DR's add_key_logic_rules does", () => {
     // Agahnim's Tower: the Room 03 stairs ask one key (validate_vanilla_key_
     // logic, KeyDoorShuffle.py:1979-1983), every key of the tower four

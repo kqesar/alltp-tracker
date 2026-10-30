@@ -1,6 +1,6 @@
 /**
  * A Door Randomizer run's own settings: what aerinon's Door Randomizer (DR,
- * 1.5.6, the pack's upstream.json) and its Overworld fork (OWR) add to a
+ * 1.5.8, the pack's upstream.json) and its Overworld fork (OWR) add to a
  * seed beyond alttpr.com's, as flat fields of the run's settings (a shared
  * link packs each as `key:value`). All are absent from an alttpr.com run;
  * in a DR run an absent field is its default (vanilla doors, nothing more
@@ -15,6 +15,7 @@
  */
 
 import {
+  DOOR_RANDOMIZER_VERSION,
   DR_LOCATIONS,
   type DrLocationSet,
   type DrModes,
@@ -36,9 +37,9 @@ export type Randomizer = "dr" | "owr";
 export type DoorShuffle = "vanilla" | "basic" | "partitioned" | "crossed";
 
 /**
- * DR's key logic (`--key_logic_algorithm`: dangerous, partial, strict at
- * 1.5.6, args.json:209-215), and the `static` of DR's unstable builds,
- * which some race seeds of 2026 ran on.
+ * DR's key logic (`--key_logic_algorithm`, args.json:209-216 at 1.5.8):
+ * dangerous, partial, strict, and the `static` 1.5.7 added, which some
+ * race seeds of 2026 ran on (from DR's unstable 1.5.6 builds).
  */
 export type DoorKeyLogic = "partial" | "strict" | "dangerous" | "static";
 
@@ -414,7 +415,7 @@ export const doorNotes = (
   if (door === null) return [];
   if (kind === "door")
     return [
-      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+      `Door Randomizer seed: the logic is DR's own (${DOOR_RANDOMIZER_VERSION}).`,
       ...(door.keyLogic === "dangerous"
         ? [
             "Its dangerous key logic: a key door is in logic once the keys of its worst case are found.",

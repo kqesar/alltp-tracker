@@ -43,7 +43,7 @@ describe("a Door Randomizer run's logic", () => {
     expect(logicModelled(DR)).toBe(true);
     expect(doorLogic(DR)).toBe(true);
     expect(doorNotes(DR, "door")).toEqual([
-      "Door Randomizer seed: the logic is DR's own (1.5.6).",
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
     ]);
     expect(doorNotes(getPreset("open").settings, "door")).toEqual([]);
   });

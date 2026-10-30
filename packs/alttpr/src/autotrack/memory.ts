@@ -43,13 +43,14 @@ export const MEMORY_SOURCES = {
   // The Door Randomizer (DR), for what it writes into its ROMs: the title,
   // the race flag, its settings and its pots', drops' and shops' tables
   dr: {
-    commit: "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    commit: "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
     license: "MIT",
     repo: "https://github.com/aerinon/ALttPDoorRandomizer",
-    version: "1.5.6",
+    version: "1.5.8",
   },
-  // The base patch DR 1.5.6 ships (data/base2current.bps, last changed in
-  // 0e43210 with the same change as this commit, 2026-02-11): its SRAM map
+  // The base patch DR 1.5.8 ships, as 1.5.6 did (data/base2current.bps,
+  // last changed in 0e43210 with the same change as this commit,
+  // 2026-02-11): its SRAM map
   // is vt's for every range below, but for the tables DR adds
   // (`RoomPotData`, `SpriteDropData`, `PurchaseCounts`)
   drz3: {

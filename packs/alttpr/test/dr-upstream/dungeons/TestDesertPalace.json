@@ -6,7 +6,7 @@
     "keyLogic": "partial",
     "logic": "noglitches",
     "mode": "open",
-    "source": "test/dungeons/TestDungeon.py:31@626691a",
+    "source": "test/dungeons/TestDungeon.py:31@5c44da3",
     "startingRegions": {
       "Agahnims Tower": ["Agahnims Tower Portal"],
       "Desert Palace Main (Inner)": ["Desert South Portal"],
@@ -147,13 +147,13 @@
     }
   ],
   "upstream": {
-    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
     "harness": {
-      "branch": "DoorDevUnstable",
-      "commit": "626691a94b718ebe25bb7d3d2c2a46574f05160c"
+      "branch": "1.5.8",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4"
     },
     "license": "MIT, Copyright (c) 2019 aerinon",
     "repo": "aerinon/ALttPDoorRandomizer",
-    "version": "1.5.6"
+    "version": "1.5.8"
   }
 }

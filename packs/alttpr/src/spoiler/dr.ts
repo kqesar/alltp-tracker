@@ -79,18 +79,25 @@ export interface DoorSpoilerFacts {
 const isRecord = (value: unknown): value is Doc =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** The keys of DR's JSON that are no list of locations. */
+/**
+ * The keys of DR's JSON that are no list of locations; 1.5.7 adds the
+ * drops, the digging game, the prize packs and the in-game texts
+ * (BaseClasses.py:2730-2733 at 1.5.8), keyed by player name.
+ */
 const RESERVED: ReadonlySet<string> = new Set([
   "Bosses",
   "Bottles",
+  "Dig Game Digs",
   "DoorTypes",
   "Doors",
   "Drops",
   "Entrances",
   "Hashes",
+  "In-Game Texts",
   "Lobbies",
   "Maps",
   "Overworld",
+  "Prize Packs",
   "PrizePacks",
   "Prizes",
   "Shops",

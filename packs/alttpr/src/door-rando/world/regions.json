@@ -1,6 +1,6 @@
 {
   "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
-  "upstream": {"commit":"4da73127a224ec86e762c1f838d8d9c3f9735845","license":"MIT, Copyright (c) 2019 aerinon","repo":"aerinon/ALttPDoorRandomizer","version":"1.5.6"},
+  "upstream": {"commit":"5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4","license":"MIT, Copyright (c) 2019 aerinon","repo":"aerinon/ALttPDoorRandomizer","version":"1.5.8"},
   "dungeons": [
     {"bigKey":null,"boss":null,"name":"Hyrule Castle","prize":null,"smallKeys":["Small Key (Escape)"],"source":"Dungeons.py:16"},
     {"bigKey":"Big Key (Eastern Palace)","boss":"Armos Knights","name":"Eastern Palace","prize":"Eastern Palace - Prize","smallKeys":[],"source":"Dungeons.py:17"},

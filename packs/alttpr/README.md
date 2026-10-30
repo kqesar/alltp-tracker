@@ -32,7 +32,7 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 | `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
-| `src/door-rando/locations.ts` | aerinon/ALttPDoorRandomizer 1.5.6 (`PotShuffle.py`, `source/dungeon/EnemyList.py`, `Regions.py`, `Dungeons.py`, `ItemList.py`): the Door Randomizer's key drops, pots, enemy drops, shop and take-any items (`locations.json`, imported), which a seed's settings make locations (`drLocationsOf`), and where its base patch keeps each one taken (see "The Door Randomizer") |
+| `src/door-rando/locations.ts` | aerinon/ALttPDoorRandomizer 1.5.8 (`PotShuffle.py`, `source/dungeon/EnemyList.py`, `Regions.py`, `Dungeons.py`, `ItemList.py`): the Door Randomizer's key drops, pots, enemy drops, shop and take-any items (`locations.json`, imported), which a seed's settings make locations (`drLocationsOf`), and where its base patch keeps each one taken (see "The Door Randomizer") |
 | `src/door-rando/seed-import.ts` | a DR seed's settings from an avianart permalink's spoiler `meta` or a Hyrule Town Hall patch's bytes |
 | `src/margin.ts`, `src/rewritten.ts` | `itemPlacement !== 'basic'` in the regions' health gates and `Boss.php`, `region.requireBetterSword` and `requireBetterBow` (`World.php`): the world without basic placement's safety margins (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
 
@@ -1009,12 +1009,35 @@ fetches it: no other run downloads DR's rules, at first load or at a
 service worker's install.
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
-DR 1.5.6 (`4da73127`; 1.5.2 to 1.5.8 coexist, and the races recorded below
+DR 1.5.8 (`5c44da33`; 1.5.2 to 1.5.8 coexist, and the races recorded below
 ran DR's unstable builds, 1.5.7-u for ten of them, 1.5.8-u and 1.5.6-u for
 one each, `test/dr-spoilers/index.json`), its base patch
 `aerinon/z3randomizer` `d0f46511` (DRUnstable, the same change as DR's
-`data/base2current.bps` at 1.5.6), and OWR 0.8.0.0 (`2297be2f`, the last
-release on DR 1.5.6).
+`data/base2current.bps`, which 1.5.6 to 1.5.8 ship unchanged), and OWR
+0.8.0.0 (`2297be2f`, the last release on DR 1.5.6; OWR 0.8.0.1 and 0.8.0.2
+merge DR 1.5.7 and change none of the ROM's bytes the tracker reads, and
+no OWR release is on 1.5.8 yet). From 1.5.6 to 1.5.8 the locations' files
+(`Regions.py`, `PotShuffle.py`, `source/dungeon/EnemyList.py`,
+`Dungeons.py`, `ItemList.py`) do not change, so the data is every one of
+these versions' (`DOOR_RANDOMIZER_SAME_LOCATIONS`); the logic does, below
+("DR 1.5.7 and 1.5.8").
+
+**DR 1.5.7 and 1.5.8** (`git diff 1.5.6 1.5.8`, 37 files, read for the pin's
+move): Eastern Palace's big key chest joins `kill_chests` (`Rules.py:1483`),
+the Old Man's ledge drops into his west room rather than the east
+(`EntranceShuffle2.py:2344`), which is dark (`Rules.py:1351`), and the Kings
+Grave case of the bomb shop reads the renamed `Village of Outcasts`
+(`:1839`, entrance shuffles only). The rest reaches no rule of the world: the
+customizer's `key_logic` plando (`KeyDoorShuffle.py:1404-1500`), the
+spoiler's tree pulls, prize packs and in-game texts (sections the parser
+passes over), the enemizer's and the fill's fixes (enemy shuffle is not
+modelled; the fill decides where items go, not what reaches them), and ROM
+writes no decoder reads (native item codes for the dungeons' own big keys,
+maps and compasses, which set the same bits; the map HUD counter; glitched
+logics' flags). A seed of 1.5.6 or 1.5.7 is read with these rules, since each
+only asks more (the kill chest; the drop's lamp, which the west room asked
+from the east already): the world never says yes where such a seed's logic
+says no.
 
 **The ROM.** DR names its seeds `DR` and its version's first three digits,
 then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1452-1456`); OWR
@@ -1103,7 +1126,7 @@ and `drops` cite them). Where `defeat_rule_multiple` breaks a tie with
 `random.choice`, every choice is followed and anded (`ties`, none among the
 vanilla rooms); an enemy whose health depends on the world it is in reads the
 region's side through derived settings (`lightWorld_<region>`,
-`darkWorld_<region>`). As DR 1.5.6 computes it, Ganon's Tower's tile room
+`darkWorld_<region>`). As DR computes it, Ganon's Tower's tile room
 chest needs the powder (its anti-fairy).
 
 **Its own tests** (`test/dr-upstream/`, the same run, `packs/alttpr/scripts/dr-tests.mjs`): the
@@ -1113,11 +1136,12 @@ entrances, Turtle Rock's 186 disabled by a `return`), `dungeons` (483),
 `owg` (558) and `inverted_owg` (432), each test with its kind, its starting
 regions and whether it is disabled; a test of no case list
 (`TestInvertedBombRules`) is kept as code. At 1.5.6 their setUps no longer
-run; upstream restored them on DoorDevUnstable (`626691a`, pinned in
-`upstream.json` as `doorRandomizer.testHarness`), changing the harness
-only, so the harness is read there (`git show`: the world each suite
-builds, the dungeon tests' `STARTING_REGION_MAP`) and the cases at the
-release. `pool.json` is the pool an "everything but" case draws from, from
+ran; upstream restored them (`626691a`, "test: restore the unit test
+suite", in the release since 1.5.7), changing the harness only; the
+harness is read at the commit `upstream.json` pins as
+`doorRandomizer.testHarness`, the release's own since 1.5.8 (`git show`: the
+world each suite builds, the dungeon tests' `STARTING_REGION_MAP`), and the
+cases at the release. `pool.json` is the pool an "everything but" case draws from, from
 `ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
 customizer seeds' Verification checks, the key logic seeds held by
 `test/dr-suite.spec.ts` (below). `vanilla-key-logic.json` is
@@ -2473,7 +2497,7 @@ adapter pairs each with the run's value of the same name.
 - `src/spoiler/dr-items.json`: the Door Randomizer's item name -> vt class, or
   null for an event, joined on the code the same way. DR's `item_table` puts a
   price after the code, writes an event as type `Event` with code 999 and adds a
-  dungeon byte after a prize's sprite bytes (DR 1.5.6 `Items.py:23-194`), which
+  dungeon byte after a prize's sprite bytes (DR 1.5.8 `Items.py:23-194`), which
   is dropped before keying. A code no vt class has (`Big Magic`, `Fairy`, `Bee
   Trap`, `Chicken`: what DR's pots and enemies drop) goes to `unmatched`, read as
   an item with no pack item, shown by name; so does `Arrows (5)`, which shares
@@ -2518,7 +2542,7 @@ are made in the specs by editing a fixture's parsed document, never stored.
 ### The Door Randomizer's logs
 
 `parseSpoiler` hands a Door Randomizer log (and its Overworld fork's) to
-`src/spoiler/dr.ts`, which reads what DR 1.5.6 writes (`Spoiler`,
+`src/spoiler/dr.ts`, which reads what DR 1.5.8 writes (`Spoiler`,
 `BaseClasses.py:2497-2985` at the commit `doorRandomizer` pins) in either form:
 
 | | Text (`to_file`) | JSON (`to_json`) |
@@ -2566,9 +2590,11 @@ Both are turned into the JSON's shape (`textDocument` for the text) and read by
   list no item); an item `dr-items.json` lacks, or more than four unknown
   locations (a newer DR, the fork's bonk drops), is `newer-version`.
 
-The JSON's `Entrances`, `Doors`, `Lobbies`, `DoorTypes`, `Bottles`, `paths`
-and the fork's `Overworld`, `Whirlpools` and `Maps`, and the text's sections
-of the same, are not read.
+The JSON's `Entrances`, `Doors`, `Lobbies`, `DoorTypes`, `Bottles`, `paths`,
+the `Drops`, `Dig Game Digs`, `Prize Packs` and `In-Game Texts` 1.5.7 added
+(tree pulls, the crab, the digging game, the enemies' prize packs, Blind's
+pun), and the fork's `Overworld`, `Whirlpools` and `Maps`, and the text's
+sections of the same, are not read.
 
 `test/dr-spoilers/` holds DR's own text log of twelve spoiler races, cut by
 `pnpm --filter @alltp/pack-alttpr record-dr-spoilers` to the header (less the

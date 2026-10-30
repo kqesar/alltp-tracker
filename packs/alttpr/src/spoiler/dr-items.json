@@ -175,7 +175,7 @@
   "unmatched": ["Arrows (5)", "Bee Trap", "Big Magic", "Chicken", "Fairy"],
   "upstream": {
     "dr": {
-      "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
       "repo": "aerinon/ALttPDoorRandomizer"
     },
     "vt": {

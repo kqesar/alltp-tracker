@@ -113,19 +113,20 @@ describe("the Door Randomizer's tests (test/dr-upstream)", () => {
     expect(
       fixtures.flatMap((f) => (f.code ?? []).map((c) => `${f.file}:${c.line}`)),
     ).toEqual([
-      "test/inverted/TestInvertedBombRules.py:17",
-      "test/inverted/TestInvertedBombRules.py:30",
-      "test/inverted/TestInvertedBombRules.py:36",
+      "test/inverted/TestInvertedBombRules.py:24",
+      "test/inverted/TestInvertedBombRules.py:31",
+      "test/inverted/TestInvertedBombRules.py:35",
     ]);
   });
 
   it("run in the harness upstream restored them with, pinned", () => {
+    // Restored by 626691a, shipped by the release itself since 1.5.7
     const { commit } = manifest.doorRandomizer.testHarness;
-    expect(commit).toMatch(/^626691a/);
+    expect(commit).toBe(manifest.doorRandomizer.commit);
     for (const f of fixtures) {
       expect(f.upstream.commit).toBe(manifest.doorRandomizer.commit);
       expect(f.upstream.harness.commit).toBe(commit);
-      expect(f.harness.source).toMatch(/@626691a$/);
+      expect(f.harness.source).toMatch(/@5c44da3$/);
       expect(f.harness.keyLogic).toBe("partial");
     }
     const worlds = new Set(

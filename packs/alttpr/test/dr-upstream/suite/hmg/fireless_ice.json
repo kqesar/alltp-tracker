@@ -9,10 +9,10 @@
     "logic": "hybridglitches"
   },
   "upstream": {
-    "commit": "4da73127a224ec86e762c1f838d8d9c3f9735845",
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
     "license": "MIT, Copyright (c) 2019 aerinon",
     "repo": "aerinon/ALttPDoorRandomizer",
-    "version": "1.5.6"
+    "version": "1.5.8"
   },
   "verifications": []
 }

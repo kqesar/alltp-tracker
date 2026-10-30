@@ -1,6 +1,6 @@
 {
   "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
-  "upstream": {"commit":"4da73127a224ec86e762c1f838d8d9c3f9735845","license":"MIT, Copyright (c) 2019 aerinon","repo":"aerinon/ALttPDoorRandomizer","version":"1.5.6"},
+  "upstream": {"commit":"5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4","license":"MIT, Copyright (c) 2019 aerinon","repo":"aerinon/ALttPDoorRandomizer","version":"1.5.8"},
   "doors": [
     {"direction":"West","name":"Hyrule Castle Lobby W","source":"Doors.py:46","supertile":97,"type":"Normal"},
     {"direction":"East","name":"Hyrule Castle Lobby E","source":"Doors.py:47","supertile":97,"type":"Normal"},

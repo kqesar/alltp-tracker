@@ -283,6 +283,36 @@ describe("DR's text log", () => {
     expect(log.start).toEqual(["Pegasus Boots", "Ocarina"]);
   });
 
+  it("passes over the sections 1.5.7 added: drops, prize packs, Blind's pun", () => {
+    // to_file at 1.5.8 (BaseClasses.py:2959-2990) writes them before the
+    // playthrough, which playthrough_to_file appends
+    const original = textOf(KEY_DROPS);
+    const added = original.replace(
+      "\n\nPlaythrough:\n",
+      [
+        "\n\nDrops:\n",
+        "Tree Pull Tier 1: Small Heart",
+        "Tree Pull Tier 2: Rupees (5)",
+        "Tree Pull Tier 3: Bombs (8)",
+        "Rupee Crab Main: Rupees (5)",
+        "Rupee Crab Final: Rupees (20)",
+        "Stun Prize: Small Magic",
+        "Fish Save Prize: Big Magic",
+        "Digging Game Digs: 12",
+        "\n\nPrize Packs:\n",
+        "EnemyGroup1: HeartsPack",
+        "Drop Order: Small Heart, Small Heart, Small Heart, Small Heart, Rupees (5), Small Heart, Small Heart, Rupees (5)",
+        "\n\nIn-Game Text:\n",
+        "Blind Pun: I hate insect puns, they really bug me.",
+        "\n\nPlaythrough:\n",
+      ].join("\n"),
+    );
+    expect(added).not.toBe(original);
+    expect(logOf(parseSpoiler(added, KEY_DROPS))).toEqual(
+      logOf(parseSpoiler(original, KEY_DROPS)),
+    );
+  });
+
   it("reads the Overworld fork's first line and both versions", () => {
     const text = textOf(KEYSANITY).replace(
       /^ALttP Dungeon Randomizer Version 1\.5\.6-u {2}- {2}Seed: (\d+)/,
@@ -362,6 +392,36 @@ describe("DR's JSON log", () => {
     expect(log.extra.settings?.wildKeys).toEqual({ known: true, value: true });
     // Bottles, Doors and the rest are no locations
     expect([...log.skipped].sort()).toEqual([...keysanity.skipped].sort());
+  });
+
+  it("passes over the sections 1.5.7 added, keyed by player name", () => {
+    // to_json at 1.5.8 (BaseClasses.py:2730-2733), a single player's keys
+    // its name, empty (Rom.py's player_name)
+    const doc = jsonOf(KEY_DROPS);
+    const added = {
+      ...doc,
+      "Dig Game Digs": { "": 12 },
+      Drops: {
+        Drops: {
+          FishSave: "Big Magic",
+          PullTree: { Tier1: "Small Heart", Tier2: "Rupees (5)" },
+          RupeeCrab: { Final: "Rupees (20)", Main: "Rupees (5)" },
+          Stun: "Small Magic",
+        },
+      },
+      "In-Game Texts": { "": { "Blind Pun": "I hate insect puns." } },
+      "Prize Packs": {
+        PrizePacks: {
+          EnemyGroup1: {
+            DropOrder: "Small Heart",
+            PrizePackName: "HeartsPack",
+          },
+        },
+      },
+    };
+    expect(logOf(parseSpoiler(JSON.stringify(added)))).toEqual(
+      logOf(parseSpoiler(JSON.stringify(doc))),
+    );
   });
 
   it("strips the dungeon a crossed door shuffle names and an enemy's note", () => {

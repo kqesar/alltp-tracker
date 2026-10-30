@@ -27,7 +27,7 @@ test("a Door Randomizer run lists its key pots in DR's logic, checked in place",
   await dialog.getByRole("button", { name: "Close" }).first().click();
 
   await expect(page.getByTestId("logic-note-door")).toHaveText(
-    /Door Randomizer seed: the logic is DR's own \(1\.5\.6\)\./,
+    /Door Randomizer seed: the logic is DR's own \(1\.5\.8\)\./,
   );
   await page.getByTestId("map-view-tab-checks").click();
   // DR's world, loaded on demand: the dark square's pot wants the lamp

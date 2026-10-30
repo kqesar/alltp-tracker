@@ -6,13 +6,14 @@
 // test/inverted_owg, one class a file, each test method a list of cases (a
 // location or an entrance, whether it is reached, the items held and, for
 // an "everything but" case, the items taken out of the pool). At 1.5.6
-// their setUps no longer run (they predate the door and entrance rewrite);
-// upstream restored them on DoorDevUnstable (626691a, "test: restore the
-// unit test suite"), changing the harness only: every suite builds its
-// world as Main does (build_vanilla_world), and the dungeon tests map their
-// old starting regions onto today's portal regions (STARTING_REGION_MAP).
-// That harness is read from the pinned commit (upstream.json,
-// doorRandomizer.testHarness) through `git show`, the cases from 1.5.6.
+// their setUps no longer ran (they predate the door and entrance rewrite);
+// upstream restored them (626691a, "test: restore the unit test suite", in
+// the release since 1.5.7), changing the harness only: every suite builds
+// its world as Main does (build_vanilla_world), and the dungeon tests map
+// their old starting regions onto today's portal regions
+// (STARTING_REGION_MAP). That harness is read from the pinned commit
+// (upstream.json, doorRandomizer.testHarness, the release's own since
+// 1.5.8) through `git show`, the cases from the release.
 //
 // What comes out, for the contract (upstream true is our yes, upstream false
 // is not our yes): a fixture per test file, the pool "everything but" draws
@@ -460,7 +461,7 @@ export function vanillaKeyLogicOf(read) {
 
 /**
  * Every DR test fixture.
- * @param {(file: string) => string} read - A file of the checkout at 1.5.6
+ * @param {(file: string) => string} read - A file of the release's checkout
  * @param {(file: string) => string} harness - A file at the harness commit
  * @param {string} commit - The harness commit
  * @param {{ tests: Record<string, string[]>, suite: string[] }} files - The
@@ -473,7 +474,7 @@ export function importDrTests(read, harness, commit, files) {
       const file = `test/${suite}/${name}`;
       const tests = testsOf(read(file), file);
       // A test method of no case list: code over tables, not cases
-      // (TestInvertedBombRules at 1.5.6 reads tables the ER rewrite deleted)
+      // (TestInvertedBombRules: code over the bomb shop's door options)
       const code = classOf(read(file), file)
         .methods.filter(
           (m) =>
