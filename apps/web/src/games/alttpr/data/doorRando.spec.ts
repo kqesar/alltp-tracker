@@ -2,6 +2,10 @@ import type { SeedSettingsReading } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
   DOOR_LOCATION_IDS,
+  doorEntranceChange,
+  doorEntranceModes,
+  doorEntranceOf,
+  doorEntranceText,
   doorFromSeed,
   doorLocationsOf,
   doorNotes,
@@ -20,6 +24,7 @@ import {
   crossedLogic,
   doorLogic,
   entrancesKnown,
+  entrancesShuffled,
   GLITCHES_LABELS,
   type Glitches,
   getPreset,
@@ -413,6 +418,59 @@ describe("a Door Randomizer run's settings", () => {
     expect(isDoorSettings({ pottery: "keys" })).toBe(false);
     expect(isDoorSettings({ pottery: "pots", randomizer: "dr" })).toBe(false);
     expect(isDoorSettings({ randomizer: "vt" })).toBe(false);
+  });
+
+  it("offer DR's own entrance shuffles, in DR's words and order", () => {
+    // DR 1.5.8's GUI (resources/app/gui/randomize/entrando/widgets.json,
+    // lang/en.json)
+    expect(doorEntranceModes("dr").map(([, words]) => words)).toEqual([
+      "Vanilla",
+      "Simple",
+      "Restricted",
+      "Full",
+      "Lite",
+      "Lean",
+      "Swapped",
+      "Crossed",
+      "Insanity",
+      "Dungeons + Full",
+      "Dungeons + Simple",
+    ]);
+    // The Overworld fork's adds District after Lean
+    expect(doorEntranceModes("owr").map(([mode]) => mode)).toContain(
+      "district",
+    );
+    expect(doorEntranceModes("owr")[6]?.[0]).toBe("district");
+    expect(doorEntranceModes("dr").map(([mode]) => mode)).not.toContain(
+      "district",
+    );
+    // A run's: DR's own, else alttpr.com's of the same name
+    expect(doorEntranceOf(DR)).toBe("vanilla");
+    expect(doorEntranceOf(DR_CROSSKEYS)).toBe("crossed");
+    expect(doorEntranceOf(with_(DR, { doorEntrances: "lite" }))).toBe("lite");
+    expect(doorEntranceText(DR_CROSSKEYS)).toBe("Crossed");
+    expect(doorEntranceText(with_(DR, { doorEntrances: "dungeonsfull" }))).toBe(
+      "Dungeons + Full",
+    );
+    // A change sets one and clears the other, so a run never holds two
+    expect(doorEntranceChange("lean")).toEqual({
+      doorEntrances: "lean",
+      entranceShuffle: "none",
+    });
+    expect(doorEntranceChange("insanity")).toEqual({
+      doorEntrances: undefined,
+      entranceShuffle: "insanity",
+    });
+    expect(doorEntranceChange("vanilla")).toEqual({
+      doorEntrances: undefined,
+      entranceShuffle: "none",
+    });
+    // DR's own leave alttpr.com's at none, yet the entrances are shuffled
+    expect(entrancesShuffled(with_(DR, { doorEntrances: "swapped" }))).toBe(
+      true,
+    );
+    expect(entrancesShuffled(DR)).toBe(false);
+    expect(entrancesShuffled(DR_CROSSKEYS)).toBe(true);
   });
 
   it("compare by their values, a default absent or written", () => {

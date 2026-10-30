@@ -326,6 +326,61 @@ describe("PresetSelector", () => {
     expect(updateSettings).not.toHaveBeenCalled();
   });
 
+  it("offers a Door Randomizer run DR's own entrance shuffles", () => {
+    Object.assign(fakeState, {
+      presetId: "door-crosskeys",
+      settings: getPreset("door-crosskeys").settings,
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    const entrances = within(dialog).getByRole("combobox", {
+      name: "Entrances",
+    });
+    expect(entrances).toHaveValue("crossed");
+    expect(
+      within(entrances)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "Vanilla",
+      "Simple",
+      "Restricted",
+      "Full",
+      "Lite",
+      "Lean",
+      "Swapped",
+      "Crossed",
+      "Insanity",
+      "Dungeons + Full",
+      "Dungeons + Simple",
+    ]);
+    fireEvent.change(entrances, { target: { value: "lite" } });
+    fireEvent.change(entrances, { target: { value: "full" } });
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ doorEntrances: "lite", entranceShuffle: "none" }],
+      [{ doorEntrances: undefined, entranceShuffle: "full" }],
+    ]);
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("offers a Door Randomizer run's entrances as not known in a Mystery", () => {
+    Object.assign(fakeState, {
+      presetId: "door-randomizer",
+      settings: {
+        ...getPreset("door-randomizer").settings,
+        hidden: ["entranceShuffle"],
+      },
+    });
+    render(<PresetSelector />);
+    const entrances = within(openList()).getByRole("combobox", {
+      name: "Entrances",
+    });
+    expect(entrances).toHaveValue("?");
+    fireEvent.change(entrances, { target: { value: "?" } });
+    expect(hideSetting).toHaveBeenCalledWith("entranceShuffle");
+  });
+
   it("offers Link's House and the Tavern's back as not known until set", () => {
     Object.assign(fakeState, {
       presetId: "door-crosskeys",

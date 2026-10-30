@@ -206,8 +206,8 @@ export const DOOR_OPTIONS = {
     ["lean", "Lean"],
     ["swapped", "Swapped"],
     ["district", "District"],
-    ["dungeonssimple", "Dungeons Simple"],
-    ["dungeonsfull", "Dungeons Full"],
+    ["dungeonssimple", "Dungeons + Simple"],
+    ["dungeonsfull", "Dungeons + Full"],
   ],
   doorShuffle: [
     ["vanilla", "Vanilla"],
@@ -383,6 +383,97 @@ export const doorRows = (
     ? [...DR_ROWS, ...entrances, ...OWR_ROWS]
     : [...DR_ROWS, ...entrances];
 };
+
+/**
+ * DR's entrance shuffles as its GUI offers them, in its order
+ * (resources/app/gui/randomize/entrando/widgets.json at DR 1.5.8) and its
+ * words (lang/en.json `randomizer.entrance.entranceshuffle.*`). Those
+ * alttpr.com has too are a run's `entranceShuffle` (vanilla its "none"),
+ * the others its `doorEntrances`.
+ */
+const DR_ENTRANCE_MODES = [
+  ["vanilla", "Vanilla"],
+  ["simple", "Simple"],
+  ["restricted", "Restricted"],
+  ["full", "Full"],
+  ["lite", "Lite"],
+  ["lean", "Lean"],
+  ["swapped", "Swapped"],
+  ["crossed", "Crossed"],
+  ["insanity", "Insanity"],
+  ["dungeonsfull", "Dungeons + Full"],
+  ["dungeonssimple", "Dungeons + Simple"],
+] as const;
+
+/** alttpr.com's entrance shuffles, which DR has too (a run's `entranceShuffle`). */
+type SharedEntrances =
+  | "none"
+  | "simple"
+  | "restricted"
+  | "full"
+  | "crossed"
+  | "insanity";
+
+/** A DR entrance shuffle, as DR's `--shuffle` names it. */
+export type DoorEntranceMode =
+  | (typeof DR_ENTRANCE_MODES)[number][0]
+  | "district";
+
+/**
+ * The entrance shuffles a DR run's summary offers, DR's own words in DR's
+ * order; the Overworld fork's adds District after Lean (its
+ * resources/app/cli/args.json and lang/en.json at 0.8.0.0).
+ */
+export const doorEntranceModes = (
+  randomizer: Randomizer,
+): readonly (readonly [DoorEntranceMode, string])[] =>
+  randomizer === "owr"
+    ? [
+        ...DR_ENTRANCE_MODES.slice(0, 6),
+        ["district", "District"],
+        ...DR_ENTRANCE_MODES.slice(6),
+      ]
+    : DR_ENTRANCE_MODES;
+
+/** A DR run's entrance shuffle, in DR's name: its own, or alttpr.com's. */
+export const doorEntranceOf = (
+  settings: DoorRunSettings & { entranceShuffle: string },
+): DoorEntranceMode =>
+  settings.doorEntrances ??
+  (settings.entranceShuffle === "none"
+    ? "vanilla"
+    : (settings.entranceShuffle as DoorEntranceMode));
+
+/** A DR run's entrance shuffle in DR's words. */
+export const doorEntranceText = (
+  settings: DoorRunSettings & { entranceShuffle: string },
+): string => {
+  const mode = doorEntranceOf(settings);
+  return (
+    doorEntranceModes(settings.randomizer ?? "dr").find(
+      ([option]) => option === mode,
+    )?.[1] ?? mode
+  );
+};
+
+/**
+ * The run settings a DR entrance shuffle sets: alttpr.com's of the same
+ * name, its own cleared, or DR's own with alttpr.com's at none, so a run
+ * never holds two.
+ */
+export const doorEntranceChange = (
+  mode: DoorEntranceMode,
+): {
+  readonly entranceShuffle: SharedEntrances;
+  readonly doorEntrances: DoorEntrances | undefined;
+} =>
+  DR_SHUFFLES.includes(mode) || mode === "vanilla"
+    ? {
+        doorEntrances: undefined,
+        entranceShuffle:
+          mode === "vanilla" ? "none" : (mode as SharedEntrances),
+      }
+    : { doorEntrances: mode as DoorEntrances, entranceShuffle: "none" };
 
 /** alttpr.com's entrance shuffles DR has too, by the same name. */
 const DR_SHUFFLES: readonly string[] = [

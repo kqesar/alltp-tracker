@@ -24,6 +24,8 @@ import {
   DOOR_SETTING_LABELS,
   type DoorRunSettings,
   type DoorSetting,
+  doorEntranceOf,
+  doorEntranceText,
   doorFromSeed,
   doorOf,
   doorRows,
@@ -277,8 +279,20 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   const differs = (key: TunableSetting) =>
     shown(key) && settings[key] !== preset.settings[key];
+  // A DR run's in DR's own words: Lite, Dungeons + Full…
   if (
     shown("entranceShuffle") &&
+    isDoorRun(settings) &&
+    doorEntranceOf(settings) !== doorEntranceOf(preset.settings)
+  ) {
+    parts.push(
+      doorEntranceOf(settings) === "vanilla"
+        ? "vanilla entrances"
+        : `${doorEntranceText(settings)} entrances`,
+    );
+  } else if (
+    shown("entranceShuffle") &&
+    !isDoorRun(settings) &&
     settings.entranceShuffle !== preset.settings.entranceShuffle
   ) {
     parts.push(

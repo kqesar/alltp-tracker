@@ -19,6 +19,7 @@ import {
   type DoorRunSettings,
   type DoorSetting,
   type DoorSettings,
+  doorEntranceText,
   doorOf,
   doorReasons,
   doorRows,
@@ -793,6 +794,11 @@ export type SettingRow = {
   readonly setting?: TunableSetting;
   /** A Door Randomizer setting, which its own select changes. */
   readonly doorSetting?: DoorSetting;
+  /**
+   * A Door Randomizer run's entrance shuffle, which a select of DR's own
+   * shuffles changes (`doorEntranceModes`): alttpr.com's or DR's own.
+   */
+  readonly doorEntrances?: true;
 };
 
 /** Whether a run's setting is one it has not discovered yet. */
@@ -880,11 +886,20 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "enemyHealth",
       ENEMY_HEALTH_LABELS[enemyHealthOf(settings)],
     ),
-    row(
-      "Entrances",
-      "entranceShuffle",
-      ENTRANCE_LABELS[settings.entranceShuffle],
-    ),
+    // A DR run's are DR's own shuffles, by DR's names
+    isDoorRun(settings)
+      ? {
+          doorEntrances: true,
+          label: "Entrances",
+          value: isHidden(settings, "entranceShuffle")
+            ? "?"
+            : doorEntranceText(settings),
+        }
+      : row(
+          "Entrances",
+          "entranceShuffle",
+          ENTRANCE_LABELS[settings.entranceShuffle],
+        ),
     row("Glitches", "glitches", GLITCHES_LABELS[glitchesOf(settings)]),
     ...(noLogicRun(settings)
       ? [

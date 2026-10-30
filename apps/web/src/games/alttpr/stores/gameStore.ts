@@ -171,9 +171,13 @@ type GameState = Progress &
     /**
      * Change a Door Randomizer run's own settings in the run going, as
      * `updateSettings` does: the counters keep their items found as the
-     * locations the settings make come and go. One undo step.
+     * locations the settings make come and go. One undo step, its
+     * entrance shuffle too (DR's own or alttpr.com's, `doorEntranceChange`).
      */
-    updateDoorSettings: (change: Partial<DoorRunSettings>) => void;
+    updateDoorSettings: (
+      change: Partial<DoorRunSettings> &
+        Pick<SettingsChange, "entranceShuffle">,
+    ) => void;
     /** Hide a setting again, as not known yet: one undo step. */
     hideSetting: (setting: HiddenSetting) => void;
     /**

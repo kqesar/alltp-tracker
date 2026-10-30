@@ -545,6 +545,20 @@ describe("describeRun", () => {
     ).toBe("Swordless (Open, Ganon, 7/7, swords)");
   });
 
+  it("names a Door Randomizer run's entrances in DR's words", () => {
+    const dr = getPreset("door-randomizer").settings;
+    expect(
+      describeRun("door-randomizer", { ...dr, doorEntrances: "lite" }),
+    ).toBe("Door Randomizer (Open, Ganon, 7/7, Lite entrances)");
+    expect(
+      describeRun("door-crosskeys", {
+        ...getPreset("door-crosskeys").settings,
+        entranceShuffle: "none",
+      }),
+    ).toMatch(/vanilla entrances/);
+    expect(describeRun("door-randomizer", dr)).not.toMatch(/entrances/);
+  });
+
   it("leaves out what a Mystery run has not found", () => {
     const mystery = getPreset("mystery").settings;
     expect(describeRun("mystery", mystery)).toBe("Mystery (Open)");

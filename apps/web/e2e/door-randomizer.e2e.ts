@@ -127,3 +127,40 @@ test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async 
   // Map pins: WCAG 2.5.8's exception, as in a Crosskeys run
   await auditPage(page, ".mapspan");
 });
+
+test("a Door Randomizer run picks one of DR's own entrance shuffles in its summary", async ({
+  page,
+}) => {
+  const dialog = await openDoorRun(page);
+  const entrances = dialog.getByRole("combobox", { name: "Entrances" });
+  await expect(entrances).toHaveValue("vanilla");
+  await expect(entrances.getByRole("option")).toHaveText([
+    "Vanilla",
+    "Simple",
+    "Restricted",
+    "Full",
+    "Lite",
+    "Lean",
+    "Swapped",
+    "Crossed",
+    "Insanity",
+    "Dungeons + Full",
+    "Dungeons + Simple",
+  ]);
+  await entrances.selectOption("dungeonssimple");
+  // The shuffle's own settings appear with it, not known until set
+  await expect(
+    dialog.getByRole("combobox", { name: "Link's House" }),
+  ).toHaveValue("?");
+  await auditPage(page);
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  // DR's own pool: the dungeons' doors alone, on the Entrances tab
+  await page.getByRole("tab", { name: "Entrances" }).click();
+  await expect(page.getByTestId(/^entrance-/)).toHaveCount(28);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The logic follows the entrances you noted",
+  );
+  // Undo takes the shuffle back, as one step
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("tab", { name: "Entrances" })).toHaveCount(0);
+});

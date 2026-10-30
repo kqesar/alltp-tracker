@@ -10,6 +10,9 @@ import {
   DOOR_UNSET_TEXT,
   type DoorSetting,
   type DoorSettings,
+  doorEntranceChange,
+  doorEntranceModes,
+  doorEntranceOf,
   doorOf,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -133,6 +136,49 @@ const DoorSettingSelect = ({
       {unsettable && <option value={HIDDEN}>? {DOOR_UNSET_TEXT}</option>}
       {options.map(([option, words]) => (
         <option key={String(option)} value={String(option)}>
+          {words}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+/**
+ * A Door Randomizer run's entrance shuffle: DR's own shuffles, in DR's
+ * words and order (`doorEntranceModes`), whether alttpr.com shares the
+ * shuffle (`entranceShuffle`) or not (`doorEntrances`). A change applies at
+ * once, the run's progress and notes kept, as one undo step. Hidden in a
+ * Mystery run, it offers "?", as the other selects do.
+ */
+const DoorEntranceSelect = ({ id }: { id: string }) => {
+  const settings = useGameStore((state) => state.settings);
+  const presetId = useGameStore((state) => state.presetId);
+  const updateDoorSettings = useGameStore((state) => state.updateDoorSettings);
+  const hideSetting = useGameStore((state) => state.hideSetting);
+  const options = doorEntranceModes(settings.randomizer ?? "dr");
+  const hidden = isHidden(settings, "entranceShuffle");
+  return (
+    <select
+      className="run-settings__select"
+      data-testid="run-setting-entranceShuffle"
+      id={id}
+      onChange={(event) => {
+        if (event.target.value === HIDDEN) {
+          hideSetting("entranceShuffle");
+          return;
+        }
+        const picked = options.find(
+          ([option]) => option === event.target.value,
+        );
+        if (picked) updateDoorSettings(doorEntranceChange(picked[0]));
+      }}
+      value={hidden ? HIDDEN : doorEntranceOf(settings)}
+    >
+      {(hidden || presetId === "mystery") && (
+        <option value={HIDDEN}>? Unknown</option>
+      )}
+      {options.map(([option, words]) => (
+        <option key={option} value={option}>
           {words}
         </option>
       ))}
@@ -272,7 +318,10 @@ export const PresetSelector = () => {
         <GamePicker current="alttpr" />
         <dl aria-label="Current run settings" className="run-settings">
           {describeSettings(settings).map((row) => {
-            const control = row.setting ?? row.doorSetting;
+            const control =
+              row.setting ??
+              row.doorSetting ??
+              (row.doorEntrances ? "entranceShuffle" : undefined);
             return (
               <div className="run-settings__row" key={row.label}>
                 <dt className="run-settings__label">
@@ -295,6 +344,8 @@ export const PresetSelector = () => {
                       id={`${idPrefix}-${row.doorSetting}`}
                       setting={row.doorSetting}
                     />
+                  ) : row.doorEntrances ? (
+                    <DoorEntranceSelect id={`${idPrefix}-entranceShuffle`} />
                   ) : (
                     row.value
                   )}
