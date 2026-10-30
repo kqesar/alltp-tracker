@@ -18,12 +18,7 @@ import { whenIdle } from "@/games/alttpr/hooks/useRunAnalysis";
 import { packSettings } from "@/games/alttpr/logic/settings";
 import { warmTricks } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-
-/** "A", "A and B", "A, B and C". */
-const listOf = (items: readonly string[]) =>
-  items.length < 2
-    ? items.join("")
-    : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+import { listOf } from "@/utils/listOf";
 
 /** One trick: its checkbox, what it does and where to learn it. */
 const TrickRow = ({
