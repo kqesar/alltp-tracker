@@ -216,11 +216,13 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   const exact: DoorExactSettings = {
     doorShuffle,
     dropShuffle,
-    enemyShuffle: String(meta.enemy_shuffle ?? "none"),
+    ...(typeof meta.enemy_shuffle === "string"
+      ? { enemyShuffle: meta.enemy_shuffle }
+      : {}),
     ...(typeof meta.key_logic === "string" ? { keyLogic: meta.key_logic } : {}),
     pottery,
     shopsanity,
-    takeAny: String(meta.take_any ?? "none"),
+    ...(typeof meta.take_any === "string" ? { takeAny: meta.take_any } : {}),
     ...(shuffle in ENTRANCES ? {} : { doorEntrances: shuffle }),
     ...(bombBag === null ? {} : { bombBag }),
     ...(potShuffle === null ? {} : { potShuffle }),
@@ -362,7 +364,9 @@ export const doorMetaReading = (
             : "beyond-caves",
       ),
       shopsanity: known(exact.shopsanity),
-      takeAny: known(exact.takeAny !== "none"),
+      takeAny: setting(
+        exact.takeAny === undefined ? null : exact.takeAny !== "none",
+      ),
       version: setting(version),
     },
     doorExact: exact,

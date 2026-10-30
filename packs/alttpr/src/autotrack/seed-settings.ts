@@ -337,8 +337,14 @@ export interface DoorExactSettings {
   readonly dropShuffle: SeedDropShuffle;
   readonly pottery: string;
   readonly shopsanity: boolean;
-  readonly takeAny: string;
-  readonly enemyShuffle: string;
+  /**
+   * Its take-any caves (`take_any`) and enemy shuffle (`enemy_shuffle`),
+   * where `meta` names them: every release's does (BaseClasses.py:2574,
+   * :2597 at 1.5.8; :2570, :2593 at 1.5.6; owr :3139, :3164), so one it
+   * leaves out is not known, never DR's default.
+   */
+  readonly takeAny?: string;
+  readonly enemyShuffle?: string;
   /**
    * Its key logic (`key_logic_algorithm`, BaseClasses.py:2580), as named:
    * dangerous, partial, strict, or the static of 1.5.7 on (and of some

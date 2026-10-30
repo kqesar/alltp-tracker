@@ -95,6 +95,28 @@ describe("avianartReading", () => {
     );
   });
 
+  it("leaves the enemy shuffle and take-any caves unnamed where meta names none", () => {
+    // Every release's meta names both (BaseClasses.py:2574, :2597 at 1.5.8):
+    // one without them is not known, never DR's none
+    const json = avianart("C2BdrZOiV") as {
+      response: { spoiler: { meta: Record<string, unknown> } };
+    };
+    const {
+      enemy_shuffle: _enemies,
+      take_any: _takeAny,
+      ...meta
+    } = json.response.spoiler.meta;
+    const reading = avianartReading(
+      { response: { spoiler: { meta } } },
+      "C2BdrZOiV",
+    );
+    expect(reading?.doorExact).not.toHaveProperty("enemyShuffle");
+    expect(reading?.doorExact).not.toHaveProperty("takeAny");
+    expect(shown(reading?.door?.takeAny ?? { known: true })).toBe(
+      "?unrecognized",
+    );
+  });
+
   it("names the Overworld fork, its settings and DR's own entrance shuffle", () => {
     const reading = avianartReading(avianart("u6BKiwo1E"), "u6BKiwo1E");
     expect(reading?.randomizer).toMatchObject({ overworld: true });
