@@ -12,7 +12,7 @@ const openDoorRun = async (page: Page) => {
   await dialog.getByRole("button", { name: /^Door Randomizer/ }).click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
   await page.getByRole("button", { name: /^Mode/ }).click();
-  // No run type knows the bomb bag: not known until set, every check maybe
+  // The bomb bag not known until set (read as on, its upgrade not known)
   const bag = dialog.getByRole("combobox", { name: "Bomb bag" });
   await expect(bag).toHaveValue("?");
   await bag.selectOption("false");

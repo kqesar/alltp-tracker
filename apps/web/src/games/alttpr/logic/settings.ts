@@ -252,7 +252,12 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const pottery = door?.pottery ?? "none";
   const drops = door?.dropShuffle ?? "none";
   const keyLogic = door?.keyLogic ?? "partial";
-  const bombBag = door?.bombBag ?? false;
+  // Not known reads as on: can_use_bombs (dr:BaseClasses.py:1209,
+  // owr:BaseClasses.py:1367), the one rule that reads the bag (Rules.py's
+  // bomb_escape_rule is a placement, maybe either way), then asks the +10
+  // upgrade, which no cell records (the pack's `bombUpgradeUnknown`): maybe
+  // where off would say yes and on no, the same as off elsewhere
+  const bombBag = door?.bombBag ?? true;
   const potShuffle = door?.potShuffle ?? false;
   const bossItems = door?.restrictBossItems ?? "none";
   const pyramid = pyramidOpen(run);

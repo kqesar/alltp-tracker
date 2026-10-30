@@ -1,7 +1,6 @@
 import type { SeedSettingsReading } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import {
-  BOMB_BAG_NOT_KNOWN,
   DOOR_LOCATION_IDS,
   doorEntranceChange,
   doorEntranceModes,
@@ -45,8 +44,8 @@ import {
   smallKeysMax,
 } from "@/games/alttpr/logic/settings";
 
-// The run types with the bomb bag set, which no run type knows (the seed's
-// ROM or spoiler, or the player, tells it)
+// The run types with the bomb bag off (not known, it reads as on with its
+// upgrade not known: a check that wants bombs is maybe)
 const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
 const DR_CROSSKEYS = {
   ...getPreset("door-crosskeys").settings,
@@ -455,8 +454,6 @@ describe("a Door Randomizer run's logic", () => {
       ],
       [{ owLayout: "grid", randomizer: "owr" }, "the Grid overworld layout"],
       [{ owMixed: true, randomizer: "owr" }, "a mixed overworld"],
-      // Bombs then need the +10 upgrade, which no cell records
-      [{ bombBag: true }, "the bomb bag"],
     ];
     for (const [change, reason] of cases) {
       const run = with_(DR, change);
@@ -936,9 +933,11 @@ describe("doorFromSeed", () => {
     expect(doorFromSeed(rom({ known: false, why: "race-mode" }), {})).toEqual({
       randomizer: "dr",
     });
-    expect(unmodelledReasons({ ...DR, bombBag: undefined })).toEqual([
-      BOMB_BAG_NOT_KNOWN,
-    ]);
+    // On or not known, modelled: on with its upgrade not known
+    expect(unmodelledReasons({ ...DR, bombBag: undefined })).toEqual([]);
+    expect(unmodelledReasons({ ...DR, bombBag: true })).toEqual([]);
+    expect(drSettingsOf({ ...DR, bombBag: undefined }).bombBag).toBe(true);
+    expect(drSettingsOf({ ...DR, bombBag: false }).bombBag).toBe(false);
     expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
       potShuffle: true,
       randomizer: "dr",

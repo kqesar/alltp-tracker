@@ -74,8 +74,9 @@ describe("the app's one table of the pack's items", () => {
             beaten,
             items: held,
             prizes,
-            // A legacy run has no hearts set, nor any bombs
-            unknown: { bombs: true, health: true },
+            // A legacy run has no hearts set, nor any bombs; no cell records
+            // the Door Randomizer's bomb upgrade
+            unknown: { bombs: true, bombUpgrade: true, health: true },
           },
         );
       }
@@ -100,7 +101,7 @@ describe("the app's one table of the pack's items", () => {
       },
       items: {},
       prizes: { "palace-of-darkness": "redCrystal", "swamp-palace": "pendant" },
-      unknown: { bombs: true, health: true },
+      unknown: { bombs: true, bombUpgrade: true, health: true },
     });
   });
 
@@ -151,6 +152,7 @@ describe("the app's one table of the pack's items", () => {
   it("leaves the activation unknown in Race Mode alone, known otherwise", () => {
     expect(read(ACTIVATION.UNKNOWN).unknown).toEqual({
       bombs: true,
+      bombUpgrade: true,
       flute: true,
       health: true,
     });
@@ -161,6 +163,7 @@ describe("the app's one table of the pack's items", () => {
     ]) {
       expect(read(known).unknown, String(known)).toEqual({
         bombs: true,
+        bombUpgrade: true,
         health: true,
       });
     }
@@ -191,11 +194,11 @@ describe("the app's one table of the pack's items", () => {
     // Not set: the health is unknown, and nothing is held
     expect(found(0)).toMatchObject({
       items: {},
-      unknown: { bombs: true, health: true },
+      unknown: { bombs: true, bombUpgrade: true, health: true },
     });
     // 3 hearts (1), the start: none found, and the health known
     expect(found(1).items).toEqual({});
-    expect(found(1).unknown).toEqual({ bombs: true });
+    expect(found(1).unknown).toEqual({ bombs: true, bombUpgrade: true });
     // 10 hearts: 7 found, to which the pack adds the 3 every world is
     // given (Randomizer.php:46-56)
     expect(found(8).items).toEqual({ heartContainer: 7 });

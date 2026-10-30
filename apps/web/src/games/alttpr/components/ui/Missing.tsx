@@ -42,6 +42,8 @@ export const doubtText = (doubt: Doubt): string => {
       return "it takes the Ten Bombs, which no cell records: autotracking reads them from the game";
     case "flute":
       return "it takes the flute activated, which Race Mode does not read";
+    case "bombBag":
+      return "it takes bombs, and with a bomb bag (or one not known) the bag, which no cell records";
     case "glitches":
       return "a glitched logic has it, and the seed's glitches are not set";
   }

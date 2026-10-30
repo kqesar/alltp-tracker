@@ -154,8 +154,11 @@ export type DoorRunSettings = {
    * The bomb bag (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
    * BaseClasses.py:1208-1209): a spoiler's meta names it, the ROM's item
    * substitutions tell it (seed-settings.ts). Unset, it is not known
-   * (`DOOR_UNSET`), a cause of `doorReasons`: off would be the permissive
-   * guess, bombs from the start.
+   * (`DOOR_UNSET`), and DR's world reads it on (`drSettingsOf`): with the
+   * +10 upgrade unknown (the pack's `bombUpgrade` count, no cell records
+   * it), a check that wants bombs is maybe, never in logic by a guess of
+   * off, and nothing else moves (can_use_bombs is the only rule that reads
+   * the bag, dr:BaseClasses.py:1209, owr:BaseClasses.py:1367).
    *
    * The settings DR's rules read that no ROM table states: the legacy pot
    * shuffle (`--shufflepots`: Mire's spikes' key pot may move onto the
@@ -722,10 +725,6 @@ export const doorReasons = (
     reasons.push("shuffled key drops with keys outside their dungeons");
   }
   if (door.enemyShuffle !== "none") reasons.push("shuffled enemies");
-  // Bombs then need the bag, the +10 upgrade (can_use_bombs, BaseClasses.py:
-  // 1208-1209), which no cell records: the bomb count starts at 10
-  if (door.bombBag === undefined) reasons.push(BOMB_BAG_NOT_KNOWN);
-  else if (door.bombBag) reasons.push("the bomb bag");
   // DR refuses its static key logic with key drops or key pots shuffled
   // (static_logic_supported, StaticKeyLogic.py:80-84): no such seed is
   // rolled, so no reading of its logic holds
@@ -760,9 +759,6 @@ export const doorReasons = (
   }
   return reasons;
 };
-
-/** The cause `doorReasons` gives while a DR run's bomb bag is unset. */
-export const BOMB_BAG_NOT_KNOWN = "the bomb bag not known yet (set it in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's prize shuffle is unset. */
 export const PRIZES_NOT_KNOWN =

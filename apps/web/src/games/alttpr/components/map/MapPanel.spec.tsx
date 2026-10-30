@@ -190,10 +190,8 @@ describe("MapPanel", () => {
     );
 
     act(() => useGameStore.getState().applyPreset("door-randomizer"));
-    // No run type knows the bomb bag: named until set, never assumed off
-    expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "Not modelled yet: the bomb bag not known yet (set it in Mode).",
-    );
+    // Its bomb bag not known reads as on, the upgrade not known: modelled
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
     act(() => useGameStore.getState().updateDoorSettings({ bombBag: false }));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
     expect(screen.getByTestId("logic-note-door")).toHaveTextContent(

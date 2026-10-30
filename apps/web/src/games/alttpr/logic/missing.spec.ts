@@ -543,6 +543,40 @@ describe("a Door Randomizer run", () => {
     ).toEqual(["agahnim-2", "ganon"]);
   });
 
+  it("reads a bomb bag not known as on: a check that wants bombs is maybe, its doubt the bag", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    // Eastern's big key chest once its room's enemies are beaten (kill_chests,
+    // Rules.py:1483): bombs alone, from the start without a bag
+    const CHEST = "eastern-palace/big-key-chest";
+    const run = (bombBag: boolean | undefined) =>
+      inputsOf(
+        { lantern: true },
+        {
+          preset: "door-randomizer",
+          settings: { ...getPreset("door-randomizer").settings, bombBag },
+          smallKeys: Array(13).fill(9),
+        },
+      );
+    expect(solutionOf(run(false)).tris[CHEST]).toBe("yes");
+    for (const bag of [undefined, true]) {
+      const analysis = analysisOf(run(bag));
+      expect(analysis.solution.tris[CHEST], String(bag)).toBe("maybe");
+      expect(analysis.missing.get(CHEST)?.doubts).toEqual([
+        { kind: "bombBag" },
+      ]);
+    }
+    // Nothing else moves: the rest of the map reads as with no bag
+    const off = solutionOf(run(false)).tris;
+    const unknown = solutionOf(run(undefined)).tris;
+    const moved = Object.keys(off).filter(
+      (id) =>
+        off[id] !== unknown[id] &&
+        !(off[id] === "yes" && unknown[id] === "maybe"),
+    );
+    expect(moved).toEqual([]);
+  });
+
   it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:73-74)", async () => {
     const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);

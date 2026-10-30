@@ -65,7 +65,7 @@ describe("trackerInput", () => {
       medallions: { mire: "unknown", turtleRock: "unknown" },
       prizes: {},
       // No hearts set, and no cell for the escape's bombs
-      unknown: { bombs: true, health: true },
+      unknown: { bombs: true, bombUpgrade: true, health: true },
     });
   });
 

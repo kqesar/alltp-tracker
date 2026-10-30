@@ -111,6 +111,11 @@ export type Doubt =
   /** A rule takes the flute activated, which Race Mode does not read. */
   | { readonly kind: "flute" }
   /**
+   * A rule takes a Door Randomizer seed's bomb bag, its +10 upgrade, which
+   * no cell records (or the bag not known, read as on).
+   */
+  | { readonly kind: "bombBag" }
+  /**
    * A Mystery run's glitches are not known: a glitched logic would have it,
    * NoGlitches not yet.
    */
@@ -481,6 +486,7 @@ const doubtOf = (key: string): Doubt => {
   if (kind === "unknown") {
     if (what === "bombs") return { kind: "bombs" };
     if (what === "flute") return { kind: "flute" };
+    if (what === "bombUpgrade") return { kind: "bombBag" };
     return { basic: false, hearts: 0, kind: "hearts" };
   }
   return { kind: "placement" };

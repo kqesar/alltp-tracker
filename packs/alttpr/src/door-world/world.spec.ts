@@ -243,6 +243,13 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(solveFacts(world, { ...held, bombUpgrade: 1 }).location(chest)).toBe(
       "yes",
     );
+    // The upgrade not known (no cell records it): maybe, never out of logic,
+    // and the upgrade held still brings it in
+    const unknown = { ...held, bombUpgradeUnknown: 1 };
+    expect(solveFacts(world, unknown).location(chest)).toBe("maybe");
+    expect(
+      solveFacts(world, { ...unknown, bombUpgrade: 1 }).location(chest),
+    ).toBe("yes");
   });
 
   it("drops from the Old Man's ledge into his dark room, lamp in hand (1.5.8)", () => {
