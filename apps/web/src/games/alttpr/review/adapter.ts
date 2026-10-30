@@ -115,12 +115,17 @@ const doorFacts = (
       name: "door:shopsanity",
       run: yes(two.shopsanity),
     },
+    // Not known on either side: no fact
     {
-      file: yes(one.takeAny !== "none"),
+      file: one.takeAny === undefined ? null : yes(one.takeAny !== "none"),
       name: "door:take-any",
-      run: yes(two.takeAny !== "none"),
+      run: two.takeAny === undefined ? null : yes(two.takeAny !== "none"),
     },
-    { file: one.enemyShuffle, name: "door:enemies", run: two.enemyShuffle },
+    {
+      file: one.enemyShuffle ?? null,
+      name: "door:enemies",
+      run: two.enemyShuffle ?? null,
+    },
   );
   return facts;
 };

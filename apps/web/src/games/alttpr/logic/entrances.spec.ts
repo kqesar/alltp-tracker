@@ -254,8 +254,10 @@ describe("the entrance assistant's model", () => {
   });
 
   it("has the fork's own pool for an OWR run's every other shuffle", () => {
+    // The run type states DR's take-any caves: unstated here
+    const { takeAny: _, ...preset } = getPreset("door-randomizer").settings;
     const owr = {
-      ...getPreset("door-randomizer").settings,
+      ...preset,
       customGoals: false,
       prizeShuffle: "none",
       randomizer: "owr",

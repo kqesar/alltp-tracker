@@ -7,12 +7,14 @@ import {
   bonkDropsOf,
   DOOR_LOCATION_IDS,
   DOOR_OPTIONS,
+  DOOR_RUN_DEFAULTS,
   doorEntranceChange,
   doorEntranceModes,
   doorEntranceOf,
   doorEntranceText,
   doorFromSeed,
   doorLocationsOf,
+  doorModesOf,
   doorNotes,
   doorOf,
   doorPoolSettingsOf,
@@ -1034,7 +1036,7 @@ describe("doorFromSeed", () => {
         read({ dropShuffle: { known: true, value: "underworld" } }),
         {},
       ),
-    ).toEqual({ dropShuffle: "underworld", randomizer: "dr" });
+    ).toEqual({ dropShuffle: "underworld", randomizer: "dr", takeAny: "none" });
     expect(
       doorFromSeed({ randomizer: { kind: "vt" } } as SeedSettingsReading, DR),
     ).toEqual({});
@@ -1094,6 +1096,8 @@ describe("doorFromSeed", () => {
       owWhirlpool: true,
       randomizer: "owr",
       shuffleFollowers: false,
+      // The ROM's take-any caves (none)
+      takeAny: "none",
     });
     expect(doorFromSeed(rom, { prizeShuffle: "dungeon" })).toMatchObject({
       prizeShuffle: "dungeon",
@@ -1220,26 +1224,30 @@ describe("doorFromSeed", () => {
         },
         randomizer: { kind: "door", overworld, version: "1.5.6" },
       }) as unknown as SeedSettingsReading;
+    // The enemy shuffle and take-any caves every meta names: kept as named
+    const named = { enemyShuffle: "none", takeAny: "none" } as const;
     expect(doorFromSeed(exact({ keyLogic: "static" }, false), {})).toEqual({
+      ...named,
       keyLogic: "static",
       randomizer: "dr",
     });
     // Partial is DR's default: left out; a name it does not know reads as
     // strict, which asks the most, never the run's (another seed's)
     expect(doorFromSeed(exact({ keyLogic: "partial" }, false), {})).toEqual({
+      ...named,
       randomizer: "dr",
     });
     expect(
       doorFromSeed(exact({ keyLogic: "newer" }, false), {
         keyLogic: "dangerous",
       }),
-    ).toEqual({ keyLogic: "strict", randomizer: "dr" });
+    ).toEqual({ ...named, keyLogic: "strict", randomizer: "dr" });
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, false), {}),
-    ).toEqual({ randomizer: "dr" });
+    ).toEqual({ ...named, randomizer: "dr" });
     expect(
       doorFromSeed(exact({ doorEntrances: "district" }, true), {}),
-    ).toEqual({ doorEntrances: "district", randomizer: "owr" });
+    ).toEqual({ ...named, doorEntrances: "district", randomizer: "owr" });
   });
 
   it("lays none of an earlier run's settings on a seed", () => {
@@ -1274,9 +1282,11 @@ describe("doorFromSeed", () => {
     } as unknown as SeedSettingsReading;
     expect(doorFromSeed(crosskeys, owr)).toEqual({
       doorVersion: "1.5.8",
+      enemyShuffle: "none",
       randomizer: "dr",
       shuffleLinks: false,
       shuffleTavern: false,
+      takeAny: "none",
     });
     // A DR ROM read on that run keeps none of the fork's either
     const rom = {
@@ -1325,13 +1335,16 @@ describe("doorFromSeed", () => {
       ),
     ).toEqual({
       bombBag: true,
+      enemyShuffle: "none",
       openPyramid: "no",
       potShuffle: true,
       randomizer: "dr",
       restrictBossItems: "dungeon",
+      takeAny: "none",
     });
-    // DR's defaults are left out, the bomb bag kept (it has none: unset is
-    // not known); a meta without them keeps the run's
+    // DR's defaults are left out but the bomb bag and the four a seed must
+    // name (none of them has a default: unset is not known), never the
+    // run's
     expect(
       doorFromSeed(
         exact({
@@ -1342,7 +1355,14 @@ describe("doorFromSeed", () => {
         }),
         { bombBag: true, randomizer: "dr" },
       ),
-    ).toEqual({ bombBag: false, randomizer: "dr" });
+    ).toEqual({
+      bombBag: false,
+      enemyShuffle: "none",
+      openPyramid: "auto",
+      randomizer: "dr",
+      restrictBossItems: "none",
+      takeAny: "none",
+    });
     // A ROM's item substitutions tell it; unread, the run's own, unset
     const rom = (bombBag: unknown) =>
       ({
@@ -1361,9 +1381,68 @@ describe("doorFromSeed", () => {
     expect(unmodelledReasons({ ...DR, bombBag: true })).toEqual([]);
     expect(drSettingsOf({ ...DR, bombBag: undefined }).bombBag).toBe(true);
     expect(drSettingsOf({ ...DR, bombBag: false }).bombBag).toBe(false);
-    // Not named: DR's default, never the run's (another seed's)
+    // Not named: DR's default, never the run's (another seed's); the boss
+    // items and the pyramid, which every meta names, not known
     expect(doorFromSeed(exact({}), { potShuffle: true })).toEqual({
+      enemyShuffle: "none",
       randomizer: "dr",
+      takeAny: "none",
+    });
+  });
+
+  it("reads a spoiler's word it does not know for the enemies, take-any caves, boss items or pyramid as not known, never DR's default", () => {
+    // Every release's meta names the four (BaseClasses.py:2574-2597 at
+    // 1.5.8, :2570-2593 at 1.5.6, owr :3139-3164); a newer word or none
+    // leaves the setting unset, a cause the map names, so no check is yes
+    const reading = (more: Record<string, unknown>) =>
+      ({
+        doorExact: {
+          doorShuffle: "vanilla",
+          dropShuffle: "none",
+          enemyShuffle: "none",
+          openPyramid: "auto",
+          pottery: "none",
+          restrictBossItems: "none",
+          shopsanity: false,
+          takeAny: "none",
+          ...more,
+        },
+        randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+      }) as unknown as SeedSettingsReading;
+    const cases = [
+      ["enemyShuffle", "the enemy shuffle not known yet (set it in Mode)"],
+      ["takeAny", "the take-any caves not known yet (set them in Mode)"],
+      ["restrictBossItems", "the boss items not known yet (set them in Mode)"],
+      ["openPyramid", "the pyramid hole not known yet (set it in Mode)"],
+    ] as const;
+    for (const [key, cause] of cases) {
+      // The run held DR's default before: the seed's word replaces it
+      const run = { ...DR, ...DOOR_RUN_DEFAULTS };
+      for (const word of ["newer", undefined]) {
+        const read = doorFromSeed(reading({ [key]: word }), run) ?? {};
+        expect(read, `${key} ${word}`).not.toHaveProperty(key);
+        const laid = { ...run, ...read, [key]: undefined };
+        expect(doorReasons(laid, false), key).toContain(cause);
+        expect(doorLogic(laid), key).toBe(false);
+      }
+    }
+    // Named as DR names them, each kept: no cause
+    const named = { ...DR, ...(doorFromSeed(reading({}), DR) ?? {}) };
+    expect(doorReasons(named, false)).toEqual([]);
+    expect(doorLogic(named)).toBe(true);
+    // The world never reads an unset one as DR's default: the pyramid
+    // shut, the boss items restricted, the enemies shuffled (no cave of
+    // their drops kept), the take-any caves' places unlisted
+    const { openPyramid: _p, restrictBossItems: _b, ...unset } = DR;
+    expect(drSettingsOf(unset)).toMatchObject({
+      openPyramid: false,
+      restrictBossItems: true,
+    });
+    const { enemyShuffle: _e, takeAny: _t, ...noEnemies } = DR;
+    expect(doorPoolSettingsOf(noEnemies).enemyShuffle).toBe(true);
+    expect(doorModesOf(noEnemies)).toMatchObject({
+      enemyShuffle: true,
+      takeAny: "none",
     });
   });
 

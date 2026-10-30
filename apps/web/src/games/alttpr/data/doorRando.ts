@@ -238,7 +238,12 @@ export type DoorSetting = keyof DoorRunSettings;
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
  * move, the doors read as decoupled, and the bomb bag, OWR's release, its
  * overworld shuffles, its prize and follower shuffles and custom goals are
- * causes of `doorReasons` (OWR's bonk drops read as shuffled).
+ * causes of `doorReasons` (OWR's bonk drops read as shuffled). So are the
+ * enemy shuffle, the take-any caves, the boss items and the pyramid hole,
+ * which every release's meta names (BaseClasses.py:2574-2597 at 1.5.8):
+ * one a seed names with a word this version does not know, or not at all,
+ * is not known, never DR's default; a run type states DR's
+ * (`DOOR_RUN_DEFAULTS`).
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
@@ -256,6 +261,10 @@ export const DOOR_UNSET = [
   "owWhirlpool",
   "owFluteShuffle",
   "bonkDrops",
+  "enemyShuffle",
+  "takeAny",
+  "restrictBossItems",
+  "openPyramid",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -272,16 +281,24 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   doorShuffle: "vanilla",
   doorVersion: "1.5.6",
   dropShuffle: "none",
-  enemyShuffle: "none",
   keyLogic: "partial",
   nearbyItems: false,
-  openPyramid: "auto",
   potShuffle: false,
   pottery: "none",
-  restrictBossItems: "none",
   shopsanity: false,
-  takeAny: "none",
 };
+
+/**
+ * DR's defaults (args.json) of the settings a seed must name to be known
+ * (`DOOR_UNSET`): a DR run type starts from them, as DR's own command line
+ * does; a seed lays its own.
+ */
+export const DOOR_RUN_DEFAULTS = {
+  enemyShuffle: "none",
+  openPyramid: "auto",
+  restrictBossItems: "none",
+  takeAny: "none",
+} as const satisfies DoorRunSettings;
 
 /** Whether a run is a Door Randomizer seed's. */
 export const isDoorRun = (settings: DoorRunSettings): boolean =>
@@ -715,6 +732,8 @@ export const doorPoolSettingsOf = (
   const door = doorOf(settings) ?? { ...DOOR_DEFAULTS };
   return {
     dropShuffle: door.dropShuffle,
+    // Not known reads as shuffled: its drops may move a cave, and none is
+    // listed
     enemyShuffle: door.enemyShuffle !== "none",
     mode:
       settings.mode === "inverted"
@@ -797,7 +816,11 @@ export const doorReasons = (
   if (keyDropsShuffled(door) && keysWild) {
     reasons.push("shuffled key drops with keys outside their dungeons");
   }
-  if (door.enemyShuffle !== "none") reasons.push("shuffled enemies");
+  // Each a seed must name: not known, any of its values may be the seed's
+  for (const [key, cause] of RUN_SETTINGS_NOT_KNOWN)
+    if (door[key] === undefined) reasons.push(cause);
+  if (door.enemyShuffle !== undefined && door.enemyShuffle !== "none")
+    reasons.push("shuffled enemies");
   // DR refuses its static key logic with key drops or key pots shuffled
   // (static_logic_supported, StaticKeyLogic.py:80-84): no such seed is
   // rolled, so no reading of its logic holds
@@ -890,6 +913,20 @@ export const FOLLOWERS_NOT_KNOWN =
   "the follower shuffle not known yet (set it in Mode)";
 
 /**
+ * The causes `doorReasons` gives while a DR run leaves unset a setting a
+ * seed must name (`DOOR_RUN_DEFAULTS`), by setting.
+ */
+export const RUN_SETTINGS_NOT_KNOWN = [
+  ["enemyShuffle", "the enemy shuffle not known yet (set it in Mode)"],
+  ["takeAny", "the take-any caves not known yet (set them in Mode)"],
+  ["restrictBossItems", "the boss items not known yet (set them in Mode)"],
+  ["openPyramid", "the pyramid hole not known yet (set it in Mode)"],
+] as const satisfies readonly (readonly [
+  keyof typeof DOOR_RUN_DEFAULTS,
+  string,
+])[];
+
+/**
  * What a DR run's logic rests on, when the tracker models it: DR's own
  * world (doorLogic) and its key logic's reading (the notes its shuffled
  * entrances rest on are LogicNote's, as any run's). Any other DR run is not
@@ -962,11 +999,14 @@ export const doorModesOf = (
     bossShuffle:
       settings.bossShuffle !== undefined && settings.bossShuffle !== "none",
     dropShuffle: door.dropShuffle,
+    // Not known reads as shuffled: its drops may move a cave, and none is
+    // listed
     enemyShuffle: door.enemyShuffle !== "none",
     potShuffle: door.potShuffle,
     pottery: door.pottery,
     shopsanity: door.shopsanity,
-    takeAny: door.takeAny,
+    // Not known: its caves unlisted, as bonk drops (a cause names it)
+    takeAny: door.takeAny ?? "none",
   };
 };
 
@@ -1144,8 +1184,11 @@ const POTS_BEYOND_CAVES: readonly PotteryMode[] = [
 ];
 
 /** `value` when it is one of `of`, else `or`. */
-const kept = <T extends string>(value: T, of: readonly T[], or: T): T =>
-  of.includes(value) ? value : or;
+const kept = <T extends string>(
+  value: T | undefined,
+  of: readonly T[],
+  or: T,
+): T => (value !== undefined && of.includes(value) ? value : or);
 
 /** The settings only the Overworld fork has, District among its shuffles. */
 const OWR_ONLY = [
@@ -1342,7 +1385,7 @@ export const doorFromSeed = (
       takeAny === undefined
         ? own.takeAny
         : takeAny
-          ? kept(own.takeAny, ["random", "fixed"], "random")
+          ? kept<TakeAny>(own.takeAny, ["random", "fixed"], "random")
           : "none",
   };
   const ow = rom.overworld;

@@ -15,6 +15,7 @@
  */
 
 import {
+  DOOR_RUN_DEFAULTS,
   DOOR_SETTING_LABELS,
   type DoorRunSettings,
   type DoorSetting,
@@ -297,7 +298,7 @@ export const presets: Preset[] = [
       "A Door Randomizer seed, doors vanilla: key drops, pots, enemy drops and shop items as its settings shuffle them.",
     id: "door-randomizer",
     name: "Door Randomizer",
-    settings: { ...baseSettings, randomizer: "dr" },
+    settings: { ...baseSettings, ...DOOR_RUN_DEFAULTS, randomizer: "dr" },
   },
   {
     // Crosskeys rolled on the Door Randomizer (Crosskeys 2026, Hyrule Town
@@ -317,6 +318,7 @@ export const presets: Preset[] = [
     name: "DR Crosskeys",
     settings: {
       ...baseSettings,
+      ...DOOR_RUN_DEFAULTS,
       bombBag: false,
       dungeonItems: "full",
       entranceShuffle: "crossed",

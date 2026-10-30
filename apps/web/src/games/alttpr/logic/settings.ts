@@ -224,7 +224,8 @@ const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
  */
 export const pyramidOpen = (run: RunSettings): boolean => {
   const door = doorOf(run);
-  const pyramid = door?.openPyramid ?? "auto";
+  // Not known in a DR run reads as shut: open asks less
+  const pyramid = door === null ? "auto" : (door.openPyramid ?? "no");
   if (pyramid !== "auto") return pyramid === "yes";
   const entrances =
     run.entranceShuffle === "none" &&
@@ -266,7 +267,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   // (doorStateOf)
   const bombBag = door?.bombBag ?? true;
   const potShuffle = door?.potShuffle ?? false;
-  const bossItems = door?.restrictBossItems ?? "none";
+  // Not known reads as restricted, whose rules ask more (Rules.py:809-825)
+  const bossItems = door?.restrictBossItems ?? "dungeon";
   const pyramid = pyramidOpen(run);
   const owr = door?.randomizer === "owr";
   // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7: an
