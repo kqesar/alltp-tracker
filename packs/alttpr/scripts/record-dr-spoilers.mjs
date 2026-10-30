@@ -52,8 +52,12 @@
 // holds avianart.games seeds generated for these fixtures on
 // 2026-10-30, not races: the door presets players race (the doors league's
 // and ladder's partitioned, Lightspeed's and Kekpriest's crossed) and the
-// customizer's basic, partitioned and crossed at each intensity, each
-// spoiler cut to the keys above and its Doors, Lobbies and DoorTypes.
+// customizer's basic, partitioned and crossed at each intensity, and, also
+// from the customizer (`?action=generate`, branch DRUnstable), crossed
+// doors decoupled, in the Inverted world, and with Crosskeys' crossed
+// entrances, and partitioned intensity 3 decoupled in the Inverted world
+// with key drops and pots; each spoiler cut to the keys above and its Doors, Lobbies and
+// DoorTypes.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -143,6 +147,16 @@ export const DOOR_SEEDS = [
   "CURaRjUhM",
   // crossed, intensity 3, standard, door types all: "Lightspeed w/ Crossed Doors"
   "fKa1LLrNU",
+  // crossed, intensity 2, open, decoupled doors (customizer)
+  "gVe3VdZba",
+  // crossed, intensity 2, inverted, keysanity (customizer)
+  "7SFJ6YE0k",
+  // crossed, intensity 2, open, crossed entrances, keysanity: Crosskeys with
+  // its doors crossed (customizer)
+  "4L77dyaAg",
+  // partitioned, intensity 3, inverted, decoupled doors, key drops and key
+  // pots (customizer)
+  "2uDU33UMw",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */

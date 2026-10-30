@@ -1,9 +1,11 @@
 // The Door Randomizer's world on shuffled doors, held to real seeds: each
 // log of test/dr-door-spoilers/ (recorded by scripts/record-dr-spoilers.mjs
 // doors: avianart.games seeds of DR 1.5.8 generated for it, basic,
-// partitioned and crossed at each intensity, as no door-shuffled race's
-// spoiler is public), its doors noted as its spoiler says (doors.ts
-// doorNotesFromSpoiler), as a player who walked them notes them.
+// partitioned and crossed at each intensity, decoupled, Inverted, and
+// crossed with Crosskeys' entrances, as no door-shuffled race's spoiler is
+// public), its doors noted as its spoiler says (doors.ts
+// doorNotesFromSpoiler), as a player who walked them notes them, and its
+// entrances too where they are shuffled.
 //
 // - Its model offers each link, lobby and kind the log made: each door it
 //   links is one the shuffle relinks and its pair a door the picker offers
@@ -30,6 +32,7 @@ import { solveFacts } from "../src/facts";
 import { type Medallion, medallionFacts } from "../src/medallions";
 import {
   early,
+  entranceNotesOf,
   flag,
   jsonLog,
   type Log,
@@ -156,8 +159,23 @@ const REGION_OF: ReadonlyMap<string, string> = new Map([
 const settingsOf = (meta: Log["meta"]) => ({
   ...settingsFor(meta),
   ...(meta.mode === "standard" ? { standardMode: true } : {}),
+  ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
   ...(flag(meta.bombbag) ? { bombBag: true } : {}),
 });
+
+/** A log's world: its doors noted, and its entrances where shuffled. */
+const worldOf = (
+  json: Json,
+  log: Log,
+  options: { readonly sweepEvents?: boolean } = {},
+) =>
+  drWorld(settingsOf(log.meta), {
+    doors: notesOf(json, log),
+    ...(log.meta.shuffle === "vanilla"
+      ? {}
+      : { entrances: entranceNotesOf(log) }),
+    ...options,
+  });
 
 /**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
@@ -171,6 +189,34 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     "5:Swamp Palace - Boss": "maybe",
     "5:Swamp Palace - Prize": "maybe",
     "11:Agahnim 2": "maybe",
+  },
+  "avianart-4L77dyaAg.json": {
+    "4:Agahnim 1": "maybe",
+    "4:Ice Palace - Spike Room": "maybe",
+    "4:Palace of Darkness - The Arena - Bridge": "maybe",
+    "5:Swamp Palace - Waterway Pot Key": "maybe",
+    "6:Ganons Tower - Validation Chest": "maybe",
+    "6:Swamp Palace - Prize": "maybe",
+    "8:Ice Palace - Prize": "maybe",
+    "10:Eastern Palace - Big Chest": "maybe",
+    "10:Ganons Tower - DMs Room - Bottom Right": "maybe",
+    "10:Ganons Tower - DMs Room - Top Right": "maybe",
+    "10:Turtle Rock - Crystaroller Room": "maybe",
+    "13:Palace of Darkness - Dark Maze - Bottom": "maybe",
+  },
+  "avianart-7SFJ6YE0k.json": {
+    "5:Misery Mire - Prize": "maybe",
+    "5:Swamp Palace - Pot Row Pot Key": "maybe",
+    "9:Desert Palace - Desert Tiles 1 Pot Key": "maybe",
+    "9:Hyrule Castle - Boomerang Guard Key Drop": "maybe",
+    "9:Hyrule Castle - Key Rat Key Drop": "maybe",
+    "9:Thieves' Town - Spike Switch Pot Key": "maybe",
+    "10:Ganons Tower - Conveyor Cross Pot Key": "maybe",
+    "10:Swamp Drain": "maybe",
+    "11:Desert Palace - Boss": "maybe",
+    "11:Palace of Darkness - The Arena - Ledge": "maybe",
+    "12:Ice Palace - Spike Room": "maybe",
+    "14:Ice Palace - Prize": "maybe",
   },
   "avianart-CURaRjUhM.json": {
     "2:Suspicious Maiden": "maybe",
@@ -211,6 +257,7 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     "9:Ganons Tower - Pre-Moldorm Chest": "maybe",
   },
   "avianart-w6Jx8UcW6.json": { "10:Agahnim 2": "maybe" },
+
   "avianart-xd8m0E50c.json": {
     "7:Ganons Tower - Conveyor Cross Pot Key": "maybe",
     "7:Misery Mire - Prize": "maybe",
@@ -235,6 +282,10 @@ describe("DR's world on shuffled doors against real seeds", () => {
       expect([...kinds].some((k) => k.startsWith(shuffle))).toBe(true);
     for (const intensity of [1, 2, 3])
       expect([...kinds].some((k) => k.endsWith(` ${intensity}`))).toBe(true);
+    // Decoupled doors, the Inverted world, entrances shuffled with doors
+    expect(metas.some((m) => flag(m.decoupledoors))).toBe(true);
+    expect(metas.some((m) => m.mode === "inverted")).toBe(true);
+    expect(metas.some((m) => m.shuffle === "crossed")).toBe(true);
   });
 
   for (const name of logs)
@@ -274,9 +325,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
     it(`puts each room in the dungeon the log does (${name})`, () => {
       const json = JSON.parse(read(name)) as Json;
       const log = jsonLog(withoutDoors(json));
-      const world = drWorld(settingsOf(log.meta), {
-        doors: notesOf(json, logOf(json)),
-      });
+      const world = worldOf(json, logOf(json));
       const regionOf = new Map(
         DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r.name] as const)),
       );
@@ -299,9 +348,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
     it(`reaches each sphere with the spheres before it (${name})`, () => {
       const json = JSON.parse(read(name)) as Json;
       const log = logOf(json);
-      const world = drWorld(settingsOf(log.meta), {
-        doors: notesOf(json, log),
-      });
+      const world = worldOf(json, log);
       const { checked, notYes } = walk(log, world);
       expect(checked).toBeGreaterThan(15);
       expect(notYes).toEqual(REVIEWED[name] ?? {});
@@ -338,10 +385,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
     it(`says yes to no location of a later sphere (${name})`, () => {
       const json = JSON.parse(read(name)) as Json;
       const log = logOf(json);
-      const world = drWorld(settingsOf(log.meta), {
-        doors: notesOf(json, log),
-        sweepEvents: false,
-      });
+      const world = worldOf(json, log, { sweepEvents: false });
       expect(early(log, world)).toEqual([]);
     });
 });

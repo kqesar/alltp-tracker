@@ -14,7 +14,6 @@
 //   and no location of a later sphere `yes` too early.
 import { describe, expect, it } from "vitest";
 import {
-  type DrPoolSettings,
   type DrShuffle,
   drEntranceName,
   drEntranceOf,
@@ -22,12 +21,13 @@ import {
   drTargetOf,
   vanillaEntrances,
 } from "../src/door-rando/entrances";
-import { type DrNotedEntrances, drWorld } from "../src/door-world/index";
+import { drWorld } from "../src/door-world/index";
 import {
   early,
-  flag,
   jsonLog,
   type Log,
+  entranceNotesOf as notesOf,
+  poolOf,
   readFixture,
   settingsFor,
   textLog,
@@ -83,33 +83,6 @@ const REVIEWED: Readonly<
     why: MIRE,
   },
 };
-
-/** What of a log decides its pool (`drShuffled`). */
-const poolOf = (meta: Log["meta"]): DrPoolSettings => ({
-  dropShuffle: String(meta.dropshuffle ?? "none"),
-  enemyShuffle: (meta.enemy_shuffle ?? "none") !== "none",
-  mode: "open",
-  pottery: String(meta.pottery ?? "none"),
-  shopsanity: flag(meta.shopsanity),
-  shuffleLinks: flag(meta.shufflelinks),
-  shuffleTavern: flag(meta.shuffletavern),
-});
-
-/** A log's entrances, noted as its spoiler says: entrance id → target id. */
-function notesOf(log: Log): DrNotedEntrances {
-  const shuffle = log.meta.shuffle as DrShuffle;
-  const pool = poolOf(log.meta);
-  const noted: Record<string, string> = {};
-  const moved = new Set(
-    drEntrancePool(shuffle, pool).entrances.map((entrance) => entrance.id),
-  );
-  for (const link of log.Entrances) {
-    if (link.direction === "exit") continue;
-    const id = drEntranceOf(link.entrance).id;
-    if (moved.has(id)) noted[id] = drTargetOf(link.exit).id;
-  }
-  return { noted, pool, shuffle };
-}
 
 describe("DR's world on shuffled entrances against real seeds", () => {
   const logs = Object.keys(INDEX.logs);

@@ -2828,17 +2828,20 @@ what it is (no 1.5.x race spoiler public; Swapped raced on OWR only).
 door-shuffled race was found (those races, about 2 to 3 % of DR's, run on
 Hyrule Town Hall and avianart race seeds, whose permalinks keep their meta
 alone), so the set holds the
-JSON spoilers of eight avianart.games seeds of DR 1.5.8-u generated on
+JSON spoilers of twelve avianart.games seeds of DR 1.5.8-u generated on
 2026-10-30 for it (not races): the door presets players race ("DR Beginner
 Week 1 & 2", "Ladder Beginner Doors", "Lightspeed w/ Crossed Doors") and the
 site's customizer for basic, partitioned and crossed at intensities 1, 2
-and 3, in Open and Standard, keys in their dungeons and keysanity, each cut
+and 3, in Open and Standard, keys in their dungeons and keysanity, and
+crossed doors decoupled, in the Inverted world, and with Crosskeys' crossed
+entrances (keysanity), and partitioned intensity 3 decoupled in the Inverted
+world with key drops and key pots, each cut
 as the entrance set's avianart seed is, its `Doors`, `Lobbies` and
 `DoorTypes` kept (the script's `DOOR_SEEDS` says which is which). Biome
 leaves them as recorded. `test/dr-door-playthrough.spec.ts` notes every
 door as each spoiler says (`doorNotesFromSpoiler`; each dungeon's small
 keys as its counter shows them, its chests' and the forced drops its rooms
-hold) and holds: each link a door the shuffle relinks paired with one the
+hold), and its entrances where they are shuffled, and holds: each link a door the shuffle relinks paired with one the
 picker offers, each lobby and kind one the model allows, each room in the
 dungeon the log puts its locations in (` @ Dungeon`), and the playthrough
 both ways. Not `yes` where DR says reachable: only key doors read

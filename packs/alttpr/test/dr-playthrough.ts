@@ -10,6 +10,14 @@
 // (sweep_for_events(key_only=True), BaseClasses.py:1051-1066).
 import { readFileSync } from "node:fs";
 import type { State } from "@alltp/engine";
+import {
+  type DrPoolSettings,
+  type DrShuffle,
+  drEntranceOf,
+  drEntrancePool,
+  drTargetOf,
+} from "../src/door-rando/entrances";
+import type { DrNotedEntrances } from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import type { Medallion } from "../src/medallions";
 import { medallionFacts } from "../src/medallions";
@@ -132,6 +140,36 @@ export function settingsFor(meta: Log["meta"]) {
       ? { locationsAccessibility: true }
       : {}),
   };
+}
+
+/** What of a log decides its entrance pool (`drShuffled`). */
+export const poolOf = (meta: Log["meta"]): DrPoolSettings => ({
+  dropShuffle: String(meta.dropshuffle ?? "none"),
+  enemyShuffle: (meta.enemy_shuffle ?? "none") !== "none",
+  mode: meta.mode === "inverted" ? "inverted" : "open",
+  pottery: String(meta.pottery ?? "none"),
+  shopsanity: flag(meta.shopsanity),
+  shuffleLinks: flag(meta.shufflelinks),
+  shuffleTavern: flag(meta.shuffletavern),
+});
+
+/**
+ * A log's shuffled entrances, noted as its spoiler says: entrance id →
+ * target id, each door its pool moves.
+ */
+export function entranceNotesOf(log: Log): DrNotedEntrances {
+  const shuffle = log.meta.shuffle as DrShuffle;
+  const pool = poolOf(log.meta);
+  const noted: Record<string, string> = {};
+  const moved = new Set(
+    drEntrancePool(shuffle, pool).entrances.map((entrance) => entrance.id),
+  );
+  for (const link of log.Entrances) {
+    if (link.direction === "exit") continue;
+    const id = drEntranceOf(link.entrance).id;
+    if (moved.has(id)) noted[id] = drTargetOf(link.exit).id;
+  }
+  return { noted, pool, shuffle };
 }
 
 /** What a player holds of `items`, with the seed's medallions. */
