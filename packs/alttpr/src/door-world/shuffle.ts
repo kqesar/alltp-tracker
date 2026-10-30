@@ -24,19 +24,12 @@
 //   (shuffle_small_key_doors, :2139-2145), so its door asks the count the
 //   player noted (`keys`), `maybe` until then.
 import type { DrNotedDoors } from "./connections";
-import {
-  DR_DOORS,
-  DR_REGIONS,
-  DR_RULES,
-  type DrDoor,
-  type DrMode,
-  regionNamed,
-} from "./data";
+import { type DrData, type DrDoor, type DrMode, perData } from "./data";
 import {
   type DoorKindNote,
   doorId,
   kindShuffled,
-  PORTAL_DUNGEON,
+  portalDungeonOf,
   vanillaKind,
 } from "./doors";
 import {
@@ -139,12 +132,13 @@ export function isShut(
  * @param lobbies - Each portal's lobby door, by portal name
  */
 export function roomDungeons(
+  data: DrData,
   exits: readonly { readonly from: string; readonly to: string }[],
   lobbies: ReadonlyMap<string, string>,
   doors: DrNotedDoors,
 ): ReadonlyMap<string, string> {
   const found = new Map<string, string>();
-  for (const r of DR_REGIONS)
+  for (const r of data.regions)
     if (r.type === "dungeon" && r.dungeon !== null)
       found.set(r.name, r.dungeon);
   if (doors.settings.shuffle === "basic") return found;
@@ -153,16 +147,16 @@ export function roomDungeons(
     next.set(a, [...(next.get(a) ?? []), b]);
   for (const exit of exits)
     if (
-      regionNamed(exit.from).type === "dungeon" &&
-      regionNamed(exit.to).type === "dungeon"
+      data.regionNamed(exit.from).type === "dungeon" &&
+      data.regionNamed(exit.to).type === "dungeon"
     ) {
       join(exit.from, exit.to);
       join(exit.to, exit.from);
     }
   const seen = new Set<string>();
   for (const [portal, door] of lobbies) {
-    const dungeon = PORTAL_DUNGEON.get(portal);
-    const start = DOOR_REGION.get(door);
+    const dungeon = portalDungeonOf(data).get(portal);
+    const start = data.parent.get(door);
     if (dungeon === undefined || start === undefined || seen.has(start))
       continue;
     const queue = [start];
@@ -178,11 +172,6 @@ export function roomDungeons(
   }
   return found;
 }
-
-/** The region each door leaves from. */
-const DOOR_REGION: ReadonlyMap<string, string> = new Map(
-  DR_REGIONS.flatMap((r) => r.exits.map((e) => [e, r.name] as const)),
-);
 
 /** The rule a door of a kind asks beside its keys (Rules.py:895-906). */
 const KIND_RULES: Partial<Record<DoorKindNote, string>> = {
@@ -207,6 +196,7 @@ interface ShuffleExit {
  * 1322, :4138-4152), so its boss and its prize stay its dungeon's.
  */
 export function addShuffledDoorRules(
+  data: DrData,
   exits: readonly ShuffleExit[],
   locations: Map<string, string>,
   keys: WorldKeys,
@@ -215,7 +205,7 @@ export function addShuffledDoorRules(
   mode: DrMode,
 ): void {
   const special = specialBigKeyDoors(mode);
-  const doorNamed = new Map(DR_DOORS.map((d) => [d.name, d]));
+  const doorNamed = data.doorByName;
   const smallRule = (dungeon: string) => strictSafe(keys, doors, dungeon);
   for (const exit of exits) {
     const door = doorNamed.get(exit.name);
@@ -236,7 +226,7 @@ export function addShuffledDoorRules(
     if (special.has(door.name))
       exit.req = and(exit.req, keys.bigKeyRule(dungeon));
   }
-  for (const region of DR_REGIONS) {
+  for (const region of data.regions) {
     const dungeon = dungeons.get(region.name);
     if (dungeon === undefined) continue;
     for (const name of region.locations) {
@@ -287,6 +277,7 @@ function strictSafe(
  * only in the castle's layout (add_conditional_lamps, Rules.py:1364-1366).
  */
 export function shuffledDoorSettings(
+  data: DrData,
   doors: DrNotedDoors,
   lobbies: ReadonlySet<string>,
   dungeons: ReadonlyMap<string, string>,
@@ -294,38 +285,39 @@ export function shuffledDoorSettings(
 ): Record<string, boolean> {
   const found: Record<string, boolean> = { vanillaDoors: false };
   if (doors.settings.shuffle !== "basic")
-    for (const [name, data] of Object.entries(DR_RULES.derived))
-      if (data.kind === "litRoom")
+    for (const [name, derived] of Object.entries(data.rules.derived))
+      if (derived.kind === "litRoom")
         found[name] =
           mode === "standard" &&
-          dungeons.get(data.region ?? "") === "Hyrule Castle";
-  const doorNamed = new Map(DR_DOORS.map((d) => [d.name, d]));
-  for (const [name, data] of Object.entries(DR_RULES.doorData)) {
-    const door = doorNamed.get(data.door);
-    const flag = (data as { flag?: string }).flag;
+          dungeons.get(derived.region ?? "") === "Hyrule Castle";
+  for (const [name, entry] of Object.entries(data.rules.doorData)) {
+    const door = data.doorByName.get(entry.door);
+    const flag = (entry as { flag?: string }).flag;
     if (door === undefined) continue;
     const shuffled = kindShuffled(door, doors.settings);
     const kind = kindIn(door, doors);
     if (flag === "trapped")
       found[name] = shuffled
         ? kind === undefined || kind === "trap"
-        : data.vanilla;
-    else if (flag === "entranceFlag") found[name] = lobbies.has(data.door);
+        : entry.vanilla;
+    else if (flag === "entranceFlag") found[name] = lobbies.has(entry.door);
     else if (flag === "bigKey")
       found[name] = shuffled
         ? kind === undefined || kind === "big"
-        : data.vanilla;
+        : entry.vanilla;
   }
   return found;
 }
 
 /** The portals of each dungeon (Doors.py:1549-1575), by dungeon. */
-const PORTALS_OF: ReadonlyMap<string, readonly string[]> = (() => {
-  const found = new Map<string, string[]>();
-  for (const [portal, dungeon] of PORTAL_DUNGEON)
-    found.set(dungeon, [...(found.get(dungeon) ?? []), portal]);
-  return found;
-})();
+const portalsOfDungeon = perData(
+  (data): ReadonlyMap<string, readonly string[]> => {
+    const found = new Map<string, string[]>();
+    for (const [portal, dungeon] of portalDungeonOf(data))
+      found.set(dungeon, [...(found.get(dungeon) ?? []), portal]);
+    return found;
+  },
+);
 
 /**
  * The Sanctuary Mirror Route of a pool of dungeons from intensity 3
@@ -336,6 +328,7 @@ const PORTALS_OF: ReadonlyMap<string, readonly string[]> = (() => {
  * (`random.choice`, :1023), none: the route is left out.
  */
 export function sanctuaryRoute(
+  data: DrData,
   doors: DrNotedDoors,
   dungeons: ReadonlyMap<string, string>,
   lobbies: ReadonlyMap<string, string>,
@@ -350,14 +343,14 @@ export function sanctuaryRoute(
   if (doors.settings.intensity < 3 || doors.settings.shuffle === "basic")
     return undefined;
   const dungeon = dungeons.get(SANCTUARY);
-  const portals = PORTALS_OF.get(dungeon ?? "") ?? [];
+  const portals = portalsOfDungeon(data).get(dungeon ?? "") ?? [];
   const picked =
     dungeon === "Hyrule Castle"
       ? "Sanctuary"
       : (portals.find((p) => lobbies.get(p) === "Sanctuary S") ??
         (portals.length === 1 ? portals[0] : undefined));
   const lobby = picked === undefined ? undefined : lobbies.get(picked);
-  const to = lobby === undefined ? undefined : DOOR_REGION.get(lobby);
+  const to = lobby === undefined ? undefined : data.parent.get(lobby);
   if (to === undefined) return undefined;
   return { from: SANCTUARY, name: "Sanctuary Mirror Route", req: "true", to };
 }

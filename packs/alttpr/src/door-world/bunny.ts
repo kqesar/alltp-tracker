@@ -17,8 +17,7 @@
 // data (dashable, bombable, hidden walls, :2175-2180), which RoomData.py
 // holds and import-dr does not read yet.
 
-import ruleData from "../door-rando/world/rules.json" with { type: "json" };
-import { DOOR_NAMED, DR_REGIONS, type DrMode, regionNamed } from "./data";
+import type { DrData, DrMode } from "./data";
 import { and, or } from "./text";
 
 /** An exit, as the world builder holds it: its rule may grow. */
@@ -31,16 +30,18 @@ interface BunnyExit {
 }
 
 type List = { readonly line: number; readonly value: readonly string[] };
-const LISTS = (
-  ruleData as unknown as {
-    readonly bunny: {
-      readonly accessibleLocations: List;
-      readonly impassableCaves: List;
-      readonly impassableDoors: List;
-      readonly impassableIfTrapped: List;
-    };
-  }
-).bunny;
+/** set_bunny_rules' lists, as rules.json holds them. */
+const listsOf = (data: DrData) =>
+  (
+    data.rules as unknown as {
+      readonly bunny: {
+        readonly accessibleLocations: List;
+        readonly impassableCaves: List;
+        readonly impassableDoors: List;
+        readonly impassableIfTrapped: List;
+      };
+    }
+  ).bunny;
 
 const PEARL = "moonPearl";
 
@@ -50,12 +51,14 @@ const PEARL = "moonPearl";
  * path is found, as DR's lambdas capture them.
  * @returns The helpers the rules call, by name (`bunny<n>`), each a rule
  *   that reads only those before it
+ * @param data - The release's world (data.ts)
  * @param exits - The world's exits, the trapped dungeon doors left out
  * @param locations - Each location's rule, by name
  * @param added - The locations added to regions beside their own (the
  *   run's pots and drops, Murahdahla), by region
  */
 export function addBunnyRules(
+  data: DrData,
   exits: readonly BunnyExit[],
   locations: Map<string, string>,
   marked: {
@@ -80,8 +83,9 @@ export function addBunnyRules(
     outOf.set(exit.from, [...(outOf.get(exit.from) ?? []), exit]);
     named.set(exit.name, exit);
   }
-  const typeOf = (region: string) => regionNamed(region).type;
-  const idOf = (region: string) => regionNamed(region).id;
+  const lists = listsOf(data);
+  const typeOf = (region: string) => data.regionNamed(region).type;
+  const idOf = (region: string) => data.regionNamed(region).id;
 
   // get_rule_to_add (:2079-2161), its No Glitches branches
   const ruleToAdd = (region: string): string => {
@@ -122,7 +126,7 @@ export function addBunnyRules(
   };
 
   // The caves a bunny cannot cross (:2163-2169)
-  for (const name of LISTS.impassableCaves.value) {
+  for (const name of lists.impassableCaves.value) {
     if (!isBunny(name)) continue;
     const rule = ruleToAdd(name);
     for (const exit of outOf.get(name) ?? []) add(exit, rule);
@@ -134,23 +138,23 @@ export function addBunnyRules(
     add(shopEntrance, ruleToAdd(shop));
   // The doors a bunny cannot pass (:2175-2178), and those it cannot once
   // trapped (:2180-2183)
-  for (const name of LISTS.impassableDoors.value) {
+  for (const name of lists.impassableDoors.value) {
     const exit = named.get(name);
     if (exit !== undefined && isBunny(exit.from))
       add(exit, ruleToAdd(exit.from));
   }
-  for (const name of LISTS.impassableIfTrapped.value) {
+  for (const name of lists.impassableIfTrapped.value) {
     const exit = named.get(name);
     if (
       exit !== undefined &&
-      DOOR_NAMED.get(name)?.trapped === true &&
+      data.doorByName.get(name)?.trapped === true &&
       isBunny(exit.from)
     )
       add(exit, ruleToAdd(exit.from));
   }
   // Every location of a bunny's region but those it can get (:2191-2196)
-  const accessible = new Set(LISTS.accessibleLocations.value);
-  for (const region of DR_REGIONS) {
+  const accessible = new Set(lists.accessibleLocations.value);
+  for (const region of data.regions) {
     if (!isBunny(region.name)) continue;
     for (const name of [
       ...region.locations,

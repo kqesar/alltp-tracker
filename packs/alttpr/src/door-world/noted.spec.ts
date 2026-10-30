@@ -12,6 +12,7 @@ import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
 import { notedConnections, vanillaConnections } from "./connections";
+import { DR_DATA } from "./data";
 import {
   DR_DEFAULTS,
   type DrNotedEntrances,
@@ -82,6 +83,7 @@ describe("DR's world on noted entrances", () => {
     for (const shuffle of SHUFFLES)
       for (const mode of ["open", "standard", "inverted"] as const) {
         const built = notedConnections(
+          DR_DATA,
           mode,
           noted(shuffle, mode, vanillaNotes(shuffle, mode)),
           158,
@@ -90,7 +92,7 @@ describe("DR's world on noted entrances", () => {
         expect(built.decoupled).toBe(false);
         // The Inverted world's lite and lean keep the save point's door
         // one way (do_vanilla_connect): its exit leads nowhere there
-        const vanilla = new Map(vanillaConnections(mode, 158));
+        const vanilla = new Map(vanillaConnections(DR_DATA, mode, 158));
         if (mode === "inverted" && (shuffle === "lite" || shuffle === "lean"))
           vanilla.delete("Dark Sanctuary Hint Exit");
         expect(
@@ -101,18 +103,23 @@ describe("DR's world on noted entrances", () => {
   });
 
   it("leads an entrance not noted nowhere, and knows when all are", () => {
-    const none = notedConnections("open", noted("crossed", "open", {}));
+    const none = notedConnections(
+      DR_DATA,
+      "open",
+      noted("crossed", "open", {}),
+    );
     expect(none.complete).toBe(false);
     expect(none.connections.has("Kakariko Shop")).toBe(false);
     expect(none.connections.has("Kakariko Well Drop")).toBe(false);
     // Kept vanilla: Link's House (no shufflelinks), the overworld
     expect(none.connections.get("Links House")).toBe("Links House");
     expect(none.connections.has("Kakariko Village NW")).toBe(
-      vanillaConnections("open").has("Kakariko Village NW"),
+      vanillaConnections(DR_DATA, "open").has("Kakariko Village NW"),
     );
     // A note on an entrance the shuffle does not move, or of no target,
     // is passed over
     const stray = notedConnections(
+      DR_DATA,
       "open",
       noted("dungeonssimple", "open", {
         "eastern-palace": "no-such-target",
@@ -127,16 +134,24 @@ describe("DR's world on noted entrances", () => {
     const notes = {
       "kakariko-shop": drTargetOf("Elder House Exit (East)").id,
     };
-    const insanity = notedConnections("open", noted("insanity", "open", notes));
+    const insanity = notedConnections(
+      DR_DATA,
+      "open",
+      noted("insanity", "open", notes),
+    );
     expect(insanity.decoupled).toBe(true);
     expect(insanity.complete).toBe(false);
     expect(insanity.connections.get("Kakariko Shop")).toBe(
-      vanillaConnections("open").get("Elder House (East)"),
+      vanillaConnections(DR_DATA, "open").get("Elder House (East)"),
     );
     expect(insanity.connections.has("Elder House Exit (East)")).toBe(false);
-    const crossed = notedConnections("open", noted("crossed", "open", notes));
+    const crossed = notedConnections(
+      DR_DATA,
+      "open",
+      noted("crossed", "open", notes),
+    );
     expect(crossed.connections.get("Elder House Exit (East)")).toBe(
-      vanillaConnections("open").get("Kakariko Shop Exit") ??
+      vanillaConnections(DR_DATA, "open").get("Kakariko Shop Exit") ??
         crossed.connections.get("Elder House Exit (East)"),
     );
     expect(crossed.connections.has("Elder House Exit (East)")).toBe(true);
@@ -147,12 +162,15 @@ describe("DR's world on noted entrances", () => {
       "dark-sanctuary-hint": drTargetOf("Dark Sanctuary Hint").id,
     };
     const built = notedConnections(
+      DR_DATA,
       "inverted",
       noted("crossed", "inverted", notes),
       156,
     );
     expect(built.connections.get("Dark Sanctuary Hint Exit")).toBe(
-      vanillaConnections("inverted", 158).get("Dark Sanctuary Hint Exit"),
+      vanillaConnections(DR_DATA, "inverted", 158).get(
+        "Dark Sanctuary Hint Exit",
+      ),
     );
   });
 
@@ -163,14 +181,16 @@ describe("DR's world on noted entrances", () => {
       ["Eastern Palace"].includes(name),
     );
     const built = notedConnections(
+      DR_DATA,
       "open",
       noted("dungeonssimple", "open", eastern),
     );
-    const told = portalsKnown("open", built.connections);
+    const told = portalsKnown(DR_DATA, "open", built.connections);
     expect(told.has("Eastern Palace")).toBe(true);
     expect(told.has("Desert Palace")).toBe(false);
     expect(told.has("Skull Woods")).toBe(false);
     const all = notedConnections(
+      DR_DATA,
       "open",
       noted("dungeonssimple", "open", vanillaNotes("dungeonssimple", "open")),
     );
@@ -179,8 +199,10 @@ describe("DR's world on noted entrances", () => {
     // Rock's ledges are reached only through them (find_inaccessible_
     // regions): DR's analysis starts them from another portal, after
     // others, which only the whole world tells (analyze_portals)
-    const whole = portalsKnown("open", all.connections);
-    expect(whole).toEqual(portalsKnown("open", vanillaConnections("open")));
+    const whole = portalsKnown(DR_DATA, "open", all.connections);
+    expect(whole).toEqual(
+      portalsKnown(DR_DATA, "open", vanillaConnections(DR_DATA, "open")),
+    );
     expect(whole.size).toBe(10);
     for (const ledge of ["Desert Palace", "Skull Woods", "Turtle Rock"])
       expect(whole.has(ledge), ledge).toBe(false);
@@ -242,12 +264,13 @@ describe("DR's world on noted entrances", () => {
       (name) => name !== "Desert Palace Entrance (North)",
     );
     const built = notedConnections(
+      DR_DATA,
       "open",
       noted("dungeonssimple", "open", notes),
     );
-    expect(portalsKnown("open", built.connections).has("Desert Palace")).toBe(
-      false,
-    );
+    expect(
+      portalsKnown(DR_DATA, "open", built.connections).has("Desert Palace"),
+    ).toBe(false);
     const world = drWorld(wild, {
       entrances: noted("dungeonssimple", "open", notes),
     });

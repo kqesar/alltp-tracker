@@ -42,7 +42,6 @@ import {
   dynamicExits,
   lobbiesOf,
   notedConnections,
-  PORTAL_DOORS,
   vanillaConnections,
 } from "./connections";
 import {
@@ -53,15 +52,13 @@ import {
   inState,
 } from "./crystal";
 import {
-  DOOR_NAMED,
-  DR_DUNGEONS,
-  DR_REGIONS,
-  DR_RULES,
+  DR_DATA,
+  type DrData,
   type DrMode,
   type DrRegion,
-  REGION_NAMED,
-  regionNamed,
+  perData,
 } from "./data";
+import { portalDoorsOf } from "./doors";
 import {
   type DoorRule,
   type KeyLogic,
@@ -72,9 +69,9 @@ import {
   addKeyRules,
   DR_KEY_CODES,
   dropKeyFact,
-  KEY_DROPS,
   KEY_ITEMS,
   type KeyHolding,
+  keyDropsOf,
   type WorldKeys,
   worldKeys,
 } from "./keys";
@@ -103,12 +100,18 @@ export type {
   DrNotedEntrances,
 } from "./connections";
 export { notedConnections, vanillaConnections } from "./connections";
-export type { DrMode } from "./data";
+export type { DrData, DrMode } from "./data";
+export { DR_DATA } from "./data";
 export * from "./doors";
 export { KEY_ITEMS } from "./keys";
 
 /** How a world is built beside its settings. */
 export interface DrWorldOptions {
+  /**
+   * The release's world to build (data.ts): the Door Randomizer's by
+   * default, the Overworld Randomizer's for its runs.
+   */
+  readonly data?: DrData;
   /**
    * Regions the Menu reaches with no rule, beside its save-and-quit exits:
    * the start regions of DR's dungeon tests (TestDungeon.py, "Test Start").
@@ -205,8 +208,10 @@ export const drLocationId = (name: string): string => erLocationId(name);
  * for a region the world does not hold (a take-any cave, which ItemList.py
  * makes where the seed puts it).
  */
-export const drRegionId = (name: string): string | undefined =>
-  REGION_NAMED.get(name)?.id;
+export const drRegionId = (
+  name: string,
+  data: DrData = DR_DATA,
+): string | undefined => data.regionByName.get(name)?.id;
 
 /** The id of a probe on an exit. */
 export const probeId = (exit: string): string => `exit:${exit}`;
@@ -229,48 +234,54 @@ export const drModeOf = (settings: Settings): DrMode =>
 const factOf = (id: string) => `reached_${id}`;
 const REACH = /reach\((\w+)\)/g;
 
-/** DR's events, each a fact its rules read. */
-const EVENT_READ = new RegExp(
-  `\\b(${Object.keys(DR_RULES.events).join("|")})\\b`,
-  "g",
-);
+/** How a release's rules are read, built once per release. */
+interface Readers {
+  /** The release's events, each a fact its rules read. */
+  readonly eventRead: RegExp;
+  /**
+   * A rule as an exit (or a helper) reads it: each reach() a fact, as each
+   * crystal read is (`reachedBlue_<id>`, given in that state's node).
+   */
+  readonly exitRule: (req: string) => string;
+  /** The pack's helpers, then the release's, each reach() a fact. */
+  readonly loadedRules: ReturnType<typeof loadRules>;
+  /** The regions the release's helpers reach, by id: an exit may call any. */
+  readonly helpersReach: readonly string[];
+}
 
-/**
- * The facts a rule reads, each read at maybe too while what gives it is
- * reached at maybe only (facts.ts): the events, the crystal reads.
- */
-const factsRead = (req: string): string =>
-  req
-    .replace(EVENT_READ, (event) => readFact(event))
-    .replace(CRYSTAL_READ, (read) => readFact(read));
-
-/**
- * A rule as an exit (or a helper) reads it: each reach() a fact, as each
- * crystal read is (`reachedBlue_<id>`, given in that state's node).
- */
-const exitRule = (req: string): string =>
-  unknownCountRequirement(
-    factsRead(req).replace(REACH, (_, id) => readFact(factOf(id))),
-  );
-
-/** The pack's helpers, then DR's, each reach() a fact. */
-const LOADED_RULES = loadRules({
-  groups: RULES.groups,
-  helpers: {
-    ...RULES.helpers,
-    ...Object.fromEntries(
-      Object.entries(DR_RULES.helpers).map(([name, { req }]) => [
-        name,
-        exitRule(req),
-      ]),
+const readersOf = perData((data): Readers => {
+  const { events, helpers } = data.rules;
+  const eventRead = new RegExp(`\\b(${Object.keys(events).join("|")})\\b`, "g");
+  // The facts a rule reads, each read at maybe too while what gives it is
+  // reached at maybe only (facts.ts): the events, the crystal reads
+  const factsRead = (req: string): string =>
+    req
+      .replace(eventRead, (event) => readFact(event))
+      .replace(CRYSTAL_READ, (read) => readFact(read));
+  const exitRule = (req: string): string =>
+    unknownCountRequirement(
+      factsRead(req).replace(REACH, (_, id) => readFact(factOf(id))),
+    );
+  return {
+    eventRead,
+    exitRule,
+    helpersReach: Object.values(helpers).flatMap(({ req }) =>
+      [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
     ),
-  },
+    loadedRules: loadRules({
+      groups: RULES.groups,
+      helpers: {
+        ...RULES.helpers,
+        ...Object.fromEntries(
+          Object.entries(helpers).map(([name, { req }]) => [
+            name,
+            exitRule(req),
+          ]),
+        ),
+      },
+    }),
+  };
 });
-
-/** The regions DR's helpers reach, by id: an exit may call any. */
-const HELPERS_REACH = Object.values(DR_RULES.helpers).flatMap(({ req }) =>
-  [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
-);
 
 // ---------------------------------------------------------------------------
 // The graph
@@ -301,18 +312,19 @@ const locationsIn = (region: DrRegion, mode: DrMode): readonly string[] =>
  * save-and-quit to Uncle, the test's start exits.
  */
 function exitsOf(
+  data: DrData,
   connections: DrConnections,
   mode: DrMode,
   options: DrWorldOptions,
-  lobbies: ReadonlySet<string> = PORTAL_DOORS,
+  lobbies: ReadonlySet<string> = portalDoorsOf(data),
 ): DrExit[] {
   const found: DrExit[] = [];
   const { doors } = options;
-  for (const region of DR_REGIONS) {
+  for (const region of data.regions) {
     for (const name of region.exits) {
       const to = connections.get(name);
       if (to === undefined) continue;
-      const door = DOOR_NAMED.get(name);
+      const door = data.doorByName.get(name);
       const blocked =
         region.type === "dungeon" &&
         door !== undefined &&
@@ -323,12 +335,12 @@ function exitsOf(
         ...(blocked ? { blocked } : {}),
         from: region.name,
         name,
-        req: DR_RULES.entrances[name]?.req ?? "true",
+        req: data.rules.entrances[name]?.req ?? "true",
         to,
       });
     }
   }
-  const dynamic: readonly DrDynamicExit[] = dynamicExits(mode);
+  const dynamic: readonly DrDynamicExit[] = dynamicExits(data, mode);
   for (const exit of dynamic) found.push({ ...exit });
   if (mode === "standard") found.push({ ...UNCLE_SAVE_AND_QUIT });
   for (const name of options.start ?? [])
@@ -347,13 +359,14 @@ function exitsOf(
  * entered by, its region's first entrance.
  */
 function addBombShopRule(
+  data: DrData,
   exits: readonly DrExit[],
   mode: DrMode,
   version: number,
 ): void {
   const door = exits.find((e) => e.to === "Big Bomb Shop")?.name;
   const inverted = mode === "inverted";
-  const { cases, spot } = DR_RULES.bombShop;
+  const { cases, spot } = data.rules.bombShop;
   const found = cases.find(
     (c) =>
       door !== undefined &&
@@ -373,7 +386,10 @@ function addBombShopRule(
 }
 
 /** The worlds' light and dark regions (mark_light_dark_world_regions). */
-export function markWorlds(exits: readonly DrExit[]): {
+export function markWorlds(
+  data: DrData,
+  exits: readonly DrExit[],
+): {
   readonly light: ReadonlySet<string>;
   readonly dark: ReadonlySet<string>;
 } {
@@ -384,12 +400,12 @@ export function markWorlds(exits: readonly DrExit[]): {
   // world (Regions.py:1113-1140)
   const mark = (type: string, other: string) => {
     const seen = new Set(
-      DR_REGIONS.filter((r) => r.type === type).map((r) => r.name),
+      data.regions.filter((r) => r.type === type).map((r) => r.name),
     );
     const queue = [...seen];
     for (let name = queue.shift(); name !== undefined; name = queue.shift())
       for (const to of out.get(name) ?? []) {
-        if (seen.has(to) || regionNamed(to).type === other) continue;
+        if (seen.has(to) || data.regionNamed(to).type === other) continue;
         seen.add(to);
         queue.push(to);
       }
@@ -404,12 +420,13 @@ export function markWorlds(exits: readonly DrExit[]): {
  * side, light but in Inverted), the swamp's patch, the doors' flags.
  */
 function derivedSettings(
+  data: DrData,
   connections: DrConnections,
   marked: ReturnType<typeof markWorlds>,
   mode: DrMode,
 ): Settings {
   const derived: Record<string, boolean> = {};
-  for (const [name, { kind, region }] of Object.entries(DR_RULES.derived)) {
+  for (const [name, { kind, region }] of Object.entries(data.rules.derived)) {
     const of = region ?? "";
     if (name.startsWith("notBunny_"))
       derived[name] =
@@ -426,13 +443,13 @@ function derivedSettings(
         (dam !== undefined && dam !== "Dam") ||
         (swamp !== undefined && swamp !== "Swamp Portal");
     } else if (kind === "door")
-      derived[name] = DR_RULES.doorData[name]?.vanilla ?? false;
+      derived[name] = data.rules.doorData[name]?.vanilla ?? false;
     // add_conditional_lamps (Rules.py:1359-1366): the sewers lit in
     // Standard (sewer_light_cone); a door shuffle's pools, shuffle.ts
     else if (kind === "litRoom")
       derived[name] =
         mode === "standard" &&
-        (DR_RULES.derived[name] as { sewer?: boolean }).sewer === true;
+        (data.rules.derived[name] as { sewer?: boolean }).sewer === true;
     else throw new RangeError(`No derived setting of kind ${kind}`);
   }
   return derived;
@@ -522,6 +539,7 @@ export const DR_DEFAULTS: Settings = {
  * state a rule reads.
  */
 function graph(
+  data: DrData,
   exits: readonly DrExit[],
   locations: ReadonlyMap<string, string>,
   mode: DrMode,
@@ -534,8 +552,9 @@ function graph(
   locationIds: Map<string, string>;
   crystalFacts: { item: string; location: string }[];
 } {
+  const { eventRead, exitRule } = readersOf(data);
   const passable = exits.filter((e) => e.blocked !== true);
-  const nodes = crystalNodes(crystalStates(passable));
+  const nodes = crystalNodes(crystalStates(data, passable));
   const out = new Map<string, DrExit[]>();
   const exitNamed = new Map(exits.map((e) => [e.name, e]));
   for (const exit of passable)
@@ -544,7 +563,7 @@ function graph(
   const crystalRead = new Set<string>();
   for (const req of [
     ...exits.map((e) => e.req),
-    ...Object.values(DR_RULES.helpers).map((h) => h.req),
+    ...Object.values(data.rules.helpers).map((h) => h.req),
     ...helperBodies,
   ])
     for (const m of req.matchAll(CRYSTAL_READ)) crystalRead.add(m[0]);
@@ -553,9 +572,9 @@ function graph(
   const locationRule = (req: string) =>
     unknownCountRequirement(
       req
-        .replace(EVENT_READ, (event) => readFact(event))
+        .replace(eventRead, (event) => readFact(event))
         .replace(CRYSTAL_READ, (_, colour: string, id: string) => {
-          const region = REGION_BY_ID.get(id);
+          const region = data.regionById.get(id);
           const s = colour === "Blue" ? "blue" : "orange";
           return region !== undefined && nodes.statesOf(region).includes(s)
             ? `reach(${nodes.nodeOf(region, s)})`
@@ -570,7 +589,7 @@ function graph(
   }
   const locationIds = new Map<string, string>();
   const regions: Region[] = [];
-  for (const r of DR_REGIONS) {
+  for (const r of data.regions) {
     const located: Location[] = [
       ...locationsIn(r, mode),
       ...(added.get(r.name) ?? []),
@@ -591,7 +610,7 @@ function graph(
     const split = nodes.isSplit(r);
     for (const s of states.length === 0 ? [undefined] : states) {
       const leaving: Exit[] = (out.get(r.name) ?? []).flatMap((exit) => {
-        const to = regionNamed(exit.to);
+        const to = data.regionNamed(exit.to);
         const req = exitRule(
           s === undefined ? exit.req : inState(exit.req, r, s),
         );
@@ -600,7 +619,7 @@ function graph(
             ? [undefined]
             : s === undefined
               ? (["orange"] as const)
-              : crystalsThrough(exit.name, s);
+              : crystalsThrough(data, exit.name, s);
         return through.map((t) => ({ req, to: nodes.nodeOf(to, t) }));
       });
       const facts: Location[] = [];
@@ -632,11 +651,9 @@ function graph(
       // Read but never given: the state no path brings the region in
     ],
     locationIds,
-    world: { regions, start: regionNamed(MENU).id },
+    world: { regions, start: data.regionNamed(MENU).id },
   };
 }
-
-const REGION_BY_ID = new Map(DR_REGIONS.map((r) => [r.id, r]));
 
 /**
  * The flood switches DR holds back while their trench's pot is unchecked:
@@ -667,6 +684,7 @@ const MURAHDAHLA = "Murahdahla";
  * @param recorded - Whether the player records maps and compasses (wild)
  */
 function addBossItemRules(
+  data: DrData,
   locations: Map<string, string>,
   recorded: boolean,
 ): void {
@@ -682,7 +700,7 @@ function addBossItemRules(
       ),
     );
   };
-  for (const dungeon of DR_DUNGEONS) {
+  for (const dungeon of data.dungeons) {
     if (dungeon.prize === null) continue;
     const name = dungeon.name.startsWith("Thieves")
       ? "Thieves' Town"
@@ -698,9 +716,9 @@ function addBossItemRules(
  * the spikes, it takes the spike chest's rule; where it lands is unknown,
  * so the rule or maybe.
  */
-function addSpikesPotRule(locations: Map<string, string>): void {
+function addSpikesPotRule(data: DrData, locations: Map<string, string>): void {
   const pot = "Misery Mire - Spikes Pot Key";
-  const spikes = DR_RULES.locations["Misery Mire - Spike Chest"]?.req;
+  const spikes = data.rules.locations["Misery Mire - Spike Chest"]?.req;
   if (spikes === undefined || !locations.has(pot)) return;
   locations.set(pot, and(locations.get(pot) ?? "true", or(spikes, "maybe")));
 }
@@ -726,12 +744,13 @@ const KEY_LOGIC = new Map<string, ReadonlyMap<string, KeyLogic>>();
  * mode and the settings it reads.
  */
 export function drKeyLogic(
+  data: DrData,
   settings: Settings,
   noted?: { readonly connections: DrConnections; readonly key: string },
 ): ReadonlyMap<string, KeyLogic> {
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
-  const keys = worldKeys(keyHoldingOf(all), {
+  const keys = worldKeys(data, keyHoldingOf(all), {
     drops: all.dropShuffle === true,
     pots: all.potKeys === true,
   });
@@ -753,6 +772,7 @@ export function drKeyLogic(
   };
   const id = JSON.stringify({
     ...analysis,
+    flavor: data.flavor,
     forcedDrops: [...analysis.forcedDrops].sort(),
     noted: noted?.key,
   });
@@ -760,8 +780,13 @@ export function drKeyLogic(
   if (found === undefined) {
     found = vanillaKeyLogic(
       noted === undefined
-        ? analysis
-        : { ...analysis, connections: noted.connections, partial: true },
+        ? { ...analysis, data }
+        : {
+            ...analysis,
+            connections: noted.connections,
+            data,
+            partial: true,
+          },
     );
     // The vanilla world's few analyses stay; a noted world's, one per note,
     // only the last few
@@ -790,6 +815,7 @@ export function drKeyLogic(
  * whose exits lead elsewhere unnoted, has none.
  */
 function notedKeyLogic(
+  data: DrData,
   settings: Settings,
   mode: DrMode,
   entrances: DrNotedEntrances,
@@ -803,10 +829,10 @@ function notedKeyLogic(
     Object.entries(entrances.noted).sort(),
     settings.drVersion,
   ]);
-  const known = portalsKnown(mode, connections);
+  const known = portalsKnown(data, mode, connections);
   if (mode === "standard") known.delete("Hyrule Castle");
   if (known.size === 0) return new Map();
-  const logic = drKeyLogic(settings, { connections, key });
+  const logic = drKeyLogic(data, settings, { connections, key });
   return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
 }
 
@@ -828,10 +854,11 @@ const TR_ACCESS = new Map<string, TurtleRockAccess>();
  * (4222a44's message: "every TR entrance probe returned False").
  */
 export function turtleRockAccess(
+  data: DrData,
   mode: DrMode,
   version: number,
 ): TurtleRockAccess {
-  const id = `${mode}/${version}`;
+  const id = `${data.flavor}/${mode}/${version}`;
   const known = TR_ACCESS.get(id);
   if (known !== undefined) return known;
   const keys = version >= 157;
@@ -844,6 +871,7 @@ export function turtleRockAccess(
       wildKeys: true,
     },
     {
+      data,
       doorRule: (dungeon) =>
         keys && dungeon !== "Turtle Rock" ? "true" : "false",
       regions: Object.values(TURTLE_ROCK_PROBES),
@@ -878,6 +906,7 @@ const STATIC_LOGIC = new WeakMap<
 
 /** staticKeyLogic, once per analysis, case and release. */
 function staticLogicOf(
+  data: DrData,
   analysis: ReadonlyMap<string, KeyLogic>,
   trCase: TurtleRockCase | null,
   version: number,
@@ -890,7 +919,7 @@ function staticLogicOf(
   const id = `${trCase}/${version}`;
   let found = byKey.get(id);
   if (found === undefined) {
-    found = staticKeyLogic(analysis, trCase, version);
+    found = staticKeyLogic(data, analysis, trCase, version);
     byKey.set(id, found);
   }
   return found;
@@ -905,6 +934,8 @@ export function drWorld(
   settings: Settings,
   options: DrWorldOptions = {},
 ): DrWorld {
+  const data = options.data ?? DR_DATA;
+  const { exitRule, helpersReach, loadedRules } = readersOf(data);
   const all = { ...DR_DEFAULTS, ...settings };
   const mode = drModeOf(all);
   const version = Number(all.drVersion);
@@ -912,21 +943,22 @@ export function drWorld(
   const noted =
     options.entrances === undefined
       ? undefined
-      : notedConnections(mode, options.entrances, version, doors);
+      : notedConnections(data, mode, options.entrances, version, doors);
   const connections =
     noted?.connections ??
     options.connections ??
-    vanillaConnections(mode, version, doors);
-  const lobbies = lobbiesOf(doors);
+    vanillaConnections(data, mode, version, doors);
+  const lobbies = lobbiesOf(data, doors);
   const lobbyDoors = new Set(lobbies.values());
-  const exits = exitsOf(connections, mode, options, lobbyDoors);
+  const exits = exitsOf(data, connections, mode, options, lobbyDoors);
   const dungeonOfRoom =
-    doors === undefined ? undefined : roomDungeons(exits, lobbies, doors);
+    doors === undefined ? undefined : roomDungeons(data, exits, lobbies, doors);
   if (doors !== undefined && dungeonOfRoom !== undefined) {
-    const route = sanctuaryRoute(doors, dungeonOfRoom, lobbies);
+    const route = sanctuaryRoute(data, doors, dungeonOfRoom, lobbies);
     if (route !== undefined && !connections.has(route.name)) exits.push(route);
   }
   const keys = worldKeys(
+    data,
     keyHoldingOf(all),
     { drops: all.dropShuffle === true, pots: all.potKeys === true },
     {
@@ -939,9 +971,9 @@ export function drWorld(
       : (drop) => dungeonOfRoom.get(drop.region),
   );
   const locations = new Map<string, string>();
-  for (const region of DR_REGIONS)
+  for (const region of data.regions)
     for (const name of locationsIn(region, mode))
-      locations.set(name, DR_RULES.locations[name]?.req ?? "true");
+      locations.set(name, data.rules.locations[name]?.req ?? "true");
   // The locations ItemList.py adds: Murahdahla, in a triforce hunt (:200-212)
   const added = new Map<string, string[]>();
   if (all.triforceHuntGoal === true || all.trinityGoal === true) {
@@ -955,9 +987,9 @@ export function drWorld(
   for (const { name, region } of options.dropsAndPots ?? []) {
     if (locations.has(name)) continue;
     // Throws for a region DR's world does not have
-    const at = regionNamed(region).name;
+    const at = data.regionNamed(region).name;
     added.set(at, [...(added.get(at) ?? []), name]);
-    locations.set(name, DR_RULES.locations[name]?.req ?? "true");
+    locations.set(name, data.rules.locations[name]?.req ?? "true");
   }
   // A big key a vanilla drop holds (the escape's) is the item DR's rules
   // read: its fact stands for it wherever they do
@@ -969,12 +1001,12 @@ export function drWorld(
     for (const [name, req] of locations)
       locations.set(name, req.replace(item, rule));
   }
-  const marked = markWorlds(exits);
+  const marked = markWorlds(data, exits);
   const derived = {
-    ...derivedSettings(connections, marked, mode),
+    ...derivedSettings(data, connections, marked, mode),
     ...(doors === undefined || dungeonOfRoom === undefined
       ? {}
-      : shuffledDoorSettings(doors, lobbyDoors, dungeonOfRoom, mode)),
+      : shuffledDoorSettings(data, doors, lobbyDoors, dungeonOfRoom, mode)),
   };
   // DoorShuffle.py:640-643: a Swamp portal on another lobby needs the patch
   if (
@@ -983,7 +1015,7 @@ export function drWorld(
     lobbies.has("Swamp") &&
     lobbies.get("Swamp") !== "Swamp Lobby S"
   )
-    for (const [name, { kind }] of Object.entries(DR_RULES.derived))
+    for (const [name, { kind }] of Object.entries(data.rules.derived))
       if (kind === "swampPatch") derived[name] = true;
   // A shuffled world's sides are known once every entrance is: until then
   // a rule reading a region's side holds in each side it may still take
@@ -1006,6 +1038,7 @@ export function drWorld(
           all.staticKeyLogic === true
           ? undefined
           : notedKeyLogic(
+              data,
               all,
               mode,
               options.entrances,
@@ -1013,16 +1046,25 @@ export function drWorld(
               noted.decoupled,
             )
         : options.connections === undefined
-          ? drKeyLogic(all)
+          ? drKeyLogic(data, all)
           : undefined;
   const isStatic = all.staticKeyLogic === true && analysis !== undefined;
   const trCase = isStatic
-    ? turtleRockCase(turtleRockAccess(mode, version))
+    ? turtleRockCase(turtleRockAccess(data, mode, version))
     : null;
   if (doors !== undefined && dungeonOfRoom !== undefined)
-    addShuffledDoorRules(exits, locations, keys, doors, dungeonOfRoom, mode);
+    addShuffledDoorRules(
+      data,
+      exits,
+      locations,
+      keys,
+      doors,
+      dungeonOfRoom,
+      mode,
+    );
   else
     addKeyRules(
+      data,
       exits,
       locations,
       doorRule === undefined
@@ -1033,28 +1075,30 @@ export function drWorld(
               doorRule(dungeon, rule, logic, keys),
           },
       mode,
-      isStatic ? staticLogicOf(analysis, trCase, version) : analysis,
+      isStatic ? staticLogicOf(data, analysis, trCase, version) : analysis,
     );
   if (all.restrictBossItems === true)
     addBossItemRules(
+      data,
       locations,
       all.wildMaps === true && all.wildCompasses === true,
     );
-  if (all.potShuffle === true) addSpikesPotRule(locations);
+  if (all.potShuffle === true) addSpikesPotRule(data, locations);
   if (mode === "standard") {
     const blank = { ...all, ...derived };
     const path = zeldaPath(
+      data,
       exits,
       (req) =>
-        evaluate(parse(exitRule(req)), {}, LOADED_RULES, {
+        evaluate(parse(exitRule(req)), {}, loadedRules, {
           settings: blank,
         }) === "yes",
     );
     addZeldaPath(exits, locations, path);
   }
-  if (isStatic) addStaticKeyRules(exits, locations, keys, mode, trCase);
-  addBombShopRule(exits, mode, version);
-  const bunny = addBunnyRules(exits, locations, marked, mode, added);
+  if (isStatic) addStaticKeyRules(data, exits, locations, keys, mode, trCase);
+  addBombShopRule(data, exits, mode, version);
+  const bunny = addBunnyRules(data, exits, locations, marked, mode, added);
   const bunnyBodies = [...bunny.values()];
 
   // The events: each a fact once its location is reached. A flood switch
@@ -1063,7 +1107,7 @@ export function drWorld(
   // neither a key nor progress, which DR floods over
   const sweep = options.sweepEvents ?? true;
   const potFacts: { item: string; location: string }[] = [];
-  for (const { location } of Object.values(DR_RULES.events)) {
+  for (const { location } of Object.values(data.rules.events)) {
     const pot = FLOODED_KEYS[location];
     if (pot === undefined || !locations.has(location)) continue;
     const drop = keys.forcedDrops.find((d) => d.location === pot);
@@ -1081,7 +1125,7 @@ export function drWorld(
 
   // The regions a rule reads the reach of where only a fact can stand
   const reached = new Set([
-    ...HELPERS_REACH,
+    ...helpersReach,
     ...bunnyBodies.flatMap((req) =>
       [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
     ),
@@ -1090,6 +1134,7 @@ export function drWorld(
       .flatMap((e) => [...e.req.matchAll(REACH)].map((m) => m[1] ?? "")),
   ]);
   const { crystalFacts, locationIds, world } = graph(
+    data,
     exits,
     locations,
     mode,
@@ -1098,7 +1143,7 @@ export function drWorld(
     added,
     bunnyBodies,
   );
-  const events = Object.entries(DR_RULES.events).flatMap(
+  const events = Object.entries(data.rules.events).flatMap(
     ([item, { location }]) => {
       const id = locationIds.get(location);
       return sweep && id !== undefined ? [{ item, location: id }] : [];
@@ -1120,16 +1165,16 @@ export function drWorld(
   const crystalItems = [
     ...exits.map((e) => e.req),
     ...bunnyBodies,
-    ...Object.values(DR_RULES.helpers).map((h) => h.req),
+    ...Object.values(data.rules.helpers).map((h) => h.req),
   ].flatMap((req) => [...req.matchAll(CRYSTAL_READ)].map((m) => m[0]));
   // The bunny's helpers beside DR's, read as an exit reads a rule
   const rules =
     bunny.size === 0
-      ? LOADED_RULES
+      ? loadedRules
       : {
-          groups: LOADED_RULES.groups,
+          groups: loadedRules.groups,
           helpers: new Map([
-            ...LOADED_RULES.helpers,
+            ...loadedRules.helpers,
             ...[...bunny].map(
               ([name, req]) => [name, parse(exitRule(req))] as const,
             ),
@@ -1140,12 +1185,12 @@ export function drWorld(
       ...new Set([
         ...STATE_NAMES,
         ...(options.items ?? []),
-        ...DR_RULES.newItems,
-        ...Object.keys(DR_RULES.events),
+        ...data.rules.newItems,
+        ...Object.keys(data.rules.events),
         ...KEY_ITEMS,
         ...[
-          ...Object.keys(DR_RULES.events),
-          ...KEY_DROPS.map((d) => d.fact),
+          ...Object.keys(data.rules.events),
+          ...keyDropsOf(data).map((d) => d.fact),
           ...crystalItems,
           ...facts.map((f) => f.item),
           ...potFacts.map((f) => f.item),

@@ -1,8 +1,10 @@
 // DR's key counters on the vanilla world (dungeon.ts, exploration.ts,
 // counters.ts): what the walk starts from, what it crosses, and the
 // counters it makes in each dungeon.
+
 import { describe, expect, it } from "vitest";
-import { KEY_DROPS } from "../keys";
+import { DR_DATA } from "../data";
+import { keyDropsOf } from "../keys";
 import { findMaxCounter, type KeyLayout, keyLayout } from "./counters";
 import {
   DR_DUNGEON_ORDER,
@@ -11,13 +13,14 @@ import {
   rstrip,
 } from "./dungeon";
 
-const ALL_DROPS = new Set(KEY_DROPS.map((d) => d.location));
+const ALL_DROPS = new Set(keyDropsOf(DR_DATA).map((d) => d.location));
 const settingsOf = (
   mode: KeyAnalysisSettings["mode"],
   more: Partial<KeyAnalysisSettings> = {},
 ): KeyAnalysisSettings => ({
   accessibility: "items",
   bigKeyShuffle: false,
+  data: DR_DATA,
   dropShuffleNone: true,
   forcedDrops: ALL_DROPS,
   keyShuffle: "none",

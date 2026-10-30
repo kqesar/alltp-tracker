@@ -19,7 +19,7 @@
 // back (3416af0, :237-239); 1.5.8 from the front and middle (5d8f8ec,
 // :243). An older build, which DR's 1.5.6 version string names too, keeps
 // the alternatives (`maybe`, never yes) and probes without keys.
-import { DR_RULES } from "./data";
+import type { DrData } from "./data";
 import type { DoorRule, KeyLogic } from "./key-analysis/analysis";
 import type { KDoor, KLocation } from "./key-analysis/dungeon";
 import type { WorldKeys } from "./keys";
@@ -35,18 +35,19 @@ export interface StaticDoor {
 }
 
 /** StaticKeyLogic.py's tables, as import-dr.mjs wrote them. */
-export const STATIC_KEY_LOGIC = (
-  DR_RULES as unknown as {
-    readonly staticKeyLogic: {
-      readonly doors: Readonly<
-        Record<string, Readonly<Record<string, StaticDoor>>>
-      >;
-      readonly gtCompass: readonly string[];
-      readonly gtRandomizer: readonly string[];
-      readonly trEyeBridge: readonly string[];
-    };
-  }
-).staticKeyLogic;
+export const staticTablesOf = (data: DrData) =>
+  (
+    data.rules as unknown as {
+      readonly staticKeyLogic: {
+        readonly doors: Readonly<
+          Record<string, Readonly<Record<string, StaticDoor>>>
+        >;
+        readonly gtCompass: readonly string[];
+        readonly gtRandomizer: readonly string[];
+        readonly trEyeBridge: readonly string[];
+      };
+    }
+  ).staticKeyLogic;
 
 /**
  * Which of Turtle Rock's ways in DR's probe reaches with every item but
@@ -112,6 +113,7 @@ const ruleOf = (keys: number): DoorRule => ({
  * @param version - The seed's release, its ROM title's digits (158)
  */
 export function staticKeyLogic(
+  data: DrData,
   logic: ReadonlyMap<string, KeyLogic>,
   trCase: TurtleRockCase | null,
   version: number,
@@ -150,7 +152,7 @@ export function staticKeyLogic(
   // apply_key_rule_specs (KeyDoorShuffle.py:1422-1500), validate=False,
   // chest_counting=True: each listed door, and its pair at its number
   const specs = new Map<string, StaticDoor>();
-  for (const doors of Object.values(STATIC_KEY_LOGIC.doors))
+  for (const doors of Object.values(staticTablesOf(data).doors))
     for (const [door, spec] of Object.entries(doors)) specs.set(door, spec);
   const resolved = new Map<
     KDoor,
@@ -315,6 +317,7 @@ interface StaticExit {
  * left out.
  */
 export function addStaticKeyRules(
+  data: DrData,
   exits: readonly StaticExit[],
   locations: Map<string, string>,
   keys: WorldKeys,
@@ -352,8 +355,8 @@ export function addStaticKeyRules(
   const placed = (n: number) => and("maybe", chests(gt, n));
   add("Ganons Tower - Firesnake Room", or(chests(gt, 3), placed(2)));
   for (const name of [
-    ...STATIC_KEY_LOGIC.gtRandomizer,
-    ...STATIC_KEY_LOGIC.gtCompass,
+    ...staticTablesOf(data).gtRandomizer,
+    ...staticTablesOf(data).gtCompass,
   ])
     add(name, or(chests(gt, 4), placed(3)));
 }

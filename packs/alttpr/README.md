@@ -1310,6 +1310,14 @@ the harness fixes; the dungeon tests never sweep events).
 
 **Its world, built** (`src/door-world/`): `drWorld(settings, options)`
 compiles DR's world for the engine, its doors and entrances vanilla.
+Every function of the builder reads its release's data from a bundle
+passed to it (`DrData`, `data.ts`: the regions, doors, portals, rules and
+connection tables of one import, with their indexes; `options.data`, DR's
+`DR_DATA` by default), never from a module-level table, so the Overworld
+Randomizer's world (its own import, `src/door-rando/owr/`) is built by the
+same code. What a module derives from the data is built once per bundle
+(`perData`), and the caches of the key analysis and the Turtle Rock probe
+are keyed by the bundle's flavor.
 `connections.ts` links every exit as DR's vanilla world does
 (`link_overworld`, `link_entrances_new`'s vanilla path with the Inverted
 swaps, `EntranceShuffle2.py:64-78`, `link_doors_prep`'s tables and the

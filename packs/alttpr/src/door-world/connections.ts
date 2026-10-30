@@ -15,18 +15,7 @@ import {
   drTargetName,
   vanillaEntrances,
 } from "../door-rando/entrances";
-import {
-  DOOR_NAMED,
-  DR_DOORS,
-  DR_PORTALS,
-  DR_REGIONS,
-  type DrMode,
-  PARENT,
-  pairsOf,
-  parentOf,
-  regionNamed,
-  tableOf,
-} from "./data";
+import { type DrData, type DrMode, dependentsOf } from "./data";
 import {
   type DoorNotes,
   type DoorShuffleSettings,
@@ -49,57 +38,60 @@ export interface DrDynamicExit {
 }
 
 /** connect_two_way: each side leads into the other's region. */
-function twoWay(c: Map<string, string>, a: string, b: string): void {
-  c.set(a, parentOf(b));
-  c.set(b, parentOf(a));
+function twoWay(
+  data: DrData,
+  c: Map<string, string>,
+  a: string,
+  b: string,
+): void {
+  c.set(a, data.parentOf(b));
+  c.set(b, data.parentOf(a));
 }
-
-/** The doors a controller's link carries along (dependents). */
-const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
-  const found = new Map<string, string[]>();
-  for (const door of DR_DOORS)
-    if (door.controller !== undefined)
-      found.set(door.controller, [
-        ...(found.get(door.controller) ?? []),
-        door.name,
-      ]);
-  return found;
-})();
 
 /**
  * DoorShuffle's connect_two_way (:423-448) and connect_one_way
  * (:451-468): a door's dependents lead where it does.
  */
 function linkDoor(
+  data: DrData,
   c: Map<string, string>,
   entrance: string,
   exit: string,
   twoWays: boolean,
 ): void {
-  c.set(entrance, parentOf(exit));
-  if (twoWays) c.set(exit, parentOf(entrance));
-  for (const dep of DEPENDENTS.get(entrance) ?? []) c.set(dep, parentOf(exit));
+  const dependents = dependentsOf(data);
+  c.set(entrance, data.parentOf(exit));
+  if (twoWays) c.set(exit, data.parentOf(entrance));
+  for (const dep of dependents.get(entrance) ?? [])
+    c.set(dep, data.parentOf(exit));
   if (twoWays)
-    for (const dep of DEPENDENTS.get(exit) ?? [])
-      c.set(dep, parentOf(entrance));
+    for (const dep of dependents.get(exit) ?? [])
+      c.set(dep, data.parentOf(entrance));
 }
 
 /** link_overworld (OverworldShuffle.py:5-20). */
-function linkOverworld(c: Map<string, string>, mode: DrMode): void {
-  for (const [exit, region] of pairsOf(
+function linkOverworld(
+  data: DrData,
+  c: Map<string, string>,
+  mode: DrMode,
+): void {
+  for (const [exit, region] of data.pairsOf(
     "OverworldShuffle.py",
     "mandatory_connections",
   ))
     c.set(exit, region);
-  for (const [exit, region] of pairsOf(
+  for (const [exit, region] of data.pairsOf(
     "OverworldShuffle.py",
     mode === "inverted"
       ? "inverted_mandatory_connections"
       : "open_mandatory_connections",
   ))
     c.set(exit, region);
-  for (const [a, b] of pairsOf("OverworldShuffle.py", "default_connections"))
-    twoWay(c, a, b);
+  for (const [a, b] of data.pairsOf(
+    "OverworldShuffle.py",
+    "default_connections",
+  ))
+    twoWay(data, c, a, b);
 }
 
 /**
@@ -119,13 +111,14 @@ function linkOverworld(c: Map<string, string>, mode: DrMode): void {
  *   not
  */
 function linkEntrances(
+  data: DrData,
   c: Map<string, string>,
   mode: DrMode,
   version: number,
   kept: (entrance: string) => boolean = () => true,
   rest = true,
 ): void {
-  for (const [exit, region] of pairsOf(
+  for (const [exit, region] of data.pairsOf(
     "EntranceShuffle2",
     "mandatory_connections",
   ))
@@ -135,11 +128,12 @@ function linkEntrances(
   // do_vanilla_connections (:162-170): Chris Houlihan's room back to Link's
   // House, wherever it leads with it
   const linksHouse = inverted ? "Big Bomb Shop" : "Links House";
-  if (kept(linksHouse)) c.set("Chris Houlihan Room Exit", parentOf(linksHouse));
+  if (kept(linksHouse))
+    c.set("Chris Houlihan Room Exit", data.parentOf(linksHouse));
   for (const entrance of pool) {
     if (!kept(entrance)) continue;
     const exit = twoWays.get(entrance);
-    if (exit !== undefined) twoWay(c, entrance, exit);
+    if (exit !== undefined) twoWay(data, c, entrance, exit);
     const region = oneWay.get(entrance);
     if (region !== undefined) c.set(entrance, region);
   }
@@ -150,7 +144,7 @@ function linkEntrances(
     kept(DARK_SANCTUARY) &&
     !c.has(DARK_SANCTUARY_EXIT)
   )
-    c.set(DARK_SANCTUARY_EXIT, parentOf(DARK_SANCTUARY));
+    c.set(DARK_SANCTUARY_EXIT, data.parentOf(DARK_SANCTUARY));
 }
 
 /** The Inverted world's save point (EntranceShuffle2.py:171-176). */
@@ -166,8 +160,8 @@ export interface DrNotedDoors {
 }
 
 /** The portal_map entry of a portal: its door's way out, its way in. */
-function portalEnds(name: string): readonly [string, string] {
-  const portalMap = tableOf<readonly [string, string, string]>(
+function portalEnds(data: DrData, name: string): readonly [string, string] {
+  const portalMap = data.tableOf<readonly [string, string, string]>(
     "DoorShuffle.py",
     "portal_map",
   );
@@ -181,10 +175,15 @@ function portalEnds(name: string): readonly [string, string] {
  * connect_portal (DoorShuffle.py:739-752): the lobby's door out to the
  * portal region, the portal region's way in to the lobby.
  */
-function linkPortal(c: Map<string, string>, name: string, door: string) {
-  const [exit, enter] = portalEnds(name);
-  c.set(door, parentOf(exit));
-  c.set(enter, parentOf(door));
+function linkPortal(
+  data: DrData,
+  c: Map<string, string>,
+  name: string,
+  door: string,
+) {
+  const [exit, enter] = portalEnds(data, name);
+  c.set(door, data.parentOf(exit));
+  c.set(enter, data.parentOf(door));
 }
 
 /**
@@ -192,16 +191,17 @@ function linkPortal(c: Map<string, string>, name: string, door: string) {
  * lobby from 3 (a portal not noted opens on none), by name.
  */
 export function lobbiesOf(
+  data: DrData,
   doors: DrNotedDoors | undefined,
 ): Map<string, string> {
   const found = new Map<string, string>();
-  for (const portal of DR_PORTALS) {
+  for (const portal of data.portals) {
     if (doors === undefined || doors.settings.intensity < 3) {
       found.set(portal.name, portal.door);
       continue;
     }
     const noted = doors.notes.lobbies?.[portalId(portal.name)];
-    const door = noted === undefined ? undefined : doorById(noted);
+    const door = noted === undefined ? undefined : doorById(noted, data);
     if (door !== undefined) found.set(portal.name, door.name);
   }
   return found;
@@ -221,15 +221,19 @@ export function lobbiesOf(
  * basic, it leads to Sanctuary's portal's lobby (cross_dungeon_clean_up,
  * :1024-1028) once that is noted.
  */
-function linkShuffledDoors(c: Map<string, string>, doors: DrNotedDoors): void {
+function linkShuffledDoors(
+  data: DrData,
+  c: Map<string, string>,
+  doors: DrNotedDoors,
+): void {
   const { notes, settings } = doors;
   const simple = (name: string) => {
-    for (const [exit, region] of pairsOf("DoorShuffle.py", name))
+    for (const [exit, region] of data.pairsOf("DoorShuffle.py", name))
       c.set(exit, region);
   };
   const vanilla = (name: string) => {
-    for (const [a, b] of pairsOf("DoorShuffle.py", name))
-      linkDoor(c, a, b, true);
+    for (const [a, b] of data.pairsOf("DoorShuffle.py", name))
+      linkDoor(data, c, a, b, true);
   };
   simple("logical_connections");
   vanilla("interior_doors");
@@ -240,15 +244,18 @@ function linkShuffledDoors(c: Map<string, string>, doors: DrNotedDoors): void {
     vanilla("straight_staircases");
     vanilla("ladders");
   }
-  const lobbies = lobbiesOf(doors);
-  for (const [portal, door] of lobbies) linkPortal(c, portal, door);
+  const lobbies = lobbiesOf(data, doors);
+  for (const [portal, door] of lobbies) linkPortal(data, c, portal, door);
   const lobbyDoors = new Set(lobbies.values());
   const ownLinks = new Map<string, string>();
   for (const [fromId, toId] of Object.entries(notes.links ?? {})) {
-    const from = doorById(fromId);
-    const to = doorById(toId);
+    const from = doorById(fromId, data);
+    const to = doorById(toId, data);
     if (from === undefined || to === undefined) continue;
-    if (!isShuffledDoor(from, settings) || !isShuffledDoor(to, settings))
+    if (
+      !isShuffledDoor(from, settings, data) ||
+      !isShuffledDoor(to, settings, data)
+    )
       continue;
     if (lobbyDoors.has(from.name)) continue;
     ownLinks.set(from.name, to.name);
@@ -257,14 +264,14 @@ function linkShuffledDoors(c: Map<string, string>, doors: DrNotedDoors): void {
   if (!settings.decoupled)
     for (const [from, to] of ownLinks)
       if (!links.has(to) && !lobbyDoors.has(to)) links.set(to, from);
-  for (const [from, to] of links) linkDoor(c, from, to, false);
+  for (const [from, to] of links) linkDoor(data, c, from, to, false);
   // Its portal's lobby while Sanctuary stays the castle's (basic); in a
   // pool of dungeons DR picks one of the portals of Sanctuary's layout
   // (:1009-1023, random.choice among those reaching it): left out
   if (settings.intensity >= 3 && settings.shuffle === "basic") {
     const sanctuary = lobbies.get("Sanctuary");
     if (sanctuary !== undefined)
-      c.set(SANCTUARY_MIRROR_ROUTE, parentOf(sanctuary));
+      c.set(SANCTUARY_MIRROR_ROUTE, data.parentOf(sanctuary));
   }
 }
 
@@ -278,18 +285,22 @@ const SANCTUARY_MIRROR_ROUTE = "Sanctuary Mirror Route";
  * door table. The Sanctuary Mirror Route is removed (:84-90). With a
  * door shuffle, linkShuffledDoors.
  */
-function linkDoors(c: Map<string, string>, shuffled?: DrNotedDoors): void {
+function linkDoors(
+  data: DrData,
+  c: Map<string, string>,
+  shuffled?: DrNotedDoors,
+): void {
   if (shuffled !== undefined) {
-    linkShuffledDoors(c, shuffled);
+    linkShuffledDoors(data, c, shuffled);
     return;
   }
   const simple = (name: string) => {
-    for (const [exit, region] of pairsOf("DoorShuffle.py", name))
+    for (const [exit, region] of data.pairsOf("DoorShuffle.py", name))
       c.set(exit, region);
   };
   const doors = (name: string, twoWays = true) => {
-    for (const [a, b] of pairsOf("DoorShuffle.py", name))
-      linkDoor(c, a, b, twoWays);
+    for (const [a, b] of data.pairsOf("DoorShuffle.py", name))
+      linkDoor(data, c, a, b, twoWays);
   };
   simple("logical_connections");
   doors("interior_doors");
@@ -298,17 +309,13 @@ function linkDoors(c: Map<string, string>, shuffled?: DrNotedDoors): void {
   doors("open_edges");
   doors("straight_staircases");
   doors("ladders");
-  for (const portal of DR_PORTALS) linkPortal(c, portal.name, portal.door);
+  for (const portal of data.portals)
+    linkPortal(data, c, portal.name, portal.door);
   simple("vanilla_logical_connections");
   doors("spiral_staircases");
   doors("default_door_connections");
   doors("default_one_way_connections", false);
 }
-
-/** The doors a portal unblocks (connect_portal sets `blocked` false). */
-export const PORTAL_DOORS: ReadonlySet<string> = new Set(
-  DR_PORTALS.map((p) => p.door),
-);
 
 /** The exits DR removes from the world (link_doors_prep :80-86). */
 export const REMOVED_EXITS: ReadonlySet<string> = new Set([
@@ -322,14 +329,15 @@ export const REMOVED_EXITS: ReadonlySet<string> = new Set([
  *   digits (157 for 1.5.7), 156 for 1.5.6 or an older or unknown one
  */
 export function vanillaConnections(
+  data: DrData,
   mode: DrMode,
   version = 156,
   doors?: DrNotedDoors,
 ): DrConnections {
   const c = new Map<string, string>();
-  linkOverworld(c, mode);
-  linkEntrances(c, mode, version);
-  linkDoors(c, doors);
+  linkOverworld(data, c, mode);
+  linkEntrances(data, c, mode, version);
+  linkDoors(data, c, doors);
   removeExits(c, doors);
   return c;
 }
@@ -370,15 +378,17 @@ export interface DrNotedConnections {
  * @param version - The DR release, as vanillaConnections takes it
  */
 export function notedConnections(
+  data: DrData,
   mode: DrMode,
   entrances: DrNotedEntrances,
   version = 156,
   doors?: DrNotedDoors,
 ): DrNotedConnections {
   const c = new Map<string, string>();
-  linkOverworld(c, mode);
+  linkOverworld(data, c, mode);
   const moved = drShuffled(entrances.shuffle, entrances.pool);
   linkEntrances(
+    data,
     c,
     mode,
     version,
@@ -394,16 +404,16 @@ export function notedConnections(
     const target = drTargetName(targetId);
     if (entrance === undefined || target === undefined || !moved.has(entrance))
       continue;
-    if (!PARENT.has(entrance)) continue;
+    if (!data.parent.has(entrance)) continue;
     noted.add(entrance);
     if (exits.has(target)) {
-      c.set(entrance, parentOf(target));
-      if (!decoupled) c.set(target, parentOf(entrance));
+      c.set(entrance, data.parentOf(target));
+      if (!decoupled) c.set(target, data.parentOf(entrance));
     } else c.set(entrance, target);
     if (mode === "inverted" && target === DARK_SANCTUARY)
-      c.set(DARK_SANCTUARY_EXIT, parentOf(entrance));
+      c.set(DARK_SANCTUARY_EXIT, data.parentOf(entrance));
   }
-  linkDoors(c, doors);
+  linkDoors(data, c, doors);
   removeExits(c, doors);
   return {
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
@@ -425,16 +435,19 @@ const NO_DYNAMIC_EXITS = new Set([
  * region of the other world that mirror_connections lists, which a water
  * region asks the flippers and the pearl for.
  */
-export function dynamicExits(mode: DrMode): readonly DrDynamicExit[] {
+export function dynamicExits(
+  data: DrData,
+  mode: DrMode,
+): readonly DrDynamicExit[] {
   const inverted = mode === "inverted";
   const own = inverted ? "dw" : "lw";
   const other = inverted ? "lw" : "dw";
-  const mirrors = tableOf<readonly string[]>(
+  const mirrors = data.tableOf<readonly string[]>(
     "OverworldShuffle.py",
     "mirror_connections",
   );
   const found: DrDynamicExit[] = [];
-  for (const region of DR_REGIONS) {
+  for (const region of data.regions) {
     if (NO_DYNAMIC_EXITS.has(region.name)) continue;
     if (region.type === own && region.terrain === "land")
       found.push({
@@ -445,11 +458,11 @@ export function dynamicExits(mode: DrMode): readonly DrDynamicExit[] {
         to: "Flute Sky",
       });
   }
-  for (const region of DR_REGIONS) {
+  for (const region of data.regions) {
     if (NO_DYNAMIC_EXITS.has(region.name) || region.type !== other) continue;
     const targets = mirrors[region.name] ?? [];
     for (const to of targets) {
-      const target = regionNamed(to);
+      const target = data.regionNamed(to);
       const water = region.terrain === "water" || target.terrain === "water";
       found.push({
         from: region.name,
@@ -467,8 +480,6 @@ export function dynamicExits(mode: DrMode): readonly DrDynamicExit[] {
   return found;
 }
 
-/** Whether a name is a static exit of DR's regions. */
-export const isStaticExit = (name: string): boolean => PARENT.has(name);
-
-/** A door by name, if the exit is one. */
-export const doorOf = (exit: string) => DOOR_NAMED.get(exit);
+/** Whether a name is a static exit of a release's regions. */
+export const isStaticExit = (data: DrData, name: string): boolean =>
+  data.parent.has(name);

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
-import { DR_DOORS, DR_PORTALS, pairsOf } from "./data";
+import { DR_DATA } from "./data";
 import {
   type DoorKindNote,
   type DoorNotes,
@@ -50,17 +50,17 @@ function vanillaNotes(s: DoorShuffleSettings): DoorNotes {
     "straight_staircases",
     "ladders",
   ])
-    for (const [a, b] of pairsOf("DoorShuffle.py", table)) {
-      const one = DR_DOORS.find((d) => d.name === a);
+    for (const [a, b] of DR_DATA.pairsOf("DoorShuffle.py", table)) {
+      const one = DR_DATA.doors.find((d) => d.name === a);
       if (one === undefined || !isShuffledDoor(one, s)) continue;
       links[doorId(a)] = doorId(b);
       links[doorId(b)] = doorId(a);
     }
   const kinds: Record<string, DoorKindNote> = {};
-  for (const door of DR_DOORS)
+  for (const door of DR_DATA.doors)
     if (kindShuffled(door, s)) kinds[doorId(door.name)] = vanillaKind(door);
   const lobbies = Object.fromEntries(
-    DR_PORTALS.map((p) => [portalId(p.name), doorId(p.door)]),
+    DR_DATA.portals.map((p) => [portalId(p.name), doorId(p.door)]),
   );
   return { kinds, links, lobbies };
 }

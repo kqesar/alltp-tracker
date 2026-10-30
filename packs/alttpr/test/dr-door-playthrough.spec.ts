@@ -17,7 +17,7 @@
 //   and no location of a later sphere `yes` too early.
 import { describe, expect, it } from "vitest";
 import { DR_LOCATIONS } from "../src/door-rando/locations";
-import { DOOR_NAMED, DR_REGIONS } from "../src/door-world/data";
+import { DR_DATA } from "../src/door-world/data";
 import {
   type DoorShuffleSettings,
   doorNotesFromSpoiler,
@@ -27,7 +27,7 @@ import {
   kindShuffled,
   lobbyDoors,
 } from "../src/door-world/index";
-import { KEY_DROPS } from "../src/door-world/keys";
+import { keyDropsOf } from "../src/door-world/keys";
 import { solveFacts } from "../src/facts";
 import { type Medallion, medallionFacts } from "../src/medallions";
 import {
@@ -66,11 +66,13 @@ const withoutDoors = (json: Json): Json => {
  */
 const forcedDrops = (meta: Log["meta"]): ReadonlySet<string> =>
   new Set(
-    KEY_DROPS.filter((d) =>
-      d.pot
-        ? ["none", "cave"].includes(String(meta.pottery ?? "none"))
-        : String(meta.dropshuffle ?? "none") === "none",
-    ).map((d) => d.location),
+    keyDropsOf(DR_DATA)
+      .filter((d) =>
+        d.pot
+          ? ["none", "cave"].includes(String(meta.pottery ?? "none"))
+          : String(meta.dropshuffle ?? "none") === "none",
+      )
+      .map((d) => d.location),
   );
 
 /** A log's JSON, its locations named as DR's world names them. */
@@ -140,7 +142,7 @@ function notesOf(json: Json, log: Log) {
   for (const [dungeon, word] of Object.entries(KEY_NAMES))
     keys[dungeon] =
       chests.filter((item) => item === `Small Key (${word})`).length +
-      KEY_DROPS.filter(
+      keyDropsOf(DR_DATA).filter(
         (d) =>
           !d.big &&
           forced.has(d.location) &&
@@ -151,7 +153,9 @@ function notesOf(json: Json, log: Log) {
 
 /** The region of each DR location (its own and its key drops). */
 const REGION_OF: ReadonlyMap<string, string> = new Map([
-  ...DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r.name] as const)),
+  ...DR_DATA.regions.flatMap((r) =>
+    r.locations.map((l) => [l, r.name] as const),
+  ),
   ...DR_LOCATIONS.map((l) => [l.name, l.region] as const),
 ]);
 
@@ -295,8 +299,8 @@ describe("DR's world on shuffled doors against real seeds", () => {
       const doors = json.Doors as readonly { entrance: string; exit: string }[];
       expect(doors.length).toBeGreaterThan(150);
       for (const { entrance, exit } of doors) {
-        const a = DOOR_NAMED.get(entrance);
-        const b = DOOR_NAMED.get(exit);
+        const a = DR_DATA.doorByName.get(entrance);
+        const b = DR_DATA.doorByName.get(exit);
         if (a === undefined || b === undefined) throw new Error(entrance);
         expect(isShuffledDoor(a, settings), entrance).toBe(true);
         expect(
@@ -315,7 +319,7 @@ describe("DR's world on shuffled doors against real seeds", () => {
       for (const [id, kind] of Object.entries(notes.kinds ?? {}))
         if (kind !== "normal")
           expect(
-            [...DOOR_NAMED.values()].some(
+            [...DR_DATA.doorByName.values()].some(
               (d) => kindShuffled(d, settings) && notes.kinds?.[id] === kind,
             ),
           ).toBe(true);
@@ -327,7 +331,9 @@ describe("DR's world on shuffled doors against real seeds", () => {
       const log = jsonLog(withoutDoors(json));
       const world = worldOf(json, logOf(json));
       const regionOf = new Map(
-        DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r.name] as const)),
+        DR_DATA.regions.flatMap((r) =>
+          r.locations.map((l) => [l, r.name] as const),
+        ),
       );
       const wrong: string[] = [];
       let checked = 0;

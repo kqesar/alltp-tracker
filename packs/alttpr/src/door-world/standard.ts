@@ -3,7 +3,7 @@
 // way back from Zelda's cell to the throne room, whose rules gate taking
 // her out (find_rules_for_zelda_delivery, :1587-1611, set on the throne
 // room's tapestry and on her drop-off, :1573-1576).
-import { regionNamed } from "./data";
+import type { DrData } from "./data";
 import { and } from "./text";
 
 /** An exit, as the world builder holds it. */
@@ -32,6 +32,7 @@ export const UNCLE_SAVE_AND_QUIT = {
  * @param passesBlank - Whether a rule holds with nothing collected
  */
 export function zeldaPath(
+  data: DrData,
   exits: readonly StandardExit[],
   passesBlank: (req: string) => boolean,
 ): readonly string[] {
@@ -44,7 +45,7 @@ export function zeldaPath(
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
     const [region, rules] = next;
     for (const exit of out.get(region) ?? []) {
-      const to = regionNamed(exit.to);
+      const to = data.regionNamed(exit.to);
       if (
         visited.has(to.name) ||
         (to.type !== "dungeon" && to.name !== "Hyrule Castle Ledge")

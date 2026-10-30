@@ -24,14 +24,16 @@
 //   okay_interiors, :3063-3066; a spiral stair's key kinds; a trap kind),
 //   so a door the shuffle may change has its kind noted, and one not noted
 //   is unknown: `maybe` to pass. Every other door keeps its room's kind.
+//
+// Each function reads a release's doors (data.ts), the Door Randomizer's
+// by default: the Doors tab notes DR's.
 import { locationId } from "@alltp/engine";
 import {
-  DOOR_NAMED,
-  DR_DOORS,
-  DR_PORTALS,
+  DR_DATA,
+  type DrData,
   type DrDoor,
-  PARENT,
-  regionNamed,
+  type DrPortal,
+  perData,
 } from "./data";
 
 /** DR's door shuffles (`--door_shuffle`, args.json) but `vanilla`. */
@@ -95,34 +97,48 @@ export const doorId = (name: string): string => locationId(name);
 /** A portal's id: its name's slug (`hyrule-castle-south`). */
 export const portalId = (name: string): string => locationId(name);
 
-const DOOR_BY_ID: ReadonlyMap<string, DrDoor> = new Map(
-  DR_DOORS.map((d) => [doorId(d.name), d]),
+const doorsById = perData(
+  (data): ReadonlyMap<string, DrDoor> =>
+    new Map(data.doors.map((d) => [doorId(d.name), d])),
 );
 
 /** A door by its id, if one has it. */
-export const doorById = (id: string): DrDoor | undefined => DOOR_BY_ID.get(id);
+export const doorById = (
+  id: string,
+  data: DrData = DR_DATA,
+): DrDoor | undefined => doorsById(data).get(id);
 
-const PORTAL_BY_ID: ReadonlyMap<string, (typeof DR_PORTALS)[number]> = new Map(
-  DR_PORTALS.map((p) => [portalId(p.name), p]),
+const portalsById = perData(
+  (data): ReadonlyMap<string, DrPortal> =>
+    new Map(data.portals.map((p) => [portalId(p.name), p])),
 );
 
 /** A portal by its id, if one has it. */
-export const portalById = (id: string) => PORTAL_BY_ID.get(id);
+export const portalById = (
+  id: string,
+  data: DrData = DR_DATA,
+): DrPortal | undefined => portalsById(data).get(id);
 
 /** The dungeon a door's room lies in, as DR's world builds it. */
-export const homeDungeonOf = (door: DrDoor): string | null => {
-  const region = PARENT.get(door.name);
-  return region === undefined ? null : regionNamed(region).dungeon;
+export const homeDungeonOf = (
+  door: DrDoor,
+  data: DrData = DR_DATA,
+): string | null => {
+  const region = data.parent.get(door.name);
+  return region === undefined ? null : data.regionNamed(region).dungeon;
 };
 
 /** The dungeon each portal leads into (its own door's, Doors.py:1549-1575). */
-export const PORTAL_DUNGEON: ReadonlyMap<string, string> = new Map(
-  DR_PORTALS.map((p) => {
-    const door = DOOR_NAMED.get(p.door);
-    const dungeon = door === undefined ? null : homeDungeonOf(door);
-    if (dungeon === null) throw new RangeError(`No dungeon for ${p.name}`);
-    return [p.name, dungeon];
-  }),
+export const portalDungeonOf = perData(
+  (data): ReadonlyMap<string, string> =>
+    new Map(
+      data.portals.map((p) => {
+        const door = data.doorByName.get(p.door);
+        const dungeon = door === undefined ? null : homeDungeonOf(door, data);
+        if (dungeon === null) throw new RangeError(`No dungeon for ${p.name}`);
+        return [p.name, dungeon];
+      }),
+    ),
 );
 
 /** partitioned's groups (create_dungeon_pool, DoorShuffle.py:149-152). */
@@ -158,9 +174,9 @@ const shuffledTypes = (intensity: number): ReadonlySet<string> =>
     ...(intensity > 1 ? ["Open", "StraightStairs", "Ladder"] : []),
   ]);
 
-/** Whether a door is a portal's own (connect_portal links it below 3). */
-const PORTAL_DOOR_NAMES: ReadonlySet<string> = new Set(
-  DR_PORTALS.map((p) => p.door),
+/** The portals' own doors (connect_portal links them below 3). */
+export const portalDoorsOf = perData(
+  (data): ReadonlySet<string> => new Set(data.portals.map((p) => p.door)),
 );
 
 /**
@@ -172,18 +188,21 @@ const PORTAL_DOOR_NAMES: ReadonlySet<string> = new Set(
 export function isShuffledDoor(
   door: DrDoor,
   settings: DoorShuffleSettings,
+  data: DrData = DR_DATA,
 ): boolean {
   if (!shuffledTypes(settings.intensity).has(door.type)) return false;
-  if (homeDungeonOf(door) === null) return false;
-  if (settings.intensity < 3 && PORTAL_DOOR_NAMES.has(door.name)) return false;
+  if (homeDungeonOf(door, data) === null) return false;
+  if (settings.intensity < 3 && portalDoorsOf(data).has(door.name))
+    return false;
   return true;
 }
 
 /** Every door a run's shuffle relinks, by name, in Doors.py's order. */
 export function shuffledDoors(
   settings: DoorShuffleSettings,
+  data: DrData = DR_DATA,
 ): readonly DrDoor[] {
-  return DR_DOORS.filter((door) => isShuffledDoor(door, settings));
+  return data.doors.filter((door) => isShuffledDoor(door, settings, data));
 }
 
 /** The side a door faces, which the door it leads into faces back. */
@@ -203,15 +222,16 @@ const OPPOSITE: Readonly<Record<string, string>> = {
 export function doorTargets(
   door: DrDoor,
   settings: DoorShuffleSettings,
+  data: DrData = DR_DATA,
 ): readonly DrDoor[] {
-  if (!isShuffledDoor(door, settings)) return [];
-  const home = homeDungeonOf(door);
+  if (!isShuffledDoor(door, settings, data)) return [];
+  const home = homeDungeonOf(door, data);
   if (home === null) return [];
   const pool = new Set(poolOf(home, settings.shuffle));
   const stairs = door.type === "SpiralStairs";
-  return shuffledDoors(settings).filter((other) => {
+  return shuffledDoors(settings, data).filter((other) => {
     if (other.name === door.name) return false;
-    const dungeon = homeDungeonOf(other);
+    const dungeon = homeDungeonOf(other, data);
     if (dungeon === null || !pool.has(dungeon)) return false;
     if (stairs) return other.type === "SpiralStairs";
     return (
@@ -231,12 +251,13 @@ export function doorTargets(
 export function lobbyDoors(
   portal: string,
   shuffle: DoorShuffleMode,
+  data: DrData = DR_DATA,
 ): readonly DrDoor[] {
-  const dungeon = PORTAL_DUNGEON.get(portal);
+  const dungeon = portalDungeonOf(data).get(portal);
   if (dungeon === undefined) throw new RangeError(`No portal ${portal}`);
   const pool = new Set(poolOf(dungeon, shuffle));
-  return DR_DOORS.filter((door) => {
-    const home = homeDungeonOf(door);
+  return data.doors.filter((door) => {
+    const home = homeDungeonOf(door, data);
     return door.portalAble === true && home !== null && pool.has(home);
   });
 }
@@ -370,9 +391,11 @@ const SPOILER_KINDS: Readonly<Record<string, DoorKindNote>> = {
 export function doorNotesFromSpoiler(
   spoiler: DoorSpoiler,
   settings: DoorShuffleSettings,
+  data: DrData = DR_DATA,
 ): DoorNotes {
   const known = (name: string) => {
-    if (!DOOR_NAMED.has(name)) throw new RangeError(`No DR door "${name}"`);
+    if (!data.doorByName.has(name))
+      throw new RangeError(`No DR door "${name}"`);
     return doorId(name);
   };
   const links: Record<string, string> = {};
@@ -387,12 +410,12 @@ export function doorNotesFromSpoiler(
   }
   const lobbies: Record<string, string> = {};
   for (const { door_name, lobby_name } of spoiler.Lobbies ?? []) {
-    if (!PORTAL_DUNGEON.has(lobby_name))
+    if (!portalDungeonOf(data).has(lobby_name))
       throw new RangeError(`No DR portal "${lobby_name}"`);
     lobbies[portalId(lobby_name)] = known(door_name);
   }
   const kinds: Record<string, DoorKindNote> = {};
-  for (const door of DR_DOORS)
+  for (const door of data.doors)
     if (kindShuffled(door, settings)) kinds[doorId(door.name)] = "normal";
   for (const { doorNames, type } of spoiler.DoorTypes ?? []) {
     const kind = SPOILER_KINDS[type];
@@ -412,17 +435,21 @@ export function doorNotesFromSpoiler(
  */
 export function kindOnlyDoors(
   settings: DoorShuffleSettings,
+  data: DrData = DR_DATA,
 ): readonly DrDoor[] {
-  return DR_DOORS.filter(
+  return data.doors.filter(
     (door) =>
-      homeDungeonOf(door) !== null &&
-      !isShuffledDoor(door, settings) &&
+      homeDungeonOf(door, data) !== null &&
+      !isShuffledDoor(door, settings, data) &&
       kindShuffled(door, settings),
   );
 }
 
 /** The portals of a dungeon, in Doors.py's order. */
-export const portalsOf = (dungeon: string): readonly string[] =>
-  DR_PORTALS.filter((p) => PORTAL_DUNGEON.get(p.name) === dungeon).map(
-    (p) => p.name,
-  );
+export const portalsOf = (
+  dungeon: string,
+  data: DrData = DR_DATA,
+): readonly string[] =>
+  data.portals
+    .filter((p) => portalDungeonOf(data).get(p.name) === dungeon)
+    .map((p) => p.name);

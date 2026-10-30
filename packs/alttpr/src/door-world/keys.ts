@@ -23,7 +23,7 @@
 // shuffles that drop, when the key found is one the player records.
 import { locationId } from "@alltp/engine";
 import { DR_LOCATIONS } from "../door-rando/locations";
-import { DOOR_NAMED, DR_DUNGEONS, DR_REGIONS, type DrMode } from "./data";
+import { type DrData, type DrMode, dependentsOf, perData } from "./data";
 import type { DoorRule, KeyLogic } from "./key-analysis/analysis";
 import { and, maybeOf, or, readFact } from "./text";
 
@@ -106,7 +106,10 @@ export const ALTERNATIVE_CRYSTAL_DOORS: ReadonlySet<string> = new Set([
 export const dropKeyFact = (location: string): string =>
   `dropKey_${locationId(location).replace(/[^a-z0-9]+/g, "_")}`;
 
-const DUNGEON_OF_REGION = new Map(DR_REGIONS.map((r) => [r.name, r.dungeon]));
+/** Each region's dungeon, by name. */
+const dungeonOfRegion = perData(
+  (data) => new Map(data.regions.map((r) => [r.name, r.dungeon])),
+);
 
 /** Which vanilla drops a run shuffles: their keys are then items. */
 export interface DropShuffle {
@@ -129,21 +132,21 @@ export interface KeyDrop {
 }
 
 /** The 33 vanilla key drops (key_drop_data), by dungeon. */
-export const KEY_DROPS: readonly KeyDrop[] = DR_LOCATIONS.filter(
-  (l) => l.kind === "keyDrop",
-).map((l) => {
-  const dungeon = DUNGEON_OF_REGION.get(l.region);
-  if (dungeon === undefined || dungeon === null)
-    throw new RangeError(`No dungeon for the key drop ${l.name}`);
-  return {
-    big: l.key === "big",
-    dungeon,
-    fact: dropKeyFact(l.name),
-    location: l.name,
-    pot: l.flag.memory === "pot",
-    region: l.region,
-  };
-});
+export const keyDropsOf = perData((data): readonly KeyDrop[] =>
+  DR_LOCATIONS.filter((l) => l.kind === "keyDrop").map((l) => {
+    const dungeon = dungeonOfRegion(data).get(l.region);
+    if (dungeon === undefined || dungeon === null)
+      throw new RangeError(`No dungeon for the key drop ${l.name}`);
+    return {
+      big: l.key === "big",
+      dungeon,
+      fact: dropKeyFact(l.name),
+      location: l.name,
+      pot: l.flag.memory === "pot",
+      region: l.region,
+    };
+  }),
+);
 
 /**
  * How the run holds its small keys: in their dungeons, wild (keysanity)
@@ -196,6 +199,7 @@ export interface WorldKeys {
  *   gives each its room's dungeon's key (its big key, the castle's drop)
  */
 export function worldKeys(
+  data: DrData,
   holding: KeyHolding,
   shuffled: DropShuffle,
   bigKeys: {
@@ -205,12 +209,12 @@ export function worldKeys(
   dangerous = false,
   dungeonOf?: (drop: KeyDrop) => string | undefined,
 ): WorldKeys {
-  const forced = KEY_DROPS.filter(
-    (d) => !(d.pot ? shuffled.pots : shuffled.drops),
-  ).map((d) => {
-    const dungeon = dungeonOf?.(d) ?? d.dungeon;
-    return dungeon === d.dungeon ? d : { ...d, dungeon };
-  });
+  const forced = keyDropsOf(data)
+    .filter((d) => !(d.pot ? shuffled.pots : shuffled.drops))
+    .map((d) => {
+      const dungeon = dungeonOf?.(d) ?? d.dungeon;
+      return dungeon === d.dungeon ? d : { ...d, dungeon };
+    });
   const codeOf = (dungeon: string) => {
     const code = DR_KEY_CODES[dungeon];
     if (code === undefined) throw new RangeError(`No dungeon ${dungeon}`);
@@ -283,8 +287,10 @@ export function worldKeys(
     strictSafeRule: (dungeon) => {
       if (holding === "universal") return "maybe";
       const chests =
-        DR_DUNGEONS.find((d) => d.name === dungeon)?.smallKeys.length ?? 0;
-      const drops = KEY_DROPS.filter((d) => !d.big && d.dungeon === dungeon);
+        data.dungeons.find((d) => d.name === dungeon)?.smallKeys.length ?? 0;
+      const drops = keyDropsOf(data).filter(
+        (d) => !d.big && d.dungeon === dungeon,
+      );
       const all = chests + drops.length;
       return all === 0 ? "true" : or(atLeast(dungeon, all), "maybe");
     },
@@ -310,18 +316,6 @@ interface KeyExit {
 const crystalAlternative = (keys: WorldKeys, dungeon: string, n: number) =>
   and("maybe", keys.atLeast(dungeon, n));
 
-/** The doors whose link follows each door's (dependents). */
-const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
-  const found = new Map<string, string[]>();
-  for (const door of DOOR_NAMED.values())
-    if (door.controller !== undefined)
-      found.set(door.controller, [
-        ...(found.get(door.controller) ?? []),
-        door.name,
-      ]);
-  return found;
-})();
-
 /**
  * Adds the key rules (add_key_logic_rules, Rules.py:2347-2385): each key
  * door of a dungeon's analysis and the doors its link carries along ask
@@ -332,6 +326,7 @@ const DEPENDENTS: ReadonlyMap<string, readonly string[]> = (() => {
  * strict-safe rule.
  */
 export function addKeyRules(
+  data: DrData,
   exits: readonly KeyExit[],
   locations: Map<string, string>,
   keys: WorldKeys,
@@ -339,6 +334,8 @@ export function addKeyRules(
   logic: ReadonlyMap<string, KeyLogic> | undefined,
 ): void {
   const special = specialBigKeyDoors(mode);
+  const dependents = dependentsOf(data);
+  const dungeonOf = dungeonOfRegion(data);
   // The rule each exit asks, by the door rules of the analysis
   const ruled = new Map<string, string>();
   const alternative = new Map<string, string>();
@@ -361,19 +358,19 @@ export function addKeyRules(
           continue;
         }
         const req = keys.doorRule(dungeon, rule, dungeonLogic);
-        for (const door of [name, ...(DEPENDENTS.get(name) ?? [])])
+        for (const door of [name, ...(dependents.get(name) ?? [])])
           ruled.set(door, and(ruled.get(door) ?? "true", req));
       }
     }
   for (const exit of exits) {
-    const door = DOOR_NAMED.get(exit.name);
-    const dungeon = DUNGEON_OF_REGION.get(exit.from);
+    const door = data.doorByName.get(exit.name);
+    const dungeon = dungeonOf.get(exit.from);
     if (door === undefined || dungeon === undefined || dungeon === null)
       continue;
     const controller =
       door.controller === undefined
         ? undefined
-        : DOOR_NAMED.get(door.controller);
+        : data.doorByName.get(door.controller);
     const small = (d: typeof door | undefined) =>
       d?.smallKey === true && !UGLY_SMALLS.has(d.name);
     const big = (d: typeof door | undefined) =>
@@ -397,7 +394,7 @@ export function addKeyRules(
       if (keys.holding !== "universal")
         exit.req = or(exit.req, crystalAlternative(keys, "Misery Mire", 2));
   }
-  for (const region of DR_REGIONS) {
+  for (const region of data.regions) {
     if (region.dungeon === null) continue;
     for (const name of region.locations)
       if (isBigChest(name) && locations.has(name))

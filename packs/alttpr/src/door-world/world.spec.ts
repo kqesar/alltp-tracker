@@ -11,7 +11,7 @@ import {
   REMOVED_EXITS,
   vanillaConnections,
 } from "./connections";
-import { DR_REGIONS, pairsOf, REGION_NAMED } from "./data";
+import { DR_DATA } from "./data";
 import {
   DR_DEFAULTS,
   drKeyLogic,
@@ -31,10 +31,10 @@ const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
 describe("the Door Randomizer's world (door-world)", () => {
   it("links every exit to a region of DR's, as DR's vanilla world does", () => {
     for (const mode of ["open", "standard", "inverted"] as const) {
-      const connections = vanillaConnections(mode);
+      const connections = vanillaConnections(DR_DATA, mode);
       for (const [exit, to] of connections) {
-        expect(isStaticExit(exit), exit).toBe(true);
-        expect(REGION_NAMED.has(to), to).toBe(true);
+        expect(isStaticExit(DR_DATA, exit), exit).toBe(true);
+        expect(DR_DATA.regionByName.has(to), to).toBe(true);
       }
       // Unlinked: a one-way door's far side, an exit only the other
       // worlds' mandatory tables link, the inverted sanctuary's way out
@@ -42,25 +42,27 @@ describe("the Door Randomizer's world (door-world)", () => {
       // the removed mirror route
       const other = new Set(
         [
-          ...pairsOf(
+          ...DR_DATA.pairsOf(
             "OverworldShuffle.py",
             mode === "inverted"
               ? "open_mandatory_connections"
               : "inverted_mandatory_connections",
           ),
-          ...pairsOf("EntranceShuffle2", "drop_map"),
-          ...pairsOf("EntranceShuffle2", "entrance_map"),
+          ...DR_DATA.pairsOf("EntranceShuffle2", "drop_map"),
+          ...DR_DATA.pairsOf("EntranceShuffle2", "entrance_map"),
         ].map(([exit]) => exit),
       );
       const farSides = new Set(
-        pairsOf("DoorShuffle.py", "default_one_way_connections").map(
+        DR_DATA.pairsOf("DoorShuffle.py", "default_one_way_connections").map(
           ([, to]) => to,
         ),
       );
-      const unlinked = DR_REGIONS.flatMap((r) => r.exits).filter(
-        (exit) =>
-          !connections.has(exit) && !farSides.has(exit) && !other.has(exit),
-      );
+      const unlinked = DR_DATA.regions
+        .flatMap((r) => r.exits)
+        .filter(
+          (exit) =>
+            !connections.has(exit) && !farSides.has(exit) && !other.has(exit),
+        );
       expect(unlinked, mode).toEqual([
         "Dark Sanctuary Hint Exit",
         "Sanctuary Mirror Route",
@@ -75,12 +77,12 @@ describe("the Door Randomizer's world (door-world)", () => {
     // of its entrance since 1.5.7 (3c4307e; EntranceShuffle2.py:171-176 at
     // 1.5.8); a 1.5.6 seed's logic, or one of no version known, never did
     const exit = "Dark Sanctuary Hint Exit";
-    expect(vanillaConnections("inverted").has(exit)).toBe(false);
-    expect(vanillaConnections("inverted", 156).has(exit)).toBe(false);
-    expect(vanillaConnections("inverted", 157).get(exit)).toBe(
+    expect(vanillaConnections(DR_DATA, "inverted").has(exit)).toBe(false);
+    expect(vanillaConnections(DR_DATA, "inverted", 156).has(exit)).toBe(false);
+    expect(vanillaConnections(DR_DATA, "inverted", 157).get(exit)).toBe(
       "Dark Chapel Area",
     );
-    expect(vanillaConnections("open", 158).has(exit)).toBe(false);
+    expect(vanillaConnections(DR_DATA, "open", 158).has(exit)).toBe(false);
     // The brewery from the start: through that way out alone
     // (TestInvertedDarkWorld.py:6)
     const brewery = drLocationId("Brewery");
@@ -92,8 +94,8 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("swaps the Inverted world's entrances (EntranceShuffle2.py:64-78)", () => {
-    const open = vanillaConnections("open");
-    const inverted = vanillaConnections("inverted");
+    const open = vanillaConnections(DR_DATA, "open");
+    const inverted = vanillaConnections(DR_DATA, "inverted");
     expect(open.get("Ganons Tower")).toBe("Ganons Tower Portal");
     expect(inverted.get("Ganons Tower")).toBe("Agahnims Tower Portal");
     expect(inverted.get("Agahnims Tower")).toBe("Ganons Tower Portal");
@@ -108,18 +110,21 @@ describe("the Door Randomizer's world (door-world)", () => {
 
   it("makes the flute and mirror exits DR makes in code, of new names", () => {
     for (const mode of ["open", "inverted"] as const) {
-      const exits = dynamicExits(mode);
+      const exits = dynamicExits(DR_DATA, mode);
       const names = exits.map((e) => e.name);
       expect(new Set(names).size).toBe(names.length);
-      for (const name of names) expect(isStaticExit(name), name).toBe(false);
+      for (const name of names)
+        expect(isStaticExit(DR_DATA, name), name).toBe(false);
       const own = mode === "open" ? "lw" : "dw";
       for (const exit of exits)
-        expect(REGION_NAMED.get(exit.from)?.type).toBe(
+        expect(DR_DATA.regionByName.get(exit.from)?.type).toBe(
           exit.to === "Flute Sky" ? own : own === "lw" ? "dw" : "lw",
         );
     }
     expect(
-      dynamicExits("open").find((e) => e.name === "Flute From Zoras Domain"),
+      dynamicExits(DR_DATA, "open").find(
+        (e) => e.name === "Flute From Zoras Domain",
+      ),
     ).toBeUndefined();
   });
 
@@ -127,8 +132,9 @@ describe("the Door Randomizer's world (door-world)", () => {
     const world = drWorld(settings("open"));
     expect(world.locationIds.size).toBeGreaterThan(200);
     const marked = markWorlds(
-      [...vanillaConnections("open")].map(([name, to]) => ({
-        from: DR_REGIONS.find((r) => r.exits.includes(name))?.name ?? "",
+      DR_DATA,
+      [...vanillaConnections(DR_DATA, "open")].map(([name, to]) => ({
+        from: DR_DATA.regions.find((r) => r.exits.includes(name))?.name ?? "",
         name,
         req: "true",
         to,
@@ -230,9 +236,9 @@ describe("the Door Randomizer's world (door-world)", () => {
   it("drops from the Old Man's ledge into his dark room, lamp in hand (1.5.8)", () => {
     // mandatory_connections (EntranceShuffle2.py:2344 at 1.5.8) and the
     // dark room's entrances (Rules.py:1351)
-    expect(vanillaConnections("open").get("Old Man Cave Dropdown")).toBe(
-      "Old Man Cave (West)",
-    );
+    expect(
+      vanillaConnections(DR_DATA, "open").get("Old Man Cave Dropdown"),
+    ).toBe("Old Man Cave (West)");
     const world = drWorld(settings("open"), {
       probes: ["Old Man Cave Dropdown"],
     });
@@ -266,7 +272,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     // Universal keys are bought: maybe, the shops not ported
     expect(at({ universalKeys: true }, 4)).toBe("maybe");
     // On connections given, no analysis: every key of the dungeon
-    const given = { connections: vanillaConnections("open") };
+    const given = { connections: vanillaConnections(DR_DATA, "open") };
     expect([at({}, 1, given), at({}, 4, given)]).toEqual(["maybe", "yes"]);
     expect(at({ universalKeys: true }, 4, given)).toBe("maybe");
     // Pots or drops in the dungeons, which the analysis does not count:
@@ -337,6 +343,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     ];
     const both = ["Paradox Shop", "Paradox Cave Front"];
     const helpers = addBunnyRules(
+      DR_DATA,
       exits,
       new Map(),
       {
@@ -364,7 +371,8 @@ describe("the Door Randomizer's world (door-world)", () => {
         bunny: { impassableDoors: { value: readonly string[] } };
       }
     ).bunny.impassableDoors.value.slice(0, 18);
-    const rooms = DR_REGIONS.filter((r) => r.type === "dungeon")
+    const rooms = DR_DATA.regions
+      .filter((r) => r.type === "dungeon")
       .slice(0, doors.length + 1)
       .map((r) => r.name);
     const exits = [
@@ -382,6 +390,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       })),
     ];
     const helpers = addBunnyRules(
+      DR_DATA,
       exits,
       new Map(),
       {
@@ -422,7 +431,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("builds on the connections it is given", () => {
-    const connections = new Map(vanillaConnections("inverted"));
+    const connections = new Map(vanillaConnections(DR_DATA, "inverted"));
     const brewery = drLocationId("Brewery");
     const before = solveFacts(drWorld(settings("inverted")), {
       heartContainer: 3,
@@ -514,10 +523,12 @@ describe("the Door Randomizer's world (door-world)", () => {
       },
     ];
     // Breadth first: the direct way, its rule only
-    expect(zeldaPath(exits, (req) => req === "true")).toEqual(["lamp"]);
-    expect(zeldaPath(exits.slice(0, 2), (req) => req === "true")).toEqual([
-      "keyH2",
+    expect(zeldaPath(DR_DATA, exits, (req) => req === "true")).toEqual([
+      "lamp",
     ]);
+    expect(
+      zeldaPath(DR_DATA, exits.slice(0, 2), (req) => req === "true"),
+    ).toEqual(["keyH2"]);
   });
 
   it("adds Murahdahla to a triforce hunt", () => {
@@ -555,11 +566,11 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("refuses a door rule without its worst case, never opening the door", () => {
-    const logic = drKeyLogic(settings("open")).get("Agahnims Tower");
+    const logic = drKeyLogic(DR_DATA, settings("open")).get("Agahnims Tower");
     const [first] = logic?.doorRules.values() ?? [];
     if (logic === undefined || first === undefined)
       throw new Error("no rule for Agahnim's Tower");
-    const keys = worldKeys("dungeon", { drops: false, pots: false });
+    const keys = worldKeys(DR_DATA, "dungeon", { drops: false, pots: false });
     expect(keys.doorRule("Agahnims Tower", first, logic)).toContain("keyA1");
     expect(() =>
       keys.doorRule(
@@ -575,6 +586,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     // drop in a room of Eastern's layout holds Eastern's big key
     const drop = "Hyrule Castle - Big Key Drop";
     const moved = worldKeys(
+      DR_DATA,
       "wild",
       { drops: false, pots: false },
       { wild: true },
@@ -586,7 +598,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(moved.bigKeyRule("Eastern Palace")).toContain(fact);
     expect(moved.bigKeyRule("Hyrule Castle")).not.toContain(fact);
     // Left in its own dungeon without a shuffle
-    const own = worldKeys("wild", { drops: false, pots: false });
+    const own = worldKeys(DR_DATA, "wild", { drops: false, pots: false });
     expect(own.bigKeyRule("Hyrule Castle")).toContain(fact);
     expect(own.bigKeyRule("Eastern Palace")).not.toContain(fact);
   });

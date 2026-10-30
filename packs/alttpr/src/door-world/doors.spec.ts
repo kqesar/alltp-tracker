@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DOOR_NAMED, DR_DOORS, pairsOf } from "./data";
+import { DR_DATA } from "./data";
 import {
   type DoorShuffleSettings,
   doorById,
@@ -18,7 +18,7 @@ import {
 } from "./doors";
 
 const door = (name: string) => {
-  const found = DOOR_NAMED.get(name);
+  const found = DR_DATA.doorByName.get(name);
   if (found === undefined) throw new RangeError(name);
   return found;
 };
@@ -35,8 +35,8 @@ const shuffle = (
 
 describe("the door shuffle's model (doors.ts)", () => {
   it("gives every door and portal an id of its own, read back", () => {
-    const ids = DR_DOORS.map((d) => doorId(d.name));
-    expect(new Set(ids).size).toBe(DR_DOORS.length);
+    const ids = DR_DATA.doors.map((d) => doorId(d.name));
+    expect(new Set(ids).size).toBe(DR_DATA.doors.length);
     expect(doorId("GT Warp Maze (Rails) WS")).toBe("gt-warp-maze-rails-ws");
     expect(doorById("eastern-lobby-nw")?.name).toBe("Eastern Lobby NW");
     expect(portalId("Hyrule Castle South")).toBe("hyrule-castle-south");
@@ -66,7 +66,9 @@ describe("the door shuffle's model (doors.ts)", () => {
     const basic = doorTargets(north, shuffle()).map((d) => d.name);
     expect(basic).toContain("Eastern Cannonball S");
     expect(
-      basic.every((name) => DOOR_NAMED.get(name)?.direction === "South"),
+      basic.every(
+        (name) => DR_DATA.doorByName.get(name)?.direction === "South",
+      ),
     ).toBe(true);
     expect(basic).not.toContain("PoD Lobby S");
     expect(
@@ -210,7 +212,7 @@ describe("the door shuffle's model (doors.ts)", () => {
   it("offers each vanilla link among a door's targets", () => {
     // The vanilla layout is one DR may make: its pairs are choices
     const settings = shuffle({ intensity: 2 });
-    for (const [a, b] of pairsOf(
+    for (const [a, b] of DR_DATA.pairsOf(
       "DoorShuffle.py",
       "default_door_connections",
     )) {

@@ -7,7 +7,7 @@
 // dungeon region a node per state some path can bring it in, a region
 // reached in both split in two copies (`<id>__orange`, `<id>__blue`) that
 // lead to the region itself, where its locations are.
-import { DOOR_NAMED, type DrRegion, regionNamed } from "./data";
+import type { DrData, DrRegion } from "./data";
 import { ALTERNATIVE_CRYSTAL_DOORS } from "./keys";
 
 export type Crystal = "orange" | "blue";
@@ -26,8 +26,12 @@ interface CrystalExit {
  * if its door hits a switch, its barrier's colour for Mire's barriers two
  * keys open whatever the state (alternative_crystal_rule).
  */
-export function crystalsThrough(exit: string, s: Crystal): readonly Crystal[] {
-  const crystal = DOOR_NAMED.get(exit)?.crystal;
+export function crystalsThrough(
+  data: DrData,
+  exit: string,
+  s: Crystal,
+): readonly Crystal[] {
+  const crystal = data.doorByName.get(exit)?.crystal;
   if (crystal === undefined) return [s];
   if (crystal === "either") return CRYSTALS;
   if (crystal === s || ALTERNATIVE_CRYSTAL_DOORS.has(exit)) return [crystal];
@@ -36,6 +40,7 @@ export function crystalsThrough(exit: string, s: Crystal): readonly Crystal[] {
 
 /** Each dungeon region's states some path can bring it in, rules aside. */
 export function crystalStates(
+  data: DrData,
   exits: readonly CrystalExit[],
 ): ReadonlyMap<string, ReadonlySet<Crystal>> {
   const out = new Map<string, CrystalExit[]>();
@@ -53,15 +58,15 @@ export function crystalStates(
   // From outside a dungeon, orange (BaseClasses.py:686-690)
   for (const exit of exits)
     if (
-      regionNamed(exit.from).type !== "dungeon" &&
-      regionNamed(exit.to).type === "dungeon"
+      data.regionNamed(exit.from).type !== "dungeon" &&
+      data.regionNamed(exit.to).type === "dungeon"
     )
       reach(exit.to, "orange");
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
     const [region, s] = next;
     for (const exit of out.get(region) ?? [])
-      if (regionNamed(exit.to).type === "dungeon")
-        for (const t of crystalsThrough(exit.name, s)) reach(exit.to, t);
+      if (data.regionNamed(exit.to).type === "dungeon")
+        for (const t of crystalsThrough(data, exit.name, s)) reach(exit.to, t);
   }
   return states;
 }

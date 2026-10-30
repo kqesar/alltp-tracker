@@ -3,11 +3,13 @@
 // (test/dr-upstream/vanilla-key-logic.json, written by import-dr.mjs from
 // validate_vanilla_key_logic, :2019-2193). No code of DR calls that
 // validator, so a check it fails on DR's own code is listed below with why.
+
 import { describe, expect, it } from "vitest";
 import fixture from "../../../test/dr-upstream/vanilla-key-logic.json" with {
   type: "json",
 };
-import { KEY_DROPS } from "../keys";
+import { DR_DATA } from "../data";
+import { keyDropsOf } from "../keys";
 import { type DoorRule, type KeyLogic, vanillaKeyLogic } from "./analysis";
 import type { KeyAnalysisSettings } from "./dungeon";
 
@@ -19,8 +21,9 @@ const settingsOf = (
 ): KeyAnalysisSettings => ({
   accessibility: "items",
   bigKeyShuffle: false,
+  data: DR_DATA,
   dropShuffleNone: true,
-  forcedDrops: new Set(KEY_DROPS.map((d) => d.location)),
+  forcedDrops: new Set(keyDropsOf(DR_DATA).map((d) => d.location)),
   keyShuffle: "none",
   mode,
   ...more,

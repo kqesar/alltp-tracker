@@ -14,16 +14,8 @@ import {
   dynamicExits,
   vanillaConnections,
 } from "../connections";
-import {
-  DOOR_NAMED,
-  DR_DOORS,
-  DR_PORTALS,
-  DR_REGIONS,
-  type DrMode,
-  REGION_NAMED,
-  tableOf,
-} from "../data";
-import { KEY_DROPS, UGLY_SMALLS } from "../keys";
+import type { DrData, DrMode } from "../data";
+import { keyDropsOf, UGLY_SMALLS } from "../keys";
 
 /** DR's dungeons, in the order create_dungeons lists them (Dungeons.py:30). */
 export const DR_DUNGEON_ORDER: readonly string[] = [
@@ -216,6 +208,8 @@ export const DUNGEON_EVENTS: ReadonlySet<string> = new Set([
 
 /** How the run sets what the analysis reads. */
 export interface KeyAnalysisSettings {
+  /** The release's world the analysis walks (data.ts). */
+  readonly data: DrData;
   readonly mode: DrMode;
   /** keyshuffle: none (in their dungeon), wild, universal. */
   readonly keyShuffle: "none" | "wild" | "universal";
@@ -302,9 +296,10 @@ export function rstrip(text: string, chars: string): string {
 }
 
 /** The exits of each region, the dynamic ones after the static. */
-function exitsByRegion(mode: DrMode): Map<string, string[]> {
-  const exits = new Map(DR_REGIONS.map((r) => [r.name, [...r.exits]]));
-  for (const exit of dynamicExits(mode)) exits.get(exit.from)?.push(exit.name);
+function exitsByRegion(data: DrData, mode: DrMode): Map<string, string[]> {
+  const exits = new Map(data.regions.map((r) => [r.name, [...r.exits]]));
+  for (const exit of dynamicExits(data, mode))
+    exits.get(exit.from)?.push(exit.name);
   return exits;
 }
 
@@ -314,6 +309,7 @@ function exitsByRegion(mode: DrMode): Map<string, string[]> {
  * aside, before link_doors_prep links the doors and portals.
  */
 function inaccessibleRegions(
+  data: DrData,
   mode: DrMode,
   target: (exit: string) => string | undefined,
   exits: ReadonlyMap<string, readonly string[]>,
@@ -322,14 +318,14 @@ function inaccessibleRegions(
   // The doors and the portals' ways in are linked after this walk
   const portalEnters = new Set(
     Object.values(
-      tableOf<readonly [string, string, string]>(
+      data.tableOf<readonly [string, string, string]>(
         "DoorShuffle.py",
         "portal_map",
       ),
     ).map(([, , enter]) => enter),
   );
   const linked = (exit: string) =>
-    !DOOR_NAMED.has(exit) && !portalEnters.has(exit);
+    !data.doorByName.has(exit) && !portalEnters.has(exit);
   const starts =
     mode === "inverted"
       ? ["Links House", "Dark Sanctuary Hint"]
@@ -342,7 +338,7 @@ function inaccessibleRegions(
     if (mode === "inverted" && next === "Dark Sanctuary Hint")
       for (const parent of entrances.get(next) ?? [])
         if (
-          REGION_NAMED.get(parent)?.type !== "dungeon" &&
+          data.regionByName.get(parent)?.type !== "dungeon" &&
           !queued.has(parent)
         ) {
           queued.add(parent);
@@ -351,7 +347,7 @@ function inaccessibleRegions(
     for (const exit of exits.get(next) ?? []) {
       const to = linked(exit) ? target(exit) : undefined;
       if (to === undefined || queued.has(to)) continue;
-      const region = REGION_NAMED.get(to);
+      const region = data.regionByName.get(to);
       if (region?.type !== "dungeon" || to.endsWith(" Portal")) {
         queued.add(to);
         queue.push(to);
@@ -359,16 +355,18 @@ function inaccessibleRegions(
     }
   }
   const found = new Set(
-    DR_REGIONS.filter(
-      (r) =>
-        r.type !== "dungeon" &&
-        !visited.has(r.name) &&
-        // valid_inaccessible_region (:3490-3491)
-        (r.type !== "cave" ||
-          ((exits.get(r.name)?.length ?? 0) > 0 &&
-            r.name !== "Links House" &&
-            r.name !== "Chris Houlihan Room")),
-    ).map((r) => r.name),
+    data.regions
+      .filter(
+        (r) =>
+          r.type !== "dungeon" &&
+          !visited.has(r.name) &&
+          // valid_inaccessible_region (:3490-3491)
+          (r.type !== "cave" ||
+            ((exits.get(r.name)?.length ?? 0) > 0 &&
+              r.name !== "Links House" &&
+              r.name !== "Chris Houlihan Room")),
+      )
+      .map((r) => r.name),
   );
   if (
     mode === "inverted" &&
@@ -415,10 +413,10 @@ function logicalDoors(
 }
 
 /** Each door's dest: the door a door table links it with. */
-function destinations(): Map<string, string> {
+function destinations(data: DrData): Map<string, string> {
   const dest = new Map<string, string>();
   const table = (name: string, twoWays: boolean) => {
-    const value = tableOf<unknown>("DoorShuffle.py", name);
+    const value = data.tableOf<unknown>("DoorShuffle.py", name);
     const pairs = (
       Array.isArray(value) ? value : Object.entries(value)
     ) as readonly (readonly [string, string])[];
@@ -456,12 +454,13 @@ function destinations(): Map<string, string> {
  * a portal's exit leads back to the door that enters it.
  */
 export function portalsKnown(
+  data: DrData,
   mode: DrMode,
   connections: DrConnections,
 ): Set<string> {
-  const dynamic = new Map(dynamicExits(mode).map((e) => [e.name, e.to]));
+  const dynamic = new Map(dynamicExits(data, mode).map((e) => [e.name, e.to]));
   const target = (exit: string) => connections.get(exit) ?? dynamic.get(exit);
-  const exits = exitsByRegion(mode);
+  const exits = exitsByRegion(data, mode);
   const entrances = new Map<string, string[]>();
   for (const [region, list] of exits)
     for (const exit of list) {
@@ -469,7 +468,13 @@ export function portalsKnown(
       if (to !== undefined)
         entrances.set(to, [...(entrances.get(to) ?? []), region]);
     }
-  const inaccessible = inaccessibleRegions(mode, target, exits, entrances);
+  const inaccessible = inaccessibleRegions(
+    data,
+    mode,
+    target,
+    exits,
+    entrances,
+  );
   const known = new Set<string>();
   for (const dungeon of DR_DUNGEON_ORDER) {
     const regions = [
@@ -479,7 +484,8 @@ export function portalsKnown(
     const told = regions.every((region) => {
       const parents = (entrances.get(region) ?? []).filter(
         (parent) =>
-          (REGION_NAMED.get(parent)?.type !== "dungeon" && parent !== "Menu") ||
+          (data.regionByName.get(parent)?.type !== "dungeon" &&
+            parent !== "Menu") ||
           parent === "Sewer Drop",
       );
       return (
@@ -498,11 +504,11 @@ export function portalsKnown(
  * dungeon's start regions.
  */
 export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
-  const { mode } = settings;
-  const connections = settings.connections ?? vanillaConnections(mode);
-  const dynamic = new Map(dynamicExits(mode).map((e) => [e.name, e.to]));
+  const { data, mode } = settings;
+  const connections = settings.connections ?? vanillaConnections(data, mode);
+  const dynamic = new Map(dynamicExits(data, mode).map((e) => [e.name, e.to]));
   const target = (exit: string) => connections.get(exit) ?? dynamic.get(exit);
-  const exits = exitsByRegion(mode);
+  const exits = exitsByRegion(data, mode);
   const parentOf = new Map<string, string>();
   for (const [region, list] of exits)
     for (const exit of list) parentOf.set(exit, region);
@@ -513,17 +519,22 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
       if (to !== undefined)
         entrances.set(to, [...(entrances.get(to) ?? []), region]);
     }
-  const inaccessible = inaccessibleRegions(mode, target, exits, entrances);
+  const inaccessible = inaccessibleRegions(
+    data,
+    mode,
+    target,
+    exits,
+    entrances,
+  );
   const logical = logicalDoors(inaccessible, target, exits, mode);
 
   const forcedOf = new Map(
-    KEY_DROPS.filter((d) => settings.forcedDrops.has(d.location)).map((d) => [
-      d.location,
-      { big: d.big, dungeon: d.dungeon },
-    ]),
+    keyDropsOf(data)
+      .filter((d) => settings.forcedDrops.has(d.location))
+      .map((d) => [d.location, { big: d.big, dungeon: d.dungeon }]),
   );
   const regions = new Map<string, KRegion>();
-  for (const r of DR_REGIONS)
+  for (const r of data.regions)
     regions.set(r.name, {
       doors: [],
       dungeon: r.dungeon,
@@ -545,7 +556,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
   const proposed = new Set(
     Object.values(DEFAULT_SMALL_KEY_DOORS).flatMap((list) => list.flat()),
   );
-  for (const d of DR_DOORS) {
+  for (const d of data.doors) {
     const event =
       (d as { event?: string }).event ??
       (standard
@@ -558,7 +569,8 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
     doors.set(d.name, {
       // unmark_ugly_smalls (DoorShuffle.py:476-480)
       bigKey: d.bigKey === true,
-      blocked: d.trapped === true && !DR_PORTALS.some((p) => p.door === d.name),
+      blocked:
+        d.trapped === true && !data.portals.some((p) => p.door === d.name),
       controller: null,
       crystal: d.crystal ?? null,
       dest: null,
@@ -585,13 +597,13 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
         to: null,
         type: "Logical",
       });
-  const dest = destinations();
+  const dest = destinations(data);
   for (const door of doors.values()) {
     const to = target(door.name);
     door.to = to === undefined ? null : (regions.get(to) ?? null);
     const other = dest.get(door.name);
     door.dest = other === undefined ? null : (doors.get(other) ?? null);
-    const controller = DOOR_NAMED.get(door.name)?.controller;
+    const controller = data.doorByName.get(door.name)?.controller;
     door.controller =
       controller === undefined ? null : (doors.get(controller) ?? null);
   }
@@ -628,12 +640,12 @@ function startRegions(
   target: (exit: string) => string | undefined,
   exits: ReadonlyMap<string, readonly string[]>,
 ): Map<string, KRegion[]> {
-  const { mode } = settings;
-  const portalOf = new Map(DR_PORTALS.map((p) => [p.name, p]));
+  const { data, mode } = settings;
+  const portalOf = new Map(data.portals.map((p) => [p.name, p]));
   const lobbyOf = (portal: string) => {
     const p = portalOf.get(portal);
     if (p === undefined) throw new RangeError(`No portal ${portal}`);
-    const lobby = DR_REGIONS.find((r) => r.exits.includes(p.door));
+    const lobby = data.regions.find((r) => r.exits.includes(p.door));
     if (lobby === undefined) throw new RangeError(`No lobby for ${portal}`);
     return lobby.name;
   };
@@ -654,7 +666,7 @@ function startRegions(
     for (const [name, portal] of names) {
       const region = portal === null ? name : `${portal} Portal`;
       for (const parent of entrances.get(region) ?? []) {
-        const type = REGION_NAMED.get(parent)?.type;
+        const type = data.regionByName.get(parent)?.type;
         if (
           !(
             (type !== "dungeon" && parent !== "Menu") ||
@@ -710,7 +722,7 @@ function startRegions(
     }
   };
   const regionsOf = (dungeon: string) =>
-    DR_REGIONS.filter((r) => r.dungeon === dungeon).map((r) => r.name);
+    data.regions.filter((r) => r.dungeon === dungeon).map((r) => r.name);
   const destinations = destinationPortals(mode);
   // _find_portal_for_region (:352-354) strips its parent's name with
   // rstrip(' Portal'), a set of characters, not a suffix: "Hyrule Castle

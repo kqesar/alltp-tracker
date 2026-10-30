@@ -1,11 +1,13 @@
 // DR's static key logic (static.ts): what DR's own tests of it
 // (test/dr-static.spec.ts) leave out, the releases' differences and the
 // cases of Turtle Rock the vanilla Open world never takes.
+
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
+import { DR_DATA } from "./data";
 import {
   DR_DEFAULTS,
   drKeyLogic,
@@ -16,8 +18,8 @@ import {
 import { worldKeys } from "./keys";
 import {
   addStaticKeyRules,
-  STATIC_KEY_LOGIC,
   staticKeyLogic,
+  staticTablesOf,
   type TurtleRockCase,
   turtleRockCase,
 } from "./static";
@@ -27,7 +29,7 @@ const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
   ...settingsFromUpstream(mode),
 });
 
-const OPEN = drKeyLogic(settings("open"));
+const OPEN = drKeyLogic(DR_DATA, settings("open"));
 const ruleOf = (
   logic: ReturnType<typeof staticKeyLogic>,
   dungeon: string,
@@ -40,15 +42,17 @@ const ruleOf = (
 
 describe("DR's static key logic (StaticKeyLogic.py)", () => {
   it("reads every dungeon's table, a number its keys, a lone big key spot a list", () => {
-    expect(Object.keys(STATIC_KEY_LOGIC.doors)).toHaveLength(13);
-    expect(STATIC_KEY_LOGIC.doors["Ganons Tower"]?.["GT Hookshot ES"]).toEqual({
+    expect(Object.keys(staticTablesOf(DR_DATA).doors)).toHaveLength(13);
+    expect(
+      staticTablesOf(DR_DATA).doors["Ganons Tower"]?.["GT Hookshot ES"],
+    ).toEqual({
       bigKeyIn: ["Ganons Tower - Map Chest"],
       keys: 4,
       smallKeyIn: "Ganons Tower - Map Chest",
       withBigKey: 3,
       withSmallKey: 3,
     });
-    expect(STATIC_KEY_LOGIC.gtRandomizer).toHaveLength(4);
+    expect(staticTablesOf(DR_DATA).gtRandomizer).toHaveLength(4);
   });
 
   it("takes Turtle Rock's case from the ways in, back first (:234-266)", () => {
@@ -75,13 +79,13 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
     // its mirror reaching the dark ledges; Standard before 1.5.7 none
     // (4222a44: no key out of the sewers)
     const front = { back: false, bigChest: false, front: true, middle: false };
-    expect(turtleRockAccess("open", 158)).toEqual(front);
-    expect(turtleRockAccess("standard", 158)).toEqual(front);
-    expect(turtleRockAccess("standard", 156)).toEqual({
+    expect(turtleRockAccess(DR_DATA, "open", 158)).toEqual(front);
+    expect(turtleRockAccess(DR_DATA, "standard", 158)).toEqual(front);
+    expect(turtleRockAccess(DR_DATA, "standard", 156)).toEqual({
       ...front,
       front: false,
     });
-    expect(turtleRockAccess("inverted", 158)).toEqual({
+    expect(turtleRockAccess(DR_DATA, "inverted", 158)).toEqual({
       back: true,
       bigChest: true,
       front: true,
@@ -90,7 +94,7 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
   });
 
   it("sets each door of the table and its pair, counting chest keys", () => {
-    const logic = staticKeyLogic(OPEN, "front", 158);
+    const logic = staticKeyLogic(DR_DATA, OPEN, "front", 158);
     for (const [dungeon, l] of logic) {
       expect(l.chestCounting, dungeon).toBe(true);
       // The analysis's own logic is left as it was
@@ -114,13 +118,13 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
     );
     expect(analysis?.lockNum).toBeDefined();
     const newer = ruleOf(
-      staticKeyLogic(OPEN, "front", 157),
+      staticKeyLogic(DR_DATA, OPEN, "front", 157),
       "Ganons Tower",
       "GT Firesnake Room SW",
     );
     expect([newer.worstCase, newer.lockNum]).toEqual([3, undefined]);
     const older = ruleOf(
-      staticKeyLogic(OPEN, "front", 156),
+      staticKeyLogic(DR_DATA, OPEN, "front", 156),
       "Ganons Tower",
       "GT Firesnake Room SW",
     );
@@ -130,7 +134,11 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
 
   it("sets Turtle Rock's doors by its case and the seed's release", () => {
     const tr = (trCase: TurtleRockCase, version: number, door: string) =>
-      ruleOf(staticKeyLogic(OPEN, trCase, version), "Turtle Rock", door);
+      ruleOf(
+        staticKeyLogic(DR_DATA, OPEN, trCase, version),
+        "Turtle Rock",
+        door,
+      );
     // The front: 2 and 1 (:246-250)
     expect(tr("front", 158, "TR Chain Chomps Down Stairs").worstCase).toBe(2);
     expect(tr("front", 158, "TR Hub NW").worstCase).toBe(1);
@@ -150,7 +158,7 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
     expect([chomps.lockNum, chomps.alternateSmallKey]).toEqual([2, 2]);
     expect(chomps.alternateBigKeyLoc.size).toBe(3);
     // No way in found (Standard before 1.5.7): the table's numbers
-    const none = staticKeyLogic(OPEN, null, 156);
+    const none = staticKeyLogic(DR_DATA, OPEN, null, 156);
     expect(ruleOf(none, "Turtle Rock", "TR Hub NW").worstCase).toBe(4);
     expect(
       ruleOf(none, "Turtle Rock", "TR Chain Chomps Down Stairs").worstCase,
@@ -162,12 +170,12 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
     const gt = OPEN.get("Ganons Tower");
     if (gt === undefined) throw new RangeError("No Ganons Tower");
     expect(() =>
-      staticKeyLogic(new Map([["Ganons Tower", gt]]), "front", 158),
+      staticKeyLogic(DR_DATA, new Map([["Ganons Tower", gt]]), "front", 158),
     ).toThrow(/is not a small key door/);
-    const keys = worldKeys("dungeon", { drops: false, pots: false });
-    expect(() => addStaticKeyRules([], new Map(), keys, "open", null)).toThrow(
-      /No location/,
-    );
+    const keys = worldKeys(DR_DATA, "dungeon", { drops: false, pots: false });
+    expect(() =>
+      addStaticKeyRules(DR_DATA, [], new Map(), keys, "open", null),
+    ).toThrow(/No location/);
     const located = new Map(
       [
         "Hyrule Castle - Boomerang Chest",
@@ -176,9 +184,9 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
         "Desert Palace - Prize",
       ].map((name) => [name, "true"]),
     );
-    expect(() => addStaticKeyRules([], located, keys, "open", null)).toThrow(
-      /No exit/,
-    );
+    expect(() =>
+      addStaticKeyRules(DR_DATA, [], located, keys, "open", null),
+    ).toThrow(/No exit/);
   });
 
   it("gives its chests their rules, keys of the chests alone", () => {

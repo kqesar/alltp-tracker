@@ -12,11 +12,11 @@ import { solveFacts, solveFactsState } from "../facts";
 import { ITEMS } from "../items";
 import { medallionFacts } from "../medallions";
 import { settingsFromUpstream } from "../settings";
-import { DR_DUNGEONS, DR_REGIONS } from "./data";
+import { DR_DATA } from "./data";
 import { DR_DEFAULTS, type DrWorld, drKeyLogic, drWorld } from "./index";
 import type { DoorRule } from "./key-analysis/analysis";
 import { DUNGEON_EVENTS } from "./key-analysis/dungeon";
-import { DR_KEY_CODES, KEY_DROPS, type WorldKeys } from "./keys";
+import { DR_KEY_CODES, keyDropsOf, type WorldKeys } from "./keys";
 import { and, or } from "./text";
 
 const OPEN: Settings = { ...DR_DEFAULTS, ...settingsFromUpstream("open") };
@@ -49,7 +49,7 @@ type Placement = ReadonlyMap<string, string>;
  * door's locations behind (Lock).
  */
 function atomsOf(settings: Settings) {
-  const logic = drKeyLogic(settings);
+  const logic = drKeyLogic(DR_DATA, settings);
   const allow = new Map<DoorRule, string>();
   const lock = new Map<DoorRule, string>();
   for (const [dungeon, dungeonLogic] of logic)
@@ -124,7 +124,7 @@ const truthOf =
   };
 
 /** The dungeon items the fill places: each big key, each chest's small key. */
-const DUNGEON_ITEMS = DR_DUNGEONS.flatMap((d) => {
+const DUNGEON_ITEMS = DR_DATA.dungeons.flatMap((d) => {
   const code = DR_KEY_CODES[d.name];
   return [
     ...(d.bigKey === null ? [] : [{ dungeon: d.name, item: `bigKey${code}` }]),
@@ -134,9 +134,10 @@ const DUNGEON_ITEMS = DR_DUNGEONS.flatMap((d) => {
 
 /** Each dungeon's locations a key may lie at: no event, prize or drop. */
 const SPOTS = new Map(
-  DR_DUNGEONS.map((d) => [
+  DR_DATA.dungeons.map((d) => [
     d.name,
-    DR_REGIONS.filter((r) => r.dungeon === d.name)
+    DR_DATA.regions
+      .filter((r) => r.dungeon === d.name)
       .flatMap((r) =>
         r.locations.filter((l) => !(r.locationModes?.[l]?.length === 1)),
       )
@@ -146,7 +147,7 @@ const SPOTS = new Map(
           !l.includes("- Prize") &&
           l !== "Agahnim 1" &&
           l !== "Agahnim 2" &&
-          !KEY_DROPS.some((k) => k.location === l),
+          !keyDropsOf(DR_DATA).some((k) => k.location === l),
       ),
   ]),
 );

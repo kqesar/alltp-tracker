@@ -14,7 +14,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { type DrWorld, drKeyLogic, drWorld } from "../src/door-world/index";
+import {
+  DR_DATA,
+  type DrWorld,
+  drKeyLogic,
+  drWorld,
+} from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import { collect, POOL, settingsOf } from "./dr-state";
 import { PACK_DIR } from "./manifest";
@@ -102,7 +107,7 @@ describe("DR's key logic seeds", () => {
       const world = drWorld(settings);
       // The big key's forbidden spots (bk_restricted), by item
       const forbidden = new Set(
-        [...drKeyLogic(settings).values()].flatMap((logic) =>
+        [...drKeyLogic(DR_DATA, settings).values()].flatMap((logic) =>
           [...logic.bkRestricted].map(
             (loc) => `Big Key (${logic.dungeon}) at ${loc.name}`,
           ),

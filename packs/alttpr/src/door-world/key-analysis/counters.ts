@@ -4,8 +4,8 @@
 // the lookups the analysis makes over them (find_counter, find_max_counter,
 // can_open_door_by_counter, :1852-2000). A counter's id is DR's: the big
 // key's bit, then a bit for each door of the flattened proposal.
-import { DR_DUNGEONS } from "../data";
-import { KEY_DROPS, specialBigKeyDoors } from "../keys";
+import { perData } from "../data";
+import { keyDropsOf, specialBigKeyDoors } from "../keys";
 import {
   DEFAULT_SMALL_KEY_DOORS,
   DUNGEON_EVENTS,
@@ -397,17 +397,18 @@ export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
   );
   const locations = regions.flatMap((r) => r.locations);
   const maxDrops = locations.filter((l) => isForcedSmall(l, dungeon)).length;
-  const { keyShuffle, mode } = world.settings;
+  const { data, keyShuffle, mode } = world.settings;
+  const smallDrops = keyDropSmall(data);
   // calc_max_chests: len(dungeon.small_keys), the chests' and each key
   // drop's the run shuffles (adjust_locations), none for universal keys
   const chestKeys =
     keyShuffle === "universal"
       ? 0
-      : (DR_DUNGEONS.find((d) => d.name === dungeon)?.smallKeys.length ?? 0) +
+      : (data.dungeons.find((d) => d.name === dungeon)?.smallKeys.length ?? 0) +
         locations.filter(
           (l) =>
             l.forced === null &&
-            KEY_DROP_SMALL.has(l.name) &&
+            smallDrops.has(l.name) &&
             l.dungeon === dungeon,
         ).length;
   const explorable: ExplorePredicate = (region) =>
@@ -436,6 +437,11 @@ export function keyLayout(world: KeyWorld, dungeon: string): KeyLayout {
 }
 
 /** The small key drops' locations (key_drop_data). */
-const KEY_DROP_SMALL: ReadonlySet<string> = new Set(
-  KEY_DROPS.filter((d) => !d.big).map((d) => d.location),
+const keyDropSmall = perData(
+  (data): ReadonlySet<string> =>
+    new Set(
+      keyDropsOf(data)
+        .filter((d) => !d.big)
+        .map((d) => d.location),
+    ),
 );
