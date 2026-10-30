@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
-import { DR_DATA } from "./data";
 import {
   type DoorKindNote,
   type DoorNotes,
@@ -14,6 +13,7 @@ import {
   portalId,
   vanillaKind,
 } from "./doors";
+import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, drLocationId, drWorld, KEY_ITEMS } from "./index";
 
 type Mode = "open" | "standard";
@@ -52,7 +52,7 @@ function vanillaNotes(s: DoorShuffleSettings): DoorNotes {
   ])
     for (const [a, b] of DR_DATA.pairsOf("DoorShuffle.py", table)) {
       const one = DR_DATA.doors.find((d) => d.name === a);
-      if (one === undefined || !isShuffledDoor(one, s)) continue;
+      if (one === undefined || !isShuffledDoor(one, s, DR_DATA)) continue;
       links[doorId(a)] = doorId(b);
       links[doorId(b)] = doorId(a);
     }
@@ -89,9 +89,10 @@ describe("DR's world on noted doors", () => {
     for (const intensity of [1, 2, 3] as const) {
       const s = shuffle({ intensity });
       const world = drWorld(settings("open"), {
+        data: DR_DATA,
         doors: { notes: vanillaNotes(s), settings: s },
       });
-      const vanilla = drWorld(settings("open"));
+      const vanilla = drWorld(settings("open"), { data: DR_DATA });
       const all = keyed(everything(settingsFromUpstream("open")));
       const noted = answers(world, all);
       const own = answers(vanilla, all);
@@ -106,6 +107,7 @@ describe("DR's world on noted doors", () => {
     const s = shuffle();
     const all = everything(settingsFromUpstream("open"));
     const bare = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: { notes: {}, settings: s },
     });
     const got = answers(bare, all);
@@ -123,10 +125,12 @@ describe("DR's world on noted doors", () => {
     const bridge = doorId("Eastern Cannonball N");
     const { [bridge]: _, ...unknown } = notes.kinds ?? {};
     const maybe = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: { notes: { ...notes, kinds: unknown }, settings: s },
     });
     expect(answers(maybe, all).get(BIG_CHEST)).toBe("maybe");
     const plain = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: {
         notes: { ...notes, kinds: { ...notes.kinds, [bridge]: "normal" } },
         settings: s,
@@ -139,6 +143,7 @@ describe("DR's world on noted doors", () => {
     const s = shuffle();
     const notes = vanillaNotes(s);
     const world = drWorld(settings("open", { wildKeys: true }), {
+      data: DR_DATA,
       doors: { notes, settings: s },
     });
     // Hera's big key behind its key stairs, its one key in a chest
@@ -158,6 +163,7 @@ describe("DR's world on noted doors", () => {
     const bridge = doorId("Eastern Lobby Bridge N");
     const tower = doorId("GT Big Chest SW");
     const world = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: {
         notes: {
           ...notes,
@@ -172,6 +178,7 @@ describe("DR's world on noted doors", () => {
     // A pool's key doors wait for the dungeon's count, noted
     const all = everything(settingsFromUpstream("open"));
     const counted = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: {
         notes: { ...notes, keys: { "Eastern Palace": 2 } },
         settings: s,
@@ -180,7 +187,10 @@ describe("DR's world on noted doors", () => {
     const location = drLocationId("Eastern Palace - Big Key Chest");
     expect(
       answers(
-        drWorld(settings("open"), { doors: { notes, settings: s } }),
+        drWorld(settings("open"), {
+          data: DR_DATA,
+          doors: { notes, settings: s },
+        }),
         all,
       ).get(location),
     ).toBe("maybe");
@@ -198,6 +208,7 @@ describe("DR's world on noted doors", () => {
     const pot = drLocationId("Swamp Palace - Trench 2 Pot Key");
     for (const potKeys of [false, true]) {
       const world = drWorld(settings("open", { potKeys }), {
+        data: DR_DATA,
         doors: { notes: {}, settings: s },
         start,
       });
@@ -210,6 +221,7 @@ describe("DR's world on noted doors", () => {
     const notes = vanillaNotes(s);
     const { [portalId("Eastern")]: _, ...others } = notes.lobbies ?? {};
     const world = drWorld(settings("open"), {
+      data: DR_DATA,
       doors: { notes: { ...notes, lobbies: others }, settings: s },
     });
     const all = everything(settingsFromUpstream("open"));

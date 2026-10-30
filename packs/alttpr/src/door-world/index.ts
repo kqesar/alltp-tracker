@@ -51,13 +51,7 @@ import {
   crystalsThrough,
   inState,
 } from "./crystal";
-import {
-  DR_DATA,
-  type DrData,
-  type DrMode,
-  type DrRegion,
-  perData,
-} from "./data";
+import { type DrData, type DrMode, type DrRegion, perData } from "./data";
 import { portalDoorsOf } from "./doors";
 import {
   type DoorRule,
@@ -111,17 +105,17 @@ export type {
 } from "./connections";
 export { notedConnections, vanillaConnections } from "./connections";
 export type { DrData, DrMode } from "./data";
-export { DR_DATA } from "./data";
 export * from "./doors";
 export { KEY_ITEMS } from "./keys";
 
 /** How a world is built beside its settings. */
 export interface DrWorldOptions {
   /**
-   * The release's world to build (data.ts): the Door Randomizer's by
-   * default, the Overworld Randomizer's for its runs.
+   * The release's world to build: the Door Randomizer's (dr-data.ts) or the
+   * Overworld Randomizer's (owr-data.ts). Never a default: whichever a
+   * caller imports is the only world its bundle downloads.
    */
-  readonly data?: DrData;
+  readonly data: DrData;
   /**
    * Regions the Menu reaches with no rule, beside its save-and-quit exits:
    * the start regions of DR's dungeon tests (TestDungeon.py, "Test Start").
@@ -218,10 +212,8 @@ export const drLocationId = (name: string): string => erLocationId(name);
  * for a region the world does not hold (a take-any cave, which ItemList.py
  * makes where the seed puts it).
  */
-export const drRegionId = (
-  name: string,
-  data: DrData = DR_DATA,
-): string | undefined => data.regionByName.get(name)?.id;
+export const drRegionId = (name: string, data: DrData): string | undefined =>
+  data.regionByName.get(name)?.id;
 
 /** The id of a probe on an exit. */
 export const probeId = (exit: string): string => `exit:${exit}`;
@@ -944,11 +936,8 @@ function staticLogicOf(
  * entrances vanilla, compiled: once per settings change.
  * @param settings - The pack's settings and DR's (DR_DEFAULTS)
  */
-export function drWorld(
-  settings: Settings,
-  options: DrWorldOptions = {},
-): DrWorld {
-  const data = options.data ?? DR_DATA;
+export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
+  const { data } = options;
   const { exitRule, helpersReach, loadedRules } = readersOf(data);
   const owr = data.flavor === "owr";
   const mode = drModeOf({ ...DR_DEFAULTS, ...settings });

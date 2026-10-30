@@ -60,6 +60,15 @@ const withoutSiteOnlyFiles = (): Plugin => ({
   name: "without-site-only-files",
 });
 
+/**
+ * The Door Randomizer's own data (packs/alttpr/src/door-rando/world/), told
+ * by a region of DR's that the Overworld Randomizer's data names otherwise.
+ */
+const DR_DATA_CODE = {
+  marker: "Dark Death Mountain Ladder (Bottom)",
+  what: "The Door Randomizer's own data",
+} as const;
+
 // https://vite.dev/config/
 // Two builds: the site (GitHub Pages, under /alltp-tracker/, offline through
 // its service worker) and, in the "desktop" mode, the desktop app's pages,
@@ -105,10 +114,14 @@ export default defineConfig(({ mode }) => {
             what: "The Door Randomizer's world",
           },
           {
-            // A screen edge's source in the fork's own data (owr/overworld.json)
+            // A screen edge's source in the fork's own data (owr/overworld.json),
+            // whose runs never download DR's own data (its own module,
+            // door-world/dr-data.ts): no import of DR_DATA reaches its chunk
+            apart: [DR_DATA_CODE],
             marker: "OWEdges.py:42",
             what: "The Overworld Randomizer's world",
           },
+          DR_DATA_CODE,
           {
             // A bonk drop's place on the fork's map (owr/bonk.json alone)
             marker: "OverworldShuffle.py:2441",

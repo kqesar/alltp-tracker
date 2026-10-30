@@ -17,7 +17,7 @@ const flavorOf = (run: RunSettings): Randomizer =>
 export const loadDoorSolver = (run: RunSettings): Promise<DoorSolver> =>
   flavorOf(run) === "owr"
     ? import("@/games/alttpr/logic/owrWorld").then(({ solver }) => solver)
-    : import("@/games/alttpr/logic/doorWorld").then(({ solver }) => solver);
+    : import("@/games/alttpr/logic/drSolver").then(({ solver }) => solver);
 
 /**
  * Loads the logic of a Door Randomizer run once the run is one DR's world

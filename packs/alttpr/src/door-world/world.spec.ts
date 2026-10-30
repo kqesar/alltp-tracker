@@ -12,8 +12,8 @@ import {
   REMOVED_EXITS,
   vanillaConnections,
 } from "./connections";
-import { DR_DATA } from "./data";
 import { type DoorKindNote, doorId } from "./doors";
+import { DR_DATA } from "./dr-data";
 import {
   DR_DEFAULTS,
   drKeyLogic,
@@ -90,9 +90,12 @@ describe("the Door Randomizer's world (door-world)", () => {
     // (TestInvertedDarkWorld.py:6)
     const brewery = drLocationId("Brewery");
     const at = (drVersion: number) =>
-      solveFacts(drWorld({ ...settings("inverted"), drVersion }), {
-        heartContainer: 3,
-      }).location(brewery);
+      solveFacts(
+        drWorld({ ...settings("inverted"), drVersion }, { data: DR_DATA }),
+        {
+          heartContainer: 3,
+        },
+      ).location(brewery);
     expect([at(156), at(157), at(158)]).toEqual(["no", "yes", "yes"]);
   });
 
@@ -132,7 +135,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("marks the worlds through the exits, never across", () => {
-    const world = drWorld(settings("open"));
+    const world = drWorld(settings("open"), { data: DR_DATA });
     expect(world.locationIds.size).toBeGreaterThan(200);
     const marked = markWorlds(
       DR_DATA,
@@ -151,10 +154,13 @@ describe("the Door Randomizer's world (door-world)", () => {
 
   it("gives each location one id", () => {
     for (const mode of ["open", "standard", "inverted"] as const) {
-      const world = drWorld({
-        ...DR_DEFAULTS,
-        ...settingsFromUpstream(mode),
-      });
+      const world = drWorld(
+        {
+          ...DR_DEFAULTS,
+          ...settingsFromUpstream(mode),
+        },
+        { data: DR_DATA },
+      );
       const ids = [...world.locationIds.values()];
       expect(new Set(ids).size, mode).toBe(ids.length);
     }
@@ -164,7 +170,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("starts at the Menu, its save-and-quit points reached", () => {
-    const world = drWorld(settings("open"));
+    const world = drWorld(settings("open"), { data: DR_DATA });
     const solution = solveFacts(world, { heartContainer: 3 });
     expect(solution.location(drLocationId("Link's House"))).toBe("yes");
     expect(solution.location(drLocationId("Sanctuary"))).toBe("yes");
@@ -185,7 +191,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("splits a dungeon region by the crystal states some path brings", () => {
-    const { regionIds } = drWorld(settings("open")).compiled;
+    const { regionIds } = drWorld(settings("open"), { data: DR_DATA }).compiled;
     // Hera's lobby: entered orange, its switch turns it blue
     expect(regionIds).toContain("heraLobby__orange");
     expect(regionIds).toContain("heraLobby__blue");
@@ -195,8 +201,11 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("asks a key door's number of keys of DR's analysis, drops' too, else maybe", () => {
-    const world = drWorld(settings("open"));
-    const unswept = drWorld(settings("open"), { sweepEvents: false });
+    const world = drWorld(settings("open"), { data: DR_DATA });
+    const unswept = drWorld(settings("open"), {
+      data: DR_DATA,
+      sweepEvents: false,
+    });
     const chest = drLocationId("Eastern Palace - Big Key Chest");
     const lamp = { heartContainer: 3, lamp: 1 };
     // The dark square's door asks two keys; Eastern's two keys are drops,
@@ -224,7 +233,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     const chest = drLocationId("Eastern Palace - Big Key Chest");
     const world = drWorld(
       { ...settings("open"), bombBag: true },
-      { sweepEvents: false },
+      { data: DR_DATA, sweepEvents: false },
     );
     const held = { heartContainer: 3, keyP1: 2, lamp: 1 };
     expect(solveFacts(world, held).location(chest)).toBe("no");
@@ -243,6 +252,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       vanillaConnections(DR_DATA, "open").get("Old Man Cave Dropdown"),
     ).toBe("Old Man Cave (West)");
     const world = drWorld(settings("open"), {
+      data: DR_DATA,
       probes: ["Old Man Cave Dropdown"],
     });
     const drop = "exit:Old Man Cave Dropdown";
@@ -260,7 +270,12 @@ describe("the Door Randomizer's world (door-world)", () => {
       solveFacts(
         drWorld(
           { ...settings("open"), ...more },
-          { start: ["Agahnims Tower Portal"], sweepEvents: false, ...options },
+          {
+            data: DR_DATA,
+            start: ["Agahnims Tower Portal"],
+            sweepEvents: false,
+            ...options,
+          },
         ),
         { ...held, keyA1: keys },
       ).location(maze);
@@ -294,9 +309,10 @@ describe("the Door Randomizer's world (door-world)", () => {
     const zelda = drLocationId("Hyrule Castle - Zelda's Chest");
     const held = { ...everything(OPEN), keyH2: 0 };
     const standard = (more: Settings) =>
-      solveFacts(drWorld({ ...settings("standard"), ...more }), held).location(
-        zelda,
-      );
+      solveFacts(
+        drWorld({ ...settings("standard"), ...more }, { data: DR_DATA }),
+        held,
+      ).location(zelda);
     expect(standard({ universalKeys: true })).toBe("yes");
   });
 
@@ -307,15 +323,18 @@ describe("the Door Randomizer's world (door-world)", () => {
     const at = (world: ReturnType<typeof drWorld>, more = {}) =>
       solveFacts(world, { ...held, ...more }).location(chest);
     // Wild big keys: the one recorded decides
-    expect([at(drWorld(wild)), at(drWorld(wild), { bigKeyP1: 1 })]).toEqual([
-      "no",
-      "yes",
-    ]);
+    expect([
+      at(drWorld(wild, { data: DR_DATA })),
+      at(drWorld(wild, { data: DR_DATA }), { bigKeyP1: 1 }),
+    ]).toEqual(["no", "yes"]);
     // Kept in its dungeon, the big key may lie inside: maybe until held
-    const kept = drWorld(settings("open"));
+    const kept = drWorld(settings("open"), { data: DR_DATA });
     expect([at(kept), at(kept, { bigKeyP1: 1 })]).toEqual(["maybe", "yes"]);
     // Wild but one the player cannot record: maybe too
-    const unrecorded = drWorld(wild, { unrecorded: ["bigKeyP1"] });
+    const unrecorded = drWorld(wild, {
+      data: DR_DATA,
+      unrecorded: ["bigKeyP1"],
+    });
     expect(at(unrecorded)).toBe("maybe");
   });
 
@@ -449,6 +468,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     // the rat path's dashable wall asks the pearl, which the wall's region
     // never gives without it
     const world = drWorld(settings("inverted"), {
+      data: DR_DATA,
       regions: ["Sewers Secret Room"],
     });
     const secret = regionProbeId("Sewers Secret Room");
@@ -460,7 +480,7 @@ describe("the Door Randomizer's world (door-world)", () => {
   });
 
   it("makes the light world the bunny's in Inverted", () => {
-    const world = drWorld(settings("inverted"));
+    const world = drWorld(settings("inverted"), { data: DR_DATA });
     // Through Agahnim's portal: a light world chest asks the pearl, the
     // bottle merchant does not (bunny_accessible_locations)
     const held = { defeatAgahnim: 1, glove: 1, hammer: 1, heartContainer: 3 };
@@ -476,20 +496,26 @@ describe("the Door Randomizer's world (door-world)", () => {
   it("builds on the connections it is given", () => {
     const connections = new Map(vanillaConnections(DR_DATA, "inverted"));
     const brewery = drLocationId("Brewery");
-    const before = solveFacts(drWorld(settings("inverted")), {
-      heartContainer: 3,
-    });
+    const before = solveFacts(
+      drWorld(settings("inverted"), { data: DR_DATA }),
+      {
+        heartContainer: 3,
+      },
+    );
     // DR's vanilla Inverted world leaves the Dark Sanctuary's exit unlinked
     expect(before.location(brewery)).toBe("no");
     connections.set("Dark Sanctuary Hint Exit", "Dark Chapel Area");
-    const after = solveFacts(drWorld(settings("inverted"), { connections }), {
-      heartContainer: 3,
-    });
+    const after = solveFacts(
+      drWorld(settings("inverted"), { connections, data: DR_DATA }),
+      {
+        heartContainer: 3,
+      },
+    );
     expect(after.location(brewery)).toBe("yes");
   });
 
   it("runs Standard's escape: Uncle's save point, Zelda's way back", () => {
-    const world = drWorld(settings("standard"));
+    const world = drWorld(settings("standard"), { data: DR_DATA });
     const at = (state: Record<string, number>, name: string) =>
       solveFacts(world, { heartContainer: 3, ...state }).location(
         drLocationId(name),
@@ -522,7 +548,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     ];
     const world = drWorld(
       { ...settings("standard"), wildBigKeys: true, wildKeys: true },
-      { regions: ["Hyrule Castle Courtyard", ...outside] },
+      { data: DR_DATA, regions: ["Hyrule Castle Courtyard", ...outside] },
     );
     const state = Object.fromEntries(
       Object.entries(everything(settingsFromUpstream("standard"))).filter(
@@ -580,7 +606,7 @@ describe("the Door Randomizer's world (door-world)", () => {
       treasureHunt: 20,
       triforceHuntGoal: true,
     };
-    const world = drWorld(hunt);
+    const world = drWorld(hunt, { data: DR_DATA });
     const murahdahla = world.locationIds.get("Murahdahla") ?? "";
     expect(murahdahla).toBe("murahdahla");
     const pieces = (n: number) =>
@@ -589,7 +615,11 @@ describe("the Door Randomizer's world (door-world)", () => {
       );
     expect(pieces(19)).toBe("no");
     expect(pieces(20)).toBe("yes");
-    expect(drWorld(settings("open")).locationIds.has("Murahdahla")).toBe(false);
+    expect(
+      drWorld(settings("open"), { data: DR_DATA }).locationIds.has(
+        "Murahdahla",
+      ),
+    ).toBe(false);
   });
 
   it("asks a door its worst case under dangerous key logic, partial's number capped", () => {
@@ -599,7 +629,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     const wild = { ...settings("open"), wildBigKeys: true, wildKeys: true };
     const firesnake = drLocationId("Ganons Tower - Firesnake Room");
     const at = (more: Settings, keys: number) =>
-      solveFacts(drWorld({ ...wild, ...more }), {
+      solveFacts(drWorld({ ...wild, ...more }, { data: DR_DATA }), {
         ...everything(OPEN),
         keyA2: keys,
       }).location(firesnake);
@@ -650,15 +680,20 @@ describe("the Door Randomizer's world (door-world)", () => {
     const held = { bigKeyP1: 1, bow: 1, heartContainer: 3, keyP1: 2, lamp: 1 };
     const boss = drLocationId("Eastern Palace - Boss");
     // Maps and compasses shuffled: the player records them
-    const restricted = drWorld({
-      ...settings("open"),
-      restrictBossItems: true,
-      wildCompasses: true,
-      wildMaps: true,
-    });
-    expect(solveFacts(drWorld(settings("open")), held).location(boss)).toBe(
-      "yes",
+    const restricted = drWorld(
+      {
+        ...settings("open"),
+        restrictBossItems: true,
+        wildCompasses: true,
+        wildMaps: true,
+      },
+      { data: DR_DATA },
     );
+    expect(
+      solveFacts(drWorld(settings("open"), { data: DR_DATA }), held).location(
+        boss,
+      ),
+    ).toBe("yes");
     expect(solveFacts(restricted, held).location(boss)).toBe("no");
     expect(
       solveFacts(restricted, { ...held, compassP1: 1, mapP1: 1 }).location(
@@ -666,7 +701,10 @@ describe("the Door Randomizer's world (door-world)", () => {
       ),
     ).toBe("yes");
     // Kept in their dungeons, unrecorded: they may be in hand, never yes
-    const kept = drWorld({ ...settings("open"), restrictBossItems: true });
+    const kept = drWorld(
+      { ...settings("open"), restrictBossItems: true },
+      { data: DR_DATA },
+    );
     expect(solveFacts(kept, held).location(boss)).toBe("maybe");
     expect(
       solveFacts(kept, { ...held, compassP1: 1, mapP1: 1 }).location(boss),
@@ -679,6 +717,7 @@ describe("the Door Randomizer's world (door-world)", () => {
     const world = drWorld(
       { ...settings("open"), pottery: true },
       {
+        data: DR_DATA,
         dropsAndPots: [
           { name: pot, region: "Palace of Darkness Hint" },
           { name: drop, region: "Sewers Dark Cross" },
@@ -699,24 +738,34 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(at(drop, { heartContainer: 3, lamp: 1 })).toBe("yes");
     const bag = drWorld(
       { ...settings("open"), bombBag: true },
-      { dropsAndPots: [{ name: drop, region: "Sewers Dark Cross" }] },
+      {
+        data: DR_DATA,
+        dropsAndPots: [{ name: drop, region: "Sewers Dark Cross" }],
+      },
     );
     const inBag = (state: State) =>
       solveFacts(bag, state).location(drLocationId(drop));
     expect(inBag({ heartContainer: 3, lamp: 1 })).toBe("no");
     expect(inBag({ heartContainer: 3, lamp: 1, sword: 1 })).toBe("yes");
     // Not asked for, not in the world
-    expect(drWorld(settings("open")).locationIds.has(pot)).toBe(false);
+    expect(
+      drWorld(settings("open"), { data: DR_DATA }).locationIds.has(pot),
+    ).toBe(false);
   });
 
   it("puts Mire's spikes' key pot behind the spikes once pots shuffle", () => {
     const pot = drLocationId("Misery Mire - Spikes Pot Key");
     const state = { ...everything(OPEN), caneOfByrna: 0, cape: 0 };
     const hurt = { ...state, heartContainer: 3, pieceOfHeart: 0 };
-    expect(solveFacts(drWorld(settings("open")), hurt).location(pot)).toBe(
-      "yes",
+    expect(
+      solveFacts(drWorld(settings("open"), { data: DR_DATA }), hurt).location(
+        pot,
+      ),
+    ).toBe("yes");
+    const shuffled = drWorld(
+      { ...settings("open"), potShuffle: true },
+      { data: DR_DATA },
     );
-    const shuffled = drWorld({ ...settings("open"), potShuffle: true });
     expect(solveFacts(shuffled, hurt).location(pot)).toBe("maybe");
     expect(solveFacts(shuffled, state).location(pot)).toBe("yes");
   });

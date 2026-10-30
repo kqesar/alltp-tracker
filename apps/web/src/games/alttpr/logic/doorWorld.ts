@@ -5,11 +5,12 @@
 // with DR's rules and region graph: no other run downloads them, so
 // whatever reads that world goes through this module. An Overworld
 // Randomizer run is solved in the same world built on the fork's own data
-// (logic/owrWorld.ts, `doorSolverOf`).
+// (logic/owrWorld.ts, `doorSolverOf`). Neither release's data is imported
+// here: each solver's module brings its own (logic/drSolver.ts,
+// logic/owrWorld.ts), so an OWR run never downloads DR's world.
 
 import type { Settings, State, Tri } from "@alltp/engine";
 import {
-  DR_DATA,
   type DrData,
   type DrNotedDoors,
   type DrNotedEntrances,
@@ -145,6 +146,3 @@ export const doorSolverOf = (data: DrData): DoorSolver => {
       solveIn(worldOf(data, built, settings, added, entrances, doors), state),
   };
 };
-
-/** The solver of Door Randomizer runs, in DR's own world. */
-export const solver: DoorSolver = doorSolverOf(DR_DATA);

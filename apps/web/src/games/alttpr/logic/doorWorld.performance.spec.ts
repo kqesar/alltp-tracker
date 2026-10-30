@@ -25,7 +25,7 @@ const BUDGET_MS = 5;
 const COLD_BUDGET_MS = 400;
 
 beforeAll(async () => {
-  const { solver } = await import("@/games/alttpr/logic/doorWorld");
+  const { solver } = await import("@/games/alttpr/logic/drSolver");
   setDoorSolver(solver);
 });
 

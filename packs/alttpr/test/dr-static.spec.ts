@@ -11,8 +11,10 @@
 // static numbers do not depend on where keys lie (has_sm_key_strict counts
 // those held), so the cases are asked again with the keys wild, where one
 // key short is `no` but for an alternative that rests on a placement.
+
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { DR_DATA } from "../src/door-world/dr-data";
 import { drWorld } from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import { contractHolds } from "./contract";
@@ -55,7 +57,7 @@ describe("DR's static key logic against TestStaticKeyLogic.py", () => {
   const worlds = [false, true].map((wildKeys) =>
     drWorld(
       { ...settingsOf(harness.mode), staticKeyLogic: true, wildKeys },
-      { start: harness.starts },
+      { data: DR_DATA, start: harness.starts },
     ),
   );
   const answer = (world: (typeof worlds)[number], c: Case, keys: number) => {

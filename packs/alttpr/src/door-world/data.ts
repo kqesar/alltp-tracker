@@ -1,15 +1,8 @@
-// The Door Randomizer's world as import-dr.mjs wrote it (src/door-rando/
-// world/*.json), typed for the world builder. Nothing here decides: each
-// table is read as DR's source has it, at the release upstream.json pins.
-import connectionData from "../door-rando/world/connections.json" with {
-  type: "json",
-};
-import doorData from "../door-rando/world/doors.json" with { type: "json" };
-import entranceData from "../door-rando/world/entrances.json" with {
-  type: "json",
-};
-import regionData from "../door-rando/world/regions.json" with { type: "json" };
-import ruleData from "../door-rando/world/rules.json" with { type: "json" };
+// A release's world as its importer wrote it (src/door-rando/world/*.json
+// for DR, src/door-rando/owr/*.json for the Overworld Randomizer), typed for
+// the world builder. Nothing here decides: each table is read as the source
+// has it, at the release upstream.json pins. Each release's bundle is a
+// module of its own (dr-data.ts, owr-data.ts), so a run downloads its own.
 
 /** DR's three worlds, as its `mode` option names them. */
 export type DrMode = "open" | "standard" | "inverted";
@@ -158,7 +151,8 @@ const FILES: Readonly<Record<string, string>> = {
 
 /**
  * A release's world as its importer wrote it: the Door Randomizer's
- * (`DR_DATA`) or the Overworld Randomizer's (owr-data.ts), each the data
+ * (dr-data.ts, `DR_DATA`) or the Overworld Randomizer's (owr-data.ts,
+ * `OWR_DATA`), each the data
  * every function of the world builder reads, passed to it rather than
  * imported, so either world is built by the same code.
  */
@@ -264,14 +258,6 @@ export function drDataOf(
       tableNamed(file, name).value as Readonly<Record<string, T>>,
   };
 }
-
-/** The Door Randomizer's world at the release upstream.json pins. */
-export const DR_DATA: DrData = drDataOf("dr", {
-  doors: doorData,
-  regions: regionData,
-  rules: ruleData,
-  tables: [connectionData, entranceData],
-});
 
 /**
  * A value derived from a release's data, built once per bundle: what a

@@ -12,7 +12,7 @@ import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
 import { notedConnections, vanillaConnections } from "./connections";
-import { DR_DATA } from "./data";
+import { DR_DATA } from "./dr-data";
 import {
   DR_DEFAULTS,
   type DrNotedEntrances,
@@ -217,8 +217,9 @@ describe("DR's world on noted entrances", () => {
     const firesnake = drLocationId("Ganons Tower - Firesnake Room");
     const solve = (world: ReturnType<typeof drWorld>, keys: number) =>
       solveFacts(world, state(keys)).location(firesnake);
-    const vanilla = drWorld(wild);
+    const vanilla = drWorld(wild, { data: DR_DATA });
     const known = drWorld(wild, {
+      data: DR_DATA,
       entrances: noted(
         "dungeonssimple",
         "open",
@@ -226,6 +227,7 @@ describe("DR's world on noted entrances", () => {
       ),
     });
     const partly = drWorld(wild, {
+      data: DR_DATA,
       entrances: noted(
         "dungeonssimple",
         "open",
@@ -241,6 +243,7 @@ describe("DR's world on noted entrances", () => {
     expect(solve(partly, fewest)).toBe("yes");
     // Ganon's Tower's door not noted: unreached
     const noGT = drWorld(wild, {
+      data: DR_DATA,
       entrances: noted(
         "dungeonssimple",
         "open",
@@ -272,9 +275,10 @@ describe("DR's world on noted entrances", () => {
       portalsKnown(DR_DATA, "open", built.connections).has("Desert Palace"),
     ).toBe(false);
     const world = drWorld(wild, {
+      data: DR_DATA,
       entrances: noted("dungeonssimple", "open", notes),
     });
-    const vanilla = drWorld(wild);
+    const vanilla = drWorld(wild, { data: DR_DATA });
     const state = (keys: number): State => ({
       ...everything(settingsFromUpstream("open")),
       keyP2: keys,
@@ -286,6 +290,7 @@ describe("DR's world on noted entrances", () => {
     // its analysis starting from the portal analyze_portals picks
     // (DoorShuffle.py:727-735), which the owner chose not to port
     const whole = drWorld(wild, {
+      data: DR_DATA,
       entrances: noted(
         "dungeonssimple",
         "open",
@@ -307,6 +312,7 @@ describe("DR's world on noted entrances", () => {
     const at = (notes: Record<string, string>) =>
       solveFacts(
         drWorld(settings("open"), {
+          data: DR_DATA,
           entrances: noted("dungeonssimple", "open", notes),
         }),
         noMirror,
@@ -353,6 +359,7 @@ describe("DR's world on noted entrances", () => {
     const fairy = (version: number) =>
       solveFacts(
         drWorld(settings("open", { drVersion: version }), {
+          data: DR_DATA,
           entrances: noted("crossed", "open", notes),
           probes: ["Pyramid Fairy"],
         }),

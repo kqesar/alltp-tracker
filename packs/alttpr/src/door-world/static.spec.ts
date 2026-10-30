@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
-import { DR_DATA } from "./data";
+import { DR_DATA } from "./dr-data";
 import {
   DR_DEFAULTS,
   drKeyLogic,
@@ -190,13 +190,16 @@ describe("DR's static key logic (StaticKeyLogic.py)", () => {
   });
 
   it("gives its chests their rules, keys of the chests alone", () => {
-    const wild = drWorld({
-      ...settings("open"),
-      drVersion: 158,
-      staticKeyLogic: true,
-      wildBigKeys: true,
-      wildKeys: true,
-    });
+    const wild = drWorld(
+      {
+        ...settings("open"),
+        drVersion: 158,
+        staticKeyLogic: true,
+        wildBigKeys: true,
+        wildKeys: true,
+      },
+      { data: DR_DATA },
+    );
     // Everything held but the keys asked about
     const all = everything(settingsFromUpstream("open"));
     const at = (location: string, keys: Record<string, number>) =>

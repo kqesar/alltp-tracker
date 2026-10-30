@@ -7,6 +7,12 @@ export interface LazyCode {
   readonly marker: string;
   /** What the code is, for the error. */
   readonly what: string;
+  /**
+   * Lazy code that must never load with this one: none of it in the static
+   * closure of any chunk that brings this code (the Overworld Randomizer's
+   * world never downloads the Door Randomizer's own data).
+   */
+  readonly apart?: readonly LazyCode[];
 }
 
 /**
@@ -42,6 +48,33 @@ export function lazyGuard({
             output.type === "chunk" ? [[output.fileName, output] as const] : [],
           ),
         );
+        /** A chunk and every chunk it imports statically, by name. */
+        const closureOf = (start: string): Set<string> => {
+          const found = new Set<string>();
+          for (const names = [start]; names.length > 0; ) {
+            const name = names.pop() as string;
+            if (found.has(name)) continue;
+            found.add(name);
+            names.push(...(chunks.get(name)?.imports ?? []));
+          }
+          return found;
+        };
+        const holds = (names: Set<string>, marker: string) =>
+          [...names].find((name) => chunks.get(name)?.code.includes(marker));
+        for (const { marker, what, apart = [] } of lazy) {
+          if (apart.length === 0) continue;
+          for (const name of chunks.keys()) {
+            const loaded = closureOf(name);
+            if (holds(loaded, marker) === undefined) continue;
+            for (const other of apart) {
+              const with_ = holds(loaded, other.marker);
+              if (with_ !== undefined)
+                this.error(
+                  `${other.what} is in ${with_}, which loads with ${what} (from ${name}): keep them apart`,
+                );
+            }
+          }
+        }
         const starts = [...chunks.values()]
           .filter(
             (chunk) =>

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import fixture from "../../../test/dr-upstream/vanilla-key-logic.json" with {
   type: "json",
 };
-import { DR_DATA } from "../data";
+import { DR_DATA } from "../dr-data";
 import { keyDropsOf } from "../keys";
 import { type DoorRule, type KeyLogic, vanillaKeyLogic } from "./analysis";
 import type { KeyAnalysisSettings } from "./dungeon";

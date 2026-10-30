@@ -3,7 +3,7 @@
 // counters it makes in each dungeon.
 
 import { describe, expect, it } from "vitest";
-import { DR_DATA } from "../data";
+import { DR_DATA } from "../dr-data";
 import { keyDropsOf } from "../keys";
 import { findMaxCounter, type KeyLayout, keyLayout } from "./counters";
 import {

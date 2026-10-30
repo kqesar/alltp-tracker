@@ -12,6 +12,7 @@ import {
   portalsOf,
   shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
+import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
 import { memo, useId, useMemo, useState } from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { linkChange } from "@/games/alttpr/logic/doorNotes";
@@ -90,7 +91,7 @@ const DoorRow = memo(
     const byDungeon = useMemo(() => {
       const groups = new Map<string, Door[]>();
       for (const other of targets) {
-        const dungeon = homeDungeonOf(other) ?? "";
+        const dungeon = homeDungeonOf(other, DR_DATA) ?? "";
         groups.set(dungeon, [...(groups.get(dungeon) ?? []), other]);
       }
       return [...groups];
@@ -148,7 +149,7 @@ const LobbyRow = ({
   const lobby = useGameStore((state) => state.doors.lobbies?.[id]);
   const noteDoors = useGameStore((state) => state.noteDoors);
   const doors = useMemo(
-    () => lobbyDoors(portal, settings.shuffle),
+    () => lobbyDoors(portal, settings.shuffle, DR_DATA),
     [portal, settings.shuffle],
   );
   return (
@@ -233,14 +234,18 @@ const DoorsPanel = () => {
     () =>
       settings === undefined
         ? []
-        : shuffledDoors(settings).filter((d) => homeDungeonOf(d) === dungeon),
+        : shuffledDoors(settings, DR_DATA).filter(
+            (d) => homeDungeonOf(d, DR_DATA) === dungeon,
+          ),
     [settings, dungeon],
   );
   const kindOnly = useMemo(
     () =>
       settings === undefined
         ? []
-        : kindOnlyDoors(settings).filter((d) => homeDungeonOf(d) === dungeon),
+        : kindOnlyDoors(settings, DR_DATA).filter(
+            (d) => homeDungeonOf(d, DR_DATA) === dungeon,
+          ),
     [settings, dungeon],
   );
   const targets = useMemo(
@@ -248,7 +253,10 @@ const DoorsPanel = () => {
       new Map(
         settings === undefined
           ? []
-          : relinked.map((door) => [door.name, doorTargets(door, settings)]),
+          : relinked.map((door) => [
+              door.name,
+              doorTargets(door, settings, DR_DATA),
+            ]),
       ),
     [settings, relinked],
   );
@@ -273,7 +281,7 @@ const DoorsPanel = () => {
   const unknownLinked = unknownKinds.filter((door) =>
     through.has(doorId(door.name)),
   );
-  const portals = settings.intensity >= 3 ? portalsOf(dungeon) : [];
+  const portals = settings.intensity >= 3 ? portalsOf(dungeon, DR_DATA) : [];
   return (
     <div className="doors" data-testid="doors-panel">
       <div className="doors__bar">

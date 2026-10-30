@@ -12,6 +12,7 @@
 // - The playthrough both ways (test/dr-playthrough.ts): each sphere `yes`
 //   with the spheres before it, but where the reviewed list says why not,
 //   and no location of a later sphere `yes` too early.
+
 import { describe, expect, it } from "vitest";
 import {
   type DrShuffle,
@@ -21,6 +22,7 @@ import {
   drTargetOf,
   vanillaEntrances,
 } from "../src/door-rando/entrances";
+import { DR_DATA } from "../src/door-world/dr-data";
 import { drWorld } from "../src/door-world/index";
 import {
   early,
@@ -135,6 +137,7 @@ describe("DR's world on shuffled entrances against real seeds", () => {
     it(`reaches each sphere with the spheres before it (${name})`, () => {
       const log = logOf(name);
       const world = drWorld(settingsFor(log.meta), {
+        data: DR_DATA,
         entrances: notesOf(log),
       });
       const { checked, notYes } = walk(log, world);
@@ -146,6 +149,7 @@ describe("DR's world on shuffled entrances against real seeds", () => {
     it(`says yes to no location of a later sphere (${name})`, () => {
       const log = logOf(name);
       const world = drWorld(settingsFor(log.meta), {
+        data: DR_DATA,
         entrances: notesOf(log),
         sweepEvents: false,
       });

@@ -1003,11 +1003,13 @@ Its logic is DR's own: DR's world, rules, enemy logic and tests are
 imported as data (below), the world is built from them with DR's key
 analysis (`KeyDoorShuffle.py`) and held to DR's tests and to real seeds'
 playthroughs; the app solves a DR run with vanilla doors and entrances in
-it, through the package's `./door-world` export, which only its lazy chunk
-imports (`apps/web/src/games/alttpr/logic/doorWorld.ts`), named on demand
-(`ondemand-`) so the site's service worker caches it only once a DR run
-fetches it: no other run downloads DR's rules, at first load or at a
-service worker's install.
+it, through the package's `./door-world` export (the builder) and
+`./door-world/dr` (DR's own data, `DR_DATA`), which only its lazy chunks
+import (`apps/web/src/games/alttpr/logic/doorWorld.ts`, `drSolver.ts`),
+named on demand (`ondemand-`) so the site's service worker caches them only
+once a DR run fetches them: no other run downloads DR's rules, at first load
+or at a service worker's install, an Overworld Randomizer run's neither
+(`./door-world/owr`, the build's `lazyGuard` keeps the two apart).
 
 **Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
 DR 1.5.8 (`5c44da33`; 1.5.2 to 1.5.8 coexist, and the races recorded below
@@ -1313,8 +1315,11 @@ the harness fixes; the dungeon tests never sweep events).
 compiles DR's world for the engine, its doors and entrances vanilla.
 Every function of the builder reads its release's data from a bundle
 passed to it (`DrData`, `data.ts`: the regions, doors, portals, rules and
-connection tables of one import, with their indexes; `options.data`, DR's
-`DR_DATA` by default), never from a module-level table, so the Overworld
+connection tables of one import, with their indexes; `options.data`,
+required: DR's `DR_DATA` of `dr-data.ts` or the fork's `OWR_DATA` of
+`owr-data.ts`, each a module of its own, so the builder imports neither and
+a caller downloads only the world it builds), never from a module-level
+table, and no helper of `doors.ts` defaults to one, so the Overworld
 Randomizer's world (its own import, `src/door-rando/owr/`) is built by the
 same code. What a module derives from the data is built once per bundle
 (`perData`), and the caches of the key analysis and the Turtle Rock probe

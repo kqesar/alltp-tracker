@@ -28,10 +28,14 @@ const chunk = (
 /** The guard run over chunks: what it fails with, or null. */
 const guard = (
   chunks: readonly Rollup.OutputChunk[],
-  options: { onDemand?: RegExp; roots?: string[] } = {},
+  options: {
+    onDemand?: RegExp;
+    roots?: string[];
+    lazy?: readonly LazyCode[];
+  } = {},
 ): string | null => {
   const plugin = lazyGuard({
-    lazy: LAZY,
+    lazy: options.lazy ?? LAZY,
     roots: options.roots ?? ["src/games/alttpr/module.ts"],
     ...(options.onDemand === undefined ? {} : { onDemand: options.onDemand }),
   });
@@ -143,5 +147,44 @@ describe("the lazy guard", () => {
     ).toBeNull();
     // Without a worker (the desktop app), only the first download counts
     expect(guard([entry, game, named("assets/doorWorld-c.js")])).toBeNull();
+  });
+
+  it("fails when lazy code kept apart loads with another", () => {
+    const dr: LazyCode = { marker: "DR's own data", what: "DR's data" };
+    const lazy: readonly LazyCode[] = [
+      dr,
+      { apart: [dr], marker: "OWR's own data", what: "OWR's world" },
+    ];
+    const entry = chunk("assets/index-a.js", "import('./owr')", {
+      dynamicImports: ["assets/ondemand-owr-b.js", "assets/ondemand-dr-d.js"],
+      isEntry: true,
+    });
+    const world = chunk("assets/ondemand-world-c.js", "export const w = 1");
+    const owr = (imports: string[]) =>
+      chunk("assets/ondemand-owr-b.js", `const o = "OWR's own data"`, {
+        imports,
+      });
+    const drData = chunk(
+      "assets/ondemand-dr-d.js",
+      `const d = "DR's own data"`,
+      {
+        imports: ["assets/ondemand-world-c.js"],
+      },
+    );
+    // Each loads the shared world code alone: apart
+    expect(
+      guard([entry, world, owr(["assets/ondemand-world-c.js"]), drData], {
+        lazy,
+      }),
+    ).toBeNull();
+    // The fork's chunk reaching DR's data, here through a shared chunk
+    const shared = { ...world, imports: ["assets/ondemand-dr-d.js"] };
+    expect(
+      guard([entry, shared, owr(["assets/ondemand-world-c.js"]), drData], {
+        lazy,
+      }),
+    ).toBe(
+      "DR's data is in assets/ondemand-dr-d.js, which loads with OWR's world (from assets/ondemand-owr-b.js): keep them apart",
+    );
   });
 });

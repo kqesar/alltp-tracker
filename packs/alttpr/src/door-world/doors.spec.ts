@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { DR_DATA } from "./data";
 import {
   type DoorShuffleSettings,
   doorById,
@@ -16,6 +15,7 @@ import {
   shuffledDoors,
   vanillaKind,
 } from "./doors";
+import { DR_DATA } from "./dr-data";
 
 const door = (name: string) => {
   const found = DR_DATA.doorByName.get(name);
@@ -38,32 +38,44 @@ describe("the door shuffle's model (doors.ts)", () => {
     const ids = DR_DATA.doors.map((d) => doorId(d.name));
     expect(new Set(ids).size).toBe(DR_DATA.doors.length);
     expect(doorId("GT Warp Maze (Rails) WS")).toBe("gt-warp-maze-rails-ws");
-    expect(doorById("eastern-lobby-nw")?.name).toBe("Eastern Lobby NW");
+    expect(doorById("eastern-lobby-nw", DR_DATA)?.name).toBe(
+      "Eastern Lobby NW",
+    );
     expect(portalId("Hyrule Castle South")).toBe("hyrule-castle-south");
-    expect(portalById("turtle-rock-lazy-eyes")?.door).toBe("TR Lazy Eyes SE");
-    expect(doorById("nowhere")).toBeUndefined();
+    expect(portalById("turtle-rock-lazy-eyes", DR_DATA)?.door).toBe(
+      "TR Lazy Eyes SE",
+    );
+    expect(doorById("nowhere", DR_DATA)).toBeUndefined();
   });
 
   it("relinks a dungeon's doors of the types each intensity shuffles", () => {
     // create_door_spoiler (DoorShuffle.py:180-182): normal doors and
     // spiral stairs; open edges, straight stairs and ladders from 2; the
     // portals' own doors from 3
-    expect(shuffledDoors(shuffle({ intensity: 1 }))).toHaveLength(398);
-    expect(shuffledDoors(shuffle({ intensity: 2 }))).toHaveLength(456);
-    expect(shuffledDoors(shuffle({ intensity: 3 }))).toHaveLength(481);
+    expect(shuffledDoors(shuffle({ intensity: 1 }), DR_DATA)).toHaveLength(398);
+    expect(shuffledDoors(shuffle({ intensity: 2 }), DR_DATA)).toHaveLength(456);
+    expect(shuffledDoors(shuffle({ intensity: 3 }), DR_DATA)).toHaveLength(481);
     const edge = door("Desert Main Lobby NE Edge");
-    expect(isShuffledDoor(edge, shuffle({ intensity: 1 }))).toBe(false);
-    expect(isShuffledDoor(edge, shuffle({ intensity: 2 }))).toBe(true);
+    expect(isShuffledDoor(edge, shuffle({ intensity: 1 }), DR_DATA)).toBe(
+      false,
+    );
+    expect(isShuffledDoor(edge, shuffle({ intensity: 2 }), DR_DATA)).toBe(true);
     const lobby = door("Eastern Lobby S");
-    expect(isShuffledDoor(lobby, shuffle({ intensity: 2 }))).toBe(false);
-    expect(isShuffledDoor(lobby, shuffle({ intensity: 3 }))).toBe(true);
+    expect(isShuffledDoor(lobby, shuffle({ intensity: 2 }), DR_DATA)).toBe(
+      false,
+    );
+    expect(isShuffledDoor(lobby, shuffle({ intensity: 3 }), DR_DATA)).toBe(
+      true,
+    );
     // An interior door: never
-    expect(isShuffledDoor(door("Eastern Lobby NW"), shuffle())).toBe(false);
+    expect(isShuffledDoor(door("Eastern Lobby NW"), shuffle(), DR_DATA)).toBe(
+      false,
+    );
   });
 
   it("pairs a door with one facing it back in its pool", () => {
     const north = door("Eastern Lobby Bridge N");
-    const basic = doorTargets(north, shuffle()).map((d) => d.name);
+    const basic = doorTargets(north, shuffle(), DR_DATA).map((d) => d.name);
     expect(basic).toContain("Eastern Cannonball S");
     expect(
       basic.every(
@@ -72,17 +84,22 @@ describe("the door shuffle's model (doors.ts)", () => {
     ).toBe(true);
     expect(basic).not.toContain("PoD Lobby S");
     expect(
-      doorTargets(north, shuffle({ shuffle: "crossed" })).map((d) => d.name),
+      doorTargets(north, shuffle({ shuffle: "crossed" }), DR_DATA).map(
+        (d) => d.name,
+      ),
     ).toContain("GT Big Chest SW");
     // Stairs to stairs
     const stairs = doorTargets(
       door("Hyrule Castle Back Hall Down Stairs"),
       shuffle(),
+      DR_DATA,
     );
     expect(stairs.length).toBeGreaterThan(0);
     expect(stairs.every((d) => d.type === "SpiralStairs")).toBe(true);
     // A door the shuffle leaves has none
-    expect(doorTargets(door("Eastern Lobby S"), shuffle())).toEqual([]);
+    expect(doorTargets(door("Eastern Lobby S"), shuffle(), DR_DATA)).toEqual(
+      [],
+    );
   });
 
   it("groups the dungeons as each shuffle pools them", () => {
@@ -91,13 +108,13 @@ describe("the door shuffle's model (doors.ts)", () => {
     expect(poolOf("Ice Palace", "crossed")).toHaveLength(13);
     expect(() => poolOf("Nowhere", "partitioned")).toThrow(RangeError);
     // A portal's lobbies: the doors of its pool that may be one
-    const lobbies = lobbyDoors("Eastern", "basic").map((d) => d.name);
+    const lobbies = lobbyDoors("Eastern", "basic", DR_DATA).map((d) => d.name);
     expect(lobbies).toContain("Eastern Lobby S");
     expect(lobbies).not.toContain("PoD Lobby S");
-    expect(lobbyDoors("Eastern", "crossed").map((d) => d.name)).toContain(
-      "PoD Lobby S",
-    );
-    expect(() => lobbyDoors("Nowhere", "basic")).toThrow(RangeError);
+    expect(
+      lobbyDoors("Eastern", "crossed", DR_DATA).map((d) => d.name),
+    ).toContain("PoD Lobby S");
+    expect(() => lobbyDoors("Nowhere", "basic", DR_DATA)).toThrow(RangeError);
   });
 
   it("knows which doors may change kind, and their room's kind", () => {
@@ -154,6 +171,7 @@ describe("the door shuffle's model (doors.ts)", () => {
         Lobbies: [{ door_name: "PoD Lobby S", lobby_name: "Eastern" }],
       },
       settings,
+      DR_DATA,
     );
     expect(notes.links).toEqual({
       "desert-main-lobby-ne-edge": "eastern-boss-se",
@@ -179,6 +197,7 @@ describe("the door shuffle's model (doors.ts)", () => {
         ],
       },
       { ...settings, decoupled: true },
+      DR_DATA,
     );
     expect(decoupled.links).toEqual({
       "eastern-lobby-bridge-n": "gt-big-chest-sw",
@@ -187,24 +206,28 @@ describe("the door shuffle's model (doors.ts)", () => {
       doorNotesFromSpoiler(
         { Doors: [{ direction: "both", entrance: "Nope", exit: "No" }] },
         settings,
+        DR_DATA,
       ),
     ).toThrow(RangeError);
     expect(() =>
       doorNotesFromSpoiler(
         { Lobbies: [{ door_name: "PoD Lobby S", lobby_name: "Nope" }] },
         settings,
+        DR_DATA,
       ),
     ).toThrow(RangeError);
     expect(() =>
       doorNotesFromSpoiler(
         { DoorTypes: [{ doorNames: "PoD Lobby S (X)", type: "Odd Door" }] },
         settings,
+        DR_DATA,
       ),
     ).toThrow(RangeError);
     expect(() =>
       doorNotesFromSpoiler(
         { DoorTypes: [{ doorNames: "no dungeon", type: "Key Door" }] },
         settings,
+        DR_DATA,
       ),
     ).toThrow(RangeError);
   });
@@ -217,9 +240,9 @@ describe("the door shuffle's model (doors.ts)", () => {
       "default_door_connections",
     )) {
       const one = door(a);
-      if (!isShuffledDoor(one, settings)) continue;
+      if (!isShuffledDoor(one, settings, DR_DATA)) continue;
       expect(
-        doorTargets(one, settings).map((d) => d.name),
+        doorTargets(one, settings, DR_DATA).map((d) => d.name),
         `${a} → ${b}`,
       ).toContain(b);
     }

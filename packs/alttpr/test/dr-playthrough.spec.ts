@@ -6,7 +6,9 @@
 // sphere k is `yes` with the items of the spheres before it held, unless
 // the reviewed list below says why not, and no location of a later sphere
 // is yes too early (`early`).
+
 import { describe, expect, it } from "vitest";
+import { DR_DATA } from "../src/door-world/dr-data";
 import { drWorld } from "../src/door-world/index";
 import {
   early,
@@ -66,7 +68,10 @@ describe("DR's world against real seeds' playthroughs", () => {
   for (const name of logs)
     it(`reaches each sphere with the spheres before it (${name})`, () => {
       const log = logOf(name);
-      const { checked, notYes } = walk(log, drWorld(settingsFor(log.meta)));
+      const { checked, notYes } = walk(
+        log,
+        drWorld(settingsFor(log.meta), { data: DR_DATA }),
+      );
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
     });
@@ -75,7 +80,10 @@ describe("DR's world against real seeds' playthroughs", () => {
     it(`says yes to no location of a later sphere (${name})`, () => {
       const log = logOf(name);
       expect(
-        early(log, drWorld(settingsFor(log.meta), { sweepEvents: false })),
+        early(
+          log,
+          drWorld(settingsFor(log.meta), { data: DR_DATA, sweepEvents: false }),
+        ),
       ).toEqual([]);
     });
 });

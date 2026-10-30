@@ -14,12 +14,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import {
-  DR_DATA,
-  type DrWorld,
-  drKeyLogic,
-  drWorld,
-} from "../src/door-world/index";
+import { DR_DATA } from "../src/door-world/dr-data";
+import { type DrWorld, drKeyLogic, drWorld } from "../src/door-world/index";
 import { solveFacts } from "../src/facts";
 import { collect, POOL, settingsOf } from "./dr-state";
 import { PACK_DIR } from "./manifest";
@@ -104,7 +100,7 @@ describe("DR's key logic seeds", () => {
     it(`never says yes where the fill may not place (${file})`, () => {
       const seed = read(file);
       const settings = settingsFor(seed);
-      const world = drWorld(settings);
+      const world = drWorld(settings, { data: DR_DATA });
       // The big key's forbidden spots (bk_restricted), by item
       const forbidden = new Set(
         [...drKeyLogic(DR_DATA, settings).values()].flatMap((logic) =>

@@ -352,7 +352,7 @@ describe("a Door Randomizer run", () => {
     expect(solutionOf(store())).toMatchObject({ modelled: false });
     expect(solutionOf(store()).tris.mushroom).toBe("maybe");
 
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     act(() => setDoorSolver(solver));
     const solution = solutionOf(store());
     expect(solution).toMatchObject({ modelled: true });
@@ -373,7 +373,7 @@ describe("a Door Randomizer run", () => {
   });
 
   it("reads the keys recorded in their dungeons: below DR's number maybe", async () => {
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     act(() => {
       setDoorSolver(solver);
       store().applyPreset("door-randomizer");

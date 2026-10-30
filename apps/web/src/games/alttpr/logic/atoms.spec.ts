@@ -4,6 +4,7 @@
 // reviewed exception. A rule that starts reading anything else fails here,
 // before a run shows a check out of logic for good (the basic placement's
 // hearts did: `@hasHealth7` over hearts no cell recorded).
+
 import {
   type CompiledWorld,
   compileWorld,
@@ -22,6 +23,7 @@ import {
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
 import { drWorld } from "@alltp/pack-alttpr/door-world";
+import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
 import { describe, expect, it } from "vitest";
 import { items, itemsMax } from "@/games/alttpr/data/items";
 import {
@@ -240,7 +242,10 @@ const WORLDS = (["open", "standard", "inverted"] as const).flatMap((mode) =>
     // pieces (doorStateOf)
     const doors = (["ganon", "ganonhunt"] as const).map((goal) => {
       const door = { ...doorRun(mode, dungeonItems), goal };
-      const dr = drWorld(drSettingsOf(door), { unrecorded: ["bigKeyH2"] });
+      const dr = drWorld(drSettingsOf(door), {
+        data: DR_DATA,
+        unrecorded: ["bigKeyH2"],
+      });
       return {
         facts: dr.facts.flatMap(({ item, maybe }) => [item, maybe ?? item]),
         // Every dungeon's keys, as DR's world reads the recorded ones

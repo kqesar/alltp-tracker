@@ -216,7 +216,7 @@ describe("the waits of a run in DR's own world", () => {
     const played = playedRun(inDungeon, plan, run());
     const comparison = compareReview(inDungeon, played);
     expect(hiddenReason(inDungeon, played, comparison)).toBeNull();
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     const endMs = (plan.length + 3) * 120_000;
     const sweep = drain(sweepRun(inDungeon, played, comparison, endMs, solver));
     expect(sweep.waits.length).toBeGreaterThan(0);
@@ -232,7 +232,7 @@ describe("the waits of a run in DR's own world", () => {
     // Strict key logic reads its own rule only with wild keys (Rules.py:
     // 2345-2347): this seed's keys stay in their dungeons, so its doors ask
     // partial's number, and a strict run of it waits as a partial one
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     const endMs = (plan.length + 3) * 120_000;
     const waitsOf = (keyLogic: "partial" | "strict") => {
       play(inDungeon);

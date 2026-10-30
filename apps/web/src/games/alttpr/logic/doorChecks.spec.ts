@@ -60,7 +60,7 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())["turtle-rock/pokey-1-key-drop"]).toBe(
       "possible",
     );
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     const states = checkStates(state());
     // Turtle Rock, with nothing found: no way in
@@ -80,7 +80,7 @@ describe("a Door Randomizer run's checks", () => {
   });
 
   it("follow DR's rules for pots, a take-any cave's item maybe", async () => {
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     useGameStore.getState().updateDoorSettings({ takeAny: "random" });
     const idOf = (name: string) => {
@@ -140,7 +140,7 @@ describe("a Door Randomizer run's checks", () => {
     const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
     setBonkDrops(BONK_DROPS);
     // DR's own world is no stand-in: maybe until the fork's is loaded
-    const { solver: dr } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver: dr } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(dr);
     expect(solutionOf(state()).modelled).toBe(false);
     expect(checkStates(state())["lost-woods-hideout-tree"]).toBe("possible");
@@ -203,7 +203,7 @@ describe("a Door Randomizer run's checks", () => {
 describe("a Door Randomizer run with shuffled entrances", () => {
   it("reads DR's world on the entrances noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyPreset("door-crosskeys");
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     // DR's world, not the entrance randomizer's
     expect(solutionOf(state()).door).toBeDefined();
@@ -233,7 +233,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       ...getPreset("door-randomizer").settings,
       doorShuffle: "basic",
     });
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     expect(solutionOf(state()).door).toBeDefined();
     const cannonball = "eastern-palace/cannonball-chest";

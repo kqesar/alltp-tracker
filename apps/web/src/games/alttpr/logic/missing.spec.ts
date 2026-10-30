@@ -512,7 +512,7 @@ describe("a run with shuffled entrances", () => {
 
 describe("a Door Randomizer run", () => {
   it("says what a check misses in DR's world, and steps its go mode there", async () => {
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     const inputs = inputsOf(
       { lantern: true },
@@ -540,7 +540,7 @@ describe("a Door Randomizer run", () => {
   });
 
   it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:73-74)", async () => {
-    const { solver } = await import("@/games/alttpr/logic/doorWorld");
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     // Every cell at its top, every dungeon beaten for its crystal
     const full = Object.fromEntries(

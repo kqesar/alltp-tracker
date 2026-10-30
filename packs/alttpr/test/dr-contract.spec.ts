@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
-import { DR_DATA } from "../src/door-world/data";
+import { DR_DATA } from "../src/door-world/dr-data";
 import { type DrWorld, drWorld, probeId } from "../src/door-world/index";
 import { keyDropsOf } from "../src/door-world/keys";
 import { solveFacts } from "../src/facts";
@@ -125,6 +125,7 @@ describe("the Door Randomizer's own tests", () => {
       const world = drWorld(
         { ...settingsOf(fixture.harness.mode), bombBag },
         {
+          data: DR_DATA,
           probes: [
             ...new Set(
               fixture.tests

@@ -12,7 +12,7 @@ import { solveFacts, solveFactsState } from "../facts";
 import { ITEMS } from "../items";
 import { medallionFacts } from "../medallions";
 import { settingsFromUpstream } from "../settings";
-import { DR_DATA } from "./data";
+import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, type DrWorld, drKeyLogic, drWorld } from "./index";
 import type { DoorRule } from "./key-analysis/analysis";
 import { DUNGEON_EVENTS } from "./key-analysis/dungeon";
@@ -262,6 +262,7 @@ const states = fc
 function soundness(model: DrWorld, settings: Settings) {
   const atoms = atomsOf(settings);
   const truth = drWorld(settings, {
+    data: DR_DATA,
     doorRule: truthOf(atoms),
     items: atoms.items,
   });
@@ -325,7 +326,10 @@ describe("the key model's soundness", () => {
     ["Inverted, wild keys", INVERTED, 12],
   ] as const)
     it(`says yes only where every placement the fill may make lets the player in (${name})`, () => {
-      const { property, seen } = soundness(drWorld(settings), settings);
+      const { property, seen } = soundness(
+        drWorld(settings, { data: DR_DATA }),
+        settings,
+      );
       fc.assert(property, { numRuns: runs, seed: 7 });
       // Not vacuous: the model said yes where only its keys could
       expect([...seen]).toEqual(["raised"]);
@@ -337,6 +341,7 @@ describe("the key model's soundness", () => {
     // AllowSmall and the big key's Lock read as sure: a key the tracker
     // does not know the place of
     const broken = drWorld(WILD, {
+      data: DR_DATA,
       doorRule: (dungeon, rule, _, keys) =>
         or(
           keys.atLeast(
@@ -364,6 +369,7 @@ describe("the key model's soundness", () => {
 
   it("finds a model asking one key fewer than DR unsound", () => {
     const broken = drWorld(WILD, {
+      data: DR_DATA,
       doorRule: (dungeon, rule, _, keys) =>
         keys.atLeast(
           dungeon,

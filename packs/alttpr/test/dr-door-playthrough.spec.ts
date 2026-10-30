@@ -17,7 +17,7 @@
 //   and no location of a later sphere `yes` too early.
 import { describe, expect, it } from "vitest";
 import { DR_LOCATIONS } from "../src/door-rando/locations";
-import { DR_DATA } from "../src/door-world/data";
+import { DR_DATA } from "../src/door-world/dr-data";
 import {
   type DoorShuffleSettings,
   doorNotesFromSpoiler,
@@ -132,9 +132,9 @@ const KEY_NAMES: Readonly<Record<string, string>> = {
  */
 function notesOf(json: Json, log: Log) {
   const settings = shuffleOf(log.meta);
-  const notes = doorNotesFromSpoiler(json, settings);
+  const notes = doorNotesFromSpoiler(json, settings, DR_DATA);
   const rooms =
-    drWorld(settingsOf(log.meta), { doors: { notes, settings } })
+    drWorld(settingsOf(log.meta), { data: DR_DATA, doors: { notes, settings } })
       .roomDungeons ?? new Map<string, string>();
   const chests = Object.values(jsonLog(withoutDoors(json)).Locations);
   const forced = forcedDrops(log.meta);
@@ -174,6 +174,7 @@ const worldOf = (
   options: { readonly sweepEvents?: boolean } = {},
 ) =>
   drWorld(settingsOf(log.meta), {
+    data: DR_DATA,
     doors: notesOf(json, log),
     ...(log.meta.shuffle === "vanilla"
       ? {}
@@ -302,9 +303,9 @@ describe("DR's world on shuffled doors against real seeds", () => {
         const a = DR_DATA.doorByName.get(entrance);
         const b = DR_DATA.doorByName.get(exit);
         if (a === undefined || b === undefined) throw new Error(entrance);
-        expect(isShuffledDoor(a, settings), entrance).toBe(true);
+        expect(isShuffledDoor(a, settings, DR_DATA), entrance).toBe(true);
         expect(
-          doorTargets(a, settings).map((d) => d.name),
+          doorTargets(a, settings, DR_DATA).map((d) => d.name),
           `${entrance} → ${exit}`,
         ).toContain(exit);
       }
@@ -313,9 +314,9 @@ describe("DR's world on shuffled doors against real seeds", () => {
         lobby_name: string;
       }[])
         expect(
-          lobbyDoors(lobby_name, settings.shuffle).map((d) => d.name),
+          lobbyDoors(lobby_name, settings.shuffle, DR_DATA).map((d) => d.name),
         ).toContain(door_name);
-      const notes = doorNotesFromSpoiler(json, settings);
+      const notes = doorNotesFromSpoiler(json, settings, DR_DATA);
       for (const [id, kind] of Object.entries(notes.kinds ?? {}))
         if (kind !== "normal")
           expect(

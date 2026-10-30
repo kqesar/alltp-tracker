@@ -4,7 +4,7 @@ import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
 import { vanillaConnections } from "./connections";
-import { DR_DATA } from "./data";
+import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, drLocationId, drWorld, regionProbeId } from "./index";
 import {
   fluteSpots,
