@@ -31,6 +31,7 @@ import {
   locationStateOf,
   markerById,
   setCrossedSolver,
+  setDoorSolver,
   solutionOf,
   trickSolutionOf,
 } from "@/games/alttpr/logic/solution";
@@ -506,6 +507,136 @@ describe("a run with shuffled entrances", () => {
         "tri": "no",
       }
     `);
+  });
+});
+
+describe("a Door Randomizer run", () => {
+  it("says what a check misses in DR's world, and steps its go mode there", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    const inputs = inputsOf(
+      { lantern: true },
+      {
+        preset: "door-randomizer",
+        settings: { ...getPreset("door-randomizer").settings, bombBag: false },
+        smallKeys: Array(13).fill(0),
+      },
+    );
+    const analysis = analysisOf(inputs);
+    expect(analysis.solution.door).toBeDefined();
+    expect(
+      words(analysis.missing.get("eastern-palace/big-chest")),
+    ).toMatchInlineSnapshot(`
+        {
+          "doubts": [
+            {
+              "kind": "placement",
+            },
+          ],
+          "inLogic": "Eastern Palace big key",
+          "possible": undefined,
+          "tri": "maybe",
+        }
+      `);
+    expect(
+      goModeStatusOf(inputs)?.steps.map(({ location }) => location),
+    ).toEqual(["agahnim-2", "ganon"]);
+  });
+
+  it("reads a bomb bag not known as on: a check that wants bombs is maybe, its doubt the bag", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    // Eastern's big key chest once its room's enemies are beaten (kill_chests,
+    // Rules.py:1483): bombs alone, from the start without a bag
+    const CHEST = "eastern-palace/big-key-chest";
+    const run = (bombBag: boolean | undefined) =>
+      inputsOf(
+        { lantern: true },
+        {
+          preset: "door-randomizer",
+          settings: { ...getPreset("door-randomizer").settings, bombBag },
+          smallKeys: Array(13).fill(9),
+        },
+      );
+    expect(solutionOf(run(false)).tris[CHEST]).toBe("yes");
+    const analysis = analysisOf(run(undefined));
+    expect(analysis.solution.tris[CHEST]).toBe("maybe");
+    expect(analysis.missing.get(CHEST)?.doubts).toEqual([{ kind: "bombBag" }]);
+    // Nothing else moves: the rest of the map reads as with no bag
+    const off = solutionOf(run(false)).tris;
+    const unknown = solutionOf(run(undefined)).tris;
+    const moved = Object.keys(off).filter(
+      (id) =>
+        off[id] !== unknown[id] &&
+        !(off[id] === "yes" && unknown[id] === "maybe"),
+    );
+    expect(moved).toEqual([]);
+  });
+
+  it("reads a bag known on from the bombs cell: no bombs out of logic, a bag in it", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    const CHEST = "eastern-palace/big-key-chest";
+    const run = (bombcapacity: number) =>
+      inputsOf(
+        { bombcapacity, lantern: true },
+        {
+          preset: "door-randomizer",
+          settings: { ...getPreset("door-randomizer").settings, bombBag: true },
+          smallKeys: Array(13).fill(9),
+        },
+      );
+    // None to start with (InitialSram.py:68): the bag is what it waits for
+    const none = analysisOf(run(0));
+    expect(none.solution.tris[CHEST]).toBe("no");
+    expect(waysText(none.missing.get(CHEST)?.inLogic ?? NONE)).toContain(
+      "Bomb Bag, or Bow",
+    );
+    // A bag found (10, or both: 20): bombs, in logic
+    expect(solutionOf(run(10)).tris[CHEST]).toBe("yes");
+    expect(solutionOf(run(20)).tris[CHEST]).toBe("yes");
+    // The bag not known: the cell's 10 says nothing, maybe still
+    const unknown = inputsOf(
+      { bombcapacity: 10, lantern: true },
+      {
+        preset: "door-randomizer",
+        settings: { ...getPreset("door-randomizer").settings },
+        smallKeys: Array(13).fill(9),
+      },
+    );
+    expect(solutionOf(unknown).tris[CHEST]).toBe("maybe");
+  });
+
+  it("asks a ganonhunt's Ganon for the pieces its goal asks (Rules.py:73-74)", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    setDoorSolver(solver);
+    // Every cell at its top, every dungeon beaten for its crystal
+    const full = Object.fromEntries(
+      Object.entries(freshItems).map(([id, fresh]) => [
+        id,
+        typeof fresh === "boolean" ? true : itemsMax[id],
+      ]),
+    );
+    const hunt = (triforce: number): Inputs => ({
+      ...inputsOf(
+        { ...full, goalpieces: 40, triforce },
+        {
+          settings: {
+            ...getPreset("door-randomizer").settings,
+            bombBag: false,
+            goal: "ganonhunt",
+          },
+          smallKeys: Array(13).fill(9),
+        },
+      ),
+      medallions: Array(10).fill(1),
+    });
+    // Every crystal, a beam sword and a fire source: the pieces alone
+    expect(solutionOf(hunt(39)).door).toBeDefined();
+    expect(solutionOf(hunt(39)).tris.ganon).not.toBe("yes");
+    expect(goModeStatusOf(hunt(39))?.tri).not.toBe("yes");
+    expect(solutionOf(hunt(40)).tris.ganon).toBe("yes");
+    expect(goModeStatusOf(hunt(40))?.tri).toBe("yes");
   });
 });
 

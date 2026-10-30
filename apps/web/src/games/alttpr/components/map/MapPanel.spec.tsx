@@ -71,6 +71,20 @@ describe("MapPanel", () => {
     expect(await screen.findByTestId("entrances-panel")).toBeInTheDocument();
   });
 
+  it("has an Entrances tab for one of the Door Randomizer's own shuffles", () => {
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().setMapView("entrances");
+    });
+    render(<MapPanel />);
+    expect(screen.queryByRole("tab", { name: "Entrances" })).toBeNull();
+    // A Lite seed leaves alttpr.com's shuffle at none
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ doorEntrances: "lite" }),
+    );
+    expect(screen.getByRole("tab", { name: "Entrances" })).toBeInTheDocument();
+  });
+
   it("says why every check is maybe in a run whose logic is not modelled", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
@@ -125,6 +139,107 @@ describe("MapPanel", () => {
     expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
       /: out of logic$/,
     );
+  });
+
+  it("says what a Door Randomizer seed's logic rests on, and names what it cannot model", () => {
+    act(() => {
+      useGameStore.getState().applyPreset("door-crosskeys");
+      useGameStore.getState().updateDoorSettings({ bombBag: false });
+    });
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The logic follows the entrances you noted",
+    );
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
+    );
+
+    // Its key drops too, in DR's world on the entrances noted
+    act(() => useGameStore.getState().updateDoorSettings({ pottery: "keys" }));
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The logic follows the entrances you noted",
+    );
+    expect(screen.getByTestId("logic-note-door")).toBeInTheDocument();
+    // A door shuffle: DR's world on the doors noted too
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ doorShuffle: "basic" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The logic follows the entrances you noted",
+    );
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Its doors are shuffled: the logic follows the doors you note in the Doors tab",
+    );
+
+    // DR's glitched logics are not alttpr.com's, which the pack ports
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().updateDoorSettings({ bombBag: false });
+    });
+    act(() =>
+      useGameStore
+        .getState()
+        .updateSettings({ glitches: "overworld_glitches" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the Door Randomizer's Overworld Glitches. Every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      "Hobo: maybe available",
+    );
+
+    act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    // Its bomb bag not known reads as on, the upgrade not known: modelled
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    act(() => useGameStore.getState().updateDoorSettings({ bombBag: false }));
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Door Randomizer seed: the logic is DR's own (1.5.8).",
+    );
+
+    // Its Overworld fork: the fork's own world, but where it is not held
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ randomizer: "owr" }),
+    );
+    // Its overworld, release, prizes and followers not known yet: named,
+    // never read as none
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the overworld shuffles not known yet (set them in Mode), the Overworld Randomizer's release not known yet (set it in Mode), the prize shuffle not known yet (set it in Mode), the follower shuffle not known yet (set it in Mode) and the custom goals not known yet (set them in Mode). Every check shows as maybe.",
+    );
+    act(() =>
+      useGameStore.getState().updateDoorSettings({
+        customGoals: false,
+        owCrossed: "none",
+        owFluteShuffle: "vanilla",
+        owLayout: "vanilla",
+        owMixed: false,
+        owrVersion: "0.8.0.2",
+        owWhirlpool: false,
+        prizeShuffle: "none",
+        shuffleFollowers: false,
+      }),
+    );
+    expect(screen.getByTestId("logic-note-door")).toHaveTextContent(
+      "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
+    );
+    act(() => useGameStore.getState().updateDoorSettings({ owLayout: "grid" }));
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the Grid overworld layout.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ owLayout: "vanilla" }),
+    );
+    // A Mystery run's hidden settings: not modelled until set, never v31's
+    act(() => {
+      useGameStore.getState().updateDoorSettings({ randomizer: "dr" });
+      useGameStore.getState().hideSetting("goal");
+    });
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: a Door Randomizer seed with hidden settings (set them in Mode). Every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
   });
 
   it("names the entrance shuffle as the cause in an Open run, not the run type", () => {

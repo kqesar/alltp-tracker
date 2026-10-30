@@ -5,6 +5,17 @@ import { Modal } from "@/components/ui/Modal";
 import { SeedImport } from "@/games/alttpr/components/ui/SeedImport";
 import { TricksDialog } from "@/games/alttpr/components/ui/TricksDialog";
 import {
+  DOOR_OPTIONS,
+  DOOR_UNSET,
+  DOOR_UNSET_TEXT,
+  type DoorSetting,
+  type DoorSettings,
+  doorEntranceChange,
+  doorEntranceModes,
+  doorEntranceOf,
+  doorOf,
+} from "@/games/alttpr/data/doorRando";
+import {
   describeSettings,
   getPreset,
   HIDDEN_ENTRANCES,
@@ -14,9 +25,9 @@ import {
   presets,
   type RunSettings,
   sameSettings,
-  TUNING,
   type TunableSetting,
   tunedOf,
+  tuningOptionsOf,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -51,8 +62,7 @@ const SettingSelect = ({
   const presetId = useGameStore((state) => state.presetId);
   const updateSettings = useGameStore((state) => state.updateSettings);
   const hideSetting = useGameStore((state) => state.hideSetting);
-  const options: readonly (readonly [boolean | number | string, string])[] =
-    TUNING[setting];
+  const options = tuningOptionsOf(settings, setting);
   const hidden = isHidden(settings, setting);
   const hideable =
     (HIDEABLE as readonly TunableSetting[]).includes(setting) &&
@@ -85,10 +95,102 @@ const SettingSelect = ({
 };
 
 /**
+ * A Door Randomizer run's own setting: its options as DR names them. A
+ * change applies at once, the run's progress kept (`updateDoorSettings`),
+ * as one undo step: in a race, where the ROM's settings are never read,
+ * the player sets them so. A setting no ROM states (`DOOR_UNSET`) offers
+ * "Not known" too, its absence, which the logic reads as "may be moved".
+ */
+const DoorSettingSelect = ({
+  id,
+  setting,
+}: {
+  id: string;
+  setting: DoorSetting;
+}) => {
+  const value = useGameStore(
+    (state) => (doorOf(state.settings) as DoorSettings | null)?.[setting],
+  );
+  const updateDoorSettings = useGameStore((state) => state.updateDoorSettings);
+  const options: readonly (readonly [boolean | string, string])[] =
+    DOOR_OPTIONS[setting];
+  const unsettable = (DOOR_UNSET as readonly DoorSetting[]).includes(setting);
+  return (
+    <select
+      className="run-settings__select"
+      data-testid={`run-setting-${setting}`}
+      id={id}
+      onChange={(event) => {
+        if (event.target.value === HIDDEN) {
+          updateDoorSettings({ [setting]: undefined });
+          return;
+        }
+        const picked = options.find(
+          ([option]) => String(option) === event.target.value,
+        );
+        if (picked) updateDoorSettings({ [setting]: picked[0] });
+      }}
+      value={value === undefined ? HIDDEN : String(value)}
+    >
+      {unsettable && <option value={HIDDEN}>? {DOOR_UNSET_TEXT}</option>}
+      {options.map(([option, words]) => (
+        <option key={String(option)} value={String(option)}>
+          {words}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+/**
+ * A Door Randomizer run's entrance shuffle: DR's own shuffles, in DR's
+ * words and order (`doorEntranceModes`), whether alttpr.com shares the
+ * shuffle (`entranceShuffle`) or not (`doorEntrances`). A change applies at
+ * once, the run's progress and notes kept, as one undo step. Hidden in a
+ * Mystery run, it offers "?", as the other selects do.
+ */
+const DoorEntranceSelect = ({ id }: { id: string }) => {
+  const settings = useGameStore((state) => state.settings);
+  const presetId = useGameStore((state) => state.presetId);
+  const updateDoorSettings = useGameStore((state) => state.updateDoorSettings);
+  const hideSetting = useGameStore((state) => state.hideSetting);
+  const options = doorEntranceModes(settings.randomizer ?? "dr");
+  const hidden = isHidden(settings, "entranceShuffle");
+  return (
+    <select
+      className="run-settings__select"
+      data-testid="run-setting-entranceShuffle"
+      id={id}
+      onChange={(event) => {
+        if (event.target.value === HIDDEN) {
+          hideSetting("entranceShuffle");
+          return;
+        }
+        const picked = options.find(
+          ([option]) => option === event.target.value,
+        );
+        if (picked) updateDoorSettings(doorEntranceChange(picked[0]));
+      }}
+      value={hidden ? HIDDEN : doorEntranceOf(settings)}
+    >
+      {(hidden || presetId === "mystery") && (
+        <option value={HIDDEN}>? Unknown</option>
+      )}
+      {options.map(([option, words]) => (
+        <option key={option} value={option}>
+          {words}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+/**
  * The key cells' switch, a display option of this device and not a seed
  * setting: it sits under the run's summary, apart from the selects. A run
- * whose maps and compasses leave their dungeons shows the cells on its own
- * (`applyRun`); in any other the player shows them to track keys by hand.
+ * whose maps and compasses or small keys leave their dungeons shows the
+ * cells on its own (`applyRun`, `keyCellsShown`); in any other the player
+ * shows them to track keys by hand.
  */
 const KeyCellsOption = () => {
   const id = useId();
@@ -109,8 +211,8 @@ const KeyCellsOption = () => {
         <label htmlFor={id}>Show key cells</label>
       </div>
       <p className="run-display__hint" id={`${id}-hint`}>
-        Shown on their own in MC, MCS and Full; elsewhere, to track keys by
-        hand.
+        Shown on their own in MC, MCS and Full and with small keys shuffled
+        alone; elsewhere, to track keys by hand.
       </p>
     </div>
   );
@@ -215,29 +317,42 @@ export const PresetSelector = () => {
       >
         <GamePicker current="alttpr" />
         <dl aria-label="Current run settings" className="run-settings">
-          {describeSettings(settings).map((row) => (
-            <div className="run-settings__row" key={row.label}>
-              <dt className="run-settings__label">
-                {row.setting ? (
-                  <label htmlFor={`${idPrefix}-${row.setting}`}>
-                    {row.label}
-                  </label>
-                ) : (
-                  row.label
-                )}
-              </dt>
-              <dd className="run-settings__value">
-                {row.setting ? (
-                  <SettingSelect
-                    id={`${idPrefix}-${row.setting}`}
-                    setting={row.setting}
-                  />
-                ) : (
-                  row.value
-                )}
-              </dd>
-            </div>
-          ))}
+          {describeSettings(settings).map((row) => {
+            const control =
+              row.setting ??
+              row.doorSetting ??
+              (row.doorEntrances ? "entranceShuffle" : undefined);
+            return (
+              <div className="run-settings__row" key={row.label}>
+                <dt className="run-settings__label">
+                  {control ? (
+                    <label htmlFor={`${idPrefix}-${control}`}>
+                      {row.label}
+                    </label>
+                  ) : (
+                    row.label
+                  )}
+                </dt>
+                <dd className="run-settings__value">
+                  {row.setting ? (
+                    <SettingSelect
+                      id={`${idPrefix}-${row.setting}`}
+                      setting={row.setting}
+                    />
+                  ) : row.doorSetting ? (
+                    <DoorSettingSelect
+                      id={`${idPrefix}-${row.doorSetting}`}
+                      setting={row.doorSetting}
+                    />
+                  ) : row.doorEntrances ? (
+                    <DoorEntranceSelect id={`${idPrefix}-entranceShuffle`} />
+                  ) : (
+                    row.value
+                  )}
+                </dd>
+              </div>
+            );
+          })}
         </dl>
         <KeyCellsOption />
         <TricksOption />

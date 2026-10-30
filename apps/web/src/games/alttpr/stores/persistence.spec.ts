@@ -109,6 +109,24 @@ describe("parseSave", () => {
     );
   });
 
+  it("reads a Door Randomizer run with its small keys alone outside their dungeons", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      dungeonItems: "keys",
+    };
+    expect(
+      parseSave(saveFile({ presetId: "door-randomizer", settings })),
+    ).toMatchObject({ ok: true, progress: { settings } });
+    expect(
+      refusal(
+        saveFile({
+          presetId: "door-randomizer",
+          settings: { ...settings, dungeonItems: "bigkeys" },
+        }),
+      ),
+    ).toMatch(/settings/);
+  });
+
   it("names the field that holds a value the tracker cannot show", () => {
     expect(refusal(saveFile({ items: { flute: 1 } }))).toMatch(
       /items\.flute must be true or false/,
@@ -160,6 +178,10 @@ describe("validateProgress", () => {
     expect(
       validateProgress({ checked: { "kings-tomb": true, nowhere: true } }),
     ).toEqual({ errors: [], value: { checked: { "kings-tomb": true } } });
+    // An Overworld Randomizer bonk drop is one it knows, its data not loaded
+    expect(
+      validateProgress({ checked: { "pyramid-tree": true } }).value,
+    ).toEqual({ checked: { "pyramid-tree": true } });
     expect(validateProgress({ checked: [] }).errors).toEqual([
       "checked must be an object",
     ]);
@@ -176,6 +198,34 @@ describe("a save's entrances", () => {
     for (const bad of [[], { "kakariko-shop": 3 }, { "Kakariko Shop": "x" }]) {
       expect(validateProgress({ entrances: bad }).errors).toEqual([
         "entrances must map entrance ids to target ids",
+      ]);
+    }
+  });
+});
+
+describe("a save's door notes", () => {
+  it("keeps ids, kinds and key counts, and refuses anything else", () => {
+    const doors = {
+      keys: { "Ganons Tower": 4 },
+      kinds: { "gt-lobby-s": "small" },
+      links: { "eastern-cannonball-n": "gt-big-chest-sw" },
+      lobbies: { eastern: "pod-lobby-s" },
+    };
+    expect(validateProgress({ doors })).toEqual({
+      errors: [],
+      value: { doors },
+    });
+    expect(validateProgress({ doors: {} }).value).toEqual({ doors: {} });
+    for (const bad of [
+      [],
+      { links: { "Eastern Lobby": "x" } },
+      { kinds: { "gt-lobby-s": "locked" } },
+      { keys: { Nowhere: 1 } },
+      { keys: { "Ganons Tower": 31 } },
+      { notes: {} },
+    ]) {
+      expect(validateProgress({ doors: bad }).errors).toEqual([
+        "doors must map door ids to door ids, portal ids to door ids, door ids to kinds and dungeons to key counts",
       ]);
     }
   });

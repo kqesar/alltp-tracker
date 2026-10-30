@@ -1,0 +1,42 @@
+{
+  "enemies": {
+    "1": {
+      "Underworld": {
+        "85": {
+          "1": "Lynel"
+        }
+      }
+    }
+  },
+  "file": "test/suite/enemy_logic/lynel_test.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Hobo": "Progressive Sword",
+    "Swamp Palace - Compass Chest": "Progressive Bow",
+    "Swamp Palace - Map Chest": "Progressive Bow",
+    "Waterfall Fairy - Left": "Progressive Sword",
+    "Waterfall Fairy - Right": "Progressive Sword",
+    "Zora's Ledge": "Hammer"
+  },
+  "settings": {
+    "dropshuffle": "underworld",
+    "enemy_shuffle": "shuffled",
+    "mode": "open"
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": [
+    {
+      "item": "Flippers",
+      "locations": {
+        "Hyrule Castle Secret Entrance Enemy #2": false,
+        "Link's Uncle": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

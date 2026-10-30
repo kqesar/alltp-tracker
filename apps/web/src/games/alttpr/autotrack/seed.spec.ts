@@ -443,6 +443,20 @@ describe("checkSeed", () => {
     });
   });
 
+  it("switches a Mystery run to a Door Randomizer's Mystery seed, never revealing into it", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+      randomizer: { kind: "door", overworld: false, version: "1.5.6" },
+    } as const;
+
+    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      kind: "differs",
+      presetId: "mystery",
+      settings: { glitches: "hybrid_major_glitches", randomizer: "dr" },
+    });
+  });
+
   it("switches a Mystery run whose glitches are set to another logic's seed", () => {
     const seed = {
       ...mysterySeed(),
@@ -529,6 +543,20 @@ describe("describeRun", () => {
         swordless: false,
       }),
     ).toBe("Swordless (Open, Ganon, 7/7, swords)");
+  });
+
+  it("names a Door Randomizer run's entrances in DR's words", () => {
+    const dr = getPreset("door-randomizer").settings;
+    expect(
+      describeRun("door-randomizer", { ...dr, doorEntrances: "lite" }),
+    ).toBe("Door Randomizer (Open, Ganon, 7/7, Lite entrances)");
+    expect(
+      describeRun("door-crosskeys", {
+        ...getPreset("door-crosskeys").settings,
+        entranceShuffle: "none",
+      }),
+    ).toMatch(/vanilla entrances/);
+    expect(describeRun("door-randomizer", dr)).not.toMatch(/entrances/);
   });
 
   it("leaves out what a Mystery run has not found", () => {

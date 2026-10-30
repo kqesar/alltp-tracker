@@ -1,0 +1,24 @@
+{
+  "file": "test/suite/hmg/entrance_bunny_pocket_sw.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {},
+  "settings": {
+    "logic": "hybridglitches",
+    "shuffle": "crossed"
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": [
+    {
+      "item": "Moon Pearl",
+      "locations": {
+        "Pyramid Fairy - Left": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

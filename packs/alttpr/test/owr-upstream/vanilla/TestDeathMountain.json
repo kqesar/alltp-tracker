@@ -1,0 +1,851 @@
+{
+  "file": "test/vanilla/TestDeathMountain.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "overrideBombCheck": true,
+    "source": "test/vanilla/TestVanilla.py:5@1ada5b5",
+    "suite": "vanilla"
+  },
+  "suite": "vanilla",
+  "tests": [
+    {
+      "cases": [
+        ["Ether Tablet", false, []],
+        ["Ether Tablet", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Ether Tablet", false, [], ["Lamp", "Ocarina"]],
+        ["Ether Tablet", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Ether Tablet", false, [], ["Magic Mirror", "Hammer"]],
+        ["Ether Tablet", false, ["Progressive Sword"], ["Progressive Sword"]],
+        ["Ether Tablet", false, [], ["Book of Mudora"]],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Ocarina",
+            "Magic Mirror",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Progressive Glove",
+            "Lamp",
+            "Magic Mirror",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Ocarina",
+            "Hammer",
+            "Hookshot",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ether Tablet",
+          true,
+          [
+            "Progressive Glove",
+            "Lamp",
+            "Hammer",
+            "Hookshot",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        ["Old Man", false, []],
+        ["Old Man", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Old Man", false, [], ["Lamp"]],
+        ["Old Man", true, ["Ocarina", "Lamp"]],
+        ["Old Man", true, ["Progressive Glove", "Lamp"]],
+        ["Spectacle Rock Cave", false, []],
+        ["Spectacle Rock Cave", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Spectacle Rock Cave", false, [], ["Lamp", "Ocarina"]],
+        ["Spectacle Rock Cave", true, ["Ocarina"]],
+        ["Spectacle Rock Cave", true, ["Progressive Glove", "Lamp"]],
+        ["Spectacle Rock", false, []],
+        ["Spectacle Rock", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Spectacle Rock", false, [], ["Lamp", "Ocarina"]],
+        ["Spectacle Rock", false, [], ["Magic Mirror"]],
+        ["Spectacle Rock", true, ["Ocarina", "Magic Mirror"]],
+        ["Spectacle Rock", true, ["Progressive Glove", "Lamp", "Magic Mirror"]]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testWestDeathMountain"
+    },
+    {
+      "cases": [
+        ["Mimic Cave", false, []],
+        ["Mimic Cave", false, [], ["Quake"]],
+        ["Mimic Cave", false, [], ["Progressive Sword"]],
+        ["Mimic Cave", false, ["Progressive Glove"], ["Progressive Glove"]],
+        ["Mimic Cave", false, [], ["Hammer"]],
+        ["Mimic Cave", false, [], ["Magic Mirror"]],
+        ["Mimic Cave", false, [], ["Moon Pearl"]],
+        ["Mimic Cave", false, [], ["Cane of Somaria"]],
+        [
+          "Mimic Cave",
+          false,
+          ["Small Key (Turtle Rock)"],
+          ["Small Key (Turtle Rock)"]
+        ],
+        [
+          "Mimic Cave",
+          true,
+          [
+            "Quake",
+            "Progressive Sword",
+            "Ocarina",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hammer",
+            "Moon Pearl",
+            "Cane of Somaria",
+            "Magic Mirror",
+            "Small Key (Turtle Rock)",
+            "Small Key (Turtle Rock)"
+          ]
+        ],
+        ["Spiral Cave", false, []],
+        ["Spiral Cave", false, [], ["Progressive Glove", "Ocarina"]],
+        ["Spiral Cave", false, [], ["Magic Mirror", "Hammer", "Hookshot"]],
+        ["Spiral Cave", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Spiral Cave", false, [], ["Hammer", "Hookshot"]],
+        ["Spiral Cave", false, ["Progressive Glove", "Lamp", "Magic Mirror"]],
+        ["Spiral Cave", false, ["Progressive Glove", "Hookshot"]],
+        ["Spiral Cave", false, ["Ocarina", "Magic Mirror"]],
+        ["Spiral Cave", false, ["Ocarina", "Hammer"]],
+        ["Spiral Cave", true, ["Ocarina", "Hookshot"]],
+        ["Spiral Cave", true, ["Progressive Glove", "Lamp", "Hookshot"]],
+        [
+          "Spiral Cave",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        ["Spiral Cave", true, ["Ocarina", "Magic Mirror", "Hammer"]],
+        ["Paradox Cave Lower - Far Left", false, []],
+        [
+          "Paradox Cave Lower - Far Left",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Lower - Far Left",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Far Left",
+          false,
+          [],
+          ["Magic Mirror", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Far Left", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Far Left",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Paradox Cave Lower - Far Left",
+          false,
+          ["Progressive Glove", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Far Left", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Lower - Far Left", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Lower - Far Left", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Far Left",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Far Left",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Lower - Far Left",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Lower - Left", false, []],
+        [
+          "Paradox Cave Lower - Left",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Lower - Left",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Left", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Paradox Cave Lower - Left", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Left",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        ["Paradox Cave Lower - Left", false, ["Progressive Glove", "Hookshot"]],
+        ["Paradox Cave Lower - Left", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Lower - Left", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Lower - Left", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Left",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Left",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Lower - Left",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Lower - Middle", false, []],
+        [
+          "Paradox Cave Lower - Middle",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Lower - Middle",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Middle",
+          false,
+          [],
+          ["Magic Mirror", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Middle", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Middle",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Paradox Cave Lower - Middle",
+          false,
+          ["Progressive Glove", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Middle", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Lower - Middle", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Lower - Middle", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Middle",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Middle",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Lower - Middle",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Lower - Right", false, []],
+        [
+          "Paradox Cave Lower - Right",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Lower - Right",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Right", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Paradox Cave Lower - Right", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Right",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Paradox Cave Lower - Right",
+          false,
+          ["Progressive Glove", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Right", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Lower - Right", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Lower - Right", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Right",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Right",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Lower - Right",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Lower - Far Right", false, []],
+        [
+          "Paradox Cave Lower - Far Right",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Lower - Far Right",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Far Right",
+          false,
+          [],
+          ["Magic Mirror", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Far Right", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Far Right",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Paradox Cave Lower - Far Right",
+          false,
+          ["Progressive Glove", "Hookshot"]
+        ],
+        ["Paradox Cave Lower - Far Right", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Lower - Far Right", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Lower - Far Right", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Lower - Far Right",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Lower - Far Right",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Lower - Far Right",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Upper - Left", false, []],
+        [
+          "Paradox Cave Upper - Left",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Upper - Left",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        ["Paradox Cave Upper - Left", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Paradox Cave Upper - Left", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Upper - Left",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        ["Paradox Cave Upper - Left", false, ["Progressive Glove", "Hookshot"]],
+        ["Paradox Cave Upper - Left", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Upper - Left", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Upper - Left", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Upper - Left",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Upper - Left",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Upper - Left",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ],
+        ["Paradox Cave Upper - Right", false, []],
+        [
+          "Paradox Cave Upper - Right",
+          false,
+          [],
+          ["Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Paradox Cave Upper - Right",
+          false,
+          [],
+          ["Magic Mirror", "Hammer", "Hookshot"]
+        ],
+        ["Paradox Cave Upper - Right", false, [], ["Magic Mirror", "Hookshot"]],
+        ["Paradox Cave Upper - Right", false, [], ["Hammer", "Hookshot"]],
+        [
+          "Paradox Cave Upper - Right",
+          false,
+          ["Progressive Glove", "Lamp", "Magic Mirror"]
+        ],
+        [
+          "Paradox Cave Upper - Right",
+          false,
+          ["Progressive Glove", "Hookshot"]
+        ],
+        ["Paradox Cave Upper - Right", false, ["Ocarina", "Magic Mirror"]],
+        ["Paradox Cave Upper - Right", false, ["Ocarina", "Hammer"]],
+        ["Paradox Cave Upper - Right", true, ["Ocarina", "Hookshot"]],
+        [
+          "Paradox Cave Upper - Right",
+          true,
+          ["Progressive Glove", "Lamp", "Hookshot"]
+        ],
+        [
+          "Paradox Cave Upper - Right",
+          true,
+          ["Progressive Glove", "Lamp", "Magic Mirror", "Hammer"]
+        ],
+        [
+          "Paradox Cave Upper - Right",
+          true,
+          ["Ocarina", "Magic Mirror", "Hammer"]
+        ]
+      ],
+      "kind": "location",
+      "line": 40,
+      "name": "testEastDeathMountain"
+    },
+    {
+      "cases": [
+        ["Spike Cave", false, []],
+        ["Spike Cave", false, [], ["Progressive Glove"]],
+        ["Spike Cave", false, [], ["Moon Pearl"]],
+        ["Spike Cave", false, [], ["Hammer"]],
+        ["Spike Cave", false, [], ["Cape", "Cane of Byrna"]],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Bottle",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Bottle",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Bottle",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Bottle",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/2)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/2)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/2)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/2)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/4)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/4)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cape"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/4)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Lamp",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Spike Cave",
+          true,
+          [
+            "Magic Upgrade (1/4)",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina",
+            "Cane of Byrna"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 166,
+      "name": "testWestDarkWorldDeathMountain"
+    },
+    {
+      "cases": [
+        ["Superbunny Cave - Top", false, []],
+        ["Superbunny Cave - Top", false, [], ["Progressive Glove"]],
+        ["Superbunny Cave - Top", false, [], ["Moon Pearl"]],
+        [
+          "Superbunny Cave - Top",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Superbunny Cave - Top",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Superbunny Cave - Top",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ],
+        [
+          "Superbunny Cave - Top",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Lamp"
+          ]
+        ],
+        ["Superbunny Cave - Bottom", false, []],
+        ["Superbunny Cave - Bottom", false, [], ["Progressive Glove"]],
+        ["Superbunny Cave - Bottom", false, [], ["Moon Pearl"]],
+        [
+          "Superbunny Cave - Bottom",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Superbunny Cave - Bottom",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Superbunny Cave - Bottom",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ],
+        [
+          "Superbunny Cave - Bottom",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Lamp"
+          ]
+        ],
+        ["Hookshot Cave - Bottom Right", false, []],
+        ["Hookshot Cave - Bottom Right", false, [], ["Progressive Glove"]],
+        ["Hookshot Cave - Bottom Right", false, [], ["Moon Pearl"]],
+        [
+          "Hookshot Cave - Bottom Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Hookshot Cave - Bottom Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Ocarina",
+            "Pegasus Boots"
+          ]
+        ],
+        [
+          "Hookshot Cave - Bottom Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ],
+        [
+          "Hookshot Cave - Bottom Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Hammer",
+            "Lamp",
+            "Pegasus Boots"
+          ]
+        ],
+        ["Hookshot Cave - Bottom Left", false, []],
+        ["Hookshot Cave - Bottom Left", false, [], ["Progressive Glove"]],
+        ["Hookshot Cave - Bottom Left", false, [], ["Moon Pearl"]],
+        [
+          "Hookshot Cave - Bottom Left",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Hookshot Cave - Bottom Left",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ],
+        ["Hookshot Cave - Top Left", false, []],
+        ["Hookshot Cave - Top Left", false, [], ["Progressive Glove"]],
+        ["Hookshot Cave - Top Left", false, [], ["Moon Pearl"]],
+        [
+          "Hookshot Cave - Top Left",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Hookshot Cave - Top Left",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ],
+        ["Hookshot Cave - Top Right", false, []],
+        ["Hookshot Cave - Top Right", false, [], ["Progressive Glove"]],
+        ["Hookshot Cave - Top Right", false, [], ["Moon Pearl"]],
+        [
+          "Hookshot Cave - Top Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Hookshot Cave - Top Right",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Hookshot",
+            "Lamp"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 187,
+      "name": "testEastDarkWorldDeathMountain"
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "file": "test/suite/hmg/fireless_ice.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Ice Palace - Iced T Room": "Fire Rod",
+    "Ice Palace - Map Chest": "Bombos"
+  },
+  "settings": {
+    "logic": "hybridglitches"
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": []
+}

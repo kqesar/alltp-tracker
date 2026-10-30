@@ -1,0 +1,106 @@
+{
+  "generated": "By packs/alttpr/scripts/record-dr-spoilers.mjs (vanilla|entrances): spoiler races' DR text logs and avianart.games seeds' JSON spoilers, entrances shuffled. Record again, never edit.",
+  "logs": {
+    "avianart-7E8eFbBNH.json": {
+      "address": "https://avianart.games/perm/7E8eFbBNH",
+      "kept": [
+        "meta",
+        "Entrances",
+        "Light World",
+        "Dark World",
+        "Caves",
+        "Hyrule Castle",
+        "Eastern Palace",
+        "Desert Palace",
+        "Tower of Hera",
+        "Agahnims Tower",
+        "Palace of Darkness",
+        "Thieves Town",
+        "Skull Woods",
+        "Swamp Palace",
+        "Ice Palace",
+        "Misery Mire",
+        "Turtle Rock",
+        "Ganons Tower",
+        "Starting Inventory",
+        "Special",
+        "Shops",
+        "Bosses",
+        "playthrough"
+      ],
+      "recorded": "2026-10-30",
+      "sha256": "c73511bbb334cdcedff6097c95afc66718cd5ae024634a9947c454a43a0cbaf9",
+      "version": "1.5.8-u"
+    },
+    "DR_423849316_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/99cc159b-d2c2-4e6e-84f9-f0ac45d9e42c/DR_423849316_Spoiler.txt",
+      "kept": [
+        "Requirements",
+        "Entrances",
+        "Locations",
+        "Shops",
+        "Playthrough"
+      ],
+      "race": "https://racetime.gg/alttpr/comic-chestgame-8086",
+      "recorded": "2026-10-30",
+      "sha256": "b10f1c5d29711a6a360a7fac7f39cca7271b627aa1d4e1b638e0937b7c29a64a",
+      "version": "ALttP Dungeon Randomizer Version 1.4.8.1-u  -  Seed: 423849316"
+    },
+    "DR_545713192_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/f6866f60-23e5-4f32-9d4a-5be1654b797d/DR_545713192_Spoiler.txt",
+      "kept": [
+        "Requirements",
+        "Entrances",
+        "Locations",
+        "Shops",
+        "Playthrough"
+      ],
+      "race": "https://racetime.gg/alttpr/kind-hera-6525",
+      "recorded": "2026-10-30",
+      "sha256": "f0d695a5185314aa42f2e8becfbdc7ce81f0d5e0276ff5ba05e1688c154fe609",
+      "version": "ALttP Dungeon Randomizer Version 1.4.8.1-u  -  Seed: 545713192"
+    },
+    "DR_643975221_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/e716b54e-d625-4947-ac16-ef23e9d429d2/DR_643975221_Spoiler.txt",
+      "kept": [
+        "Requirements",
+        "Entrances",
+        "Locations",
+        "Shops",
+        "Playthrough"
+      ],
+      "race": "https://racetime.gg/alttpr/cunning-validation-2430",
+      "recorded": "2026-10-30",
+      "sha256": "bc369114449bd73fffabd60525465117dbe0508ae20b41ec6db728cc93fd21c2",
+      "version": "ALttP Dungeon Randomizer Version 1.4.8.1-u  -  Seed: 643975221"
+    },
+    "DR_662971471_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/a1420381-bd1d-4d0e-a893-203fdd305b1e/DR_662971471_Spoiler.txt",
+      "kept": [
+        "Requirements",
+        "Entrances",
+        "Locations",
+        "Shops",
+        "Playthrough"
+      ],
+      "race": "https://racetime.gg/alttpr/zany-silvers-3916",
+      "recorded": "2026-10-30",
+      "sha256": "63f45d0b493b3a902b36a1b8a8034e3feaa7c1b567fad2d99ebee9e08d6bd653",
+      "version": "ALttP Dungeon Randomizer Version 1.4.8-u  -  Seed: 662971471"
+    },
+    "DR_832495269_Spoiler.txt": {
+      "address": "https://botofmudora.s3.us-east-1.amazonaws.com/seeds/93deeabb-bcbc-4da2-a031-8f4458955e59/DR_832495269_Spoiler.txt",
+      "kept": [
+        "Requirements",
+        "Entrances",
+        "Locations",
+        "Shops",
+        "Playthrough"
+      ],
+      "race": "https://racetime.gg/alttpr/smelly-pieceofheart-6451",
+      "recorded": "2026-10-30",
+      "sha256": "630e222d3666d4320e57c5d6e6ead5e21ed7bcd31032e30d255d45bbb3ff2f97",
+      "version": "ALttP Dungeon Randomizer Version 1.4.8.1-u  -  Seed: 832495269"
+    }
+  }
+}

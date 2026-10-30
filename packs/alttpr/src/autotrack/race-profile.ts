@@ -19,6 +19,22 @@ const RULES_URL =
 const HUD_COUNTS =
   "The tracker may also display and/or react to changes in current bomb count, arrow count, rupee count, heart count, heart piece count, and bottle contents.";
 
+/**
+ * v2.0's examples of a location, and the line that follows them: a pot, an
+ * enemy drop or a shop item is a location only in a mode that shuffles it.
+ */
+const SHUFFLED_LOCATIONS =
+  "Examples: a chest, a free-standing item, an NPC, the pedestal, a pot, a bonkable object, a shop item, or an enemy drop. The last 4 examples are only considered locations in modes where they are shuffled";
+
+/**
+ * What Race Mode adds to the line: it reads such a table only while the
+ * run's settings, which the player sets and the ROM never tells in a race,
+ * shuffle what it records (the app's opt-in switch), and counts only the
+ * locations those settings make.
+ */
+const ONLY_SHUFFLED =
+  " Race Mode reads the table only while the run's settings, set by the player, shuffle them, and counts only the locations they make.";
+
 /** What a category v2.0 allows but Race Mode keeps forbidden says of it. */
 const STRICT =
   " Race Mode still leaves it to the player: deliberately strict, pending clarification with the race admins.";
@@ -45,7 +61,16 @@ const STRICT =
  *   name, the crystals as a count, never which is crystal 5 or 6 (the
  *   decoders read their field and let the count alone out), nor which
  *   dungeon gave which (v2.0: "An auto-tracker may not associate an
- *   acquired item with a specific location").
+ *   acquired item with a specific location");
+ * - in a Door Randomizer seed, the pots, enemy drops and shop items
+ *   checked (`pots`, `enemy-drops`, `shop-items`: "only considered
+ *   locations in modes where they are shuffled"), from the tables DR's base
+ *   patch keeps beside the save ($7F:6018-$7F:6517: RoomPotData,
+ *   SpriteDropData, PurchaseCounts, aerinon/z3randomizer d0f4651 sram.asm:
+ *   390-392, 644-646), each read only while the run's settings, which the
+ *   player sets, shuffle what it records (the app's switches), and decoded
+ *   for those settings' locations alone. Never a room or a door: the race
+ *   admins' June 2026 clarification bars the rooms and transitions.
  * It keeps forbidden the rest of the HUD's counts and the stats v2.0 opens
  * within limits, and the bomb and arrow capacity upgrades (`capacities`: v2.0
  * names the counts held, not how many may be held), the ROM's settings, and the ROM's prize table, a
@@ -72,6 +97,12 @@ const STRICT =
  */
 export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
   categories: {
+    // The Overworld Randomizer's bonk drops: v2.0 names no such location,
+    // and the owner keeps them out of races (in doubt, forbidden)
+    "bonk-drops": {
+      permitted: false,
+      rule: "Anything not covered in this document is, by default, considered not permitted: v2.0 names no bonk drop, so Race Mode never reads the Overworld Randomizer's.",
+    },
     "boss-kills": {
       permitted: true,
       rule: "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal). This includes not auto-tracking who the dungeon boss is in Enemizer modes before the boss is defeated.",
@@ -80,6 +111,12 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     "dungeon-checks": {
       permitted: true,
       rule: "An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations. The tracker is allowed to display how many locations have been cleared, both in total, and per dungeon.",
+    },
+    // The Door Randomizer's enemy drops (key drops and every enemy's), as
+    // SpriteDropData keeps them
+    "enemy-drops": {
+      permitted: true,
+      rule: `${SHUFFLED_LOCATIONS}${ONLY_SHUFFLED}`,
     },
     entrances: {
       permitted: false,
@@ -122,6 +159,12 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "An auto-tracker is allowed to track whether or not a location's content has been acquired by the player. This includes: overworld-locations, underworld-locations, and dungeon-locations.",
     },
+    // The Door Randomizer's pots (key pots and pottery), as RoomPotData
+    // keeps them
+    pots: {
+      permitted: true,
+      rule: `${SHUFFLED_LOCATIONS}${ONLY_SHUFFLED}`,
+    },
     // Which prize each dungeon holds, as the ROM's table and the world map
     // tell it, and the world Link is in, which picks the map's half
     prizes: {
@@ -140,6 +183,12 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
       permitted: true,
       rule: "Auto-trackers are allowed to read any SRAM and/or ROM locations at any time, except ROM addresses associated with entrance locations and/or chest or other location contents.",
     },
+    // The Door Randomizer's shop slots bought (shopsanity, take-any caves),
+    // as PurchaseCounts keeps them
+    "shop-items": {
+      permitted: true,
+      rule: `${SHUFFLED_LOCATIONS}${ONLY_SHUFFLED}`,
+    },
     spheres: {
       permitted: false,
       rule: "An auto-tracker may not associate an acquired item with a specific location, nor can it derive any conclusions from the order or timing by which items are acquired.",
@@ -151,6 +200,7 @@ export const ALTTPR_RACE_PROFILE: RaceProfile = defineRaceProfile({
     [0x00_ffb0, 0x00_ffdf],
     [0x7e_0010, 0x7e_0010],
     [0x7e_f000, 0x7e_f500],
+    [0x7f_6018, 0x7f_6517],
     [0x30_8213, 0x30_8214],
   ],
   raceFlag: { bus: 0x30_8213, openValue: 0x00, raceValue: 0x01 },

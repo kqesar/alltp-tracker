@@ -1,7 +1,8 @@
+import { isBagRun } from "@/games/alttpr/data/doorRando";
 import {
   BOTTLE_CONTENTS,
   bottleSlotOf,
-  CAPACITIES,
+  capacityOf,
   heartsAfter,
   heartsOf,
 } from "@/games/alttpr/data/items";
@@ -71,7 +72,12 @@ export const applyVoice = (action: VoiceAction): Heard => {
   const dungeon = Number(index);
   if (kind === "smallkey") {
     const now = store.smallKeys[dungeon] ?? 0;
-    const next = changedValue(change, now, 0, smallKeysMax(dungeon));
+    const next = changedValue(
+      change,
+      now,
+      0,
+      smallKeysMax(dungeon, store.settings),
+    );
     store.setSmallKeys(dungeon, Number(next));
     return { changed: next !== now, words };
   }
@@ -94,11 +100,15 @@ export const applyVoice = (action: VoiceAction): Heard => {
     store.handleItemClick(control, 1);
     return { changed: useGameStore.getState().items !== before, words };
   }
-  // A capacity said is an upgrade found: 5 more, never past the most
-  const capacity = CAPACITIES[control];
+  // A capacity said is an upgrade found: 5 more (a bag in a bomb-bag
+  // run), never past the most
+  const capacity = capacityOf(control, isBagRun(store.settings));
   if (capacity !== undefined) {
     const was = Number(store.items[control]);
-    const next = Math.min(capacity.top, Math.max(capacity.start, was) + 5);
+    const next = Math.min(
+      capacity.top,
+      Math.max(capacity.start, was) + capacity.step,
+    );
     store.setItem(control, next);
     return { changed: next !== was, words };
   }

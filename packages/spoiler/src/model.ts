@@ -5,6 +5,8 @@ export type SpoilerGame = "alttpr" | "sm" | "smz3";
 export type SpoilerFormat =
   | "vt"
   | "er"
+  /** The Door Randomizer's (and its Overworld fork's), text or JSON. */
+  | "dr"
   | "smz3-yaml"
   | "smz3-api"
   | "map-rando";

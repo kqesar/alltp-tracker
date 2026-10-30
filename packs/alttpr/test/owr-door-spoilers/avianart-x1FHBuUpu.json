@@ -1,0 +1,4102 @@
+{
+  "meta": {
+    "version": "1.5.7-u",
+    "versions": {
+      "Door": "1.5.7-u",
+      "Overworld": "0.8.0.2-u"
+    },
+    "logic": "noglitches",
+    "mode": "open",
+    "bombbag": false,
+    "weapons": "random",
+    "flute_mode": "normal",
+    "bow_mode": "progressive",
+    "goal": "ganon",
+    "custom_goals": {
+      "gtentry": null,
+      "ganongoal": null,
+      "pedgoal": null,
+      "murahgoal": null
+    },
+    "ow_layout": "vanilla",
+    "ow_parallel": false,
+    "ow_terrain": false,
+    "ow_crossed": "none",
+    "ow_keepsimilar": false,
+    "ow_mixed": false,
+    "ow_whirlpool": false,
+    "ow_fluteshuffle": "vanilla",
+    "ow_fog": false,
+    "bonk_drops": false,
+    "shuffle_followers": false,
+    "shuffle": "vanilla",
+    "shuffleganon": true,
+    "shufflelinks": false,
+    "shuffletavern": true,
+    "skullwoods": "original",
+    "linked_drops": "unset",
+    "take_any": "none",
+    "overworld_map": "default",
+    "door_shuffle": "crossed",
+    "intensity": 2,
+    "door_type_mode": "original",
+    "trap_door_mode": "optional",
+    "key_logic": "partial",
+    "decoupledoors": true,
+    "door_self_loops": false,
+    "dungeon_counters": "default",
+    "item_pool": "normal",
+    "item_functionality": "normal",
+    "beemizer": "0",
+    "gt_crystals": 7,
+    "ganon_crystals": 7,
+    "open_pyramid": "auto",
+    "accessibility": "items",
+    "restricted_boss_items": "none",
+    "hints": false,
+    "mapshuffle": "none",
+    "compassshuffle": "none",
+    "keyshuffle": "none",
+    "bigkeyshuffle": "none",
+    "prizeshuffle": "none",
+    "boss_shuffle": "none",
+    "enemy_shuffle": "none",
+    "enemy_health": "default",
+    "enemy_damage": "default",
+    "any_enemy_logic": "allow_all",
+    "players": 1,
+    "teams": 1,
+    "experimental": false,
+    "dropshuffle": "none",
+    "pottery": "none",
+    "potshuffle": false,
+    "shopsanity": false,
+    "pseudoboots": false,
+    "mirrorscroll": false,
+    "triforcegoal": 0,
+    "triforcepool": 0,
+    "race": false,
+    "user_notes": "",
+    "code": "QAAAQoA4OAAAAAEAAAAJAA==",
+    "seed": 789333693,
+    "limited_run": "none",
+    "limited_run_args": "",
+    "hash": "Bow, Cape, Flippers, Flippers, Boots",
+    "gentime": 1793399971
+  },
+  "Entrances": [
+    {
+      "entrance": "Links House",
+      "exit": "Chris Houlihan Room Exit",
+      "direction": "exit"
+    }
+  ],
+  "Light World": {
+    "Master Sword Pedestal": "Rupees (5)",
+    "Mushroom": "Progressive Bow",
+    "Ether Tablet": "Arrows (10)",
+    "Spectacle Rock": "Rupees (300)",
+    "Old Man": "Piece of Heart",
+    "Floating Island": "Rupees (20)",
+    "King Zora": "Boss Heart Container",
+    "Zora's Ledge": "Bombs (3)",
+    "Bottle Merchant": "Boss Heart Container",
+    "Flute Activation": "Ocarina (Activated)",
+    "Maze Race": "Fire Rod",
+    "Flute Spot": "Cape",
+    "Hobo": "Progressive Sword",
+    "Desert Ledge": "Boss Heart Container",
+    "Bombos Tablet": "Progressive Sword",
+    "Lake Hylia Island": "Arrows (10)",
+    "Purple Chest": "Bombs (3)",
+    "Sunken Treasure": "Progressive Glove"
+  },
+  "Dark World": {
+    "Bumper Cave Ledge": "Red Boomerang",
+    "Catfish": "Bombs (3)",
+    "Pyramid": "Piece of Heart",
+    "Digging Game": "Rupees (300)",
+    "Stumpy": "Boss Heart Container"
+  },
+  "Caves": {
+    "Lost Woods Hideout": "Rupees (50)",
+    "Lumberjack Tree": "Magic Powder",
+    "Spectacle Rock Cave": "Blue Boomerang",
+    "Spiral Cave": "Rupee (1)",
+    "Mimic Cave": "Boss Heart Container",
+    "Paradox Cave Lower - Far Left": "Bombs (3)",
+    "Paradox Cave Lower - Left": "Arrows (10)",
+    "Paradox Cave Lower - Right": "Rupees (20)",
+    "Paradox Cave Lower - Far Right": "Rupees (20)",
+    "Paradox Cave Lower - Middle": "Rupees (20)",
+    "Paradox Cave Upper - Left": "Ether",
+    "Paradox Cave Upper - Right": "Bombs (3)",
+    "Waterfall Fairy - Left": "Rupees (20)",
+    "Waterfall Fairy - Right": "Bombs (3)",
+    "Bonk Rock Cave": "Arrows (10)",
+    "Graveyard Cave": "Book of Mudora",
+    "King's Tomb": "Piece of Heart",
+    "Potion Shop": "Rupees (20)",
+    "Kakariko Well - Left": "Bottle (Green Potion)",
+    "Kakariko Well - Middle": "Rupees (20)",
+    "Kakariko Well - Right": "Flippers",
+    "Kakariko Well - Bottom": "Rupees (50)",
+    "Kakariko Well - Top": "Piece of Heart",
+    "Blind's Hideout - Left": "Rupees (5)",
+    "Blind's Hideout - Right": "Piece of Heart",
+    "Blind's Hideout - Far Left": "Rupees (20)",
+    "Blind's Hideout - Far Right": "Arrows (10)",
+    "Blind's Hideout - Top": "Piece of Heart",
+    "Chicken House": "Piece of Heart",
+    "Sick Kid": "Piece of Heart",
+    "Kakariko Tavern": "Bombs (3)",
+    "Link's Uncle": "Boss Heart Container",
+    "Secret Passage": "Rupees (20)",
+    "Sahasrahla's Hut - Left": "Rupees (20)",
+    "Sahasrahla's Hut - Middle": "Bombs (3)",
+    "Sahasrahla's Hut - Right": "Quake",
+    "Sahasrahla": "Piece of Heart",
+    "Blacksmith": "Rupees (20)",
+    "Magic Bat": "Piece of Heart",
+    "Library": "Arrows (10)",
+    "Link's House": "Rupees (20)",
+    "Checkerboard Cave": "Shovel",
+    "Aginah's Cave": "Moon Pearl",
+    "Cave 45": "Rupee (1)",
+    "Mini Moldorm Cave - Far Left": "Arrows (10)",
+    "Mini Moldorm Cave - Left": "Piece of Heart",
+    "Mini Moldorm Cave - Right": "Progressive Glove",
+    "Mini Moldorm Cave - Far Right": "Hookshot",
+    "Mini Moldorm Cave - Generous Guy": "Piece of Heart",
+    "Ice Rod Cave": "Arrows (10)",
+    "Floodgate Chest": "Rupees (20)",
+    "Spike Cave": "Rupees (300)",
+    "Hookshot Cave - Bottom Right": "Rupees (20)",
+    "Hookshot Cave - Top Right": "Progressive Bow",
+    "Hookshot Cave - Top Left": "Piece of Heart",
+    "Hookshot Cave - Bottom Left": "Progressive Shield",
+    "Superbunny Cave - Top": "Rupees (20)",
+    "Superbunny Cave - Bottom": "Rupees (20)",
+    "Chest Game": "Piece of Heart",
+    "C-Shaped House": "Cane of Somaria",
+    "Brewery": "Bombs (3)",
+    "Pyramid Fairy - Left": "Bombs (3)",
+    "Pyramid Fairy - Right": "Arrows (10)",
+    "Ganon": "Triforce",
+    "Peg Cave": "Piece of Heart",
+    "Mire Shed - Left": "Bottle (Fairy)",
+    "Mire Shed - Right": "Progressive Armor",
+    "Hype Cave - Top": "Rupees (20)",
+    "Hype Cave - Middle Right": "Bottle (Fairy)",
+    "Hype Cave - Middle Left": "Progressive Sword",
+    "Hype Cave - Bottom": "Rupees (20)",
+    "Hype Cave - Generous Guy": "Rupees (300)"
+  },
+  "Hyrule Castle": {
+    "Sewers - Secret Room - Left @ Hyrule Castle": "Rupees (20)",
+    "Sewers - Secret Room - Middle @ Hyrule Castle": "Small Key (Escape)",
+    "Sewers - Secret Room - Right @ Hyrule Castle": "Rupees (20)",
+    "Sanctuary @ Hyrule Castle": "Small Key (Escape)",
+    "Ice Palace - Spike Room @ Hyrule Castle": "Rupees (50)",
+    "Turtle Rock - Chain Chomps @ Hyrule Castle": "Magic Upgrade (1/2)",
+    "Turtle Rock - Big Key Chest @ Hyrule Castle": "Piece of Heart",
+    "Ganons Tower - DMs Room - Top Left @ Hyrule Castle": "Lamp",
+    "Ganons Tower - DMs Room - Top Right @ Hyrule Castle": "Compass (Escape)",
+    "Ganons Tower - DMs Room - Bottom Left @ Hyrule Castle": "Map (Escape)",
+    "Ganons Tower - DMs Room - Bottom Right @ Hyrule Castle": "Bombs (3)"
+  },
+  "Eastern Palace": {
+    "Eastern Palace - Cannonball Chest @ Eastern Palace": "Big Key (Eastern Palace)",
+    "Eastern Palace - Boss @ Eastern Palace": "Arrows (10)",
+    "Eastern Palace - Prize @ Eastern Palace": "Red Pendant",
+    "Palace of Darkness - Map Chest @ Eastern Palace": "Small Key (Eastern Palace)",
+    "Skull Woods - Pot Prison @ Eastern Palace": "Compass (Eastern Palace)",
+    "Misery Mire - Big Chest @ Eastern Palace": "Map (Eastern Palace)",
+    "Misery Mire - Map Chest @ Eastern Palace": "Rupees (20)"
+  },
+  "Desert Palace": {
+    "Eastern Palace - Big Chest @ Desert Palace": "Small Key (Desert Palace)",
+    "Desert Palace - Compass Chest @ Desert Palace": "Big Key (Desert Palace)",
+    "Desert Palace - Boss @ Desert Palace": "Bombs (3)",
+    "Desert Palace - Prize @ Desert Palace": "Crystal 6",
+    "Palace of Darkness - Compass Chest @ Desert Palace": "Rupees (20)",
+    "Palace of Darkness - Harmless Hellway @ Desert Palace": "Bombos",
+    "Swamp Palace - West Chest @ Desert Palace": "Progressive Shield",
+    "Turtle Rock - Roller Room - Left @ Desert Palace": "Piece of Heart",
+    "Turtle Rock - Roller Room - Right @ Desert Palace": "Compass (Desert Palace)",
+    "Ganons Tower - Tile Room @ Desert Palace": "Small Key (Desert Palace)",
+    "Ganons Tower - Randomizer Room - Top Left @ Desert Palace": "Piece of Heart",
+    "Ganons Tower - Randomizer Room - Top Right @ Desert Palace": "Map (Desert Palace)",
+    "Ganons Tower - Randomizer Room - Bottom Left @ Desert Palace": "Rupees (50)",
+    "Ganons Tower - Randomizer Room - Bottom Right @ Desert Palace": "Boss Heart Container"
+  },
+  "Tower of Hera": {
+    "Tower of Hera - Map Chest @ Tower of Hera": "Small Key (Tower of Hera)",
+    "Tower of Hera - Compass Chest @ Tower of Hera": "Boss Heart Container",
+    "Tower of Hera - Big Chest @ Tower of Hera": "Map (Tower of Hera)",
+    "Tower of Hera - Boss @ Tower of Hera": "Big Key (Tower of Hera)",
+    "Tower of Hera - Prize @ Tower of Hera": "Crystal 3",
+    "Palace of Darkness - The Arena - Bridge @ Tower of Hera": "Rupees (20)",
+    "Swamp Palace - Map Chest @ Tower of Hera": "Compass (Tower of Hera)",
+    "Thieves' Town - Big Key Chest @ Tower of Hera": "Small Key (Tower of Hera)"
+  },
+  "Agahnims Tower": {
+    "Desert Palace - Big Key Chest @ Agahnims Tower": "Big Key (Agahnims Tower)",
+    "Castle Tower - Room 03 @ Agahnims Tower": "Piece of Heart",
+    "Agahnim 1 @ Agahnims Tower": "Beat Agahnim 1",
+    "Palace of Darkness - The Arena - Ledge @ Agahnims Tower": "Map (Agahnims Tower)",
+    "Thieves' Town - Big Chest @ Agahnims Tower": "Small Key (Agahnims Tower)",
+    "Misery Mire - Bridge Chest @ Agahnims Tower": "Progressive Shield",
+    "Turtle Rock - Crystaroller Room @ Agahnims Tower": "Compass (Agahnims Tower)"
+  },
+  "Palace of Darkness": {
+    "Desert Palace - Torch @ Palace of Darkness": "Map (Palace of Darkness)",
+    "Desert Palace - Big Chest @ Palace of Darkness": "Progressive Sword",
+    "Tower of Hera - Big Key Chest @ Palace of Darkness": "Sanctuary Heart Container",
+    "Palace of Darkness - Boss @ Palace of Darkness": "Arrows (10)",
+    "Palace of Darkness - Prize @ Palace of Darkness": "Green Pendant",
+    "Thieves' Town - Compass Chest @ Palace of Darkness": "Small Key (Palace of Darkness)",
+    "Ice Palace - Freezor Chest @ Palace of Darkness": "Small Key (Palace of Darkness)",
+    "Ice Palace - Iced T Room @ Palace of Darkness": "Compass (Palace of Darkness)",
+    "Ice Palace - Big Chest @ Palace of Darkness": "Small Key (Palace of Darkness)",
+    "Misery Mire - Compass Chest @ Palace of Darkness": "Big Key (Palace of Darkness)",
+    "Misery Mire - Big Key Chest @ Palace of Darkness": "Small Key (Palace of Darkness)"
+  },
+  "Thieves Town": {
+    "Eastern Palace - Map Chest @ Thieves Town": "Rupees (20)",
+    "Desert Palace - Map Chest @ Thieves Town": "Single Arrow",
+    "Palace of Darkness - Shooter Room @ Thieves Town": "Big Key (Thieves Town)",
+    "Palace of Darkness - Dark Maze - Top @ Thieves Town": "Map (Thieves Town)",
+    "Palace of Darkness - Dark Maze - Bottom @ Thieves Town": "Small Key (Thieves Town)",
+    "Palace of Darkness - Big Chest @ Thieves Town": "Bombs (3)",
+    "Swamp Palace - Flooded Room - Left @ Thieves Town": "Rupees (20)",
+    "Swamp Palace - Flooded Room - Right @ Thieves Town": "Compass (Thieves Town)",
+    "Swamp Palace - Waterfall Room @ Thieves Town": "Rupees (5)",
+    "Thieves' Town - Map Chest @ Thieves Town": "Piece of Heart",
+    "Thieves' Town - Ambush Chest @ Thieves Town": "Bombs (3)",
+    "Thieves' Town - Boss @ Thieves Town": "Ocarina",
+    "Thieves' Town - Prize @ Thieves Town": "Crystal 4",
+    "Thieves' Town - Attic @ Thieves Town": "Rupees (5)",
+    "Thieves' Town - Blind's Cell @ Thieves Town": "Piece of Heart",
+    "Ganons Tower - Compass Room - Top Left @ Thieves Town": "Small Key (Thieves Town)",
+    "Ganons Tower - Compass Room - Top Right @ Thieves Town": "Rupees (20)",
+    "Ganons Tower - Compass Room - Bottom Left @ Thieves Town": "Small Key (Thieves Town)",
+    "Ganons Tower - Compass Room - Bottom Right @ Thieves Town": "Ice Rod"
+  },
+  "Skull Woods": {
+    "Hyrule Castle - Boomerang Chest @ Skull Woods": "Bombs (3)",
+    "Sewers - Dark Cross @ Skull Woods": "Small Key (Skull Woods)",
+    "Tower of Hera - Basement Cage @ Skull Woods": "Small Key (Skull Woods)",
+    "Skull Woods - Map Chest @ Skull Woods": "Map (Skull Woods)",
+    "Skull Woods - Big Chest @ Skull Woods": "Rupees (50)",
+    "Skull Woods - Pinball Room @ Skull Woods": "Cane of Byrna",
+    "Skull Woods - Compass Chest @ Skull Woods": "Rupees (20)",
+    "Skull Woods - Big Key Chest @ Skull Woods": "Small Key (Skull Woods)",
+    "Skull Woods - Bridge Room @ Skull Woods": "Compass (Skull Woods)",
+    "Skull Woods - Boss @ Skull Woods": "Big Key (Skull Woods)",
+    "Skull Woods - Prize @ Skull Woods": "Crystal 2"
+  },
+  "Swamp Palace": {
+    "Hyrule Castle - Map Chest @ Swamp Palace": "Small Key (Swamp Palace)",
+    "Swamp Palace - Entrance @ Swamp Palace": "Compass (Swamp Palace)",
+    "Swamp Palace - Boss @ Swamp Palace": "Piece of Heart",
+    "Swamp Palace - Prize @ Swamp Palace": "Crystal 1",
+    "Turtle Rock - Compass Chest @ Swamp Palace": "Rupees (100)",
+    "Ganons Tower - Map Chest @ Swamp Palace": "Small Key (Swamp Palace)",
+    "Ganons Tower - Firesnake Room @ Swamp Palace": "Rupees (300)",
+    "Ganons Tower - Validation Chest @ Swamp Palace": "Map (Swamp Palace)"
+  },
+  "Ice Palace": {
+    "Palace of Darkness - Dark Basement - Left @ Ice Palace": "Big Key (Ice Palace)",
+    "Palace of Darkness - Dark Basement - Right @ Ice Palace": "Small Key (Ice Palace)",
+    "Ice Palace - Big Key Chest @ Ice Palace": "Compass (Ice Palace)",
+    "Ice Palace - Map Chest @ Ice Palace": "Piece of Heart",
+    "Ice Palace - Boss @ Ice Palace": "Progressive Armor",
+    "Ice Palace - Prize @ Ice Palace": "Crystal 7",
+    "Misery Mire - Main Lobby @ Ice Palace": "Boss Heart Container",
+    "Ganons Tower - Mini Helmasaur Room - Left @ Ice Palace": "Rupees (50)",
+    "Ganons Tower - Mini Helmasaur Room - Right @ Ice Palace": "Rupees (20)",
+    "Ganons Tower - Pre-Moldorm Chest @ Ice Palace": "Map (Ice Palace)"
+  },
+  "Misery Mire": {
+    "Swamp Palace - Big Chest @ Misery Mire": "Mushroom",
+    "Misery Mire - Boss @ Misery Mire": "Hammer",
+    "Misery Mire - Prize @ Misery Mire": "Crystal 5",
+    "Ganons Tower - Bob's Torch @ Misery Mire": "Big Key (Misery Mire)",
+    "Ganons Tower - Hope Room - Left @ Misery Mire": "Small Key (Misery Mire)",
+    "Ganons Tower - Hope Room - Right @ Misery Mire": "Map (Misery Mire)",
+    "Ganons Tower - Big Chest @ Misery Mire": "Bombs (10)",
+    "Ganons Tower - Bob's Chest @ Misery Mire": "Bug Catching Net",
+    "Ganons Tower - Big Key Room - Left @ Misery Mire": "Pegasus Boots",
+    "Ganons Tower - Big Key Room - Right @ Misery Mire": "Boss Heart Container",
+    "Ganons Tower - Big Key Chest @ Misery Mire": "Compass (Misery Mire)"
+  },
+  "Turtle Rock": {
+    "Eastern Palace - Big Key Chest @ Turtle Rock": "Arrows (10)",
+    "Ice Palace - Compass Chest @ Turtle Rock": "Rupees (50)",
+    "Turtle Rock - Big Chest @ Turtle Rock": "Compass (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Bottom Left @ Turtle Rock": "Small Key (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Bottom Right @ Turtle Rock": "Small Key (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Top Left @ Turtle Rock": "Big Key (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Top Right @ Turtle Rock": "Map (Turtle Rock)",
+    "Turtle Rock - Boss @ Turtle Rock": "Magic Mirror",
+    "Turtle Rock - Prize @ Turtle Rock": "Blue Pendant"
+  },
+  "Ganons Tower": {
+    "Hyrule Castle - Zelda's Chest @ Ganons Tower": "Map (Ganons Tower)",
+    "Eastern Palace - Compass Chest @ Ganons Tower": "Piece of Heart",
+    "Castle Tower - Dark Maze @ Ganons Tower": "Small Key (Ganons Tower)",
+    "Palace of Darkness - Stalfos Basement @ Ganons Tower": "Small Key (Ganons Tower)",
+    "Palace of Darkness - Big Key Chest @ Ganons Tower": "Bombs (3)",
+    "Swamp Palace - Compass Chest @ Ganons Tower": "Rupees (20)",
+    "Swamp Palace - Big Key Chest @ Ganons Tower": "Bottle (Green Potion)",
+    "Misery Mire - Spike Chest @ Ganons Tower": "Compass (Ganons Tower)",
+    "Agahnim 2 @ Ganons Tower": "Beat Agahnim 2"
+  },
+  "Starting Inventory": [],
+  "Special": {
+    "Misery Mire": "Quake",
+    "Turtle Rock": "Ether"
+  },
+  "Shops": [
+    {
+      "location": "Capacity Upgrade",
+      "type": "Shop",
+      "item_0": "Bomb Upgrade (+5) u2014 100",
+      "item_1": "Arrow Upgrade (+5) u2014 100"
+    }
+  ],
+  "Bosses": {
+    "Eastern Palace": "Armos Knights",
+    "Desert Palace": "Lanmolas",
+    "Tower of Hera": "Moldorm",
+    "Hyrule Castle": "Agahnim",
+    "Palace of Darkness": "Helmasaur King",
+    "Swamp Palace": "Arrghus",
+    "Skull Woods": "Mothula",
+    "Thieves Town": "Blind",
+    "Ice Palace": "Kholdstare",
+    "Misery Mire": "Vitreous",
+    "Turtle Rock": "Trinexx",
+    "Ganons Tower Basement": "Armos Knights",
+    "Ganons Tower Middle": "Lanmolas",
+    "Ganons Tower Top": "Moldorm",
+    "Ganons Tower": "Agahnim 2",
+    "Ganon": "Ganon"
+  },
+  "playthrough": [
+    [],
+    {
+      "Floodgate": "Open Floodgate",
+      "Kakariko Well - Right": "Flippers",
+      "Mushroom": "Progressive Bow",
+      "South Pass Area Crab Drop": "Farmable Rupees"
+    },
+    {
+      "Sunken Treasure": "Progressive Glove",
+      "Aginah's Cave": "Moon Pearl",
+      "Hobo": "Progressive Sword",
+      "Mini Moldorm Cave - Right": "Progressive Glove",
+      "Maze Race": "Fire Rod",
+      "Mini Moldorm Cave - Far Right": "Hookshot",
+      "Sahasrahla's Hut - Right": "Quake"
+    },
+    {
+      "Ganons Tower - Compass Room - Bottom Right @ Thieves Town": "Ice Rod",
+      "Suspicious Maiden @ Thieves Town": "Maiden Rescued",
+      "Ganons Tower - DMs Room - Top Left @ Hyrule Castle": "Lamp",
+      "C-Shaped House": "Cane of Somaria",
+      "Skull Woods - Prize @ Skull Woods": "Crystal 2",
+      "Hype Cave - Middle Left": "Progressive Sword"
+    },
+    {
+      "Attic Cracked Floor @ Thieves Town": "Shining Light",
+      "Paradox Cave Upper - Left": "Ether"
+    },
+    {
+      "Revealing Light @ Thieves Town": "Maiden Unmasked"
+    },
+    {
+      "Thieves' Town - Prize @ Thieves Town": "Crystal 4",
+      "Thieves' Town - Boss @ Thieves Town": "Ocarina"
+    },
+    {
+      "Flute Activation": "Ocarina (Activated)"
+    },
+    {
+      "Ganons Tower - Big Key Room - Left @ Misery Mire": "Pegasus Boots",
+      "Misery Mire - Prize @ Misery Mire": "Crystal 5",
+      "Misery Mire - Boss @ Misery Mire": "Hammer"
+    },
+    {
+      "Turtle Medallion Pad": "Turtle Opened",
+      "Tower of Hera - Prize @ Tower of Hera": "Crystal 3",
+      "Ice Palace - Prize @ Ice Palace": "Crystal 7"
+    },
+    {
+      "Turtle Rock - Boss @ Turtle Rock": "Magic Mirror"
+    },
+    {
+      "Swamp Palace - Prize @ Swamp Palace": "Crystal 1",
+      "Desert Palace - Prize @ Desert Palace": "Crystal 6"
+    },
+    {
+      "Agahnim 2 @ Ganons Tower": "Beat Agahnim 2"
+    },
+    {
+      "Ganon": "Triforce"
+    }
+  ],
+  "Overworld": [],
+  "Whirlpools": [],
+  "Maps": [],
+  "Doors": [
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle West Lobby E",
+      "exit": "Hyrule Castle East Lobby W",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle West Lobby N",
+      "exit": "Eastern Courtyard Ledge S",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle West Lobby EN",
+      "exit": "TR Lava Island WS",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Island WS",
+      "exit": "Hyrule Castle West Lobby E",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Island ES",
+      "exit": "Eastern Courtyard Ledge W",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard Ledge S",
+      "exit": "Hyrule Castle Lobby North Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard Ledge W",
+      "exit": "Hyrule Castle West Lobby EN",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard Ledge E",
+      "exit": "Mire Crystal Left WS",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Crystal Left WS",
+      "exit": "Eastern Courtyard Ledge E",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Tall Dark and Roomy ES",
+      "exit": "Hyrule Castle Lobby W",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Lobby W",
+      "exit": "TR Lava Island ES",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Lobby E",
+      "exit": "Desert Arrow Pot Corner W Edge",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Lobby WN",
+      "exit": "Mire Tall Dark and Roomy ES",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Lobby North Stairs",
+      "exit": "Desert Arrow Pot Corner S Edge",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Arrow Pot Corner S Edge",
+      "exit": "TR Crystal Maze North Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Arrow Pot Corner W Edge",
+      "exit": "Hyrule Castle Lobby E",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Crystal Maze North Stairs",
+      "exit": "Ice Cross Bottom SE",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Crystal Maze ES",
+      "exit": "Ice Spike Room WS",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spike Room WS",
+      "exit": "TR Crystal Maze ES",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spike Room Up Stairs",
+      "exit": "Ice Floor Switch Up Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spike Room Down Stairs",
+      "exit": "Sewers Secret Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Secret Room Up Stairs",
+      "exit": "Ice Spike Room Down Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Floor Switch Up Stairs",
+      "exit": "TR Chain Chomps Down Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Chain Chomps Down Stairs",
+      "exit": "GT Wizzrobes 1 Down Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pokey 1 SW",
+      "exit": "GT Wizzrobes 2 NE",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Wizzrobes 2 NE",
+      "exit": "Ice Conveyor SW",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Conveyor SW",
+      "exit": "Hyrule Castle East Lobby NW",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Wizzrobes 1 Down Stairs",
+      "exit": "Ice Spike Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Cross Bottom SE",
+      "exit": "Hyrule Castle East Lobby N",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Lobby W",
+      "exit": "Ice Cross Right ES",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Lobby N",
+      "exit": "Sewers Secret Room Key Door S",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Lobby NW",
+      "exit": "GT DMs Room SW",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "GT DMs Room SW",
+      "exit": "Hyrule Castle West Lobby N",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Cross Right ES",
+      "exit": "Hyrule Castle Lobby WN",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Sanctuary N",
+      "exit": "TR Pokey 1 SW",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Secret Room Key Door S",
+      "exit": "Sanctuary N",
+      "direction": "entrance",
+      "dname": "Hyrule Castle"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Lobby Bridge N",
+      "exit": "PoD Map Balcony South Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Map Balcony WS",
+      "exit": "TR Pokey 2 ES",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Map Balcony South Stairs",
+      "exit": "Mire 2 NE",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Sexy Statue W",
+      "exit": "Skull Pot Prison ES",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Sexy Statue NW",
+      "exit": "Eastern Boss SE",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Boss SE",
+      "exit": "Eastern Lobby Bridge N",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Pot Prison ES",
+      "exit": "Mire Block X WS",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Pot Prison SE",
+      "exit": "Eastern Cannonball N",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Cannonball S",
+      "exit": "Thieves Hellway NW",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Cannonball N",
+      "exit": "Hyrule Castle West Hall S",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle West Hall E",
+      "exit": "Hyrule Castle Back Hall W",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle West Hall S",
+      "exit": "PoD Sexy Statue NW",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Back Hall E",
+      "exit": "Mire Map Spot WN",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Back Hall W",
+      "exit": "Thieves Spike Track ES",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Back Hall Down Stairs",
+      "exit": "Tower Dark Archers Up Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Dark Archers Up Stairs",
+      "exit": "Mire Falling Foes Up Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Falling Foes ES",
+      "exit": "PoD Sexy Statue W",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Falling Foes Up Stairs",
+      "exit": "Tower Pacifist Run Up Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Pacifist Run Up Stairs",
+      "exit": "Hyrule Castle Back Hall Down Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Red Spears Down Stairs",
+      "exit": "Mire 2 Up Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Dual Statues Down Stairs",
+      "exit": "Tower Red Spears Down Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Spike Track ES",
+      "exit": "Mire Lone Shooter WS",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Triple Bypass EN",
+      "exit": "PoD Map Balcony WS",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Lone Shooter WS",
+      "exit": "Mire Falling Foes ES",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Failure Bridge W",
+      "exit": "TR Pokey 2 EN",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pokey 2 EN",
+      "exit": "TR Torches Ledge WS",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Torches Ledge WS",
+      "exit": "Hyrule Castle West Hall E",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Crystal Dead End NW",
+      "exit": "Eastern Cannonball S",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Map Spot WN",
+      "exit": "Hyrule Castle Back Hall E",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Hellway NW",
+      "exit": "Thieves Pot Alcove Bottom SW",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Pot Alcove Bottom SW",
+      "exit": "Mire Crystal Dead End NW",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Block X WS",
+      "exit": "Thieves Triple Bypass EN",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Dark Shooters Up Stairs",
+      "exit": "Tower Dual Statues Down Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire 2 Up Stairs",
+      "exit": "Mire Dark Shooters Up Stairs",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire 2 NE",
+      "exit": "Skull Pot Prison SE",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pokey 2 ES",
+      "exit": "Mire Failure Bridge W",
+      "direction": "entrance",
+      "dname": "Eastern Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Lobby Key Stairs",
+      "exit": "Hera Lobby Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Lobby Up Stairs",
+      "exit": "Hera 4F Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera 4F Down Stairs",
+      "exit": "Hera Startile Wide Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera 4F Up Stairs",
+      "exit": "Hera Lobby Key Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Startile Wide Up Stairs",
+      "exit": "Ice Spikeball Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spikeball Up Stairs",
+      "exit": "Eastern Darkness Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Darkness S",
+      "exit": "Thieves BK Corner NE",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Darkness Up Stairs",
+      "exit": "Desert Bridge Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Bridge Down Stairs",
+      "exit": "Hera Beetles Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Beamos Hall NE",
+      "exit": "Eastern Darkness S",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Beetles Down Stairs",
+      "exit": "Hera 5F Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera 5F Down Stairs",
+      "exit": "Hera Lobby Up Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera 5F Up Stairs",
+      "exit": "Thieves Attic Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Attic Down Stairs",
+      "exit": "Hera Boss Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Cricket Hall Left Edge",
+      "exit": "Thieves Rail Ledge W",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Rail Ledge NW",
+      "exit": "Mire Bent Bridge SW",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Rail Ledge W",
+      "exit": "Swamp Map Ledge EN",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Map Ledge EN",
+      "exit": "Ice Hookshot Ledge WN",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Hookshot Ledge WN",
+      "exit": "Sewers Dark Aquabats ES",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Bent Bridge SW",
+      "exit": "Hyrule Castle Throne Room N",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Bent Bridge W",
+      "exit": "Thieves Cricket Hall Left Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Throne Room N",
+      "exit": "Hyrule Castle Throne Room South Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle Throne Room South Stairs",
+      "exit": "PoD Arena Main NE",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Main NW",
+      "exit": "Thieves BK Corner S Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Main NE",
+      "exit": "PoD Arena Main SW",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Bridge SE",
+      "exit": "Thieves Rail Ledge NW",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Crystals E",
+      "exit": "Eastern Cannonball Ledge WN",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Cannonball Ledge WN",
+      "exit": "Eastern Cannonball Ledge Key Door EN",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Cannonball Ledge Key Door EN",
+      "exit": "Thieves BK Corner WN Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Main SW",
+      "exit": "Sewers Key Rat NE",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Key Rat NE",
+      "exit": "Thieves BK Corner SW Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Dark Aquabats ES",
+      "exit": "Thieves BK Corner WS Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Boss Down Stairs",
+      "exit": "Hera 4F Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves BK Corner WN Edge",
+      "exit": "PoD Arena Crystals E",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves BK Corner WS Edge",
+      "exit": "Thieves Big Chest Nook ES Edge",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves BK Corner S Edge",
+      "exit": "PoD Arena Main NW",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves BK Corner SW Edge",
+      "exit": "Desert Beamos Hall NE",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves BK Corner NE",
+      "exit": "PoD Arena Bridge SE",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Big Chest Nook ES Edge",
+      "exit": "Mire Bent Bridge W",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Lobby Down Stairs",
+      "exit": "Hera 5F Down Stairs",
+      "direction": "entrance",
+      "dname": "Tower of Hera"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Room 03 Up Stairs",
+      "exit": "Thieves Conveyor Maze Down Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Conveyor Maze WN",
+      "exit": "GT Invisible Catwalk ES",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Conveyor Maze Down Stairs",
+      "exit": "Tower Room 03 Up Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Invisible Catwalk ES",
+      "exit": "GT Invisible Catwalk WS",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Invisible Catwalk WS",
+      "exit": "Thieves Conveyor Bridge EN",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Invisible Catwalk NW",
+      "exit": "Tower Agahnim 1 SW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Invisible Catwalk NE",
+      "exit": "Mire Right Bridge SE",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Right Bridge SE",
+      "exit": "Eastern Dark Square NW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Dark Square NW",
+      "exit": "Ice Many Pots SW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Dark Square Key Door WN",
+      "exit": "Hyrule Dungeon Guardroom Catwalk Edge",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Guardroom Catwalk Edge",
+      "exit": "Eastern Dark Square Key Door WN",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Guardroom Abyss Edge",
+      "exit": "Thieves Pot Alcove Mid WS",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Guardroom N",
+      "exit": "Desert Dead End Edge",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Dead End Edge",
+      "exit": "Thieves Hallway NE",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Pot Alcove Mid WS",
+      "exit": "PoD Arena Ledge ES",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Arena Ledge ES",
+      "exit": "Eastern Map Valley WN",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Map Valley WN",
+      "exit": "Thieves Conveyor Bridge ES",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Map Valley SW",
+      "exit": "Hyrule Dungeon Guardroom N",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Many Pots SW",
+      "exit": "PoD Dark Pegs Up Ladder",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Many Pots WS",
+      "exit": "Mire Over Bridge E",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Over Bridge E",
+      "exit": "Mire Over Bridge W",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Over Bridge W",
+      "exit": "Hyrule Dungeon Guardroom Abyss Edge",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Pegs Up Ladder",
+      "exit": "Mire Left Bridge S",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Alley NE",
+      "exit": "TR Dash Room SW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dash Room SW",
+      "exit": "GT Invisible Catwalk NE",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Crystaroller Down Stairs",
+      "exit": "Ice Narrow Corridor Down Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Narrow Corridor Down Stairs",
+      "exit": "Sewers Rope Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Rope Room Up Stairs",
+      "exit": "Mire Left Bridge Down Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Rope Room North Stairs",
+      "exit": "Desert Cannonball S",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Cannonball S",
+      "exit": "PoD Dark Alley NE",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Bomb Jump NW",
+      "exit": "Thieves Hallway SE",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Left Bridge S",
+      "exit": "Sewers Rope Room North Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Left Bridge Down Stairs",
+      "exit": "TR Crystaroller Down Stairs",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Agahnim 1 SW",
+      "exit": "GT Invisible Catwalk NW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Conveyor Bridge EN",
+      "exit": "Thieves Conveyor Maze WN",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Conveyor Bridge ES",
+      "exit": "Ice Many Pots WS",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Hallway SE",
+      "exit": "Ice Bomb Jump NW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Hallway NE",
+      "exit": "Eastern Map Valley SW",
+      "direction": "entrance",
+      "dname": "Agahnims Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Left Cage Down Stairs",
+      "exit": "Swamp Pot Row Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Pot Row Up Stairs",
+      "exit": "PoD Middle Cage Down Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Pot Row WN",
+      "exit": "Mire Conveyor Crystal ES",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Pot Row WS",
+      "exit": "Iced T EN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Iced T Up Stairs",
+      "exit": "Hera Tile Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Iced T EN",
+      "exit": "TR Pipe Ledge WS",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pipe Ledge WS",
+      "exit": "Desert Sandworm Corner E Edge",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pipe Pit Up Stairs",
+      "exit": "Ice Backwards Room Down Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Pipe Pit WN",
+      "exit": "Mire Wizzrobe Bypass EN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Wizzrobe Bypass EN",
+      "exit": "GT Falling Bridge WN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Wizzrobe Bypass NE",
+      "exit": "Mire Conveyor Crystal SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Falling Bridge WN",
+      "exit": "Ice Tall Hint EN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Falling Bridge WS",
+      "exit": "Ice Crystal Right ES",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Crystal Right ES",
+      "exit": "TR Torches WN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Switch Room ES",
+      "exit": "GT Falling Bridge WS",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Switch Room SE",
+      "exit": "Mire Conveyor Barrier NW",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Conveyor Barrier NW",
+      "exit": "PoD Boss SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Conveyor Barrier Up Stairs",
+      "exit": "TR Pipe Pit Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Boss SE",
+      "exit": "Mire Spike Barrier NE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Spike Barrier NE",
+      "exit": "Ice Spike Cross SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Spike Barrier SE",
+      "exit": "Thieves Compass Room NW Edge",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire BK Door Room EN",
+      "exit": "Swamp Pot Row WS",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire BK Door Room N",
+      "exit": "Ice Tall Hint SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Compass Room NW Edge",
+      "exit": "Mire Tile Room SW",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Compass Room N Edge",
+      "exit": "Ice Firebar Down Ladder",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Compass Room WS Edge",
+      "exit": "Mire BK Door Room EN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Compass Room W",
+      "exit": "Ice Spike Cross ES",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Firebar Down Ladder",
+      "exit": "TR Torches NW",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Tile Room SW",
+      "exit": "Mire Wizzrobe Bypass NE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spike Cross SE",
+      "exit": "Mire BK Door Room N",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Spike Cross ES",
+      "exit": "Thieves Compass Room W",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Anti-Fairy Up Stairs",
+      "exit": "Mire Torches Top Down Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Torches Top Down Stairs",
+      "exit": "Iced T Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Torches WN",
+      "exit": "Ice Switch Room ES",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Torches NW",
+      "exit": "Mire Spike Barrier SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Tall Hint SE",
+      "exit": "Ice Freezors Up Ladder",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Tall Hint EN",
+      "exit": "Thieves Compass Room WS Edge",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Freezors Up Ladder",
+      "exit": "Ice Switch Room SE",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Backwards Room Down Stairs",
+      "exit": "Mire Conveyor Barrier Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Tile Room Up Stairs",
+      "exit": "PoD Left Cage Down Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Conveyor Crystal ES",
+      "exit": "Swamp Pot Row WN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Conveyor Crystal SE",
+      "exit": "PoD Middle Cage N",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Middle Cage N",
+      "exit": "Desert Sandworm Corner S Edge",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Middle Cage Down Stairs",
+      "exit": "Ice Anti-Fairy Up Stairs",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Sandworm Corner S Edge",
+      "exit": "Thieves Compass Room N Edge",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Sandworm Corner E Edge",
+      "exit": "TR Pipe Pit WN",
+      "direction": "entrance",
+      "dname": "Palace of Darkness"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Entrance Down Stairs",
+      "exit": "GT Moldorm Pit Up Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Moldorm Pit Up Stairs",
+      "exit": "GT Gauntlet 1 Down Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Gauntlet 1 Down Stairs",
+      "exit": "TR Dark Ride Up Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Gauntlet 3 SW",
+      "exit": "GT Left Moldorm Ledge NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Left Moldorm Ledge NW",
+      "exit": "Swamp Boss SW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Boss SW",
+      "exit": "Skull Vines NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Vines NW",
+      "exit": "Skull Star Pits SW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Star Pits SW",
+      "exit": "Swamp T NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp T NW",
+      "exit": "TR Dark Ride SW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dark Ride SW",
+      "exit": "Ice Pengator Trap NE",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Pengator Trap Up Stairs",
+      "exit": "Swamp C Down Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Pengator Trap NE",
+      "exit": "GT Gauntlet 3 SW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp C Down Stairs",
+      "exit": "Ice Pengator Trap Up Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Validation WS",
+      "exit": "GT Warp Maze (Pits) ES",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Warp Maze (Pits) ES",
+      "exit": "GT Warp Maze (Rails) WS",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Warp Maze (Rails) WS",
+      "exit": "GT Conveyor Cross EN",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Conveyor Cross EN",
+      "exit": "GT Validation WS",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hookshot NW",
+      "exit": "Hyrule Dungeon North Abyss Catwalk Edge",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon North Abyss Catwalk Edge",
+      "exit": "GT Hookshot NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon North Abyss South Edge",
+      "exit": "GT Double Switch NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Map Room Up Stairs",
+      "exit": "Swamp Entrance Down Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Double Switch NW",
+      "exit": "GT Hookshot SW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hookshot SW",
+      "exit": "TR Compass Room NW",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Compass Room NW",
+      "exit": "Hyrule Dungeon North Abyss South Edge",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dark Ride Up Stairs",
+      "exit": "GT Right Moldorm Ledge Down Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Right Moldorm Ledge Down Stairs",
+      "exit": "Hyrule Dungeon Map Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Swamp Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Lobby N Edge",
+      "exit": "Desert North Hall SW Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Lobby NE Edge",
+      "exit": "Thieves Boss SE",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Lobby E",
+      "exit": "Hyrule Dungeon South Abyss West Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Boss SE",
+      "exit": "Thieves Lobby N Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert North Hall SE Edge",
+      "exit": "Tower Catwalk North Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert North Hall SW Edge",
+      "exit": "Ice Catwalk NW",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert North Hall W Edge",
+      "exit": "GT Hidden Star ES",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert North Hall E Edge",
+      "exit": "Thieves Cricket Hall Right Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Cricket Hall Right Edge",
+      "exit": "Thieves Ambush ES Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Ambush S Edge",
+      "exit": "GT Crystal Conveyor NE",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Ambush SE Edge",
+      "exit": "Swamp Basement Shallows NW",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Ambush ES Edge",
+      "exit": "PoD Big Chest Balcony W",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Ambush EN Edge",
+      "exit": "GT Invisible Bridges WS",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Ambush E",
+      "exit": "GT Cannonball Bridge WN",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Cannonball Bridge WN",
+      "exit": "Thieves Lobby E",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Cannonball Bridge Up Stairs",
+      "exit": "GT Quad Pot Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Quad Pot Up Stairs",
+      "exit": "Swamp Right Elbow Down Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Right Elbow Down Stairs",
+      "exit": "Swamp Drain Right Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Drain Right Up Stairs",
+      "exit": "Tower Push Statue Down Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Push Statue Down Stairs",
+      "exit": "Thieves Basement Block Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Basement Block Up Stairs",
+      "exit": "Swamp Drain Left Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Basement Block WN",
+      "exit": "Desert North Hall E Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Lonely Zazak WS",
+      "exit": "PoD Dark Maze EN",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Maze EN",
+      "exit": "Ice Catwalk WN",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Maze E",
+      "exit": "Desert North Hall W Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Drain Left Up Stairs",
+      "exit": "PoD Shooter Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Shooter Room Up Stairs",
+      "exit": "Swamp Behind Waterfall Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Behind Waterfall Up Stairs",
+      "exit": "Swamp Flooded Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Flooded Room Up Stairs",
+      "exit": "GT Cannonball Bridge Up Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Waterfall Room SW",
+      "exit": "Hyrule Dungeon South Abyss North Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon South Abyss North Edge",
+      "exit": "Thieves Ambush S Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon South Abyss West Edge",
+      "exit": "Thieves Ambush EN Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Push Statue S",
+      "exit": "Thieves Lobby NE Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Push Statue Down Stairs",
+      "exit": "Swamp Left Elbow Down Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Left Elbow Down Stairs",
+      "exit": "Swamp Push Statue Down Stairs",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Invisible Bridges WS",
+      "exit": "GT Conveyor Star Pits EN",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Conveyor Star Pits EN",
+      "exit": "Thieves Basement Block WN",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Big Chest Balcony W",
+      "exit": "GT Beam Dash ES",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Beam Dash ES",
+      "exit": "Eastern East Wing W",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern East Wing W",
+      "exit": "PoD Dark Maze E",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Basement Shallows NW",
+      "exit": "Swamp Push Statue S",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Crystal Conveyor NE",
+      "exit": "Desert North Hall SE Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hidden Star ES",
+      "exit": "Thieves Lonely Zazak WS",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Catwalk WN",
+      "exit": "Thieves Ambush E",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Catwalk NW",
+      "exit": "Thieves Ambush SE Edge",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Catwalk North Stairs",
+      "exit": "Swamp Waterfall Room SW",
+      "direction": "entrance",
+      "dname": "Thieves Town"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Jelly Key Down Stairs",
+      "exit": "PoD Dark Basement W Up Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Basement W Up Stairs",
+      "exit": "Eastern Attic Start Down Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Dark Basement E Up Stairs",
+      "exit": "Ice Jelly Key Down Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Attic Start Down Stairs",
+      "exit": "PoD Dark Basement E Up Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Attic Start WS",
+      "exit": "Mire Hidden Shooters ES",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hidden Shooters SE",
+      "exit": "Tower Altar NW",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hidden Shooters ES",
+      "exit": "Mire Hub WN",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Minibridge NE",
+      "exit": "PoD Conveyor SW",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Conveyor North Stairs",
+      "exit": "Ice Big Key Down Ladder",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Conveyor SW",
+      "exit": "GT Dash Hall NE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Dash Hall NE",
+      "exit": "Tower Antechamber South Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Antechamber South Stairs",
+      "exit": "Mire Hub NE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Crystal Paths Down Stairs",
+      "exit": "Ice Hammer Block Down Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Hammer Block Down Stairs",
+      "exit": "GT Crystal Paths Down Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Tongue Pull Up Ladder",
+      "exit": "GT Crystal Circles SW",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Crystal Circles SW",
+      "exit": "PoD Conveyor North Stairs",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Falling Torches Down Ladder",
+      "exit": "Ice Antechamber NE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Staredown Up Ladder",
+      "exit": "GT Falling Torches Down Ladder",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Torch Cross WN",
+      "exit": "Mire Hub E",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Antechamber NE",
+      "exit": "Mire Cross SW",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Big Key Down Ladder",
+      "exit": "Mire Minibridge NE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Pengator Switch WS",
+      "exit": "Mire Hub ES",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub SE",
+      "exit": "Mire Hub Top NW",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub ES",
+      "exit": "Ice Pengator Switch WS",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub E",
+      "exit": "Mire Hub WS",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub NE",
+      "exit": "Mire Hub SE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub WN",
+      "exit": "Mire Hub Right EN",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub WS",
+      "exit": "Mire Fishbone E",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Fishbone E",
+      "exit": "Eastern Attic Start WS",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Fishbone SE",
+      "exit": "GT Staredown Up Ladder",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub Right EN",
+      "exit": "GT Torch Cross WN",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Hub Top NW",
+      "exit": "Mire Fishbone SE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Cross SW",
+      "exit": "Ice Tongue Pull Up Ladder",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Altar NW",
+      "exit": "Mire Hidden Shooters SE",
+      "direction": "entrance",
+      "dname": "Ice Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Post-Gap Down Stairs",
+      "exit": "Hyrule Dungeon Staircase Up Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Staircase Up Stairs",
+      "exit": "GT Four Torches Up Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Staircase Down Stairs",
+      "exit": "Ice Lonely Freezor Down Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Lonely Freezor NE",
+      "exit": "GT Bob's Room SE",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Lonely Freezor Down Stairs",
+      "exit": "GT Blocked Stairs Down Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Blocked Stairs Down Stairs",
+      "exit": "GT Torch Up Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Big Chest SW",
+      "exit": "Ice Lonely Freezor NE",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Torch Up Stairs",
+      "exit": "Mire Post-Gap Down Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Torch WN",
+      "exit": "Eastern Single Eyegore ES",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hope Room Up Stairs",
+      "exit": "Hyrule Dungeon Staircase Down Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hope Room EN",
+      "exit": "GT Torch WN",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Single Eyegore ES",
+      "exit": "Swamp Hub WN",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Duo Eyegores NE",
+      "exit": "Swamp Hub S",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub ES",
+      "exit": "Swamp Hub WS",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub S",
+      "exit": "Mire Neglected Room NE",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub WS",
+      "exit": "Swamp Hub ES",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub WN",
+      "exit": "GT Hope Room EN",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub North Ledge N",
+      "exit": "GT Big Chest SW",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Neglected Room NE",
+      "exit": "Mire Boss SW",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Boss SW",
+      "exit": "Eastern Duo Eyegores NE",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Bob's Room SE",
+      "exit": "Swamp Hub North Ledge N",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Four Torches Up Stairs",
+      "exit": "GT Hope Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Misery Mire"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lobby Ledge NE",
+      "exit": "PoD Mimics 2 SW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Mimics 2 SW",
+      "exit": "TR Dash Bridge NW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Bow Statue Down Ladder",
+      "exit": "TR Twin Pokeys NW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Twin Pokeys NW",
+      "exit": "Hyrule Castle East Hall SW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hallway WS",
+      "exit": "TR Lava Dual Pipes EN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Dual Pipes EN",
+      "exit": "TR Lava Dual Pipes WN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Dual Pipes WN",
+      "exit": "Eastern Big Key EN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Dual Pipes SW",
+      "exit": "Eastern Big Key NE",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Big Key EN",
+      "exit": "Swamp Trench 1 Departure WS",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Big Key NE",
+      "exit": "TR Dash Bridge SW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Trench 1 Departure WS",
+      "exit": "Swamp Trench 1 Approach ES",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hammer Switch WN",
+      "exit": "Swamp Trench 2 Pots ES",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Trench 2 Pots ES",
+      "exit": "Hyrule Castle East Hall W",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Trench 2 Departure WS",
+      "exit": "Swamp Hub Dead Ledge EN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Hub Dead Ledge EN",
+      "exit": "TR Dash Bridge WS",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Crystal Switch EN",
+      "exit": "Swamp Trench 2 Departure WS",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Trench 1 Approach ES",
+      "exit": "TR Hallway WS",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dodgers NE",
+      "exit": "TR Lava Dual Pipes SW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Hall W",
+      "exit": "Swamp Crystal Switch EN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Hall S",
+      "exit": "Ice Compass Room NE",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Castle East Hall SW",
+      "exit": "TR Lobby Ledge NE",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Compass Room NE",
+      "exit": "PoD Bow Statue Down Ladder",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dash Bridge NW",
+      "exit": "Hyrule Castle East Hall S",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dash Bridge SW",
+      "exit": "TR Eye Bridge NW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Dash Bridge WS",
+      "exit": "TR Lazy Eyes ES",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lazy Eyes ES",
+      "exit": "Swamp Hammer Switch WN",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Eye Bridge NW",
+      "exit": "TR Boss SW",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Boss SW",
+      "exit": "TR Dodgers NE",
+      "direction": "entrance",
+      "dname": "Turtle Rock"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Lobby Left Down Stairs",
+      "exit": "PoD Warp Room Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Lobby Up Stairs",
+      "exit": "GT Lobby Left Down Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Lobby Right Down Stairs",
+      "exit": "Mire Firesnake Skip Down Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Firesnake Skip Down Stairs",
+      "exit": "Tower Lone Statue Down Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Antechamber NW",
+      "exit": "TR Tile Room SE",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Tile Room SE",
+      "exit": "PoD Pit Room NE",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Pit Room NE",
+      "exit": "Desert Tiles 2 SE",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Pit Room S",
+      "exit": "Mire Antechamber NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Pit Room NW",
+      "exit": "GT Agahnim 2 SW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Basement Ledge Up Stairs",
+      "exit": "GT Frozen Over Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Frozen Over ES",
+      "exit": "Swamp Big Key Ledge WN",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Frozen Over Up Stairs",
+      "exit": "PoD Basement Ledge Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Big Key Ledge WN",
+      "exit": "Eastern False Switches ES",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern False Switches ES",
+      "exit": "Mire Ledgehop WN",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Cannonball Hell WS",
+      "exit": "Eastern Hint Tile EN",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Hint Tile EN",
+      "exit": "Eastern Cannonball Hell WS",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern West Wing E",
+      "exit": "GT Gauntlet 5 WS",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Gauntlet 5 WS",
+      "exit": "Eastern West Wing E",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Gauntlet 4 NW",
+      "exit": "Thieves Spike Switch SW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Spike Switch SW",
+      "exit": "Mire Ledgehop NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Thieves Spike Switch Up Stairs",
+      "exit": "GT Lobby Right Down Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Ledgehop WN",
+      "exit": "GT Conveyor Bridge EN",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Ledgehop NW",
+      "exit": "TR Final Abyss South Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Final Abyss South Stairs",
+      "exit": "PoD Mimics 1 NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Final Abyss NW",
+      "exit": "Eastern Hint Tile Blocked Path SE",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Hint Tile Blocked Path SE",
+      "exit": "Desert Wall Slide NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Wall Slide NW",
+      "exit": "PoD Pit Room S",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Mimics 1 NW",
+      "exit": "Mire Spikes SW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Conveyor Bridge SE",
+      "exit": "TR Final Abyss NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Conveyor Bridge EN",
+      "exit": "Mire Spikes WS",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Spikes WS",
+      "exit": "GT Frozen Over ES",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Mire Spikes SW",
+      "exit": "PoD Pit Room NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Agahnim 2 SW",
+      "exit": "Swamp Donut Top N",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Donut Top N",
+      "exit": "GT Conveyor Bridge SE",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Tiles 2 SE",
+      "exit": "GT Gauntlet 4 NW",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Lone Statue Down Stairs",
+      "exit": "Thieves Spike Switch Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Tower Dark Chargers Up Stairs",
+      "exit": "PoD Big Key Landing Down Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Big Key Landing Down Stairs",
+      "exit": "Hyrule Dungeon Cellblock Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Cellblock Up Stairs",
+      "exit": "Tower Dark Chargers Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Warp Room Up Stairs",
+      "exit": "GT Lobby Up Stairs",
+      "direction": "entrance",
+      "dname": "Ganons Tower"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert West Wing N Edge",
+      "exit": "Sewers Water S",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Water S",
+      "exit": "Desert Compass NE",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Water W",
+      "exit": "Desert Main Lobby E Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Main Lobby NE Edge",
+      "exit": "TR Roller Room SW",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Main Lobby E Edge",
+      "exit": "Desert East Wing W Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert East Wing W Edge",
+      "exit": "Eastern Courtyard EN",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert East Wing N Edge",
+      "exit": "Sewers Pull Switch S",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Pull Switch S",
+      "exit": "GT Brightly Lit Hall NW",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Brightly Lit Hall Down Stairs",
+      "exit": "Swamp West Block Path Up Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Brightly Lit Hall NW",
+      "exit": "GT Speed Torch SE",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Speed Torch SE",
+      "exit": "Desert West Wing N Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Speed Torch NE",
+      "exit": "GT Petting Zoo SE",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Petting Zoo SE",
+      "exit": "GT Speed Torch NE",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Tile Room WN",
+      "exit": "Swamp West Shallows ES",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp West Shallows ES",
+      "exit": "Sewers Water W",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp West Block Path Up Stairs",
+      "exit": "Sewers Behind Tapestry Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Behind Tapestry S",
+      "exit": "Desert Main Lobby NW Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Behind Tapestry Down Stairs",
+      "exit": "Desert Tiles 1 Up Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Tiles 1 Up Stairs",
+      "exit": "PoD Compass Room E Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Compass Room W Down Stairs",
+      "exit": "GT Brightly Lit Hall Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Compass Room E Down Stairs",
+      "exit": "Sewers Pull Switch Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Falling Bridge WN",
+      "exit": "Swamp Barrier EN",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Falling Bridge SW",
+      "exit": "Desert Main Lobby N Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Barrier EN",
+      "exit": "PoD Falling Bridge WN",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "PoD Harmless Hellway SE",
+      "exit": "Eastern Courtyard N",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Pull Switch Down Stairs",
+      "exit": "Swamp Attic Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Swamp Attic Down Stairs",
+      "exit": "PoD Compass Room W Down Stairs",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard WN",
+      "exit": "GT Randomizer Room ES",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard EN",
+      "exit": "Eastern Courtyard WN",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Eastern Courtyard N",
+      "exit": "Desert Boss SW",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Boss SW",
+      "exit": "Desert East Wing N Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Randomizer Room ES",
+      "exit": "GT Tile Room WN",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Roller Room SW",
+      "exit": "Desert Main Lobby NE Edge",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Compass NE",
+      "exit": "PoD Harmless Hellway SE",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Main Lobby N Edge",
+      "exit": "Sewers Behind Tapestry S",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Desert Main Lobby NW Edge",
+      "exit": "PoD Falling Bridge SW",
+      "direction": "entrance",
+      "dname": "Desert Palace"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull 2 East Lobby WS",
+      "exit": "TR Hub ES",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub SW",
+      "exit": "TR Hub NW",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub SE",
+      "exit": "TR Lava Escape NW",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub ES",
+      "exit": "Hyrule Dungeon South Abyss Catwalk West Edge",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub EN",
+      "exit": "Ice Refill WS",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub NW",
+      "exit": "TR Hub SW",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Hub NE",
+      "exit": "TR Hub SE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Ice Refill WS",
+      "exit": "TR Hub EN",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon South Abyss Catwalk North Edge",
+      "exit": "TR Lava Escape SE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon South Abyss Catwalk West Edge",
+      "exit": "GT Hidden Spikes EN",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hidden Spikes SE",
+      "exit": "TR Hub NE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "GT Hidden Spikes EN",
+      "exit": "Skull 2 East Lobby WS",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Escape SE",
+      "exit": "Sewers Dark Cross Key Door N",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "TR Lava Escape NW",
+      "exit": "GT Hidden Spikes SE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Dark Cross Key Door N",
+      "exit": "Sewers Dark Cross South Stairs",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Sewers Dark Cross South Stairs",
+      "exit": "Hyrule Dungeon South Abyss Catwalk North Edge",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull 1 Lobby WS",
+      "exit": "Skull Small Hall ES",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Map Room SE",
+      "exit": "Skull Pinball NE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Small Hall ES",
+      "exit": "Skull Pinball WS",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull 3 Lobby NW",
+      "exit": "Skull Map Room SE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Compass Room NE",
+      "exit": "Hyrule Dungeon Armory S",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Compass Room ES",
+      "exit": "Skull 1 Lobby WS",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Armory S",
+      "exit": "Skull Compass Room NE",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Hyrule Dungeon Armory Down Stairs",
+      "exit": "Hera Basement Cage Up Stairs",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Hera Basement Cage Up Stairs",
+      "exit": "Hyrule Dungeon Armory Down Stairs",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Pinball NE",
+      "exit": "Skull Spike Corner SW",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Pinball WS",
+      "exit": "Skull Compass Room ES",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    },
+    {
+      "player": 1,
+      "entrance": "Skull Spike Corner SW",
+      "exit": "Skull 3 Lobby NW",
+      "direction": "entrance",
+      "dname": "Skull Woods"
+    }
+  ],
+  "Lobbies": [],
+  "DoorTypes": [
+    {
+      "doorNames": "Ice Conveyor NE (Hyrule Castle)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Mire Map Spike Side EN (Eastern Palace)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Mire Falling Bridge WS (Eastern Palace)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Mire Failure Bridge E (Eastern Palace)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Sewers Behind Tapestry S (Desert Palace)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "PoD Arena Main NE (Tower of Hera)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Ice Hookshot Ledge WN (Tower of Hera)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Thieves Hallway WN (Agahnims Tower)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "GT Invisible Catwalk ES (Agahnims Tower)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Mire Wizzrobe Bypass WN (Palace of Darkness)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Ice Falling Square SE (Palace of Darkness)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "TR Pipe Ledge WS (Palace of Darkness)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Mire Warping Pool ES (Palace of Darkness)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Skull Pinball WS (Skull Woods)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Thieves Lobby E (Thieves Town)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "GT Quad Pot SW (Thieves Town)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "Tower Altar SW (Ice Palace)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "GT Four Torches ES (Misery Mire)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "GT Torch SW (Misery Mire)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "TR Dodgers SE (Turtle Rock)",
+      "type": "Trap Door"
+    },
+    {
+      "doorNames": "GT Brightly Lit Hall NW (Desert Palace)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Eastern Courtyard N (Desert Palace)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Hera Startile Corner NW (Tower of Hera)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Thieves BK Corner NE (Tower of Hera)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "PoD Dark Alley NE (Agahnims Tower)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Mire Square Rail NW (Palace of Darkness)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Mire BK Door Room N (Palace of Darkness)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Ice Crystal Right NE (Palace of Darkness)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "GT Dash Hall NE (Ice Palace)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "TR Dodgers NE (Turtle Rock)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Eastern Big Key NE (Turtle Rock)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Mire Antechamber NW (Ganons Tower)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "TR Final Abyss NW (Ganons Tower)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Desert Wall Slide NW (Ganons Tower)",
+      "type": "Big Key Door"
+    },
+    {
+      "doorNames": "Ice Spike Room WS <-> TR Crystal Maze ES (Hyrule Castle)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Hyrule Castle East Lobby N (Hyrule Castle)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Ice Cross Bottom SE (Hyrule Castle)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Crystal Right ES <-> Mire Tall Dark and Roomy WS (Hyrule Castle)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Pot Alcove Bottom SW (Eastern Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Triple Bypass WN <-> Thieves Hellway Crystal EN (Eastern Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Falling Foes ES (Eastern Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Eastern Lobby NE <-> Eastern Lobby Right Ledge SE (Eastern Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Tile Room WN (Desert Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Desert East Wing Key Door EN <-> Desert Compass Key Door WN (Desert Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Desert East Wing ES <-> Desert East Lobby WS (Desert Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Hyrule Castle Throne Room N (Tower of Hera)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Map Ledge EN (Tower of Hera)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Rail Ledge W (Tower of Hera)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Rail Ledge NW (Tower of Hera)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Desert Beamos Hall NE (Tower of Hera)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "TR Crystaroller Down Stairs (Agahnims Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "TR Dash Room ES <-> TR Tongue Pull WS (Agahnims Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "PoD Dark Pegs WN <-> PoD Lonely Turtle EN (Agahnims Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Right Bridge SE (Agahnims Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Ice Crystal Left WS <-> Ice Big Chest View ES (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Pot Row WN <-> Mire Conveyor Crystal ES (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Conveyor Crystal WS <-> Mire Tile Room ES (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Conveyor Barrier NW (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Ice Anti-Fairy SE <-> Ice Switch Room NE (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "PoD Middle Cage N (Palace of Darkness)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Waterway NW <-> Swamp T SW (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Hookshot SW (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Double Switch NW (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Warp Maze (Pits) ES (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Validation WS (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Left Moldorm Ledge NW (Swamp Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Skull Pot Circle WN <-> Skull Pull Switch EN (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Hyrule Dungeon Armory Interior Key Door N <-> Hyrule Dungeon Armory Interior Key Door S (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "TR Hub NW (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Skull Small Hall ES (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Skull Map Room SE (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Skull 3 Lobby NW (Skull Woods)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Crystal Conveyor NE (Thieves Town)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Conveyor Star Pits EN (Thieves Town)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Ice Catwalk WN (Thieves Town)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Cricket Hall Right ES <-> Thieves Attic Window WS (Thieves Town)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Bomb Conveyor SW <-> GT Crystal Circles NW (Ice Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Torch Cross WN (Ice Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Hub Right EN (Ice Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Hub WS (Ice Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "PoD Conveyor SW (Ice Palace)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Neglected Room NE (Misery Mire)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Torch WN (Misery Mire)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Crystal Switch SE <-> Swamp Shortcut NE (Turtle Rock)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Crystal Switch EN (Turtle Rock)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Hyrule Castle East Hall S (Turtle Rock)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Swamp Hammer Switch WN (Turtle Rock)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Tower Dark Maze ES <-> Tower Dark Chargers WS (Ganons Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Mire Ledgehop SW <-> Mire Spikes NW (Ganons Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Spike Switch Up Stairs (Ganons Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Thieves Spike Switch SW (Ganons Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "GT Frozen Over ES (Ganons Tower)",
+      "type": "Key Door"
+    },
+    {
+      "doorNames": "Ice Conveyor SW (Hyrule Castle)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "TR Lava Island WS (Hyrule Castle)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "TR Torches Ledge WS (Eastern Palace)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Thieves Spike Track WS <-> Thieves Hellway Crystal ES (Eastern Palace)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "Sewers Water W (Desert Palace)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Sewers Key Rat NE (Tower of Hera)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Sewers Dark Aquabats ES (Tower of Hera)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "GT Invisible Catwalk WS (Agahnims Tower)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Mire Over Bridge E (Agahnims Tower)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "TR Pipe Pit WN (Palace of Darkness)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "GT Falling Bridge WN (Palace of Darkness)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "Swamp C SE <-> Swamp Waterway NE (Swamp Palace)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Skull Spike Corner ES <-> Skull Final Drop WS (Skull Woods)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "Skull Pinball NE (Skull Woods)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "Desert North Hall NE <-> Desert Map SE (Thieves Town)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "GT Cannonball Bridge WN (Thieves Town)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "Ice Lonely Freezor NE (Misery Mire)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "TR Dash Bridge NW (Turtle Rock)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "TR Dash Bridge WS (Turtle Rock)",
+      "type": "Dash Door"
+    },
+    {
+      "doorNames": "Swamp Big Key Ledge WN (Ganons Tower)",
+      "type": "Bomb Door"
+    },
+    {
+      "doorNames": "PoD Jelly Hall NE <-> PoD Warp Hint SE (Ganons Tower)",
+      "type": "Dash Door"
+    }
+  ]
+}

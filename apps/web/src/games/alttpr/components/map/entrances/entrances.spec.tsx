@@ -207,6 +207,123 @@ describe("the entrance assistant", () => {
     }
   });
 
+  it("lists an OWR run's every shuffle from the fork's pool, and asks for one not known yet", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      randomizer: "owr" as const,
+    };
+    for (const change of [
+      { doorEntrances: "lite" as const },
+      { entranceShuffle: "crossed" as const },
+      { doorEntrances: "dungeonssimple" as const },
+    ]) {
+      act(() =>
+        useGameStore
+          .getState()
+          .applyRun("door-randomizer", { ...owr, ...change }),
+      );
+      const view = render(<EntrancesPanel />);
+      expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+        /^0 of \d+ entrances noted$/,
+      );
+      view.unmount();
+    }
+    // A Mystery's shuffle not known yet: no pool, set it in Mode
+    act(() =>
+      useGameStore.getState().applyRun("door-randomizer", {
+        ...owr,
+        entranceShuffle: "crossed",
+        hidden: ["entranceShuffle"],
+      }),
+    );
+    render(<EntrancesPanel />);
+    expect(screen.queryByTestId("entrances-summary")).toBeNull();
+    expect(screen.getByTestId("entrances-panel")).toHaveTextContent(
+      "The entrance shuffle is not known yet: set it in Mode to list its entrances.",
+    );
+  });
+
+  it("shows an OWR Swapped note's partner as told by it, undone with it in one step", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useGameStore.getState().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        customGoals: false,
+        doorEntrances: "swapped",
+        owCrossed: "none",
+        owFluteShuffle: "vanilla",
+        owLayout: "vanilla",
+        owMixed: false,
+        owrVersion: "0.8.0.2",
+        owWhirlpool: false,
+        prizeShuffle: "none",
+        randomizer: "owr",
+        shuffleFollowers: false,
+        shuffleLinks: false,
+        shuffleTavern: true,
+      });
+      useEntrancePicker.getState().pick("lost-woods-hideout-drop");
+    });
+    render(
+      <>
+        <EntrancesPanel />
+        <EntranceLayer markers={MARKERS} world="light" />
+        <EntrancePicker />
+      </>,
+    );
+    expect(screen.getByTestId("entrances-panel")).toHaveTextContent(
+      "noting one door tells where its partner leads",
+    );
+    await user.click(screen.getByTestId("entrance-option-kakariko-well-top"));
+    // Only the note made is kept; its partner is told, and says by whom
+    expect(useGameStore.getState().entrances).toEqual({
+      "lost-woods-hideout-drop": "kakariko-well-top",
+    });
+    expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+      "1 of 139 entrances noted, 1 more told by their swaps",
+    );
+    const well = screen.getByTestId("entrance-row-kakariko-well-drop");
+    expect(within(well).getByRole("button")).toHaveAccessibleName(
+      "Kakariko Well Drop (hole): leads to Lost Woods Hideout (top), swapped with Lost Woods Hideout Drop (hole). Note where it leads",
+    );
+    expect(
+      screen.getByTestId("entrance-told-kakariko-well-drop"),
+    ).toHaveTextContent("swapped with Lost Woods Hideout Drop (hole)");
+    expect(
+      screen.queryByTestId("entrance-told-lost-woods-hideout-drop"),
+    ).toBeNull();
+    const marker = screen.getByTestId("entrance-kakariko-well-drop");
+    expect(marker).toHaveAccessibleName(
+      "Kakariko Well Drop (hole): leads to Lost Woods Hideout (top), swapped with Lost Woods Hideout Drop (hole)",
+    );
+    expect(marker).toHaveClass("entrance-marker--told");
+    expect(
+      screen.getByTestId("entrance-lost-woods-hideout-drop"),
+    ).not.toHaveClass("entrance-marker--told");
+    // Its picker says so, with nothing to forget there
+    await user.click(marker);
+    const picker = screen.getByRole("dialog", {
+      name: "Where does Kakariko Well Drop (hole) lead?",
+    });
+    expect(within(picker).getByTestId("entrance-told")).toHaveTextContent(
+      "Leads to Lost Woods Hideout (top), swapped with Lost Woods Hideout Drop (hole)",
+    );
+    expect(
+      within(picker).getByTestId("entrance-option-lost-woods-hideout-top"),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(within(picker).queryByTestId("entrance-forget")).toBeNull();
+    await user.click(within(picker).getByRole("button", { name: "Cancel" }));
+    // One Undo takes the note and what it told
+    act(() => useGameStore.getState().undo());
+    expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+      /^0 of 139 entrances noted$/,
+    );
+    expect(screen.queryByTestId("entrance-told-kakariko-well-drop")).toBeNull();
+    expect(
+      screen.getByTestId("entrance-kakariko-well-drop"),
+    ).toHaveAccessibleName("Kakariko Well Drop (hole): not known yet");
+  });
+
   it("notes a Simple run's dungeon whole from one of its doors, in the list and the picker", async () => {
     const user = userEvent.setup();
     act(() => {

@@ -7,48 +7,40 @@
 // run (hooks/useCrossedLogic.ts), with the randomizer's rules: no other run
 // downloads them, so whatever reads that world goes through this module.
 
-import type {
-  Analysis,
-  AnalyzeOptions,
-  Solution as EngineSolution,
-  State,
-} from "@alltp/engine";
+import type { State } from "@alltp/engine";
 import {
   type AlttprSettings,
-  analyzeFacts,
   type ErShuffle,
   type ErWorld,
   erConnections,
   erUntracked,
   erWorld,
-  everything,
   type GoMode,
   type GoModeStatus,
   goModeStatusBy,
   type KeyedSolution,
   solveErWithKeys,
-  solveFacts,
   solveFactsState,
   type UntrackedItem,
   withErUntracked,
 } from "@alltp/pack-alttpr";
+import {
+  type OwnWorldRun,
+  type OwnWorldSolver,
+  ownWorldSolver,
+} from "@/games/alttpr/logic/ownWorld";
 
 /** The entrances noted: an entrance id to its target's (the store's). */
 type Noted = Readonly<Record<string, string>>;
 
-/** A run with shuffled entrances, solved. */
-export interface CrossedRun {
-  /** Its world, for the settings and the entrances noted. */
-  readonly world: ErWorld;
-  /**
-   * The state solved: the player's, with the keys surely in hand and the
-   * facts gained.
-   */
-  readonly state: State;
+/**
+ * A run with shuffled entrances, solved: its `state` the player's with the
+ * keys surely in hand and the facts gained, its `solution` that state's
+ * (its regions, what can be seen).
+ */
+export interface CrossedRun extends OwnWorldRun<ErWorld> {
   /** Every location as the tracker shows it: the key model's. */
   readonly keyed: KeyedSolution;
-  /** That state's solution: its regions, what can be seen. */
-  readonly solution: EngineSolution;
 }
 
 let built:
@@ -81,8 +73,12 @@ const worldOf = (
   return world;
 };
 
-/** What the tracker asks of a run with shuffled entrances. */
-export interface CrossedSolver {
+/**
+ * What the tracker asks of a run with shuffled entrances: what any world of
+ * its own answers (`OwnWorldSolver`), its go mode stepped through its key
+ * model, and its untracked keys.
+ */
+export interface CrossedSolver extends OwnWorldSolver {
   /** The run solved: every location of its world, its keys read. */
   solve(
     settings: AlttprSettings,
@@ -90,18 +86,8 @@ export interface CrossedSolver {
     entrances: Noted,
     state: State,
   ): CrossedRun;
-  /** Where the run stands against its go mode, step by step. */
+  /** Where the run stands against its go mode, step by step, keys read. */
   goMode(run: CrossedRun, mode: GoMode): GoModeStatus;
-  /**
-   * The engine's analysis of a state of the run's world, its facts read
-   * through (`analyzeFacts`): what brings each location, in items.
-   */
-  analyze(run: CrossedRun, state: State, options: AnalyzeOptions): Analysis;
-  /**
-   * The run's world solved with everything held: what is not reached then
-   * waits on a door not noted, whatever the player finds.
-   */
-  everything(run: CrossedRun, settings: AlttprSettings): EngineSolution;
   /**
    * The items the player does not track in the run's world, with where
    * each may sit: none in keysanity.
@@ -115,19 +101,8 @@ export interface CrossedSolver {
   withUntracked(run: CrossedRun, state: State): State;
 }
 
-const solvedWithAll = new WeakMap<ErWorld, EngineSolution>();
-
 export const solver: CrossedSolver = {
-  analyze: ({ world }, state, options) =>
-    analyzeFacts(world, solveFactsState(world, state).state, options),
-  everything: ({ world }, settings) => {
-    let found = solvedWithAll.get(world);
-    if (found === undefined) {
-      found = solveFacts(world, everything(settings));
-      solvedWithAll.set(world, found);
-    }
-    return found;
-  },
+  ...ownWorldSolver(),
   goMode: ({ keyed, state, world }, mode) =>
     goModeStatusBy((s) => solveErWithKeys(world, s), state, mode, keyed),
   solve: (settings, shuffle, entrances, state) => {

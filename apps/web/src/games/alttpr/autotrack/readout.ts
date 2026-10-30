@@ -4,6 +4,9 @@
 // names are upstream's, rebuilt from the pack's ids.
 
 import {
+  DOOR_RANDOMIZER_SAME_LOCATIONS,
+  DOOR_RANDOMIZER_VERSION,
+  dungeon,
   dungeonOf,
   type ItemId,
   type Medallion,
@@ -23,6 +26,7 @@ import {
 } from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { boardItems } from "@/games/alttpr/autotrack/table";
+import { doorLocationById } from "@/games/alttpr/data/doorRando";
 import {
   BOTTLE_CONTENT_NAMES,
   BOTTLE_CONTENTS,
@@ -392,7 +396,7 @@ export const describeSeed = (
       label: "Seed",
       value: race
         ? "not shown in Race Mode"
-        : (seed.seed ?? "not an alttpr.com seed"),
+        : (seed.seed ?? "not named in the ROM"),
     },
     { label: "Logic", value: settingText(seed.logic, (v) => LOGIC_NAMES[v]) },
     { label: "World", value: settingText(seed.mode, (v) => MODE_LABELS[v]) },
@@ -442,7 +446,72 @@ export const describeSeed = (
       label: "Boss shuffle",
       value: settingText(seed.bossShuffle, labelled(BOSS_SHUFFLE_LABELS)),
     },
+    ...doorRows(seed),
   ];
+};
+
+/** DR's door shuffle as its ROM tells it (DRMode). */
+const DOOR_SHUFFLE_WORDS = {
+  basic: "Basic",
+  shuffled: "Partitioned or Crossed",
+  vanilla: "Vanilla",
+} as const;
+
+/** DR's pottery as its ROM tells it. */
+const POTTERY_WORDS = {
+  "beyond-caves": "beyond the caves (the mode is not in the ROM)",
+  cave: "Cave pots",
+  none: "None",
+} as const;
+
+/** DR's drop shuffle. */
+const DROP_WORDS = { keys: "Keys", none: "None", underworld: "Underworld" };
+
+/**
+ * A Door Randomizer seed's lines: the randomizer and its version, which
+ * says so when its locations and their flags may not be those of the
+ * tracker's DR data (a version outside DOOR_RANDOMIZER_SAME_LOCATIONS), then
+ * its own settings. None
+ * for an alttpr.com seed.
+ */
+const doorRows = (seed: SeedSettingsReading): Readout["seed"] => {
+  const randomizer = seed.randomizer;
+  if (randomizer?.kind !== "door") return [];
+  const read = seed.door?.version;
+  const version = read?.known ? read.value : randomizer.version;
+  const name = randomizer.overworld
+    ? "Overworld Randomizer, on the Door Randomizer"
+    : "Door Randomizer";
+  const differs =
+    version !== null && !DOOR_RANDOMIZER_SAME_LOCATIONS.has(version)
+      ? ` (the tracker reads DR ${DOOR_RANDOMIZER_VERSION}: this version's locations may differ)`
+      : "";
+  const rows: { label: string; value: string }[] = [
+    {
+      label: "Randomizer",
+      value: `${name} ${version ?? "(version not in the title)"}${differs}`,
+    },
+  ];
+  const door = seed.door;
+  if (door === undefined) return rows;
+  const yesNo = (value: boolean) => (value ? "yes" : "no");
+  rows.push(
+    {
+      label: "Door shuffle",
+      value: settingText(door.doorShuffle, (v) => DOOR_SHUFFLE_WORDS[v]),
+    },
+    {
+      label: "Enemy drops",
+      value: settingText(door.dropShuffle, (v) => DROP_WORDS[v]),
+    },
+    {
+      label: "Pottery",
+      value: settingText(door.pottery, (v) => POTTERY_WORDS[v]),
+    },
+    { label: "Shopsanity", value: settingText(door.shopsanity, yesNo) },
+    { label: "Take-any caves", value: settingText(door.takeAny, yesNo) },
+  );
+  return rows;
 };
 
 /** A dungeon's own items, named as a kind when the board has no cell for them. */
@@ -539,11 +608,14 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
  * then counts
  * @param genericKeys - Whether a small key opens any dungeon (retro): no key
  * count is then listed, since a dungeon's would say where a key was taken
+ * @param doorLocations - A Door Randomizer run's locations, by id: a bit of
+ * its tables for any other location is not listed
  */
 export const describeReading = (
   reading: AutotrackReading,
   wildKeys = false,
   genericKeys = false,
+  doorLocations: ReadonlySet<string> = new Set(),
 ): Readout => {
   const { beyond, counts, unsettled } = reading.items;
   const items: string[] = [];
@@ -613,13 +685,31 @@ export const describeReading = (
   }
 
   const checked = new Map<string, string[]>();
+  let checkedCount = 0;
   for (const id of reading.checked) {
+    const door = doorLocationById(id);
+    if (door !== undefined) {
+      // A Door Randomizer table's bit: told only for a location of the run's
+      if (!doorLocations.has(id)) continue;
+      const area =
+        door.dungeon === null ? "Outside dungeons" : dungeon(door.dungeon).name;
+      add(
+        checked,
+        area,
+        door.name.startsWith(`${area} - `)
+          ? door.name.slice(area.length + 3)
+          : door.name,
+      );
+      checkedCount++;
+      continue;
+    }
     const code = dungeonOf(id) as DungeonCode | null;
     add(
       checked,
       code === null ? "Outside dungeons" : DUNGEON_NAMES[code],
       locationName(id, code !== null),
     );
+    checkedCount++;
   }
   // Race Mode reads every check but Zelda's rescue (v2.0 forbids telling it)
   const raceChecks = reading.unsettled.filter(([, w]) => w === "race-mode");
@@ -646,7 +736,7 @@ export const describeReading = (
     checked: ["Outside dungeons", ...DUNGEON_CODES.map((c) => DUNGEON_NAMES[c])]
       .filter((area) => checked.has(area))
       .map((area) => ({ area, locations: checked.get(area) as string[] })),
-    checkedCount: reading.checked.length,
+    checkedCount,
     completed: DUNGEON_CODES.filter(
       (code) => code !== "H2" && completed[code] === true,
     ).map((code) => DUNGEON_NAMES[code]),

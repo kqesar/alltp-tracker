@@ -2,7 +2,10 @@
 // pieces found, which upstream's hasHealth sums, ItemCollection.php:546-553)
 // and the escape's ten bombs (canKillEscapeThings, ItemCollection.php:562), and
 // whether the flute was activated (canFly, ItemCollection.php:415-428), which
-// Race Mode never reads.
+// Race Mode never reads, and the Door Randomizer's +10 bomb upgrade, the bomb
+// bag of a `--bombbag` seed (can_use_bombs, dr:BaseClasses.py:1208-1209,
+// owr:BaseClasses.py:1367), which a tracker knows only from the bombs it
+// records in a run known to have the bag (none until one is found).
 // A player sees them on the HUD but may leave them unrecorded, and a rule
 // that asks for them must not then read "none found": that would put every
 // dungeon of the basic placement out of logic for good.
@@ -28,6 +31,7 @@ import { type Expr, parse, print } from "@alltp/engine";
  */
 export const UNKNOWN_COUNTS = {
   bombs: { fact: "bombsUnknown", items: ["tenBombs"] },
+  bombUpgrade: { fact: "bombUpgradeUnknown", items: ["bombUpgrade"] },
   flute: { fact: "fluteActivationUnknown", heldOnly: true, items: ["flute"] },
   health: { fact: "healthUnknown", items: ["heartContainer", "pieceOfHeart"] },
 } as const;

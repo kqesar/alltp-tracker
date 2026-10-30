@@ -8,14 +8,21 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./bonk": "./src/door-rando/bonk.ts",
+    "./door-world": "./src/door-world/index.ts",
+    "./door-world/dr": "./src/door-world/dr-data.ts",
+    "./door-world/owr": "./src/door-world/owr-data.ts",
     "./spoiler": "./src/spoiler/parse.ts"
   },
   "scripts": {
+    "import-dr": "node scripts/import-dr.mjs",
     "import-er": "node scripts/import-er.mjs",
     "import-item-names": "node scripts/import-item-names.mjs",
     "import-rupee-texts": "node scripts/import-rupee-texts.mjs",
     "import-upstream": "node scripts/import-upstream-tests.mjs",
     "record-dark-room": "node scripts/record-dark-room.mjs",
+    "record-dr-seeds": "node scripts/record-dr-seeds.mjs",
+    "record-dr-spoilers": "node scripts/record-dr-spoilers.mjs",
     "record-er-seeds": "node scripts/record-er-seeds.mjs",
     "spoiler-fixtures": "node scripts/spoiler-fixtures.mjs",
     "test": "vitest run",
@@ -26,5 +33,8 @@
     "@alltp/engine": "workspace:*",
     "@alltp/spoiler": "workspace:*",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "js-yaml": "5.5.0"
   }
 }

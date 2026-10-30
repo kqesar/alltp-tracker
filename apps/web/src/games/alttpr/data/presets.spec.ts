@@ -8,13 +8,16 @@ import {
   getPreset,
   HIDDEN_ENTRANCES,
   HIDEABLE,
+  keyCellsShown,
   logicModelled,
   noLogicRun,
   presets,
   sameSettings,
   TUNING,
   tunedOf,
+  tuningOptionsOf,
   unmodelledReasons,
+  wildItems,
 } from "@/games/alttpr/data/presets";
 
 describe("presets", () => {
@@ -44,6 +47,12 @@ describe("presets", () => {
         )
         .map((preset) => preset.id),
     ).toEqual([]);
+    // A DR seed's bomb bag not known reads as on, its upgrade not known:
+    // modelled (drSettingsOf); DR Crosskeys races have none
+    for (const id of ["door-randomizer", "door-crosskeys"])
+      expect(unmodelledReasons(getPreset(id).settings), id).toEqual([]);
+    expect(getPreset("door-randomizer").settings.bombBag).toBeUndefined();
+    expect(getPreset("door-crosskeys").settings.bombBag).toBe(false);
     expect(unmodelledReasons(getPreset("mystery").settings)).toEqual([
       HIDDEN_ENTRANCES,
     ]);
@@ -291,6 +300,37 @@ describe("presets", () => {
     expect(getPreset("ganonhunt").settings.goal).toBe("ganonhunt");
     expect(tunedOf(open, "swords")).toBe("randomized");
     expect(tunedOf(open, "enemyHealth")).toBe("default");
+  });
+
+  it("offers small keys alone to a Door Randomizer run, never to an alttpr.com one", () => {
+    const values = (settings: Parameters<typeof tuningOptionsOf>[0]) =>
+      tuningOptionsOf(settings, "dungeonItems").map(([value]) => value);
+    expect(values(getPreset("open").settings)).toEqual([
+      "standard",
+      "mc",
+      "mcs",
+      "full",
+    ]);
+    const dr = getPreset("door-randomizer").settings;
+    expect(values(dr)).toEqual(["standard", "mc", "mcs", "full", "keys"]);
+    expect(tuningOptionsOf(dr, "goal")).toBe(TUNING.goal);
+    // The small keys leave, the rest stays; the key cells show on their own
+    expect(wildItems({ dungeonItems: "keys" })).toEqual({
+      bigKeys: false,
+      keys: true,
+      mapsAndCompasses: false,
+    });
+    expect(keyCellsShown({ dungeonItems: "keys" })).toBe(true);
+    expect(keyCellsShown({ dungeonItems: "standard" })).toBe(false);
+    expect(keyCellsShown({ dungeonItems: "mc" })).toBe(true);
+    expect(
+      Object.fromEntries(
+        describeSettings({ ...dr, dungeonItems: "keys" }).map((row) => [
+          row.label,
+          row.value,
+        ]),
+      ),
+    ).toMatchObject({ "Dungeon items": "Small keys only" });
   });
 
   it("getPreset returns the matching preset", () => {

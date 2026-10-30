@@ -1,0 +1,360 @@
+{
+  "file": "test/dungeons/TestDarkPalace.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "source": "test/dungeons/TestDungeon.py:31@5c44da3",
+    "startingRegions": {
+      "Agahnims Tower": ["Agahnims Tower Portal"],
+      "Desert Palace Main (Inner)": ["Desert South Portal"],
+      "Desert Palace Main (Outer)": [
+        "Desert West Portal",
+        "Desert East Portal"
+      ],
+      "Desert Palace North": ["Desert Back Portal"],
+      "Eastern Palace": ["Eastern Portal"],
+      "Ganons Tower (Entrance)": ["Ganons Tower Portal"],
+      "Ice Palace (Entrance)": ["Ice Portal"],
+      "Misery Mire (Entrance)": ["Mire Portal"],
+      "Palace of Darkness (Entrance)": ["Palace of Darkness Portal"],
+      "Skull Woods Final Section (Entrance)": ["Skull 3 Portal"],
+      "Skull Woods First Section": ["Skull 1 Portal", "Skull Pinball"],
+      "Skull Woods First Section (Left)": ["Skull Left Drop"],
+      "Skull Woods First Section (Top)": ["Skull Pot Circle"],
+      "Skull Woods Second Section": [
+        "Skull 2 East Portal",
+        "Skull 2 West Portal",
+        "Skull Back Drop"
+      ],
+      "Swamp Palace (Entrance)": ["Swamp Portal"],
+      "Thieves Town (Entrance)": ["Thieves Town Portal"],
+      "Tower of Hera (Bottom)": ["Hera Portal"]
+    },
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Palace of Darkness - Shooter Room", true, []],
+        ["Palace of Darkness - The Arena - Ledge", false, []],
+        [
+          "Palace of Darkness - The Arena - Ledge",
+          false,
+          [],
+          ["Progressive Bow"]
+        ],
+        ["Palace of Darkness - The Arena - Ledge", true, ["Progressive Bow"]],
+        ["Palace of Darkness - Map Chest", false, []],
+        ["Palace of Darkness - Map Chest", false, [], ["Progressive Bow"]],
+        ["Palace of Darkness - Map Chest", true, ["Progressive Bow"]],
+        ["Palace of Darkness - Big Key Chest", false, []],
+        [
+          "Palace of Darkness - Big Key Chest",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Big Key Chest",
+          true,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - The Arena - Bridge", false, []],
+        [
+          "Palace of Darkness - The Arena - Bridge",
+          false,
+          [],
+          ["Small Key (Palace of Darkness)", "Progressive Bow"]
+        ],
+        [
+          "Palace of Darkness - The Arena - Bridge",
+          false,
+          [],
+          ["Small Key (Palace of Darkness)", "Hammer"]
+        ],
+        [
+          "Palace of Darkness - The Arena - Bridge",
+          true,
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - The Arena - Bridge",
+          true,
+          ["Progressive Bow", "Hammer"]
+        ],
+        ["Palace of Darkness - Stalfos Basement", false, []],
+        [
+          "Palace of Darkness - Stalfos Basement",
+          false,
+          [],
+          ["Small Key (Palace of Darkness)", "Progressive Bow"]
+        ],
+        [
+          "Palace of Darkness - Stalfos Basement",
+          false,
+          [],
+          ["Small Key (Palace of Darkness)", "Hammer"]
+        ],
+        [
+          "Palace of Darkness - Stalfos Basement",
+          true,
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Stalfos Basement",
+          true,
+          ["Progressive Bow", "Hammer"]
+        ],
+        ["Palace of Darkness - Compass Chest", false, []],
+        [
+          "Palace of Darkness - Compass Chest",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Compass Chest",
+          true,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Dark Basement - Left", false, []],
+        ["Palace of Darkness - Dark Basement - Left", false, [], ["Lamp"]],
+        [
+          "Palace of Darkness - Dark Basement - Left",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Dark Basement - Left",
+          true,
+          [
+            "Lamp",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Dark Basement - Right", false, []],
+        ["Palace of Darkness - Dark Basement - Right", false, [], ["Lamp"]],
+        [
+          "Palace of Darkness - Dark Basement - Right",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Dark Basement - Right",
+          true,
+          [
+            "Lamp",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Harmless Hellway", false, []],
+        [
+          "Palace of Darkness - Harmless Hellway",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Harmless Hellway",
+          true,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Dark Maze - Top", false, []],
+        ["Palace of Darkness - Dark Maze - Top", false, [], ["Lamp"]],
+        [
+          "Palace of Darkness - Dark Maze - Top",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Dark Maze - Top",
+          true,
+          [
+            "Lamp",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Dark Maze - Bottom", false, []],
+        ["Palace of Darkness - Dark Maze - Bottom", false, [], ["Lamp"]],
+        [
+          "Palace of Darkness - Dark Maze - Bottom",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Dark Maze - Bottom",
+          true,
+          [
+            "Lamp",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Big Chest", false, []],
+        ["Palace of Darkness - Big Chest", false, [], ["Lamp"]],
+        [
+          "Palace of Darkness - Big Chest",
+          false,
+          [],
+          ["Big Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Big Chest",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Big Chest",
+          true,
+          [
+            "Lamp",
+            "Big Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ],
+        ["Palace of Darkness - Boss", false, []],
+        ["Palace of Darkness - Boss", false, [], ["Lamp"]],
+        ["Palace of Darkness - Boss", false, [], ["Hammer"]],
+        ["Palace of Darkness - Boss", false, [], ["Progressive Bow"]],
+        [
+          "Palace of Darkness - Boss",
+          false,
+          [],
+          ["Big Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Boss",
+          false,
+          [
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ],
+          ["Small Key (Palace of Darkness)"]
+        ],
+        [
+          "Palace of Darkness - Boss",
+          true,
+          [
+            "Lamp",
+            "Hammer",
+            "Progressive Bow",
+            "Big Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)",
+            "Small Key (Palace of Darkness)"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testDarkPalace",
+      "startingRegions": ["Palace of Darkness (Entrance)"]
+    }
+  ],
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "harness": {
+      "branch": "1.5.8",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  }
+}

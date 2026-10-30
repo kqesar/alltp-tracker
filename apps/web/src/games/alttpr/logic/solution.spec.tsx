@@ -29,6 +29,7 @@ import {
   markerDetail,
   markerStateOf,
   setCrossedSolver,
+  setDoorSolver,
   solutionOf,
   trackerInput,
   trickSolutionOf,
@@ -64,7 +65,7 @@ describe("trackerInput", () => {
       medallions: { mire: "unknown", turtleRock: "unknown" },
       prizes: {},
       // No hearts set, and no cell for the escape's bombs
-      unknown: { bombs: true, health: true },
+      unknown: { bombs: true, bombUpgrade: true, health: true },
     });
   });
 
@@ -340,6 +341,54 @@ describe("a run with shuffled entrances", () => {
       useGameStore.setState((s) => ({ items: { ...s.items, knownboss0: 10 } })),
     );
     expect(solutionOf(store()).tris[boss]).toBe("no");
+  });
+});
+
+describe("a Door Randomizer run", () => {
+  const CASTLE_TOWER = KEY_DUNGEONS.indexOf("castle-tower");
+
+  it("is maybe until DR's world loads, then solved in it", async () => {
+    act(() => {
+      store().applyPreset("door-randomizer");
+      store().updateDoorSettings({ bombBag: false });
+    });
+    expect(solutionOf(store())).toMatchObject({ modelled: false });
+    expect(solutionOf(store()).tris.mushroom).toBe("maybe");
+
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    act(() => setDoorSolver(solver));
+    const solution = solutionOf(store());
+    expect(solution).toMatchObject({ modelled: true });
+    expect(solution.door).toBeDefined();
+    expect(solution.tris.mushroom).toBe("yes");
+    // Every check of the map is one of DR's world
+    const missing = MARKERS.flatMap((marker) => marker.locations).filter(
+      (id) => solution.tris[id] === undefined,
+    );
+    expect(missing).toEqual([]);
+    // No tricks or margin world for it
+    expect(
+      tricksShown({
+        ...store(),
+        tricks: { enabled: true, techniques: ["fakeFlipper"] },
+      }),
+    ).toBe(false);
+  });
+
+  it("reads the keys recorded in their dungeons: below DR's number maybe", async () => {
+    const { solver } = await import("@/games/alttpr/logic/drSolver");
+    act(() => {
+      setDoorSolver(solver);
+      store().applyPreset("door-randomizer");
+      store().updateDoorSettings({ bombBag: false });
+    });
+    // Agahnim's Tower's dark maze: one key past its first door
+    // (validate_vanilla_key_logic, KeyDoorShuffle.py:2079-2083)
+    give({ agahnim: 0, cape: true, lantern: true, sword: 1 });
+    const maze = "castle-tower/dark-maze";
+    expect(solutionOf(store()).tris[maze]).toBe("maybe");
+    act(() => store().setSmallKeys(CASTLE_TOWER, 1));
+    expect(solutionOf(store()).tris[maze]).toBe("yes");
   });
 });
 

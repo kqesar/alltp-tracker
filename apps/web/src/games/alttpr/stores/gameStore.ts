@@ -4,8 +4,15 @@ import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
+import {
+  DOOR_OPTIONS,
+  type DoorRunSettings,
+  type DoorSetting,
+  isBagRun,
+} from "@/games/alttpr/data/doorRando";
 import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
+  BAG_BOMBS,
   bottleAfter,
   bottleSlotOf,
   CAPACITIES,
@@ -27,11 +34,11 @@ import {
   DEFAULT_PRESET_ID,
   getPreset,
   type HiddenSetting,
+  keyCellsShown,
   type RunSettings,
   type SettingsChange,
   type TunableSetting,
   tunedOf,
-  wildItems,
 } from "@/games/alttpr/data/presets";
 import {
   DEFAULT_TRICKS,
@@ -39,10 +46,18 @@ import {
   type TrickPrefs,
 } from "@/games/alttpr/data/tricks";
 import {
+  type DoorNotesChange,
+  withDoorNotes,
+} from "@/games/alttpr/logic/doorNotes";
+import {
   knownBossIndex,
   knownBossValues,
   stepKnownBoss,
 } from "@/games/alttpr/logic/knownBosses";
+import {
+  type OverworldNotesChange,
+  withOverworldNotes,
+} from "@/games/alttpr/logic/overworldNotes";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
@@ -157,12 +172,37 @@ type GameState = Progress &
      */
     noteEntrances: (notes: Readonly<Record<string, string | null>>) => void;
     /**
+     * Note a Door Randomizer run's doors (`DoorNotes`): each entry of the
+     * change set, or forgotten (`null`), as one undo step (none when nothing
+     * changes). Its pieces come whole from `logic/doorNotes.ts`, which
+     * keeps only what the player noted (a coupled door's way back is
+     * derived, `linkOf`).
+     */
+    noteDoors: (change: DoorNotesChange) => void;
+    /**
+     * Note an Overworld Randomizer run's shuffled overworld
+     * (`OverworldNotes`): whirlpools set or forgotten, each with its way
+     * back, the flute's spots, edge crossings or Mixed flips, as one undo
+     * step (none when nothing changes; `logic/overworldNotes.ts`).
+     */
+    noteOverworld: (change: OverworldNotesChange) => void;
+    /**
      * Change settings in the run going, its progress kept (`retune`): what
      * a Mystery run discovers, and the dungeon items, whose counters keep
      * the items found. A setting changed is no longer hidden. One undo
      * step; none when nothing changes.
      */
     updateSettings: (change: SettingsChange) => void;
+    /**
+     * Change a Door Randomizer run's own settings in the run going, as
+     * `updateSettings` does: the counters keep their items found as the
+     * locations the settings make come and go. One undo step, its
+     * entrance shuffle too (DR's own or alttpr.com's, `doorEntranceChange`).
+     */
+    updateDoorSettings: (
+      change: Partial<DoorRunSettings> &
+        Pick<SettingsChange, "entranceShuffle">,
+    ) => void;
     /** Hide a setting again, as not known yet: one undo step. */
     hideSetting: (setting: HiddenSetting) => void;
     /**
@@ -261,16 +301,20 @@ export const createProgress = (
   settings: RunSettings = getPreset(presetId).settings,
 ): Progress => ({
   checked: {},
+  doors: {},
   entrances: {},
   items: {
     ...initialItems,
     ...fullCounters(settings),
+    // A bomb-bag run starts with no bombs (BAG_BOMBS)
+    ...(isBagRun(settings) ? { bombcapacity: BAG_BOMBS.start } : {}),
     // A ganonhunt asks for its own count of pieces (the pack's GANONHUNT)
     ...(settings.goal === "ganonhunt"
       ? { goalpieces: GANONHUNT.required }
       : {}),
   } as ItemState,
   medallions: Array(10).fill(0) as number[],
+  overworld: {},
   presetId: getPreset(presetId).id,
   seed: null,
   settings,
@@ -290,6 +334,10 @@ export const isFreshRun = (progress: Progress): boolean => {
     progress.medallions.every((value) => value === 0) &&
     progress.smallKeys.every((value) => value === 0) &&
     Object.keys(progress.entrances).length === 0 &&
+    Object.values(progress.doors).every(
+      (notes) => Object.keys(notes ?? {}).length === 0,
+    ) &&
+    Object.keys(progress.overworld).length === 0 &&
     Object.entries(fresh.items).every(
       ([id, value]) => progress.items[id] === value,
     )
@@ -299,7 +347,7 @@ export const isFreshRun = (progress: Progress): boolean => {
 /** Display preferences for a first visit. */
 const createPrefs = (presetId: string = DEFAULT_PRESET_ID): Prefs => ({
   autoTimer: true,
-  bigKeysVisible: wildItems(getPreset(presetId).settings).mapsAndCompasses,
+  bigKeysVisible: keyCellsShown(getPreset(presetId).settings),
   mapLayout: "auto",
   mapView: "map",
   shortcuts: DEFAULT_SHORTCUTS,
@@ -327,9 +375,11 @@ const restoreProgress = (
       : base.items;
   return {
     checked: saved.checked ?? base.checked,
+    doors: saved.doors ?? base.doors,
     entrances: saved.entrances ?? base.entrances,
     items,
     medallions: saved.medallions ?? base.medallions,
+    overworld: saved.overworld ?? base.overworld,
     presetId: saved.presetId ?? base.presetId,
     seed: saved.seed === undefined ? base.seed : saved.seed,
     settings,
@@ -356,6 +406,8 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
     saved.mapView === "map" ||
     saved.mapView === "checks" ||
     saved.mapView === "entrances" ||
+    saved.mapView === "doors" ||
+    saved.mapView === "overworld" ||
     saved.mapView === "run"
       ? saved.mapView
       : base.mapView,
@@ -370,9 +422,11 @@ const restorePrefs = (base: Prefs, saved: Partial<Prefs>): Prefs => ({
 /** The run alone, as a save file carries it. */
 const progressOf = (state: GameState): Progress => ({
   checked: state.checked,
+  doors: state.doors,
   entrances: state.entrances,
   items: state.items,
   medallions: state.medallions,
+  overworld: state.overworld,
   presetId: state.presetId,
   seed: state.seed,
   settings: state.settings,
@@ -406,6 +460,34 @@ const dated = (
       };
 
 /**
+ * The bombs a run's capacity becomes when its bomb bag turns known on or
+ * stops being so; undefined when it stays. Turned on, the +10 upgrades
+ * recorded beyond the 10 every other run starts with, each a bag
+ * (BAG_BOMBS: a +5 is none in a bag seed), so none for those 10 alone,
+ * which would say the bag found (autotracking reads it again outside Race
+ * Mode). Turned off, none read back as the 10 every other run starts with.
+ */
+const bagBombs = (
+  progress: Progress,
+  settings: RunSettings,
+): number | undefined => {
+  const bag = isBagRun(settings);
+  if (bag === isBagRun(progress.settings)) return undefined;
+  const start = CAPACITIES.bombcapacity?.start ?? 0;
+  if (bag) {
+    const upgrades = Number(progress.items.bombcapacity ?? 0) - start;
+    return Math.min(
+      BAG_BOMBS.top,
+      Math.max(
+        BAG_BOMBS.start,
+        Math.floor(upgrades / BAG_BOMBS.step) * BAG_BOMBS.step,
+      ),
+    );
+  }
+  return Math.max(start, Number(progress.items.bombcapacity ?? 0));
+};
+
+/**
  * A run with some of its settings changed, its progress kept: a setting
  * changed is no longer hidden, and a change of dungeon items keeps each
  * counter's items found (its top less what it has left), counted again
@@ -413,11 +495,16 @@ const dated = (
  */
 export const retune = (
   progress: Progress,
-  change: SettingsChange,
+  change: SettingsChange & Partial<Pick<RunSettings, DoorSetting>>,
 ): { items?: ItemState; settings: RunSettings } | null => {
-  const changed = (Object.keys(change) as TunableSetting[]).filter(
+  const changed = (
+    Object.keys(change) as (TunableSetting | DoorSetting)[]
+  ).filter(
     (key) =>
-      change[key] !== tunedOf(progress.settings, key) ||
+      change[key] !==
+        (Object.hasOwn(DOOR_OPTIONS, key)
+          ? progress.settings[key as DoorSetting]
+          : tunedOf(progress.settings, key as TunableSetting)) ||
       progress.settings.hidden?.includes(key as HiddenSetting),
   );
   if (changed.length === 0) return null;
@@ -432,6 +519,9 @@ export const retune = (
     ...(hidden === undefined ? {} : { hidden }),
   };
   if (hidden?.length === 0) delete settings.hidden;
+  // A setting set back to unset (a DR run's `DOOR_UNSET`) is its absence
+  for (const [key, value] of Object.entries(rest))
+    if (value === undefined) delete settings[key as keyof RunSettings];
   // None is said by the glitches' absence, as every preset says it
   if (glitches === "none") delete settings.glitches;
   else if (glitches !== undefined) settings.glitches = glitches;
@@ -449,10 +539,21 @@ export const retune = (
   else if (enemyHealth !== undefined) settings.enemyHealth = enemyHealth;
   // A swordless run's swords are nowhere
   if (settings.swordless) delete settings.swords;
-  if (settings.dungeonItems === progress.settings.dungeonItems) {
-    return { settings };
+  const bombs = bagBombs(progress, settings);
+  // Each counter keeps its items found when its top moves: dungeon items
+  // let out or kept, a Door Randomizer run's locations added or taken away
+  if (
+    COUNTER_INDICES.every(
+      (index) =>
+        counterMax(index, settings) === counterMax(index, progress.settings),
+    )
+  ) {
+    return bombs === undefined
+      ? { settings }
+      : { items: { ...progress.items, bombcapacity: bombs }, settings };
   }
   const items = { ...progress.items } as Record<string, boolean | number>;
+  if (bombs !== undefined) items.bombcapacity = bombs;
   for (const index of COUNTER_INDICES) {
     const id = `chest${index}`;
     const found =
@@ -465,14 +566,14 @@ export const retune = (
 
 /**
  * The key cells, following the run when its dungeon items start or stop
- * leaving their dungeons; otherwise the player's own choice stands.
+ * leaving their dungeons (`keyCellsShown`); otherwise the player's own
+ * choice stands.
  */
 const keyCellsFor = (state: GameState, settings: RunSettings) => ({
   bigKeysVisible:
-    wildItems(settings).mapsAndCompasses ===
-    wildItems(state.settings).mapsAndCompasses
+    keyCellsShown(settings) === keyCellsShown(state.settings)
       ? state.bigKeysVisible
-      : wildItems(settings).mapsAndCompasses,
+      : keyCellsShown(settings),
 });
 
 /**
@@ -642,12 +743,18 @@ export const useGameStore = create<GameState>()(
             }
 
             // A capacity steps 5 at a time between the start and the most a
-            // seed gives (capacityAfter)
+            // seed gives, a bomb-bag run's bombs a bag at a time
+            // (capacityAfter)
             if (Object.hasOwn(CAPACITIES, item)) {
               return record(state, {
                 items: {
                   ...state.items,
-                  [item]: capacityAfter(item, current, direction),
+                  [item]: capacityAfter(
+                    item,
+                    current,
+                    direction,
+                    isBagRun(state.settings),
+                  ),
                 },
               });
             }
@@ -682,7 +789,7 @@ export const useGameStore = create<GameState>()(
         ) => {
           const state = get();
           // A dungeon without small keys (Eastern Palace) has nothing to step
-          const maxForDungeon = smallKeysMax(dungeonIndex);
+          const maxForDungeon = smallKeysMax(dungeonIndex, state.settings);
           if (maxForDungeon === 0) return;
           const newSmallKeys = [...state.smallKeys];
 
@@ -715,6 +822,11 @@ export const useGameStore = create<GameState>()(
           runReplaced("alttpr", get().past);
           requestResync("alttpr");
         },
+        noteDoors: (change: DoorNotesChange) =>
+          set((state) => {
+            const doors = withDoorNotes(state.doors, change);
+            return doors === state.doors ? state : record(state, { doors });
+          }),
 
         noteEntrance: (entrance: string, target: string | null) =>
           get().noteEntrances({ [entrance]: target }),
@@ -723,6 +835,13 @@ export const useGameStore = create<GameState>()(
           set((state) => {
             const entrances = withNotes(state.entrances, notes);
             return entrances === null ? state : record(state, { entrances });
+          }),
+        noteOverworld: (change: OverworldNotesChange) =>
+          set((state) => {
+            const overworld = withOverworldNotes(state.overworld, change);
+            return overworld === state.overworld
+              ? state
+              : record(state, { overworld });
           }),
         past: [],
         pauseTimer: (at = Date.now()) =>
@@ -797,7 +916,8 @@ export const useGameStore = create<GameState>()(
         setSmallKeys: (dungeonIndex: number, count: number) =>
           set((state) => {
             if (state.smallKeys[dungeonIndex] === count) return state;
-            if (count < 0 || count > smallKeysMax(dungeonIndex)) return state;
+            if (count < 0 || count > smallKeysMax(dungeonIndex, state.settings))
+              return state;
             const smallKeys = [...state.smallKeys];
             smallKeys[dungeonIndex] = count;
             return record(state, { smallKeys });
@@ -843,6 +963,12 @@ export const useGameStore = create<GameState>()(
           boardRestored("alttpr", previous);
         },
 
+        updateDoorSettings: (change) =>
+          set((state) => {
+            const next = retune(progressOf(state), change);
+            return next === null ? state : record(state, next);
+          }),
+
         updateSettings: (change) =>
           set((state) => {
             const next = retune(progressOf(state), change);
@@ -860,10 +986,17 @@ export const useGameStore = create<GameState>()(
           // instead of discarding the whole save.
           return {
             ...current,
-            ...restoreProgress(
-              current,
-              validateProgress(saved, current.settings).value,
-            ),
+            ...restoreProgress(current, {
+              // The notes a save does not hold are the saved run's: none,
+              // never this tab's (an older version's tab writes no door,
+              // entrance or overworld notes, and its New game must not
+              // keep this run's for the next seed)
+              doors: {},
+              entrances: {},
+              overworld: {},
+              seed: null,
+              ...validateProgress(saved, current.settings).value,
+            }),
             ...restorePrefs(current, saved as Partial<Prefs>),
             // The run was replaced from outside (first load, another tab):
             // undoing would now rewind someone else's changes.

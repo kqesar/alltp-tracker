@@ -83,7 +83,13 @@ export type MapLayout = "auto" | "side-by-side" | "stacked";
  * What the map panel shows: the two worlds, every check as a list, every
  * shuffled entrance as a list, or the run.
  */
-export type MapView = "map" | "checks" | "entrances" | "run";
+export type MapView =
+  | "map"
+  | "checks"
+  | "entrances"
+  | "doors"
+  | "overworld"
+  | "run";
 
 /** The two halves of the map asset. */
 export type World = "light" | "dark";

@@ -5,6 +5,7 @@ import {
   duration,
   ReviewWaits,
 } from "@/games/alttpr/components/map/ReviewWaits";
+import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { withCost } from "@/games/alttpr/logic/costs";
 import { locationName } from "@/games/alttpr/logic/solution";
 import {
@@ -32,6 +33,10 @@ const plural = (count: number, word: string): string =>
 const HIDDEN: Readonly<Record<Hidden, string>> = {
   "by-hand":
     "This run was tracked by hand: its times are when you clicked, so when each item waited is not shown.",
+  "door-logic":
+    "An item this seed needed lay in a pot, an enemy drop, a key drop, a bonk drop or a shop, which the run keeps no time for, or the run is not held to the Door Randomizer's or the Overworld Randomizer's own rules: when each place came into logic is not shown.",
+  doors:
+    "Doors were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   entrances:
     "Entrances were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "generic-keys":
@@ -47,7 +52,9 @@ const HIDDEN: Readonly<Record<Hidden, string>> = {
   "no-times":
     "Nothing the seed needed has a time on this run, so when each item waited is not shown.",
   "not-modelled":
-    "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a logic other than the run's Glitches, or a mode it does not model), so when each place came into logic is not shown.",
+    "This seed's logic is not one the tracker models (hidden settings, shuffled bosses, a logic other than the run's Glitches, a mode or a Door or Overworld Randomizer setting it does not model, which the map's note names), so when each place came into logic is not shown.",
+  overworld:
+    "Whirlpools, flute spots, the overworld's edges or its screens (Mixed) were shuffled: the run does not time where each led, so when each place came into logic is not shown.",
   "race-mode":
     "Only places outside dungeons have times in this run (autotracked in Race Mode by an earlier version of the tracker, which did not read a dungeon's chests), so most needed items are matched by the item, not by its place: when each waited is not shown.",
 };
@@ -60,7 +67,9 @@ const RawTime = ({ row }: { row: ReviewRow }) => {
     return (
       <>
         {row.state === "untimed"
-          ? "done, no time"
+          ? DOOR_LOCATION_IDS.has(row.entry.placement.location)
+            ? "taken, not timed"
+            : "done, no time"
           : row.state === "unknown"
             ? "not tracked"
             : "never taken"}
@@ -401,12 +410,19 @@ const NeverChecked = ({
 
 /** The seed's own facts: medallions, prizes, starting items, shuffled bosses. */
 const Facts = ({ log }: { log: AlttprSpoilerLog }) => {
-  const { bosses, medallions, prizes } = log.extra;
+  const { bosses, door, medallions, prizes } = log.extra;
   const prizeNames = Object.entries(prizes).map(([dungeon, item]) => {
     const held = log.placements.find((p) => p.location === `${dungeon}/prize`);
     return [dungeon, held?.itemName ?? item] as const;
   });
   const rows: [string, string][] = [];
+  if (door !== undefined) {
+    rows.push([
+      "Randomizer",
+      `${door.overworld ? "Overworld Randomizer on the Door Randomizer" : "Door Randomizer"}${door.version === null ? "" : ` ${door.version}`}`,
+    ]);
+    if (door.code !== null) rows.push(["Title screen code", door.code]);
+  }
   if (medallions.mire !== null || medallions.turtleRock !== null) {
     rows.push([
       "Medallions",
@@ -479,6 +495,10 @@ const ReviewResult = ({ review }: { review: Loaded }) => {
   );
   const comparison = useMemo(() => compareReview(log, run), [log, run]);
   const hidden = hiddenReason(log, run, comparison);
+  const doorUntimed = comparison.rows.filter(
+    ({ entry, state }) =>
+      state === "untimed" && DOOR_LOCATION_IDS.has(entry.placement.location),
+  ).length;
   const sweep = useSweep(review, run, comparison, endMs, hidden !== null);
   const stepsId = useId();
   const factsId = useId();
@@ -534,6 +554,13 @@ const ReviewResult = ({ review }: { review: Loaded }) => {
           <p className="run-section__empty">
             An entrance randomizer log: placements and playthrough are compared;
             where each entrance really led is not shown yet.
+          </p>
+        )}
+        {doorUntimed > 0 && (
+          <p className="run-section__empty" data-testid="review-door-untimed">
+            {plural(doorUntimed, "place")} of the Door Randomizer (a key drop,
+            pot, enemy drop or shop item) taken: the run keeps no time for
+            those, so they read "taken, not timed".
           </p>
         )}
         {log.skipped.length > 0 && (

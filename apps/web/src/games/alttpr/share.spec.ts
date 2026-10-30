@@ -1,5 +1,6 @@
-import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
+import { BONK_DROP_IDS, MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DOOR_LOCATION_IDS, DOOR_OPTIONS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems } from "@/games/alttpr/data/items";
 import {
   ACCESSIBILITY_LABELS,
@@ -36,8 +37,10 @@ import {
   zigzag,
 } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
+import doorBranchLink from "@/share/fixtures/link-alttpr-door-branch.json";
 import firstLayout from "@/share/fixtures/links-alttpr-v2.json";
 import thirdLayout from "@/share/fixtures/links-alttpr-v3.json";
+import fourthLayout from "@/share/fixtures/links-alttpr-v4.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import {
   play,
@@ -48,6 +51,9 @@ import {
 } from "@/share/playedRuns";
 import { decodeRun, sharedPayload } from "@/share/runLink";
 import { CHAT_LINK_CHARS, makeLink } from "@/share/shareRun";
+
+/** The locations links index: the map's, then the Door Randomizer's. */
+const LINK_LOCATIONS = MAP_LOCATIONS.size + DOOR_LOCATION_IDS.size;
 
 const MALFORMED = "This link does not hold a tracker run.";
 
@@ -305,16 +311,32 @@ describe("an ALttPR run in a packed link", () => {
         }),
       ),
     );
-    const { items: writtenItems, ...writtenRest } = written.progress;
-    const { items: recordedItems, ...recordedRest } = recorded.link.progress;
+    const {
+      checked: writtenChecked,
+      items: writtenItems,
+      ...writtenRest
+    } = written.progress;
+    const {
+      checked: recordedChecked,
+      items: recordedItems,
+      ...recordedRest
+    } = recorded.link.progress;
     expect(writtenRest).toEqual(recordedRest);
+    // The recorded checks' bits, then the Door Randomizer's locations
+    // appended to the table, none set
+    expect([...fromBase64Url(writtenChecked)]).toEqual([
+      ...fromBase64Url(recordedChecked),
+      ...Array(
+        Math.ceil(LINK_LOCATIONS / 8) - Math.ceil(MAP_LOCATIONS.size / 8),
+      ).fill(0),
+    ]);
     expect({ ...written, progress: null, sizes: null, table: null }).toEqual({
       ...recorded.link,
       progress: null,
       sizes: null,
       table: null,
     });
-    expect(written.sizes).toEqual([MAP_LOCATIONS.size, SHARE_ITEMS.length]);
+    expect(written.sizes).toEqual([LINK_LOCATIONS, SHARE_ITEMS.length]);
     // The recorded items' bytes, then each item appended at its fresh value
     // (a signed varint: twice a small count)
     expect([...fromBase64Url(writtenItems)]).toEqual([
@@ -439,11 +461,14 @@ describe("an ALttPR run in a packed link", () => {
 
   // Recorded from each earlier layout's own writer (fixtures/), never
   // changed: links already shared, which must keep opening as they were made
+  // (link 4 by v2.67.0, before the Door Randomizer's settings joined the
+  // table after its own)
   it.each(
     (
       [
         [2, firstLayout.links],
         [3, thirdLayout.links],
+        [4, fourthLayout.links],
       ] as const
     ).flatMap(([version, links]) =>
       (links as readonly Recorded[]).map(
@@ -515,7 +540,7 @@ describe("an ALttPR run in a packed link", () => {
       "arrowcapacity",
     ]);
     expect(JSON.parse(packLink(play.alttpr(0.5, randoms()))).sizes).toEqual([
-      MAP_LOCATIONS.size,
+      LINK_LOCATIONS,
       SHARE_ITEMS.length,
       SHARE_SETTINGS.length,
     ]);
@@ -577,6 +602,29 @@ describe("an ALttPR run in a packed link", () => {
     });
   });
 
+  it("refuses, as another version's, a link the unreleased Door Randomizer branch made", () => {
+    // Its settings followed v2.66.0's where v2.67.0's own now stand: the
+    // digest tells them apart, so it is never misread
+    // (made before the bonk drops' ids were appended to the locations)
+    expect(doorBranchLink.link.sizes).toEqual([
+      LINK_LOCATIONS - BONK_DROP_IDS.length,
+      125,
+      116,
+    ]);
+    expect(unpackLink(JSON.stringify(doorBranchLink.link))).toEqual({
+      ok: false,
+      reason: OTHER_VERSION,
+    });
+  });
+
+  it("keeps v2.67.0's settings table first, the Door Randomizer's after it", () => {
+    const [recorded] = fourthLayout.links;
+    const [, , settings] = recorded.link.sizes;
+    // Every entry v2.67.0 had, in its places: the first a DR run adds is past them
+    expect(SHARE_SETTINGS[settings - 1]).toBe("enemyHealth:expert");
+    expect(SHARE_SETTINGS[settings]).toBe("randomizer:dr");
+  });
+
   it("refuses a link made against other tables", () => {
     const link = JSON.parse(packLink(play.alttpr(0.5, randoms())));
 
@@ -590,7 +638,7 @@ describe("an ALttPR run in a packed link", () => {
 
   it("refuses checked locations of the wrong length, or past the table", () => {
     const link = packLink(play.alttpr(0.5, randoms()));
-    const length = Math.ceil(MAP_LOCATIONS.size / 8);
+    const length = Math.ceil(LINK_LOCATIONS / 8);
     const full = new Uint8Array(length);
 
     for (const bytes of [
@@ -880,6 +928,132 @@ describe("the settings in a link (link 4)", () => {
 
   const base = getPreset("open").settings as unknown as Record<string, unknown>;
 
+  it("carries a Door Randomizer run's settings and its own checks", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      dropShuffle: "underworld",
+      pottery: "lottery",
+      shopsanity: true,
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      checked: {
+        "eastern-palace/dark-square-pot-key": true,
+        "kakariko-shop/left": true,
+        "links-house": true,
+      },
+    });
+    const link = JSON.parse(packLink(save));
+    expect(link.link).toBe(4);
+    const unpacked = unpackLink(JSON.stringify(link));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(back.settings).toEqual(settings);
+    expect(Object.keys(back.checked).sort()).toEqual([
+      "eastern-palace/dark-square-pot-key",
+      "kakariko-shop/left",
+      "links-house",
+    ]);
+  });
+
+  it("carries an Overworld Randomizer run's settings and bonk drops taken", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      bonkDrops: true,
+      customGoals: true,
+      prizeShuffle: "nearby",
+      randomizer: "owr",
+      shuffleFollowers: true,
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      checked: { "links-house": true, "pyramid-tree": true },
+    });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(back.settings).toEqual(settings);
+    expect(Object.keys(back.checked).sort()).toEqual([
+      "links-house",
+      "pyramid-tree",
+    ]);
+  });
+
+  it("carries a door-shuffled run's door notes as they are", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      doorIntensity: "3",
+      doorShuffle: "crossed",
+    };
+    const doors = {
+      keys: { "Eastern Palace": 3 },
+      kinds: { "eastern-cannonball-n": "big" },
+      links: { "eastern-cannonball-n": "gt-big-chest-sw" },
+      lobbies: { eastern: "pod-lobby-s" },
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), { doors });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(back.doors).toEqual(doors);
+    expect(back.settings).toEqual(settings);
+    expect(runOf(unpacked.save).doors).toEqual(doors);
+  });
+
+  it("carries an OWR run's overworld notes as they are", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      owCrossed: "grouped",
+      owFluteShuffle: "random",
+      owMixed: true,
+      owWhirlpool: true,
+      randomizer: "owr",
+    };
+    const overworld = {
+      crossings: { "Lost Woods SC": false, "Lost Woods SW": true },
+      flips: { "0": true, "44": false },
+      flute: [0x30, 0x18],
+      whirlpools: {
+        "C Whirlpool": "Zora Whirlpool",
+        "Zora Whirlpool": "C Whirlpool",
+      },
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      overworld,
+    });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    expect(JSON.parse(unpacked.save).progress.overworld).toEqual(overworld);
+    expect(runOf(unpacked.save).overworld).toEqual(overworld);
+  });
+
+  it("carries an OWR District or Swapped run's entrance notes with its overworld's", () => {
+    for (const doorEntrances of ["district", "swapped"] as const) {
+      const settings = {
+        ...getPreset("door-randomizer").settings,
+        doorEntrances,
+        owMixed: true,
+        randomizer: "owr",
+        shuffleLinks: false,
+        shuffleTavern: true,
+      };
+      const entrances = {
+        "big-bomb-shop": "library",
+        "lost-woods-hideout-drop": "kakariko-well-top",
+      };
+      const overworld = { flips: { "44": true } };
+      const save = withProgress(runWith(settings, "door-randomizer"), {
+        entrances,
+        overworld,
+      });
+      const unpacked = unpackLink(packLink(save));
+      if (!unpacked.ok) throw new Error(unpacked.reason);
+      const back = JSON.parse(unpacked.save).progress;
+      expect(back.settings).toEqual(settings);
+      expect(back.entrances).toEqual(entrances);
+      expect(runOf(unpacked.save)).toMatchObject({ entrances, overworld });
+    }
+  });
+
   it("holds every option the tracker has, each once, each setting's own", () => {
     const options = [
       ...Object.keys(MODE_LABELS).map((value) => `mode:${value}`),
@@ -916,6 +1090,10 @@ describe("the settings in a link (link 4)", () => {
       ...Object.keys(ENEMY_HEALTH_LABELS)
         .filter((value) => value !== "default")
         .map((value) => `enemyHealth:${value}`),
+      // A Door Randomizer run's own, after v2.67.0's
+      ...Object.entries(DOOR_OPTIONS).flatMap(([key, options]) =>
+        options.map(([option]) => `${key}:${String(option)}`),
+      ),
     ];
     // A new option is appended to SHARE_SETTINGS: moving one breaks links
     expect(new Set(SHARE_SETTINGS)).toEqual(new Set(options));
@@ -936,7 +1114,7 @@ describe("the settings in a link (link 4)", () => {
       ];
       if (key === "hidden") continue;
       const value =
-        key === "swordless"
+        text === "true" || text === "false"
           ? text === "true"
           : key.startsWith("crystals")
             ? Number(text)

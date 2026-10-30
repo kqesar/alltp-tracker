@@ -79,6 +79,12 @@ export {
   type Unsettled,
 } from "./autotrack/decode";
 export {
+  DOOR_FLAG_RANGES,
+  type DoorChecksReading,
+  decodeDoorChecks,
+  doorSwitches,
+} from "./autotrack/door-checks";
+export {
   decodeMedallions,
   type MedallionReading,
   type MedallionShownBy,
@@ -88,10 +94,14 @@ export {
   type AlttprRange,
   DARK_ROOM_ART_SWITCH,
   DARK_ROOM_SWITCH,
+  DOOR_DROPS_SWITCH,
+  DOOR_POTS_SWITCH,
+  DOOR_SHOPS_SWITCH,
   MEMORY_RANGE,
   MEMORY_RANGES,
   MEMORY_SOURCES,
   type MemoryRangeId,
+  OWR_BONKS_SWITCH,
 } from "./autotrack/memory";
 export { ALTTPR_AUTOTRACK } from "./autotrack/pack";
 export {
@@ -105,16 +115,24 @@ export {
   ALTTPR_GAME_CHECK,
   ALTTPR_RACE_FLAG,
   checkGame,
+  DOOR_RANDOMIZER_SAME_LOCATIONS,
+  DOOR_RANDOMIZER_VERSION,
   type GameCheckCode,
   probeRaceFlag,
   type RaceFlagProbeResult,
+  type SeedRom,
+  seedRomOf,
 } from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";
 export {
+  type DoorExactSettings,
+  type DoorSeedSettings,
   decodeSeedSettings,
   SEED_SETTINGS_RANGES,
   type SeedAccessibility,
   type SeedBossShuffle,
+  type SeedDoorShuffle,
+  type SeedDropShuffle,
   type SeedEnemyHealth,
   type SeedEntrances,
   type SeedGoal,
@@ -123,6 +141,9 @@ export {
   type SeedItemPool,
   type SeedLogic,
   type SeedMode,
+  type SeedOverworldLayout,
+  type SeedPotteryKind,
+  type SeedRandomizer,
   type SeedSetting,
   type SeedSettingsRangeId,
   type SeedSettingsReading,
@@ -150,6 +171,48 @@ export {
   derivedFacts,
 } from "./derived";
 export {
+  DOOR_TARGETS,
+  type DrEntrancePool,
+  type DrPoolSettings,
+  type DrShuffle,
+  drDecoupled,
+  drEntrancePool,
+  type OwrPoolSettings,
+  type OwrShuffle,
+  owrCombineMap,
+  owrEntrancePool,
+  owrSwapPartners,
+} from "./door-rando/entrances";
+export {
+  BONK_DROP_IDS,
+  DR_LOCATIONS,
+  DR_UPSTREAM,
+  type DrLocation,
+  type DrLocationKind,
+  type DrLocationSet,
+  type DrModes,
+  type DropShuffle,
+  type DrPartial,
+  drKeysAdded,
+  drLocationsOf,
+  NO_SCREEN,
+  OVERWORLD_RANDOMIZER_VERSION,
+  type PotteryMode,
+  type TakeAny,
+} from "./door-rando/locations";
+export {
+  OWR_FLIP_SCREENS,
+  type OwrFlipGroup,
+  owrFlipGroups,
+} from "./door-rando/owr-flips";
+export {
+  avianartReading,
+  avianartUrl,
+  bpsReading,
+  type DoorSeedLink,
+  doorSeedLinkOf,
+} from "./door-rando/seed-import";
+export {
   bossLocation,
   DUNGEON_IDS,
   DUNGEONS,
@@ -164,6 +227,7 @@ export {
 } from "./dungeons";
 export {
   crossedPool,
+  type DerivedNote,
   ENTRANCES,
   type EntrancePool,
   type EntranceTarget,
@@ -202,6 +266,7 @@ export {
   solveFactsState,
   vanillaConnections,
 } from "./er-world";
+export type { FactWorld } from "./facts";
 export {
   EVENT_LOCATIONS,
   type Filler,

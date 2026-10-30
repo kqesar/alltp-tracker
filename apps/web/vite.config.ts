@@ -2,6 +2,7 @@ import { rmSync } from "node:fs";
 import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
+import { lazyGuard } from "./lazy-guard/plugin.ts";
 import { gamePages } from "./seo/plugin.ts";
 import { serviceWorker } from "./sw/plugin.ts";
 
@@ -16,6 +17,36 @@ const DESKTOP_OUT = "dist-desktop";
  */
 const SITE_ONLY = ["models", "social", "robots.txt", "sitemap.xml"];
 
+/**
+ * The files the service worker caches only once a page fetches them, so
+ * players who never need them never download them: voice commands' engine,
+ * the SMZ3 board's map of Zebes, reading a spoiler log (its worker and each
+ * game's parser, `review-*`), and code only some runs load (`ondemand-*`:
+ * the Door Randomizer's world and the Overworld Randomizer's bonk drops,
+ * which the lazy guard holds there).
+ */
+const ON_DEMAND = /^assets\/(vosk[.-]|smz3\/|review-|ondemand-)/;
+
+/**
+ * Whether a chunk holds code only some runs load: the Door Randomizer's
+ * world (logic/doorWorld.ts), the Overworld Randomizer's (its data, the
+ * pack's door-rando/owr/) or its bonk drops (the pack's `./bonk` entry,
+ * hooks/useBonkDrops.ts).
+ */
+const doorWorldChunk = (chunk: {
+  facadeModuleId: string | null;
+  moduleIds: readonly string[];
+}) =>
+  chunk.facadeModuleId?.endsWith("/logic/doorWorld.ts") === true ||
+  chunk.facadeModuleId?.endsWith("/door-rando/bonk.ts") === true ||
+  chunk.moduleIds.some(
+    (id) =>
+      id.includes("/door-world/") ||
+      // The fork's data but the bonk drops' names, which every ALttPR
+      // player's locations hold (saves and links read them)
+      (id.includes("/door-rando/owr/") && !id.endsWith("/bonk-names.json")),
+  );
+
 const withoutSiteOnlyFiles = (): Plugin => ({
   apply: "build",
   closeBundle: () => {
@@ -28,6 +59,15 @@ const withoutSiteOnlyFiles = (): Plugin => ({
   },
   name: "without-site-only-files",
 });
+
+/**
+ * The Door Randomizer's own data (packs/alttpr/src/door-rando/world/), told
+ * by a region of DR's that the Overworld Randomizer's data names otherwise.
+ */
+const DR_DATA_CODE = {
+  marker: "Dark Death Mountain Ladder (Bottom)",
+  what: "The Door Randomizer's own data",
+} as const;
 
 // https://vite.dev/config/
 // Two builds: the site (GitHub Pages, under /alltp-tracker/, offline through
@@ -47,16 +87,51 @@ export default defineConfig(({ mode }) => {
           // A game pack's spoiler parser (its `./spoiler` entry) is read only
           // when a player reviews a run, in the review worker or, where there
           // is none, in place: its chunk takes the worker's `review-` name so
-          // the service worker keeps it out of every install
-          chunkFileNames: (chunk: { facadeModuleId: string | null }) =>
+          // the service worker keeps it out of every install; so does DR's
+          // world, which only a DR run loads, and the bonk drops, which only an OWR
+          // run that shuffles them loads, under `ondemand-`
+          chunkFileNames: (chunk: {
+            facadeModuleId: string | null;
+            moduleIds: readonly string[];
+          }) =>
             chunk.facadeModuleId?.includes("/spoiler/parse.")
               ? "assets/review-[name]-[hash].js"
-              : "assets/[name]-[hash].js",
+              : doorWorldChunk(chunk)
+                ? "assets/ondemand-[name]-[hash].js"
+                : "assets/[name]-[hash].js",
         },
       },
     },
     plugins: [
       react(),
+      // Code only some runs load stays out of every player's first download,
+      // and out of what the service worker caches at install
+      lazyGuard({
+        lazy: [
+          {
+            // A region of DR's world alone (packs/alttpr/src/door-world/)
+            marker: "Swamp Trench 1 Approach Dry",
+            what: "The Door Randomizer's world",
+          },
+          {
+            // A screen edge's source in the fork's own data (owr/overworld.json),
+            // whose runs never download DR's own data (its own module,
+            // door-world/dr-data.ts): no import of DR_DATA reaches its chunk
+            apart: [DR_DATA_CODE],
+            marker: "OWEdges.py:42",
+            what: "The Overworld Randomizer's world",
+          },
+          DR_DATA_CODE,
+          {
+            // A bonk drop's place on the fork's map (owr/bonk.json alone)
+            marker: "OverworldShuffle.py:2441",
+            what: "The Overworld Randomizer's bonk drops",
+          },
+        ],
+        // The desktop app has no worker
+        ...(desktop ? {} : { onDemand: ON_DEMAND }),
+        roots: ["src/games/alttpr/module.ts"],
+      }),
       desktop
         ? withoutSiteOnlyFiles()
         : [
@@ -87,13 +162,8 @@ export default defineConfig(({ mode }) => {
                   module: "src/games/smz3/module.ts",
                 },
               },
-              // Voice commands' engine, and the SMZ3 board's map of Zebes:
-              // fetched the first time a page asks, so players of another
-              // game never do
-              // Reading a spoiler log: its worker and each game's parser
-              // (`review-*`, named under `worker` below), loaded when a
-              // player reviews a run
-              onDemand: /^assets\/(vosk[.-]|smz3\/|review-)/,
+              // Fetched the first time a page asks (`ON_DEMAND`)
+              onDemand: ON_DEMAND,
               // Never at install: the speech model, and what only crawlers
               // and link previews read (the link preview images, the game
               // pages, robots.txt and the sitemap), which no player's install

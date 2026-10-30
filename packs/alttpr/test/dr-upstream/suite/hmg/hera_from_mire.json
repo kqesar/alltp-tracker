@@ -1,0 +1,28 @@
+{
+  "file": "test/suite/hmg/hera_from_mire.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {},
+  "settings": {
+    "logic": "hybridglitches"
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": [
+    {
+      "item": "Big Key (Tower of Hera)",
+      "locations": {
+        "Tower of Hera - Basement Cage": true,
+        "Tower of Hera - Big Chest": true,
+        "Tower of Hera - Big Key Chest": true,
+        "Tower of Hera - Boss": true,
+        "Tower of Hera - Compass Chest": true,
+        "Tower of Hera - Map Chest": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

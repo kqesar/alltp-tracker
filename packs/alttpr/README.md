@@ -32,6 +32,8 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 | `src/autotrack/*.ts` | the autotracking pack (`ALTTPR_AUTOTRACK`): the memory map, decoders, game and race-flag probes, race profile, check flags, seed settings, the prizes the game shows (`prizes.ts`) and the pad medallions it shows (`medallion-pads.ts`), from the `z3randomizer` ASM and the ALTTPR Auto-tracker Rules v2.0 |
 | `src/pack.ts` | the run's world, compiled with its settings |
 | `src/tricks.ts` | `config/logic.php`, `CustomizerController.php`, the customizer's `glitches.js`: the tricks world, six minor tricks as items (see "Tricks") |
+| `src/door-rando/locations.ts` | aerinon/ALttPDoorRandomizer 1.5.8 (`PotShuffle.py`, `source/dungeon/EnemyList.py`, `Regions.py`, `Dungeons.py`, `ItemList.py`): the Door Randomizer's key drops, pots, enemy drops, shop and take-any items (`locations.json`, imported), which a seed's settings make locations (`drLocationsOf`), and where its base patch keeps each one taken (see "The Door Randomizer") |
+| `src/door-rando/seed-import.ts` | a DR seed's settings from an avianart permalink's spoiler `meta` or a Hyrule Town Hall patch's bytes |
 | `src/margin.ts`, `src/rewritten.ts` | `itemPlacement !== 'basic'` in the regions' health gates and `Boss.php`, `region.requireBetterSword` and `requireBetterBow` (`World.php`): the world without basic placement's safety margins (see "Basic placement's safety margin"), and the rewritten world it shares with the tricks world |
 
 `upstream.json` maps every upstream file to its module, with its status;
@@ -191,7 +193,11 @@ basic item placement gates eight dungeons on it
 randomizer's Spike Cave and Misery Mire spike chest read `has_hearts(4)`.
 A tracker that never records hearts would hold every one of them out of
 logic for good, whatever the player holds; `canKillEscapeThings` has the
-same edge for the uncle's `TenBombs`.
+same edge for the uncle's `TenBombs`, and the Door Randomizer's
+`can_use_bombs` (dr:`BaseClasses.py:1209`, owr:`:1367`) for the +10 bomb
+upgrade, a `--bombbag` seed's bag (`bombUpgradeUnknown`; the app reads a
+bag not known as on, so a check that wants bombs is maybe, and a bag known
+on from the bombs cell: none until a bag, so its count tells the upgrade).
 
 The engine has no unknown item count (only unknown settings, folded at
 compile time), so the pack carries the knowledge in the state, as it does
@@ -497,6 +503,7 @@ entrance, is never read, not even to be discarded):
 | the heart count, the pieces toward the next heart, the bottles' contents | "heart count, heart piece count, and bottle contents" |
 | the pendants by name, the crystals as a count | "Defeated bosses and their prizes upon collection (but not identify if a crystal is a 5/6 crystal or a regular crystal)" |
 | the game's start and end | "when the game starts and when the game ends" |
+| a Door Randomizer seed's pots, enemy drops and shop items taken, of the run's settings only (see "The Door Randomizer") | "a pot, a bonkable object, a shop item, or an enemy drop. The last 4 examples are only considered locations in modes where they are shuffled" |
 
 | Kept from a race | Why |
 | --- | --- |
@@ -506,6 +513,7 @@ entrance, is never read, not even to be discarded):
 | whether the flute was activated | an event at a place in Inverted, not named: the flute is read found, its activation an unknown count (maybe at most) |
 | the big bomb (`FollowerIndicator`), the ROM's stats, the bomb count, the bomb and arrow capacities, the stats' heart counters, the seed's settings | not named, or named within limits: "Anything not covered in this document is, by default, considered not permitted" |
 | Link's position, room, dungeon, entrances | the race admins' clarification of June 2026 (below) and "Region endpoints may not be auto-tracked" |
+| the Overworld Randomizer's bonk drops (`owr-bonks`, category `bonk-drops`) | v2.0 names no bonk drop: "Anything not covered in this document is, by default, considered not permitted", and the owner keeps them out of races |
 
 A dungeon location checked says Link cleared it, as a cave's says he was in
 the cave: that is the location tracking v2.0 names, not a display of where
@@ -989,6 +997,1016 @@ five caves (`ItemList.py` `set_up_take_anys`): the entrance assistant
 offers them, and the world gives them a region each, holding nothing the
 map shows (the old man's sword is marked on the grid when found).
 
+## The Door Randomizer
+
+About half of the alttpr races of 2025-2026 ran on seeds of aerinon's Door
+Randomizer (DR) or its Overworld fork (OWR), most with the doors vanilla
+(the study of 2026-10-29). The pack holds the ROMs, their settings, the
+locations DR adds, its door shuffle and entrance pools, and the fork's
+overworld shuffles.
+Its logic is DR's own: DR's world, rules, enemy logic and tests are
+imported as data (below), the world is built from them with DR's key
+analysis (`KeyDoorShuffle.py`) and held to DR's tests and to real seeds'
+playthroughs; the app solves a DR run in it, its doors and entrances
+vanilla or as noted, through the package's `./door-world` export (the builder) and
+`./door-world/dr` (DR's own data, `DR_DATA`), which only its lazy chunks
+import (`apps/web/src/games/alttpr/logic/doorWorld.ts`, `drSolver.ts`),
+named on demand (`ondemand-`) so the site's service worker caches them only
+once a DR run fetches them: no other run downloads DR's rules, at first load
+or at a service worker's install, an Overworld Randomizer run's neither
+(`./door-world/owr`, the build's `lazyGuard` keeps the two apart).
+
+**Sources, read as data and never run** (`upstream.json`, `doorRandomizer`):
+DR 1.5.8 (`5c44da33`; 1.5.2 to 1.5.8 coexist, and the races recorded below
+ran DR's unstable builds, 1.5.7-u for ten of them, 1.5.8-u and 1.5.6-u for
+one each, `test/dr-spoilers/index.json`), its base patch
+`aerinon/z3randomizer` `d0f46511` (DRUnstable, the same change as DR's
+`data/base2current.bps`, which 1.5.6 to 1.5.8 ship unchanged), and OWR
+0.8.0.2 (`1ada5b54`, `doorRandomizer.overworld`: the latest release, on DR
+1.5.7, and the one avianart.games rolls, whose seeds' meta reads
+`Overworld 0.8.0.2-u` on `Door 1.5.7-u`; "The Overworld Randomizer" below).
+Autotracking still cites OWR 0.8.0.0's `Rom.py` (`src/autotrack/memory.ts`):
+0.8.0.1 and 0.8.0.2 change none of the ROM's bytes the tracker reads. From 1.5.6 to 1.5.8 the locations' files
+(`Regions.py`, `PotShuffle.py`, `source/dungeon/EnemyList.py`,
+`Dungeons.py`, `ItemList.py`) do not change, so the data is every one of
+these versions' (`DOOR_RANDOMIZER_SAME_LOCATIONS`); the logic does, below
+("DR 1.5.7 and 1.5.8").
+
+**DR 1.5.7 and 1.5.8** (`git diff 1.5.6 1.5.8`, 37 files, read for the pin's
+move): Eastern Palace's big key chest joins `kill_chests` (`Rules.py:1483`),
+the Old Man's ledge drops into his west room rather than the east
+(`EntranceShuffle2.py:2344`), which is dark (`Rules.py:1351`), and the Kings
+Grave case of the bomb shop reads the renamed `Village of Outcasts`
+(`:1839`, entrance shuffles only). The rest reaches no rule of the world: the
+customizer's `key_logic` plando (`KeyDoorShuffle.py:1404-1500`), the
+spoiler's tree pulls, prize packs and in-game texts (sections the parser
+passes over), the enemizer's and the fill's fixes (enemy shuffle is not
+modelled; the fill decides where items go, not what reaches them), and ROM
+writes no decoder reads (native item codes for the dungeons' own big keys,
+maps and compasses, which set the same bits; the map HUD counter; glitched
+logics' flags). A seed of 1.5.6 or 1.5.7 is read with these rules, since each
+only asks more (the kill chest; the drop's lamp, which the west room asked
+from the east already): the world never says yes where such a seed's logic
+says no. One change of 1.5.7 asks less: its vanilla Inverted world links
+the Dark Sanctuary's exit to the place of its entrance (3c4307e,
+`EntranceShuffle2.py:171-176` at 1.5.8), which 1.5.6 left to the shuffles
+(`:222-235`), so its save point led nowhere. The world grants it only to a
+seed known to be 1.5.7's or later: its setting `drVersion` (DR's title
+digits, 156 by default, for 1.5.6, an older release or none known) comes
+from the run's `doorVersion`, which a seed read tells (the ROM's version
+text or title, a spoiler's meta).
+
+**The ROM.** DR names its seeds `DR` and its version's first three digits,
+then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1503-1507`); OWR
+`OR` and the same digits (OWR `Rom.py:1843-1848`), or a site's tag
+(`probes.ts`, `seedRomOf`). The race flag is vt's pair at the same address
+(`Rom.py:1156`, `1552-1553`; Mystery.py always asks for a race,
+`Mystery.py:70`), so the probe and its fail-closed answer are the same. The
+SRAM the decoders read is vt's for every range (the two patches'
+`%assertSRAM` lists differ only where DR moved `DungeonLocationsChecked`,
+which no decoder reads, and dropped the absorbed keys), and so are bank
+$30's settings tables. DR writes no seed type (no `0x180210` in its
+`Rom.py`), so a DR seed's logic is unrecognized, never NoGlitches; its own
+"ganon" goal writes `GanonVulnerableMode` $03 (`Rom.py:1207-1218`), read
+as Ganon. The Overworld fork, from 0.6.1.0's custom goals on, writes its
+goal tables over vt's crystals and Ganon's mode (pointer words at
+0x180198-0x18019F, then the tables, OWR 0.8.0.2 `Rom.py:1289-1385`): an OR
+ROM's goal and crystals are unrecognized, never read there, and the run
+keeps its own. Outside Race Mode, `seed-settings.ts` reads its own tables:
+`DRMode` (vanilla, basic, or partitioned or crossed, which it does not tell
+apart), `DRFlags` (every enemy's drops, a Mystery seed's `Hide_Total`),
+`MultiClientFlagsROM` (drops, shopsanity, take-any, pots, Mystery) and
+`StandingItemCounterMask` (pots beyond the caves), its version text, and
+OWR's `owMode`/`owFlags`. From a fork of 0.6.0.0 on (its version text),
+three bytes of bank $30 the fork writes whole tell its prize and follower
+shuffles and its dungeon items placed nearby (OWR 0.8.0.2 `Rom.py`):
+`FreeItemText`'s $20 the prizes nearby or wild (:1432), its $40 a map,
+compass, small or big key kind nearby (:1431; HUDDungeonItems reads them
+outside their dungeons, :1613-1616, as a spoiler's "nearby" is read), the
+compass mode's $40 wild alone (:1461), and
+`SmithTravelsFreely` $02 the followers shuffled, a value written then and
+never otherwise (:1731, :1773). No byte tells a prize shuffle of none from
+one of dungeon: the ROM reads "inside", which the app keeps unset unless
+the run says which. The bomb bag is read from the item substitutions'
+second entry, which DR and the fork write whole (DR 1.5.8 `Rom.py:1060-1063`,
+1.5.6 :1017-1020, OWR 0.8.0.2 :1127-1129): $51 $00 $31 $FF with the bag,
+$51 $06 $52 $FF without, anything else unrecognized. A table that does not open as the base patch
+writes it is unrecognized, never vanilla. A seed DR marks as Mystery hides
+its settings, the world but.
+
+**The locations** (`src/door-rando/locations.json`, written by
+`pnpm --filter @alltp/pack-alttpr import-dr <checkout>`, never by hand, and
+never a ROM byte: the pots' `RoomObject` arguments are skipped): the 33 key
+drops (`key_drop_data`: 19 pots, 14 enemies), 812 pots and large blocks
+(`vanilla_pots`), 714 enemies that may drop (`init_vanilla_sprites`,
+`valid_drop_location`), the 32 shop items and the 9 take-any items. Their
+names are DR's (`<region> Pot #n`, `<region> Enemy #n`), their ids
+`locationId(name)`, save keys like any. `drLocationsOf(modes)` is the
+seed's set, ported from `adjust_locations` (`Regions.py:1165-1232`): key
+drops by the drop shuffle and the pottery, each pottery mode's pots, every
+enemy's under `underworld`, shopsanity's shop items, the take-any caves'.
+What it cannot know it says (`partial`): reduced and clustered choose a
+random share of the dungeons' pots, enemy shuffle decides which enemies
+drop, a moved boss rewrites its room's sprites.
+
+**The world, as data** (`src/door-rando/world/`, the same `import-dr` run,
+`packs/alttpr/scripts/dr-world-data.mjs`): what DR's logic will be built on. `regions.json`
+holds the 913 regions `Regions.py` makes (578 in dungeons, the overworld
+screens and caves, two menus), each with its kind, terrain, locations,
+exits, dungeon and crystal switch (55), a list that differs by mode read
+for each (`locationModes`); ids are `regionId` of each part around " - ",
+joined by `_` (DR names `Mire Conveyor Crystal` and `Mire Conveyor -
+Crystal` apart). `doors.json` holds the 1,200 doors of `Doors.py`, their
+builder chains and the statements after them read into flags (keys,
+barriers, traps, events, dead ends, pairs, portals, controllers; a flag set
+under an `if` kept with its condition, a flag at its default left out, no
+layout byte), each door's index in its room's door list (`listPos`) and the
+kind `RoomData.py` gives it there (`kind`: `SmallKey`, `Bombable`,
+`Dashable`, `Trap`..., `create_rooms`' swaps applied; `shuffledKind` where a
+door shuffle deletes the entry), which the door shuffle reassigns, and the
+25 portals. `connections.json` holds the tables
+`OverworldShuffle.py`, `EntranceShuffle2.py` and `DoorShuffle.py` wire the
+world with, as written, each with its line (`EntranceShuffle2.py`'s
+`exit_ids` and `EntranceData.py`'s door slots and hole bytes among them, the
+layout bytes left out), but the five DR's entrance pools read (its entrance,
+drop and single cave maps, the Inverted names, `modes`), which
+`entrances.json` holds apart, so the entrance assistant loads them without
+the rest of DR's world. `world-data.spec.ts` holds the
+counts and that every exit is linked, but the doors the vanilla world never
+leaves by.
+
+**Its entrance shuffles** (`src/door-rando/entrances.ts`, over
+`world/entrances.json`): `drShuffled(shuffle, settings)` is what a DR shuffle may move in
+a world, every entrance of `link_entrances_new`'s pool (`:45-80`, Inverted's
+names put in) less what it surely leaves vanilla: Standard's escape and
+Link's House (`do_standard_connections`), Link's House without
+`shufflelinks` and the Tavern's back without `shuffletavern` (no ROM table
+states either: the app passes one a run leaves unset as shuffled, so the
+logic waits for its note), the caves of a
+kept pool whose condition holds (`do_vanilla_connect`: lite's and lean's
+shops, pots' and drops' caves, as the run's shopsanity, pottery, drop and
+enemy shuffles say), and in `dungeonssimple`/`dungeonsfull` every entrance no
+pool names. Where an option a run does not record could move an entrance
+(`skullwoods`, `shuffle_ganon`), it counts as moved: not noted, it leads
+nowhere. `drEntrancePool` gives each moved entrance the targets the moved
+entrances lead to in the vanilla world: a hole a drop, a dungeon's door a
+dungeon where the mode places dungeons among dungeons, any door any door's
+target otherwise; no note settles another (`linked_drops` and `skullwoods`
+decide that, unrecorded), and `insanity` is decoupled. Its ids are the
+entrance randomizer's (`src/entrances.ts`), so a Crosskeys run's notes read
+the same; the names DR spells otherwise are mapped (`Mire Fairy` is `Dark
+Desert Fairy`, `Skull Pinball` is `Skull Woods First Section (Right)`), and
+Link's House and the Tavern's back, which only DR shuffles, are targets of
+its own (`DOOR_TARGETS`). DR writes the game's door table, hole table and
+exit numbers as the entrance randomizer does (`Rom.py:500-549`), with the
+same slot, bytes and number for every name: `entrances.spec.ts` holds it, so
+autotracking reads where Link went in a DR seed through the same tables.
+
+**Its world on noted entrances** (`drWorld`'s `entrances` option,
+`notedConnections` in `src/door-world/connections.ts`): what the shuffle
+leaves vanilla is linked as the vanilla world links it, each noted entrance
+as DR connects it (a cave's or dungeon's door both ways, but in `insanity`,
+whose exits lead elsewhere unnoted; a hole or a single cave's door one way;
+a door noted to the Inverted save point lets its exit out there), and an
+entrance not noted leads nowhere. What DR derives from the connections
+waits for the notes: the swamp's patch is required once the Dam's or Swamp
+Palace's door is known to lead elsewhere, the mirror asked until then; a
+region's side, which enemy rules read, is held in every side it may still
+take until every moved entrance is noted (`everySide`). DR's key analysis runs
+on the noted connections for each dungeon whose portals and drops are all
+noted and stand in regions the walk from Link's House and Sanctuary reaches
+(`portalsKnown`): such a dungeon starts from all its portals and waits on no
+other, so its analysis is the whole world's; any other dungeon, Standard's
+castle and every dungeon of a decoupled world keep the strict-safe rule, as
+does a seed of the static key logic, whose Turtle Rock probe reads the
+vanilla world. Desert Palace, Skull Woods and Turtle Rock keep it, by the
+owner's decision (2026-10-30), wherever one of their portals opens onto a
+ledge the walk reaches only through the dungeon itself
+(`find_inaccessible_regions`), as in the vanilla layout, every entrance
+noted (a shuffle that puts each of their portals where the walk reaches it
+has them analysed as any other, the Crosskeys races of
+`test/dr-entrance-spoilers/` among them): DR then starts their analysis from the portal
+`analyze_portals` marks as the way out (`destination`, waiting on the dungeons
+it depends on), a `random.choice` among a ledge's portals where it has several
+(`DoorShuffle.py:727-735` at 1.5.8), made as the seed is generated and known
+to no run. Porting it would mean reading that choice as every choice and
+porting the delayed origins it feeds; strict-safe stays sound and only asks
+more keys. A vanilla-entrance run is not concerned: its analysis is the whole
+vanilla world's. The bomb shop's Kings Grave case reads the Village of
+Outcasts from 1.5.7 on (`9f688f8`); 1.5.6 read a region DR no longer had,
+which raised wherever the fill came to it, so a 1.5.6 seed never took that
+way and the world does not either. `noted.spec.ts` holds that a world noted
+where every entrance was is the vanilla world, in every shuffle and world.
+
+**Its door shuffle** (`src/door-world/doors.ts`, `shuffle.ts`, `drWorld`'s
+`doors` option): basic, partitioned and crossed (`--door_shuffle`, DR 1.5.8's
+`args.json`; `create_dungeon_pool` also knows a `paired` mode no option offers),
+each at intensity 1, 2 or 3. What a shuffle relinks is read off DR's own
+tables: a dungeon's normal doors and spiral stairs, from intensity 2 its
+open edges, straight stairs and ladders, from 3 its portals' own doors
+(`create_door_spoiler`, `DoorShuffle.py:178-182`), paired among the dungeons
+of a pool (each alone in `basic`, the three groups of `create_dungeon_pool`
+in `partitioned`, all of them in `crossed`) with a door facing back
+(`hook_from_door`); from intensity 3 each portal opens on a door of its
+pool that may be a lobby (`portal()` in `Doors.py`). A player notes it all
+by hand (`DoorNotes`: `links` door to door, `lobbies` portal to door,
+`kinds`, `keys`): the world links the noted doors as DR connects them
+(`connect_doors`, a door's dependents along, a coupled door back unless its
+own note says otherwise), every door the shuffle relinks and no note names
+leads nowhere, and a portal not noted at intensity 3 opens on nothing. A
+door's kind (key, big key, bombable, dashable, trap) moves with
+`shuffle_door_types`: a door that may change (`kindShuffled`: a normal,
+interior or spiral door at positions 0 to 3 of its room's list whose kind
+one of the shuffles takes or leaves, a door that shuts, a boss's only in
+the `boss` and `oneway` trap modes, from intensity 3 a door that may be a
+lobby) has the kind the player noted, and is `maybe` to pass while it has
+none; every other door keeps its room's (`RoomData.py`). DR's rules then read
+kinds, not its vanilla lists (`Rules.py:895-906`): a bombable door asks bombs,
+a dashable one bombs or the boots, a trap shuts its way out but for
+`trap_door_exceptions` and adds the kill rules `is_trapped` guards. In a
+pool of dungeons a room is the dungeon's whose portal its layout holds
+(`roomDungeons`: the rooms the noted links join to the lobby's, whichever
+way, or to a drop's landing, which DR builds a dungeon from as from a lobby:
+`dungeon_drops`, `DungeonGenerator.py:4239-4242`, the castle's rat path and
+Skull Woods' holes; `update_forced_keys`), so its key doors take that dungeon's keys, its
+big chest that big key, its forced drops hold its keys (the castle's big
+key drop its big key: `worldKeys` gives each its room's dungeon; a boss room never moves:
+DR gives each dungeon its own first, `dungeon_boss_sectors`,
+`DungeonGenerator.py:1320-1322`, so its boss, prize and restricted items
+stay its dungeon's), and in Standard its dark rooms are lit only in the castle's
+layout (`add_conditional_lamps`, `Rules.py:1359-1366`: `litRoom_<region>`,
+a derived setting the vanilla world reads as the sewers in Standard).
+Sanctuary's mirror route leads, from intensity 3, to the lobby of the
+portal `cross_dungeon_clean_up` picks: Sanctuary's own in `basic` or while
+Sanctuary stays the castle's, the only portal of its dungeon otherwise, and
+none where DR picks at random among several (`DoorShuffle.py:1005-1028`).
+DR analyses the key doors of each layout it generated, once, as it picks
+them (`find_valid_combination`, `DoorShuffle.py:2753-2812`, in
+`shuffle_small_key_doors` after the traps and big key doors):
+`build_key_layout` (`KeyDoorShuffle.py:234-242`) over the layout's rooms,
+its key doors (`build_pair_list`, `:3038-3049`), its chest keys
+(`calc_max_chests`, `:262-265`: the vanilla dungeon's in `basic`, the key
+doors less the forced drops in a pool) and the start regions
+`filter_start_regions` keeps (`:2332-2365`: each portal lobby of the
+layout but a destination portal's, the lobbies a rules-free walk of the
+world reaches, `find_accessible_entrances` `:3439-3479`, and the drops
+below accessible overworld), then `analyze_dungeon`.
+`key-analysis/noted.ts` (`notedDoorKeyLogic`) runs that analysis, the
+vanilla port's own (`analyzeDungeon` over a `keyWorld` given the noted
+layout: links as `dest`, kinds, traps, rooms' dungeons), on each dungeon
+whose inputs the notes all tell (each analysis kept by all it reads: the
+run's settings, its starts, each exit of its rooms with its link, kind
+and dest, so a note in one dungeon works that dungeon's out again alone,
+`doorWorld.performance.spec.ts` timing the rebuild), and its key doors ask DR's rules as with
+vanilla doors (`keys.doorRule`; a key door with no rule of it keeps the
+strict-safe one). Told means: intensity 1 or 2 (each portal on its own
+door, the destinations fixed by `link_doors_prep`, `:100-108`), coupled
+doors, vanilla entrances, every door of the layout linked and of a known
+kind, its drops in its layout, and each lobby the walk reaches or a walk
+that crossed no door not noted; Standard's castle aside (its courtyard
+start, `std_flag`). Anywhere else a key door asks every key of its
+dungeon or `maybe` (strict-safe), the vanilla count in `basic` and the
+count the player noted in a pool (`shuffle_small_key_doors` moves it,
+`DoorShuffle.py:2139-2145`), `maybe` until noted: from intensity 3 DR
+marks portals as destinations at random (`choose_portals` `:560-610`,
+`analyze_portals` `:715-733` with shuffled entrances), which no note tells,
+and its start regions follow them. A layout DR could not walk (notes it
+never made) stays strict-safe rather than failing. Strict-safe costs
+precision only: a key door reads `maybe` where DR's analysis may say yes
+with fewer keys (the door contract lists each, all `yes` once every key is
+held), and never `yes` where DR does not. `shuffled.spec.ts` holds the
+plumbing: a layout noted as the vanilla one reads DR's vanilla analysis
+rule for rule, but for `vanilla_key_logic`'s hand adjustments, which DR
+makes for vanilla doors alone; `key-model.spec.ts` holds the analysed
+model of the basic door seeds to every placement its fill may make. The door kinds read the widest of DR's settings, as neither
+`door_type_mode` nor `trap_door_mode` is a run setting: `kindShuffled`
+takes every kind any `door_type_mode` may give or take (original, big,
+all, chaos) and the trap mode as `oneway` (`doorShuffleSettingsOf` in the
+app: a boss's trap door may open too). A door that a narrower setting
+keeps vanilla then asks for a kind note, `maybe` until noted, which is
+sound: the world never assumes a door vanilla that the seed may have
+changed. Door notes are the player's alone: the app imports no spoiler
+into them. `doorNotesFromSpoiler` reads a DR JSON spoiler's `Doors`, `Lobbies`
+and `DoorTypes` as the notes of a player who walked every door (every other
+door that may change kind plain: DR lists every kind it gives).
+`doors.spec.ts` holds the model, `shuffled.spec.ts` the world (a world noted
+where the vanilla tables link reaches what the vanilla world does with every
+key; a door not noted, a kind not noted, a lobby not noted).
+
+**Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
+`Rules.py` and `Bosses.py` in the engine's language, through the entrance
+randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`, "Its rules" below) under DR's
+dialect: Open, Standard and Inverted are settings, as are the bomb bag, the
+bow mode, the key shuffle and the goals; the glitched logics are `false`.
+What only DR writes is read as data: a crystal state read by its region
+(`reachedBlue_<region>`, `crystal` lists each read), `not has('Trench 1
+Filled')` as `true` (the dry path, while the switch is left alone,
+`negatedEvents`), a door's flag (trapped, key door, portal, barrier
+colour) as a derived setting with its vanilla value (`doorData`), a
+region on Link's side of the world for the bunny (`notBunny_<region>`),
+the dark rooms' lamp, the vanilla boss of each slot. Upstream's own slip
+stays as written: `state.can_flute` uncalled is true in Python
+(`uncalledMethods`). What is code is listed in `unported` with its line
+and why, never dropped: the key logic, Zelda's path, the bunny's paths
+(the bunny's lists are kept, `bunny`, for the world to port). Of the
+placement-only rules the core reads as data, `fill` keeps the lines alone:
+no key model reads DR's (the key analysis is DR's own, below).
+`rules.spec.ts` holds that list and compiles every rule in the engine.
+
+**The enemy logic** (`packs/alttpr/scripts/dr-enemies.mjs`): DR builds its kill
+rooms', its enemy drops' and its pots' rules in code (`challenge_room_rules`,
+`drop_rules`, `pot_rules`), from `source/enemizer/EnemyLogic.py` over the
+vanilla sprites, each kind's stats (`source/dungeon/EnemyList.py`) and the
+damage table (`damage_table.yaml`, read with js-yaml). The port computes
+them as the code does, RuleFactory's folds included (a disjunction of static
+falses is true, as written), and hands them to the walk where `set_rules`
+calls them: each kill room on its doors in (unless a portal), its trapped
+doors and its chests, the escape's in Standard with every other sewers
+location behind a weapon or Uncle's bombs, each drop on its sprite (`kill`
+and `drops` cite them). Where `defeat_rule_multiple` breaks a tie with
+`random.choice`, every choice is followed and anded (`ties`, none among the
+vanilla rooms); an enemy whose health depends on the world it is in reads the
+region's side through derived settings (`lightWorld_<region>`,
+`darkWorld_<region>`). As DR computes it, Ganon's Tower's tile room
+chest needs the powder (its anti-fairy).
+
+**Its own tests** (`test/dr-upstream/`, the same run, `packs/alttpr/scripts/dr-tests.mjs`): the
+unit tests DR kept from the entrance randomizer, re-aimed at its world, as
+fixtures: `vanilla` (573 cases, 112 of entrances), `inverted` (852, 97 of
+entrances, Turtle Rock's 186 disabled by a `return`), `dungeons` (483),
+`owg` (558) and `inverted_owg` (432), each test with its kind, its starting
+regions and whether it is disabled; a test of no case list
+(`TestInvertedBombRules`) is kept as code. At 1.5.6 their setUps no longer
+ran; upstream restored them (`626691a`, "test: restore the unit test
+suite", in the release since 1.5.7), changing the harness only; the
+harness is read at the commit `upstream.json` pins as
+`doorRandomizer.testHarness`, the release's own since 1.5.8 (`git show`: the
+world each suite builds, the dungeon tests' `STARTING_REGION_MAP`), and the
+cases at the release. `pool.json` is the pool an "everything but" case draws from, from
+`ItemList.py`'s lists and the harness's prizes, cited; `suite/` holds the
+customizer seeds' Verification checks, the key logic seeds held by
+`test/dr-suite.spec.ts` (below). `vanilla-key-logic.json` is
+`KeyDoorShuffle.py`'s `validate_vanilla_key_logic`, which no code of DR
+calls: the rule it expects of each vanilla key door, read per mode. `static-key-logic.json` is
+`test/TestStaticKeyLogic.py`'s cases (1.5.7 on, below). The other tests
+1.5.7 and 1.5.8 add are code over what the world does not model:
+`TestKillChests` swaps an enemy for a Lynel (enemy shuffle; the vanilla
+room's rule is `world.spec.ts`'s), `TestKeyLogicPlando` the customizer's
+key rules, `TestForceEnemy` and `TestBossSheets` the enemizer,
+`TestMoneyBalance` the fill. A file is listed `pending` in
+`upstream.json` until DR's world is held to it (`test/dr-fixtures.spec.ts`
+holds the list); `test/dr-contract.spec.ts` holds each `ported` file to its
+cases, a case it answers otherwise listed with why (`STALE`,
+`test/dr-stale.ts`), in the harness the suite runs in
+(`test/dr-state.ts`: the items as the pack's state, the pool, the medallions
+the harness fixes; the dungeon tests never sweep events).
+
+**Its world, built** (`src/door-world/`): `drWorld(settings, options)`
+compiles DR's world for the engine, its doors and entrances vanilla.
+Every function of the builder reads its release's data from a bundle
+passed to it (`DrData`, `data.ts`: the regions, doors, portals, rules and
+connection tables of one import, with their indexes; `options.data`,
+required: DR's `DR_DATA` of `dr-data.ts` or the fork's `OWR_DATA` of
+`owr-data.ts`, each a module of its own, so the builder imports neither and
+a caller downloads only the world it builds), never from a module-level
+table, and no helper of `doors.ts` defaults to one, so the Overworld
+Randomizer's world (its own import, `src/door-rando/owr/`) is built by the
+same code. What a module derives from the data is built once per bundle
+(`perData`), and the caches of the key analysis and the Turtle Rock probe
+are keyed by the bundle's flavor.
+`connections.ts` links every exit as DR's vanilla world does
+(`link_overworld`, `link_entrances_new`'s vanilla path with the Inverted
+swaps, `EntranceShuffle2.py:64-78`, `link_doors_prep`'s tables and the
+portals, a controller's dependents following it) and makes the flute and
+mirror exits DR makes in code (`create_dynamic_exits`). `index.ts` gives
+each exit and location its rule from `rules.json` (a `reach()` in an exit
+read as a fact, `reached_<region>`), starts at the Menu and its
+save-and-quit exits, adds the bomb shop's case, sets the derived settings
+from the connections (the worlds' light and dark regions, the swamp patch,
+the doors' vanilla flags) and sweeps DR's events as facts (`src/facts.ts`,
+shared with the entrance randomizer's world). `bunny.ts` ports
+`set_bunny_rules`, the walls a bunny cannot pass included (`doors_to_check`,
+`Rules.py:2196-2201`: a normal or interior door whose kind in its room is
+dashable, bombable or hidden, `bunnyWall`): the room's kind, or under a door
+shuffle that may change it the noted one, `maybe` until noted, and the
+doors it cannot pass once trapped (`bunny_impassible_if_trapped`,
+`Rules.py:2191-2194`, `bunnyTrapped`), read the same way: the seed's trap,
+which a trap shuffle sets, the noted kind where it may. Each rule it
+finds is a helper of the world's own (`@bunny<n>`, compiled once and
+memoized like DR's helpers), as DR's paths share the rules they capture
+(`path + [entrance.access_rule]`): written out as text, a dungeon whose
+rooms lie on both sides of a shuffled world (Turtle Rock of a Crosskeys
+race) copied each earlier rule into the next, sevenfold a room, until the
+world ran out of memory.
+`crystal.ts` carries the crystal switches' states as DR's traversal does
+(`traverse_world`, `BaseClasses.py:628-714`): a dungeon region a node per
+state some path brings it in, a region reached in both split in two copies
+(`<id>__orange`, `<id>__blue`) that lead to the region itself, where its
+locations sit; a door that hits a switch lets both states through, a
+barrier its colour only, a rule reading the region's own state holds in
+that copy, and any other crystal read is a fact (`reachedBlue_<region>`).
+The keys come from DR's own analysis of each dungeon
+(`key-analysis/`, ported from `KeyDoorShuffle.py` and `DungeonGenerator.py`
+at the release): `dungeon.ts` builds what it walks (the overworld only a
+dungeon reaches, `find_inaccessible_regions`, and the logical doors DR
+gives its exits; each dungeon's start regions as `vanilla_key_logic` finds
+them, Python's `rstrip` quirk in `_find_portal_for_region` kept),
+`exploration.ts` and `counters.ts` walk each dungeon's doors without item
+rules into its key counters (every set of key doors a player may have
+opened, `create_key_counters`), and `analysis.ts` gives each key door its
+rule (`analyze_dungeon`: the counter that spent the most keys elsewhere
+and still gains from the door sets the worst case, `create_rule` partial
+logic's number, `check_for_self_lock_key` and `bk_restricted_rules` the
+alternatives a placement grants) and makes `vanilla_key_logic`'s own
+adjustments; the fill's placement rules are left out (they choose where
+keys go, never what a door asks). `analysis.spec.ts` holds it to
+`validate_vanilla_key_logic`, the validator no DR code calls: every rule
+it checks but three of Ganons Tower's, where the port asks a key more and
+DR's own adjustment outdates the validator. `keys.ts` attaches the rules
+as `add_key_logic_rules` does: each key door of the analysis asks partial
+logic's number (the worst case capped, `Rules.py:2416-2447`; `strict`
+logic with wild keys every chest key, `dangerous` logic the worst case
+uncapped, `eval_small_key_door_main`, `:2399-2400`); what a
+placement grants beside it (the key in the one location behind a door,
+the big key behind it) is `maybe`; with the keys in their dungeons a door
+short of its number is `maybe`, never `no` (a key may lie inside), with
+wild keys the keys recorded decide; universal keys are `maybe` (the shops
+are not ported). A vanilla drop's key is a fact once its location is
+reached (`dropKey_<location>`, as DR sweeps the forced key), unless the
+run shuffles that drop; the big key doors and chests ask the big key (or
+the escape's drop), `maybe` until held where the big keys stay in their
+dungeons or the player cannot record one (`unrecorded`: the app has no cell
+for Hyrule Castle's), as a small key below its number is. Misery Mire's blue barriers take DR's two-key
+alternative at `maybe` only: DR's code opens them with two keys, its own
+key logic seeds refuse what lies behind them with more. On other
+connections than the vanilla ones the analysis is not run (a dungeon's
+portals may be unknown), nor in a run whose pots or enemy drops join the
+dungeons beyond their keys (`dungeonPotsAndDrops`: pottery beyond the keys
+and caves, every enemy's drops), whose locations DR's analysis counts and
+the port's does not (`adjust_locations` runs before `link_doors`,
+`Main.py:164`, `:216`): there a key door asks every key of its dungeon, or
+`maybe`. `key-model.spec.ts` holds the model to DR's fill (Open, Standard,
+Inverted): over random states and placements of the dungeons' keys the fill may make, the model
+never says yes where playing the placement out with DR's own rule for it
+does not reach, and a model one key short, or one taking a placement's
+alternative for granted, is found unsound. `test/dr-suite.spec.ts` holds
+DR's key logic seeds (`test/suite/*key_logic*.yaml`): a location their
+fill may not place an item at is never `yes` but where only
+`bk_restricted` forbids the big key. A
+flood switch waits on its trench's pot: flooding drowns the pot and closes
+the dry paths to it, so DR never floods over a pot that holds a key or a
+progress item before it is checked (`not_flooding_a_key`,
+`BaseClasses.py:1086-1093`). That is logic, not an order of play: every
+reach DR asks reads it (`can_beat_game`, the fill's spheres, the
+playthrough), and each trench's far side is reached only flooded. The
+switch asks the vanilla key's fact, or, with the pots shuffled, the pot
+reached (a fact of its own) and `maybe` before, its item possibly neither,
+which DR floods over. Held: `test/vanilla` and `test/dungeons`, whose
+181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
+(the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
+drop keys DR's own key rules count, which it never sweeps either, the
+enemy logic, the bombs the bag would hold back, the Pinball Room's chest
+asking only the pearl, the harness reaching the overworld), each held to
+its reasons as the fork's are (`FIXES` below; a false case must lose its
+yes with the bomb bag, without the Cane of Byrna or the pearl, or reach
+its location through the overworld). The Inverted world is the same builder in that mode: its
+connections swap as `link_entrances_new` swaps them, the flute leaves from
+the dark world and the mirror from the light, the bunny is the light
+world's. `test/inverted` is held but `TestInvertedTurtleRock` (every test
+disabled upstream) and `TestInvertedBombRules` (code, no case), with the
+cases upstream's own world answers otherwise: DR names the castle's
+entrance `Agahnims Tower` whatever it leads to. The tests run at 1.5.8
+(`drVersion` 158), whose vanilla Inverted world links the Dark Sanctuary's
+exit (below). `drWorld`'s `connections` option builds the world on other
+connections than the vanilla ones; its `dropsAndPots` adds a run's pots and
+enemy drops to their regions, as `adjust_locations` does, with the rules the
+translation read for them by name (`pot_rules`, `drop_rules`, the dark rooms'
+lamp, Standard's escape) and the bunny's. `standard.ts` ports what Standard adds
+in code: the save-and-quit to Uncle, and Zelda's way back from her cell
+(`find_rules_for_zelda_delivery`: the rules of the first path to the throne
+room that a blank state does not pass, read from the world's rules so far,
+a stricter reading where DR added one later), set on the tapestry and her
+drop-off; and with entrances shuffled, the rails that keep the castle's east
+and west lobbies shut until she is delivered, wherever their exits were
+placed (`Rules.py:1511-1516`, the portals' lobby doors). The rest of `unported` but the key logic and the shuffles' code
+is ported in `index.ts`: Murahdahla in a triforce hunt, a boss's items
+behind its map and compass (`restrictBossItems`; `maybe` without them
+while the maps and compasses stay in their dungeons, which the player does
+not record), Mire's spikes' key pot
+behind the spikes or `maybe` once pots shuffle (`potShuffle`); a big key a
+vanilla drop holds (the escape's) stands for the item wherever a rule reads
+it. A fact whose location is reached at `maybe` only is read at `maybe`
+(`<fact>__maybe`, `src/facts.ts`), so what hangs on a `maybe` key door is
+`maybe`, never `no`. Standard is held to no upstream test (DR's tests build
+Open and Inverted only), nor to a race: every recorded spoiler race is
+Open; the door set's avianart seeds hold three Standard ones
+(`test/dr-door-spoilers/`).
+
+**The static key logic** (`src/door-world/static.ts`, `key_logic_algorithm`
+static, DR's from 1.5.7 and some unstable 1.5.6 builds' before): the
+entrance randomizer's key rules laid over DR's analysis.
+`source/dungeon/StaticKeyLogic.py`'s table (`DOOR_RULES`, imported into
+`rules.json` as `staticKeyLogic`) gives each of its key doors and the door
+across a fixed number, counted from the chests alone (`chest_counting`,
+`has_sm_key_strict`: the vanilla drops' facts aside), with the table's own
+alternatives (a big key or a small key in named chests) at `maybe`
+(`apply_key_rule_specs`, `KeyDoorShuffle.py:1422-1500`); its code gives
+Hyrule Castle's two chests, Desert's boss, Kholdstare (two keys, or the
+Cane of Somaria and one: an `or` over the doors' rules), Turtle Rock's big
+key chest and Ganon's Tower's top their own rules. Turtle Rock's doors
+follow which of its ways in the world reaches with every item but its
+small keys (`turtleRockAccess`, a probe world of its own, once per mode
+and release: the front alone in Open and Standard, every way in
+Inverted). Its fixes are read by the seed's release: 1.5.7 strips the
+analysis's own alternatives from the table's doors and probes with the
+other dungeons' keys, 1.5.7 and 1.5.8 open TR Pokey 2 ES to the chest's
+own key; a 1.5.6 build keeps the alternatives (`maybe` only) and, in
+Standard, the table's numbers (the probe found no way in without the
+sewers' key, `4222a44`). DR refuses it with key drops or key pots shuffled
+(`static_logic_supported`), so such a run is not modelled.
+`test/dr-static.spec.ts` holds it to `TestStaticKeyLogic.py`
+(`test/dr-upstream/static-key-logic.json`: each `min_keys` case, the
+fewest keys that reach a location, so yes with that many and not yes with
+one fewer, asked again with the keys wild, where one short is `no`; a case
+made with an item placed is only never `no` with that many), and the race
+seed of that logic (`DR_660701088`) to its playthrough.
+
+**Real seeds** (`test/dr-playthrough.spec.ts`): the playthrough of each
+recorded spoiler race (`test/dr-spoilers/`, below; built by 1.5.6-u to
+1.5.8-u, whose playthrough and sweep code does not change from 1.5.6 to
+1.5.8) is a contract.
+`create_playthrough` (`Main.py:677-778` at 1.5.8) lists the items the seed needs by
+sphere, each reached by DR's logic with the spheres before it, the keys
+kept in their dungeons collected as its sweep reaches them; so each
+location of a sphere is `yes` with the items of the spheres before it held,
+the dungeons' keys found wherever the world does not refuse their place.
+The answers that are not `yes` are listed with why: Misery Mire's two-key
+alternative and a key rule that rests on a placement (`maybe`). The seed
+of DR's `static` key logic (an unstable 1.5.6 build's) is held whole in
+its own world, below.
+**Real seeds, entrances shuffled** (`test/dr-entrance-playthrough.spec.ts`):
+the same contract, each entrance noted as the log says, as a player notes
+it, on every spoiler race of racetime.gg's alttpr category whose DR log
+shuffles entrances and has a playthrough (five Crosskeys races, DR 1.4.8 and
+1.4.8.1, `test/dr-entrance-spoilers/`, below) and an avianart.games Crosskeys
+seed of DR 1.5.8 generated for it (no 1.5.x race's spoiler is public).
+Crossed is the shuffle raced on DR; Swapped is raced on the Overworld fork
+(avianart's swapkeys rolls OWR), held in the fork's world by its own seeds
+(`test/owr-entrance-spoilers/`, below). The pool
+(`drEntrancePool`) offers each door the log moved with the target it took,
+and keeps no door DR moved. The answers that are not `yes` are each a key
+door read strict-safe (a dungeon whose portals the walk does not all reach:
+Desert Palace, Hyrule Castle, Turtle Rock) or Misery Mire's two-key
+alternative, `maybe`; nothing is `yes` too early. The text log's 1.4.x header
+names the crystals goal, Fast Ganon's (`settingsFor`).
+
+The other way, nothing is `yes` too early: the spheres are first-reachable
+sets, so no location of a later sphere is `yes` with what a sphere starts
+with, asked as DR builds that state: the earlier spheres' items and the
+keys `sweep_for_events(key_only=True)` sweeps (those kept in their
+dungeons, found only where the world says `yes`), no other event. The
+world's own sweep is left out there: it collects an event or a vanilla
+drop's key once reached, as a player does, where a sphere holds it only
+from the next (a keysanity seed's pot key one sphere, the room it opens
+the next).
+
+**Where memory keeps them** (`drFlagAddress`, `autotrack/door-checks.ts`):
+`RoomPotData` ($7F:6018) and `SpriteDropData` ($7F:6268), a word a room,
+bit `$8000 >> i` (`BitFieldMasks`, `keydrop/standing_items.asm:571-573`),
+`i` the pot's index in its room's list or the sprite's slot (its index less
+the overlords before it, `EnemyList.py:2133-2139`); `PurchaseCounts`
+($7F:64B8), a byte a shop slot, the shop's sram index plus the slot
+(`shopkeeper.asm:463-480`). The three tables are ranges of their own
+(`door-pots`, `door-drops`, `door-purchases`), each behind a switch the app
+sets from the run's settings, and of categories the race profile permits
+(`pots`, `enemy-drops`, `shop-items`): v2.0 counts "a pot, a bonkable
+object, a shop item, or an enemy drop" as a location "only ... in modes
+where they are shuffled", so a table is read, in Race Mode too, only while
+the run's settings shuffle what it records, and only the run's own
+locations are laid on the board. The Overworld fork's bonk drops
+(`BONK_DROPS`, kind `bonk`, the pack's `./bonk` entry, which only a run
+that shuffles them loads and hands to `drLocationsOf` while `bonkDrops`;
+the index keeps their ids alone, `BONK_DROP_IDS`, which saves and links
+read) are a bit of their
+screen's byte of the save's overworld data (`OVERWORLD_FLAGS + screen`, the
+mask its table gives, as the fork's own client reads it), read through a
+range of their own (`owr-bonks`) behind their switch, of a category the race
+profile forbids (`bonk-drops`): v2.0 names no bonk drop, and the owner
+keeps them out of races, so Race Mode never reads them (the base patch's
+own code was not read: its source is not in the fork's checkout). Never a door, a room or a transition (the
+race admins' June 2026 clarification). Not checked on a real DR ROM yet: a
+sprite's slot being its load order with the overlords left out, and DR's
+item entries taking no slot (`standing_items.asm:403-405`).
+
+**Small keys.** `DungeonCollectedKeys` counts in DR as in vt: a key item
+received through `AddInventory` (`stats.asm:121-148`), so a key found at a
+shuffled pot or drop counts; a vanilla drop's key does not
+(`IncrementSmallKeysNoPrimary`). `DungeonAllCollectedKeys` ($7EF4F1) is not
+read: its `CountAllKey` is marked dead code (`stats.asm:155-156`).
+
+**Settings from where the seed is rolled** (`seed-import.ts`): an avianart
+permalink's JSON (`api.php?action=permlink&hash=`) holds its spoiler's
+`meta`, every DR setting by name (`doorExact`); a Hyrule Town Hall patch
+(`/seed/DR_<uuid>.bps`) writes the bytes the ROM decoder reads, which
+`bpsTarget` recovers without the base ROM (its TargetRead runs). Both hold
+the seed's placements too, so the app asks neither in Race Mode. Their
+fixtures (`test/dr-seeds/`) are written by `pnpm --filter
+@alltp/pack-alttpr record-dr-seeds`: the permalink cut to `meta`, the patch
+re-encoded with the decoder's bytes alone.
+
+### The Overworld Randomizer
+
+codemann8's Overworld Randomizer (OWR) is a fork of DR whose seeds run its
+own rules, even on a vanilla overworld: its `Rules.py` is rewritten in an
+inspectable rule language (`source/logic/AccessRule.py`: `Has`,
+`Primitive`, `Reach`, `and_rule`, `or_rule`), each boss's spoils sit in a
+region of their own past the fight (`Eastern Boss Spoils`, …), Inverted is
+every overworld screen flipped (`is_tile_swapped`, `BaseClasses.py:331-332`),
+and it adds the bonk drops, flute spots, whirlpools, tile flips and crossed
+screen edges a seed may move. The pin is `doorRandomizer.overworld` (0.8.0.2
+on DR 1.5.7, above).
+
+**Its world, as data** (`src/door-rando/owr/`, written by `pnpm --filter
+@alltp/pack-alttpr import-dr --owr <owr-checkout>`, read as data and never
+run): `regions.json` and `doors.json` as DR's, `connections.json` with the
+fork's own tables (`OverworldShuffle.py`'s `mandatory_connections`, each
+screen's `ow_connections` as it stands and flipped, the edges'
+`default_connections`, the mirror's, `default_whirlpool_connections`;
+`EntranceShuffle2.py`'s mandatory and default connections; `FluteShuffle.py`'s
+eight vanilla spots), `entrances.json` with the tables its entrance pools read
+(`EntranceShuffle2.py`'s vanilla maps and `modes`), apart as DR's
+`world/entrances.json` so the entrance assistant loads them without the
+fork's world, and `overworld.json`: each overworld region's screen
+(`OWTileRegions`), each screen edge with its direction, terrain and parallel
+in the other world (`create_owedges`, `parallel_links`), each flute spot's
+region as its screen stands or flipped and its slot, which orders the
+spots (`flute_data`, the layout bytes left out); and `bonk.json`, apart
+so a run loads them without the fork's world, and only a run that
+shuffles them (`src/door-rando/bonk.ts`, the `./bonk` entry; their names
+alone in `bonk-names.json`, for the index): the 42 bonk
+drops (`bonk_prize_table`: region, whether Agahnim must fall first, the
+overworld flag the game sets, the screen's byte at `$7EF280` and the mask,
+as `MultiClient.py:978-987` reads it, and where the fork's own world map
+draws it, the 4096-pixel world's x and y of `ow_loc_prize_table`, or the
+screen's middle where it has none, as `Rom.py:1494-1501` falls back; the
+Good Bee Cave's statue has no screen, so no flag and no place); and
+`districts.json`, District's pools apart for the entrance assistant (each
+`special: 'district'` pool of `modes` in order, the world each entrance it
+names stands in as `create_regions` makes it, `combine_linked_drop_map`).
+Its pots, enemy drops and shops
+are DR 1.5.8's exactly, so `locations.json` serves both (the import stops if
+they part). `src/door-rando/owr-data.spec.ts` holds the data: every region
+and door, every table's names, every exit linked but those the fork links in
+code (save points, flute spots, Houlihan's room, the dark world starts).
+
+**Its rules** (`src/door-rando/owr/rules.json`, the same run): DR's
+translation (`dr-rules.mjs` over `rules-core.mjs`) under the fork's dialect.
+A rule object reads as the state call it compiles to (`Has(item, player,
+n)` is `state.has(…)`, `Primitive(m, …)` `state.m(…)`, `Reach(…)`
+`state.can_reach(…)`, `and_rule`/`or_rule`/`not_rule` Python's and, or,
+not; `accessRule`), so every DR expression and method applies where the
+fork's `BaseClasses.py` agrees with DR 1.5.8's. Where it parts, its own
+methods (`OWR_METHODS`, each citing its lines): `can_use_bombs` also needs
+bombs to farm unless `override_bomb_check` (`overrideBombCheck`, which only
+the fork's test harness sets) (`can_farm_bombs`: a farm's event, rupees and a shop selling
+bombs; Standard's escape and the seed's stun prize are maybe), `can_flute`
+is the activated flute alone (its activation an event at Kakariko),
+`has_beaten_aga` waits for Zelda in Standard, `can_collect_bonkdrops`.
+`world.is_tile_swapped(screen)` is the setting `tileSwapped_<screen>`,
+which the world gives (every screen in Inverted, its flip in Mixed);
+`is_atgt_swapped` and `is_bombshop_start` are screens too.
+`set_defeat_dungeon_boss_rule`'s own addition (Thieves' Town's Blind asks
+the maiden unmasked, `Rules.py:161-165`) is read from its body. Its events come
+from `location_events` (`Regions.py`), each boss kill an event of its own
+(`beatBoss_…`, which the dungeons goal counts); `dynamicEvents` lists those
+the world adds at locations of its own: the flute's activation and the
+bomb and rupee farms of `create_farm_locations` (the tree pulls and crabs,
+which drop what the seed's prize packs hold, are left out). Each bonk drop
+has its rule while `bonkDrops` (`shuffle_bonk_drops`). What is code is
+listed in `unported`, the same code as DR's at the fork's lines, and its
+own `ow_terrain_rules` (water edges: flippers, and the pearl by where the
+edge leads), which the world ports. `owr-rules.spec.ts` holds all of it.
+
+**Its own tests** (`test/owr-upstream/`, the same run, `testFixturesOf` in
+`dr-tests.mjs`): the fork keeps DR's suites, re-aimed at its world, in a
+harness of its own (its `test/TestBase.py` at the release:
+`make_logic_test_world`, one cached world per logic and mode, the bomb check
+overridden, the medallions Ether and Quake; the dungeon tests start in
+today's regions), so the fixtures record `overrideBombCheck` and no harness
+commit apart, and its Inverted pool holds the flute activated (`get_pool_core`
+activates it once Kakariko's screen flips, `ItemList.py:291`: `pool.json`'s
+`activatedFlute`, which `poolOf` reads by mode); 2,898 cases in 29 files (`test/owr-fixtures.spec.ts` counts
+them). Its key layouts' validator and static key tests read its screens and
+are not imported. Each file is listed in `upstream.json`
+(`doorRandomizer.overworld.tests`), `pending` until the fork's world holds
+it: the vanilla, Inverted and dungeon suites are `ported`; the glitched
+ones (`owg`, `inverted_owg`) stay `pending`, glitched logic being no
+model of the pack's.
+
+**Its world, built** (`src/door-world/` on `OWR_DATA`, `owr-data.ts`, the
+pack's `./door-world/owr` entry, so only an OWR run loads its JSON: the
+app solves an OWR run there, in the Open, Inverted or Standard world, its
+doors vanilla or noted, its entrances vanilla or of any of the fork's
+shuffles as noted, its
+whirlpools, flute spots, crossed edges and Mixed flips as noted, its bonk
+drops among the world's locations while shuffled): `drWorld(settings,
+{ data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
+fork links or rules otherwise (`overworld.ts`), its layout vanilla:
+
+- `link_overworld` (`OverworldShuffle.py:21-584`): the mandatory
+  connections, the save-and-quit points by the screens they stand on
+  (Link's House or the Bomb Shop, Sanctuary or the Dark Chapel, the pyramid
+  or the castle's ledge), each screen's links as it stands or flipped
+  (`ow_connections`), the whirlpools, every edge with its partner
+  (`edgePartnersOf`: the vanilla one, or a crossed overworld's as noted),
+  the flute spots in slot order (`fluteSpots`, `FluteShuffle.py:36-50,
+  655-657`). Inverted flips every screen, Mixed as noted (below). A seed's shuffled
+  whirlpools and moved flute spots are linked as the player notes them
+  (`options.overworld`, `OwrNotes`): each noted whirlpool into its
+  partner's region (connect_whirlpool, `OverworldShuffle.py:359-367`), the
+  noted screens' spots in slot order (`FluteShuffle.py:178-182`), and a
+  whirlpool or spot not noted leads nowhere, which never opens a way too
+  early, but a pair the shuffle leaves no choice for (`forcedWhirlpoolsOf`,
+  `OverworldShuffle.py:370-413`): an overworld not crossed shuffles each
+  world's whirlpools apart, by their regions' worlds once Mixed flipped
+  them, so a pool of two (the dark world's Qirn Jump and Bomber Corner
+  without Mixed) is linked with no note, and Polar with Mixed links those
+  two outright (`:376-378`). A crossed overworld's edges (`ow_crossed` grouped or unrestricted,
+  `OverworldShuffle.py:246-345`; Polar crosses nothing without Mixed) are
+  linked the same way: each noted edge into its partner's region, both ways
+  (connect_two_way, `:702-725`), an edge not noted nowhere; the terrain
+  rules read the noted partner's water. A player notes them as crossings
+  (`OwrNotes.crossings`): each of the 67 crossable pairs
+  (`crossablePairsOf`: a vanilla pair of light world edges with dark world
+  twins, `parallel_links`) crosses into its partner's twin, its twins'
+  pair with it, or stays; an edge with no twin never crosses on a vanilla
+  layout without Mixed (performSwap moves such a pair's two ends together,
+  `:75-87`, `:109`; unrestricted crosses only twinned edges and forces
+  their twins, `:278`, `:343-347`). `crossingsOf` turns a seed's edges into
+  crossings: both crossed seeds' edges come back whole from them. `owrNotesFromSpoiler` reads them
+  from a seed's JSON spoiler (`Whirlpools`, `Maps`' flute entry and its
+  `data`, `FluteShuffle.py:652`, and a crossed seed's `Overworld`, every
+  pair connect_two_way linked, `:721-722`).
+- `link_entrances_new`'s vanilla path (`EntranceShuffle2.py:48-200`), which
+  has no Inverted swap table: Agahnim's and Ganon's towers trade doors once
+  both screens flip, the pyramid's door and hole stand on the castle's
+  ledge once its screen does (`relocate_pyramid_entrances`,
+  `owrMovedExits`), the Bomb Shop's and Dark Chapel's ways out lead to their
+  own areas where Link starts there.
+- The fork's entrance shuffles, every mode of its `modes` (`EntranceShuffle2.py:2158-2768`,
+  `src/door-rando/owr/entrances.json`), as noted: DR's by the same names, its pools its
+  own (lite's and lean's kept caves add the `takeany` and `bonk` conditions, simple has
+  no Inverted pools), and District (`:2566-2726`: each entrance among its district's, by
+  the world its region stands in). `owrShuffled` is what a mode may move: the whole
+  pool (`:60-61`) where `undefined` places what the pools leave (shuffle, swap, error,
+  `:152-159`), only what the pools name where it leaves it vanilla (the two dungeon
+  shuffles); less the caves a kept pool connects (`do_vanilla_connect`, `:1610-1646`:
+  shops without shopsanity, pots without pottery, fairies without enemy drops, the
+  take-any caves where `take_any` is known not fixed, the Good Bee Cave where bonk drops
+  are known not shuffled; Skull Woods' doors never, `skullwoods` not recorded), in
+  Standard Link's House and the escape's drop (`do_standard_connections`, `:479-494`; the
+  castle's front door and the drop's stairs trade exits where `linked_drops` parts them,
+  not recorded: moved), the Tavern's back without shuffletavern (`:230-236`) and, without
+  shufflelinks, the start house's door (`do_links_house`, `:655-660`: Links House, or the
+  Big Bomb Shop once its screen flips, `is_bombshop_start`; neither while that flip is
+  not known). Ganon's Tower and the pyramid stand only without `shuffle_ganon`
+  (`:213-228`, `:525-531`), which a run does not record: moved. Insanity is decoupled
+  (`:2761-2766`): a noted door leads one way, its exit's way back unlinked (the tracker
+  notes doors, never exits), but the start house's door, which `do_links_house`
+  connects both ways whatever the coupling (`:717-719`). The fork's tables are
+  DR's Open world's name for name (no Inverted names: its Inverted world
+  flips screens), and so are its ROM tables (`EntranceData`, `exit_ids`):
+  a note, the app's pool (`owrEntrancePool`, a hole any hole's drop, where a mode
+  places dungeons among dungeons a dungeon's door a dungeon's exit, else a door
+  any door's target) and autotracking read an OWR seed as a DR one
+  (`src/door-rando/entrances.spec.ts`). District's pool narrows each
+  entrance to its own district's targets where the worlds are known (no
+  Mixed, `tilesSwapped`): each `district` pool shuffles its entrances
+  among their own `combine_map` targets (`:139-147`,
+  `find_entrances_and_exits` `:1946-1955`) and places them all, an
+  entrance's pool being the one naming it whose condition is the world it
+  stands in (`owrDistrictsOf`: its parent region's type, `:75-82`, the
+  pyramid's door on the castle's ledge once 0x1b swaps,
+  `relocate_pyramid_entrances` `:2034-2055`, a hole its door's,
+  `combine_linked_drop_map` `:144`); under Mixed, whose flips move regions
+  between the worlds, it offers any door's target as before. Both District
+  seeds' logs hold every entrance to its district (`test/owr-playthrough.spec.ts`). `notedConnections` links the
+  overworld as noted (above), what the shuffle keeps through
+  `linkOwrEntrances`, each noted door as connect_two_way and
+  connect_entrance do (`:2083-2155`), the pyramid's from either place
+  while its screen is not known (`owrEntranceRegion`, `OwrPossibleLinks`),
+  the Bomb Shop's and the Dark Chapel's ways out to the door noted into
+  them where Link starts there (`:2105-2110`), and Chris Houlihan's room
+  back to the start house's door (`:164-167`). The key analysis reads the
+  noted overworld and entrances together: a dungeon whose ways in they all
+  tell is analysed, any other keeps the strict-safe rule. In Swapped a
+  note tells its partner (`owrSwapPartners`): every Swapped connection
+  goes through `connect_swap` (`:1986-1995`) or `connect_swapped`
+  (`:1958-1983`), which trade targets two by two over the fork's
+  `combine_map` (`owrCombineMap`, `:62-73`: `entrance_map`, the towers'
+  exits traded once `is_atgt_swapped`, then `drop_map` and
+  `single_entrance_map`, no target twice), so a door noted to another's
+  target tells that other door leads to the first one's. `notedConnections`
+  links it as a note, the pool hands it to the app (`derived`), and
+  nothing is told of a door noted, one the shuffle keeps, a target noted
+  elsewhere, a tower's while its screens are not known, or notes that
+  clash. `test/owr-playthrough.spec.ts` holds both Swapped seeds to it:
+  each log trades two by two, and half of its notes tell the rest and
+  build the same world.
+- Mixed's flips (`ow_mixed`, `OverworldShuffle.py:156-179`), as noted
+  (`OwrNotes.flips`: a screen by its light world id, 0x80 and 0x81 the
+  pedestal's and Zora's). `owrScreensOf` reads them into the run's screens
+  (`OwrScreens`): each screen's own flip and `is_tile_swapped` (Inverted
+  unless Mixed flipped it back, `BaseClasses.py:331-332`), a dark world
+  screen its light twin's, a large screen's other ids never flipped
+  (`:1002-1005`). Screens flip in groups (`owrFlipGroups` of
+  `src/door-rando/owr-flips.ts`, which the app reads too, a port of
+  `define_tile_groups`, `:971-1056`, for a vanilla layout and no
+  customizer): a note on one screen tells its group, and a group that may
+  not flip (the sanctuary's while its save point must stay, `can_shuffle_
+  group`, `:989-999`, `allow_flip_sanc` false outside the customizer,
+  `:746`) stands; a group with no note, or notes that disagree, is not
+  known. A flipped screen's regions switch worlds (`regionTypeOf`,
+  `update_world_regions`, `:1216-1222`), which the flute and mirror exits
+  (`dynamicExits`), the regions' sides and the bunny read. Mixed alone
+  crosses each pair of edges whose two screens flip apart (`shuffle_tiles`
+  swaps the flipped screens' edges, `:945-957`; performSwap moves one
+  end into its twin, `:28-110`), Polar never (its edges stay vanilla,
+  `OwrNotes.polar`), and a crossed overworld's crossings are noted as the
+  player sees them (walking across changes worlds or not), which a pair's
+  screens flipped apart turn round (`edgePartnersOf`, `crossingsOf`).
+  **A screen whose flip is not known** links neither way of what it
+  decides: its `ow_connections`, the save-and-quit points and the start's
+  ways out it carries, Houlihan's room, the towers' trade, the pyramid's
+  exits, its pairs of edges, a flute spot on it (and, while Death
+  Mountain's slot is not known, any spot whose rank it moves). Its
+  regions have no type, so no flute or mirror exit; its `tileSwapped_<id>`
+  and every derived side that may differ are held in both values
+  (`eachValue`: the rule asks each case, past four reads each is maybe);
+  the flute's activation, which waits on Kakariko standing, is not
+  given; Death Mountain's Return Cave asks the bunny's rule as if
+  flipped. The sides are bounds (`sideBounds`): what a region surely is,
+  every unknown region the other world's and its links left out, and what
+  it may be, every unknown region the world's own and every link it may
+  have (`OwrPossibleLinks`); a region's side only grows with a light type
+  and more links, so the truth lies between. A bunny is read where it may
+  be one, Link's own world only where surely; the terrain rules ask the
+  pearl where it may be the other world. `owrNotesFromSpoiler` reads the
+  flips from `Maps`' swaps `data` (`:179`), never its text map.
+- DR's key analysis runs on the world the notes link (OWR analyses the
+  world it linked, `link_doors` after `link_overworld`): with every
+  shuffle noted whole (`owrNotesComplete`), the analysis is that world's;
+  while some is not, as for noted entrances: a dungeon whose ways in the
+  notes all tell is analysed, any other asks every key. Its walk reads the
+  fork's own find_inaccessible_regions (`owr:DoorShuffle.py:3405-3437`:
+  from the Bomb Shop once 0x2c flips, the castle's ledge by the pyramid's
+  screen), destination portals by their screens (`:99-108`) and the
+  towers' trade for `inverted_aga_check` (`:1294-1302`).
+- `ow_terrain_rules` (`owrTerrainRules`, `Rules.py:1417-1429`), the
+  activated flute (an event at Kakariko while its screen stands, a fact
+  `ocarinaActivated`; in Inverted the recorded flute must be the activated
+  one), the farms of `dynamicEvents` (`owrDynamicEvents`), the screens'
+  settings (`owrSettings`) and the fork's options at their defaults
+  (`OWR_DEFAULTS`: bonk drops unshuffled, the bomb check not overridden: a
+  real run farms or holds its bombs; only the contract overrides it, as the
+  fork's harness does), the Death Mountain Return Cave a bunny cannot cross
+  once its screen flips, with vanilla-like entrances (`Rules.py:2002-2008`). A count of events (the
+  dungeons goal's ten boss kills) reads each at maybe too (`readFacts`).
+- Bunny rules: DR's port over the fork's lists. The fork walks its paths
+  under a Pareto front of their requirements' atoms
+  (`keep_better_requirement`, `source/logic/AccessRule.py:472-491`), a
+  pruning meant to drop only paths no easier than one kept; the port keeps
+  them, so where the atoms judge exactly the rule is the same, and the
+  vanilla and Inverted suites hold. The walls a bunny cannot pass
+  (`Rules.py:2024-2029`) are read as for DR. The fork's `add_bunny_rule`
+  and `is_not_bunny` are not DR's: they ask the pearl wherever a region
+  lies in the dark world (`can_cause_bunny`, `BaseClasses.py:1443-1444`,
+  `:1703-1707`), a cave entered from both worlds too, where DR asks it only
+  off the light world; so the world reads the fork's `notBunny_*` as off
+  the dark world (the light one in Inverted), and while a shuffled run's
+  doors are not all noted, each target no note names may be entered from
+  either world (`unplaced`), so its cave asks the pearl until it is placed.
+
+`test/owr-contract.spec.ts` holds the ported files in the fork's harness
+(drVersion 157, `overrideBombCheck` as the fixture records it); a case it
+answers otherwise is listed in `test/owr-stale.ts` with why, and held to it:
+
+- The dungeon suites' 181, the same cases as DR's. A true case lists every
+  reason it falls short for (most dark world ones lack the pearl and a key
+  besides) and must hold once each reason's want is given (`FIXES`: the
+  pearl, every key of its dungeon with its drops, the events swept, the
+  mirror, a beetle or wizzrobe killer, the powder); a false case must lose
+  its yes without the harness's bomb override, the Cane of Byrna or the
+  pearl, or reach its location through the overworld.
+- In Inverted, the cases written for vt's Inverted layout (Old Man Cave
+  behind Bumper Cave's door, a bomb shop in the light world, the towers'
+  old names), those holding the plain Ocarina where the fork asks the
+  activated one, and the everything-but cases that keep the pool's
+  activated flute, which flies where the test expects none. Each is shown
+  answered by the fork's own rules (`test/owr-proof.ts`): a false case the
+  pack answers yes by a route from the start, each event it reads reached
+  before it as the sweep would; a true case by the set the case reaches
+  (each dungeon touched closed over: its rooms leave only by its portals)
+  and every exit out of it, each worth `no`. Every exit and location a
+  proof reads is listed in `test/owr-edges.ts` with the rule the world
+  gives it and the fork's lines it was reviewed against, so a rule that
+  moves fails the spec until reviewed again. `src/door-world/owr-world.spec.ts`
+holds the links, the flute spots, the screens and the rules above.
+
+**Its own seeds' playthroughs** (`test/owr-spoilers/`, written by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers owr`, never by hand):
+no OWR race keeps its spoiler (avianart's race permalinks keep their meta
+alone), so four avianart.games seeds of OWR 0.8.0.2 (on DR 1.5.7),
+generated for the fixtures from the site's customizer (branch OWR,
+noglitches, the Ganon goal, keys in their dungeons), doors and entrances
+vanilla: Open and Inverted, bonk drops shuffled and not, and two whose
+whirlpools are shuffled and flute spots moved (random in Open, balanced in
+Inverted), noted from the log as a player notes them (with vanilla links
+instead, the Open one fails both walks).
+Each JSON keeps the contract's keys and the fork's `Overworld`,
+`Whirlpools` and `Maps` (empty in these). The crossed set
+(`test/owr-crossed-spoilers/`, `record-dr-spoilers owr-crossed`) adds two
+Open seeds whose edges are crossed, grouped (`o4mamwuKZ`) and unrestricted
+(`0DsyCwK23`), every edge noted from the log's `Overworld` (with vanilla
+edges instead, the grouped one fails its walk). `test/owr-playthrough.spec.ts`
+walks each in the world the app solves an OWR run in (`OWR_DATA`, the bonk
+drops added as locations, the fork's events and farms held by name): each
+sphere `yes` with the spheres before it, and no location of a later sphere
+`yes` too early. All eight hold with no exception but the farms a seed's
+random prize packs make (tree pulls and crabs, `ItemList.py:742-760`), which
+no tracker knows and the world never holds: the walks take them out, their
+items never held (`FARMS`: `o4mamwuKZ`'s crab, whose rupees nothing later
+waited for). The Mixed set (`test/owr-mixed-spoilers/`, `record-dr-spoilers
+owr-mixed`) holds four seeds whose screens Mixed flipped: Open
+(`mPEeiQvu1`), Inverted (`6DIwXjzG5`), Open with its edges crossed grouped
+(`4yKJq5H2E`) and Open with its whirlpools shuffled (`t8B3wJpHK`), each
+flip noted from `Maps`' swaps `data` (`test/owr-mixed.spec.ts` holds its
+shape: a light screen with its dark twin). The world crosses exactly the
+edges the non-crossed ones list from their flips alone. The entrance set
+(`test/owr-entrance-spoilers/`, `record-dr-spoilers owr-entrances`) holds
+four Open seeds of the fork's own entrance shuffles, two District
+(`p5dYMs8jC`, Mixed too, and `qzj33CUOO`) and two Swapped (`sLcpC6Z45`,
+`sbuwNOmVF`), the Tavern's back shuffled, Link's House kept, every entrance
+noted from the log's `Entrances`; their reviewed answers (`REVIEWED`) are
+key doors read strict-safe, each turning yes once its dungeon's keys are
+held. All sixteen logs hold both walks with no exception but the prize-pack farms
+and those reviewed answers (with no
+flip read, `mPEeiQvu1` fails both walks; with the regions' types left
+unflipped, its sphere walk). Before the key analysis ran on the noted
+world, the Inverted one's Turtle Rock prize read maybe: its back ledges
+reached only through the dungeon once 0x45 flips. The shuffled entrances
+set (`test/owr-entrance-spoilers/`, `record-dr-spoilers owr-entrances`)
+holds a seed of each of the fork's modes, each entrance noted from the
+log's `Entrances` (its door lines, never an exit's): Swapped (`sLcpC6Z45`,
+`sbuwNOmVF` with small keys wild), District (`qzj33CUOO`, `p5dYMs8jC` with
+Mixed), Crossed (`xq1iZJVwM`, `uegcykSHR` with Mixed, `kL7bNLknt` with its
+edges crossed unrestricted, `waofX3504` Inverted), Lite (`1IAKwFudE`,
+`4cwdgebPq` Inverted), Lean (`jRN0n0tst`), Simple (`jUsfGyWR1`),
+Restricted (`zXFy19ljb`), Full (`89uvVx2xg`), Insanity (`DLSrm8B0f`) and
+the two dungeon shuffles (`ERKxf6EjS`, `tZeE1P1Du`). Its pool offers each
+door the log moves its logged target, every door it moves is in the log
+and nothing it keeps moved (the log lists what the shuffle connects, never
+what it leaves vanilla). No location of a later sphere is `yes` too early
+in any of them; what is not `yes` in time is reviewed (`REVIEWED`): key
+doors left strict-safe where the walk does not reach all of a dungeon's
+ways in (a tower behind Skull Woods' back door or Ice Palace's water, a
+castle door on Bumper Cave's ledge), each `yes` once the dungeon's keys
+are held, and Insanity's caves past an exit no note links. The Standard set
+(`test/owr-standard-spoilers/`, `record-dr-spoilers owr-standard`) holds
+six seeds of its Standard world, which no suite of the fork covers: its
+overworld and entrances vanilla (`AjT8OHdZc`), with bonk drops
+(`0rrVwugI5`), with Mixed (`mhKQq39uX`), and its entrances Crossed
+(`mGEeueUjZ`), Dungeons + Simple (`0pr3QtXLU`) and Lite (`CK14WlYnG`).
+The fork's `standard_rules` (`Rules.py:1693-1784`) is DR's port but for
+Murahdahla, who waits for Zelda's delivery (`:1770-1774`), and the Old Man's
+save point, which its rules carry; both walks hold but the escape's first
+rooms, whose kill rules read Uncle's item (`maybe` with nothing held: the
+fork counts them in Uncle's own sphere), and the strict-safe castle
+behind shuffled entrances. The Crossed seed found the fork's bunny reading
+(above). The door set (`test/owr-door-spoilers/`, `record-dr-spoilers
+owr-doors`) holds nine seeds of the fork's door shuffle, every door, lobby
+and kind noted from the log (`test/dr-doors.ts`, shared with DR's door
+contract): basic at intensities 1 and 2 (`nrVetY8I2`, `uVQOPwIvs` in
+Standard), partitioned at 3 and 2 (`kxnOoGUE9`, `CTRTq1Rhj` with Mixed),
+crossed at 2 and 3 (`0tUGDpve7`, `pSf43q0bF`), crossed in the Inverted
+world (`tIJDkPsK3`), with Crossed entrances (`61u7cpluY`) and with decoupled
+doors (`x1FHBuUpu`). The fork's door generator is DR 1.5.7's but where it
+reads screens for modes (`find_inaccessible_regions`, the portals'
+destinations, `DoorShuffle.py:103-110`, `:3404-3436`), the bosses' own
+`Spoils` rooms (its data) and its prize shuffle: what the door model reads
+(the pools, the doors each intensity shuffles, the lobbies, the kinds) is
+DR's, the rest feeds the key analysis, which door shuffle leaves
+strict-safe. Each link, lobby and kind is one the model offers, each room
+in the log's `@ Dungeon` (which found the drop-landing rooms, above), no
+location `yes` too early; what is not `yes` in time is a strict-safe key
+door, `yes` with every key held, but Standard's escape (`uVQOPwIvs`: its way
+back through a bombable door, whose bombs the fork's `can_farm_bombs` reads
+maybe before her delivery). The app's side
+(`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
+permalinks as **Start from a seed** does and holds the run they switch to
+to that world's settings: modelled, the fork's solver, its mode, its bonk
+drops, DR 1.5.7.
+
 ## The entrance randomizer's tables
 
 vt hands a seed with shuffled entrances to the entrance randomizer, a Python
@@ -1221,7 +2239,9 @@ entrance), a few hundred bytes: the session's chunk never loads `er.json`.
 `linksOf` (in `src/entrances.ts`, loaded with the entrance tables) names the
 facts: the entrance's id, and its target's, or a few alike that the game
 loads by one entrance (the healer fairies, some shops, the fortune
-tellers). Memory keeps only the last door each way: a door taken while the
+tellers), and Link's House and the Tavern's back, which only DR's and
+its fork's pools shuffle (entrances 1 and 0x43; another pool drops them).
+Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 
 ### Its rules
@@ -1230,7 +2250,13 @@ A seed with shuffled entrances is filled by the entrance randomizer, under
 its own rules (`Rules.py`, `Bosses.py`), dungeons included: not vt's, which
 the regions of this pack port. The same run of `import-er` translates them
 into the engine's language, `src/entrances/rules.json`
-(`packs/alttpr/scripts/er-rules.mjs`, over the Python reader `packs/alttpr/scripts/python.mjs`).
+(`packs/alttpr/scripts/er-rules.mjs`, the entrance randomizer's dialect of the translation in
+`packs/alttpr/scripts/rules-core.mjs`, over the Python reader `packs/alttpr/scripts/python.mjs`). The
+Door Randomizer's port (`packs/alttpr/scripts/dr-rules.mjs`) is another dialect of that one core: the
+walk, the translation, a boss read through the dialect's `bossHelper` (its slot's helper here, the
+vanilla boss's in DR's), the retro world's `has_key` and the placement-only data below are the same
+code for both. The dialect gives the world's settings, the items, the state's methods (the retro
+world's `can_shoot_arrows` is this one's) and what only its randomizer writes.
 
 ```mermaid
 flowchart LR
@@ -1381,7 +2407,12 @@ flowchart LR
   path counts only from a region the doors noted mark light that no door
   not noted may make dark: in a crossed seed where the Pyramid's door
   leads into Sanctuary, Link starts there a bunny, which a map read off
-  the doors noted would not have known.
+  the doors noted would not have known. Each path rule found is a helper
+  of the world's own (`@bunny<n>`), as the randomizer's paths share the
+  rules they capture: written out as text, a crossed seed's rules copied
+  those of the caves before them (10,298 characters in one rule of a
+  recorded seed, 171 now; `er-seeds.spec.ts`), the pattern that ran the
+  Door Randomizer's world out of memory.
 - **Facts.** The engine reads `reach()` in locations only. A rule of an
   exit or of a helper that asks for a region reads the fact
   `reached_<region>` instead, given by a location of its own in that
@@ -2063,7 +3094,8 @@ see the Triforce pieces above).
 ## Spoiler logs
 
 `parseSpoiler(text, fileName)` (`src/spoiler/parse.ts`) reads the spoiler log
-alttpr.com lets a player save, into `@alltp/spoiler`'s `SpoilerLog` (its
+alttpr.com lets a player save, or a Door Randomizer log
+([below](#the-door-randomizers-logs)), into `@alltp/spoiler`'s `SpoilerLog` (its
 README is the model's design doc). It is pure and never throws on the file:
 a reason not to show it is a refusal with one of that package's codes. The
 review that uses it (a finished run, Race Mode off) lives in the app; this
@@ -2160,15 +3192,26 @@ adapter pairs each with the run's value of the same name.
   before it are the key. The importer stops at a code that matches no item or
   two.
 
-Both are written, never edited, by
+- `src/spoiler/dr-items.json`: the Door Randomizer's item name -> vt class, or
+  null for an event, joined on the code the same way. DR's `item_table` puts a
+  price after the code, writes an event as type `Event` with code 999 and adds a
+  dungeon byte after a prize's sprite bytes (DR 1.5.8 `Items.py:23-194`), which
+  is dropped before keying. A code no vt class has (`Big Magic`, `Fairy`, `Bee
+  Trap`, `Chicken`: what DR's pots and enemies drop) goes to `unmatched`, read as
+  an item with no pack item, shown by name; so does `Arrows (5)`, which shares
+  0x5A with `Nothing` (only the name vt's English table gives a shared class
+  keeps it).
+
+All three are written, never edited, by
 
 ```sh
-pnpm --filter @alltp/pack-alttpr import-item-names --vt <vt-checkout> --er <er-checkout>
+pnpm --filter @alltp/pack-alttpr import-item-names --vt <vt-checkout> --er <er-checkout> --dr <dr-checkout>
 ```
 
-at the commits `upstream.json` pins (`entranceRandomizer.spoilerItems` names
-the second; the first reads the two files the manifest already lists, so the
-weekly drift workflow watches them). A checkout is read, never run.
+at the commits `upstream.json` pins (`entranceRandomizer.spoilerItems` and
+`doorRandomizer.spoilerItems` name the second and third; the first reads the two
+files the manifest already lists, so the weekly drift workflow watches them). A
+checkout is read, never run.
 
 ### Fixtures
 
@@ -2193,3 +3236,119 @@ The script refuses a file whose `meta` carries `notes`, free text a player
 wrote; the files hold seed data, item names and a public daily's title, no
 personal data. Spoiler-race, multiworld, shuffled-boss and malformed variants
 are made in the specs by editing a fixture's parsed document, never stored.
+
+### The Door Randomizer's logs
+
+`parseSpoiler` hands a Door Randomizer log (and its Overworld fork's) to
+`src/spoiler/dr.ts`, which reads what DR 1.5.8 writes (`Spoiler`,
+`BaseClasses.py:2497-3026` at the commit `doorRandomizer` pins) in either form:
+
+| | Text (`to_file`) | JSON (`to_json`) |
+| --- | --- | --- |
+| Who hands it out | DR's command line (`DR_<seed>_Spoiler.txt`); SahasrahBot posts it for a spoiler race | DR's `--jsonout`; avianart's Download Spoiler (`alttprcustom - DR__<hash>_Spoiler.txt`, `JSON.stringify(spoiler, null, 4)`) and its permalink API (`{ response: { spoiler, hash } }`) |
+| Told by | its first line, `ALttP Dungeon Randomizer Version <v>  -  Seed: <n>` (`ALttP Overworld Randomizer  -  Seed:` for the fork) | a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`), its file name, or a `meta` with `door_shuffle` or `versions` |
+| Settings | one `Label:   value` line each (`meta_to_file`, `:2754-2848`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
+| Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2627-2716`), kept as `area` |
+| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`) |
+
+Both are turned into the JSON's shape (`textDocument` for the text) and read by
+`readLog` with the `DR` shape:
+
+- **Names.** A location is `gen_name()` (`:2325-2334`): its name, ` @ <dungeon>`
+  when the doors are shuffled past basic, ` (<enemy>)` for an enemy's drop
+  (`EnemyList.py:2268-2270`, a key drop's under enemy shuffle,
+  `Regions.py:1177-1178`). The suffixes are dropped only when the whole name is
+  unknown. A name is one of the pack's DR locations (`DR_LOCATIONS`, by its
+  exact name: the key drops, pots, enemy drops and shop items) or the entrance
+  randomizer's (`erLocationId`). Items go through `dr-items.json`; DR prints an
+  item of no world with ` (Player 1)` after it (`Item.__unicode__`), which is
+  dropped. BabelFish translates the text log's names through an English table
+  that is empty (`resources/app/meta/lang/en.json`), so both forms write them
+  alike.
+- **Seed.** DR's ROM title is `DR<3 digits>_<team>_<player>_<seed:09>`, cut to 21
+  bytes (`Rom.py:1504-1506`), and autotracking records what follows the
+  version as the run's seed (`seedRomOf`). `titleSeedOf` writes the log's
+  `meta.seed` (or the first line's) the same way, `1_1_660701088`: that is
+  `log.seed` (`content`). Without it, avianart's hash, from the file's name or
+  the API's wrapper, is the seed (`file-name`): a run started from an avianart
+  link keeps that hash until autotracking reads the ROM.
+- **`extra.door`** (`DoorSpoilerFacts`): the version, whether it is the fork's,
+  the title's seed, avianart's hash and the title screen's code (`Hash: Bow,
+  …`, `hashes_to_file`, `:2850-2875`). The run does not read that code, so it
+  is shown, not compared.
+- **Settings.** `meta` goes through the seed import's `doorMetaReading`, the
+  reading an avianart permalink gets, so a log and a seed started from avianart
+  state the same settings; the requirements' crystals and medallions come from
+  the text's `Requirements:` (`Misery Mire: Quake Medallion`) or the JSON's
+  `Special`.
+- **Refusals.** A multiworld (`players` or `teams` over 1, an item of `Player 2`)
+  is `unsupported`; a log with no placement is `stripped`, `door-race` when its
+  `meta` says race (an avianart permalink of a race seed keeps its `meta`
+  alone), `door-settings` otherwise (DR's `settings` and `semi` spoiler modes
+  list no item); an item `dr-items.json` lacks, or more than four unknown
+  locations (a newer DR, the fork's bonk drops), is `newer-version`.
+
+The JSON's `Entrances`, `Doors`, `Lobbies`, `DoorTypes`, `Bottles`, `paths`,
+the `Drops`, `Dig Game Digs`, `Prize Packs` and `In-Game Texts` 1.5.7 added
+(tree pulls, the crab, the digging game, the enemies' prize packs, Blind's
+pun), and the fork's `Overworld`, `Whirlpools` and `Maps`, and the text's
+sections of the same, are not read.
+
+`test/dr-spoilers/` holds DR's own text log of twelve spoiler races, cut by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers` to the header (less the
+`User Notes` a person wrote) and the sections read, all Open with vanilla doors
+and entrances: `DR_660701088_Spoiler.txt` (1.5.6-u, keysanity, the unstable
+`static` key logic), `DR_278438665_Spoiler.txt` (1.5.7-u, keysanity, key drops
+and key pots), five more keysanity seeds and five with the keys in their
+dungeons (the script's `RACES` says which race each is). Their playthroughs
+hold DR's world (`test/dr-playthrough.spec.ts`, "The Door Randomizer's
+world"). The script finds the log the race
+room's bot posted in its chat log and fetches DR's text beside it;
+`index.json` keeps the race, the address, the day and the whole file's SHA-256.
+Why not avianart: a race seed's permalink keeps the spoiler's `meta` alone
+(`test/dr-seeds/avianart-*.json`, which the specs read as a `stripped` log),
+and every DR permalink of the study is a race seed's. The JSON form is held to
+documents the specs build from those logs in `to_json`'s shape; the one real
+DR JSON with placements stored is the entrance set's avianart seed, below.
+
+`test/dr-entrance-spoilers/` holds the shuffled-entrance set, recorded by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers entrances`: the text
+logs of five Crosskeys spoiler races (DR 1.4.8 and 1.4.8.1; their
+`Entrances` section kept beside the others, `<=>` both ways, `=>` in, `<=`
+out), and the JSON spoiler of an avianart.games seed of its crosskeys preset
+(DR 1.5.8-u, generated on 2026-10-30 for the set, not a race), cut to
+`meta`, `Entrances`, the locations by region, `Special`, `Starting
+Inventory`, `Shops`, `Bosses` and `playthrough`. The script's
+`ENTRANCE_RACES` and `AVIANART_SEEDS` say which is which and why the set is
+what it is (no 1.5.x race spoiler public; Swapped raced on OWR only).
+
+`test/dr-door-spoilers/` holds the door-shuffle set, recorded by
+`pnpm --filter @alltp/pack-alttpr record-dr-spoilers doors`: no spoiler of a
+door-shuffled race was found (those races, about 2 to 3 % of DR's, run on
+Hyrule Town Hall and avianart race seeds, whose permalinks keep their meta
+alone), so the set holds the
+JSON spoilers of twelve avianart.games seeds of DR 1.5.8-u generated on
+2026-10-30 for it (not races): the door presets players race ("DR Beginner
+Week 1 & 2", "Ladder Beginner Doors", "Lightspeed w/ Crossed Doors") and the
+site's customizer for basic, partitioned and crossed at intensities 1, 2
+and 3, in Open and Standard, keys in their dungeons and keysanity, and
+crossed doors decoupled, in the Inverted world, and with Crosskeys' crossed
+entrances (keysanity), and partitioned intensity 3 decoupled in the Inverted
+world with key drops and key pots, each cut
+as the entrance set's avianart seed is, its `Doors`, `Lobbies` and
+`DoorTypes` kept (the script's `DOOR_SEEDS` says which is which). Biome
+leaves them as recorded. `test/dr-door-playthrough.spec.ts` notes every
+door as each spoiler says (`doorNotesFromSpoiler`; each dungeon's small
+keys as its counter shows them, its chests' and the forced drops its rooms
+hold), and its entrances where they are shuffled, and holds: each link a door the shuffle relinks paired with one the
+picker offers, each lobby and kind one the model allows, each room in the
+dungeon the log puts its locations in (` @ Dungeon`), and the playthrough
+both ways. The six seeds below intensity 3 with vanilla entrances and
+coupled doors have every dungeon analysed (`notedDoorKeyLogic`; the escape
+of the two Standard ones aside), and their key layouts' chest keys match
+the logs' keys. Not `yes` where DR says reachable: on those, one rule's
+placement alternative (xd8m0E50c's Misery Mire, its big key behind a
+door); elsewhere key doors read strict-safe; each listed and proved `yes`
+once every key is held; `yes` too early: none (a flood switch waits on its pot's key as DR's spheres do, above).
+The walks hold no item for a forced drop's key, which the world reads as a
+fact.

@@ -1,0 +1,45 @@
+{
+  "file": "test/suite/hmg/no_east_dw_from_kikiskip.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Pyramid Fairy - Right": "Magic Mirror",
+    "Thieves' Town - Attic": "Progressive Sword",
+    "Thieves' Town - Big Chest": "Progressive Sword",
+    "Thieves' Town - Blind's Cell": "Progressive Sword",
+    "Thieves' Town - Map Chest": "Cape"
+  },
+  "settings": {
+    "logic": "hybridglitches",
+    "shuffle": "vanilla"
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": [
+    {
+      "item": "Moon Pearl",
+      "locations": {
+        "Palace of Darkness - Big Chest": true,
+        "Palace of Darkness - Big Key Chest": true,
+        "Palace of Darkness - Boss": true,
+        "Palace of Darkness - Compass Chest": true,
+        "Palace of Darkness - Dark Basement - Left": true,
+        "Palace of Darkness - Dark Basement - Right": true,
+        "Palace of Darkness - Dark Maze - Bottom": true,
+        "Palace of Darkness - Dark Maze - Top": true,
+        "Palace of Darkness - Harmless Hellway": true,
+        "Palace of Darkness - Map Chest": true,
+        "Palace of Darkness - Shooter Room": true,
+        "Palace of Darkness - Stalfos Basement": true,
+        "Palace of Darkness - The Arena - Bridge": true,
+        "Palace of Darkness - The Arena - Ledge": true,
+        "Pyramid": false,
+        "Pyramid Fairy - Left": false
+      },
+      "type": "Verification"
+    }
+  ]
+}

@@ -5,6 +5,7 @@
 // an item or a location was added) still reads: the tables grow at the end.
 
 import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
+import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, itemsMax } from "@/games/alttpr/data/items";
 import { isTimelineKey } from "@/games/alttpr/logic/timeline";
 import type { Stamp } from "@/games/stamp";
@@ -30,7 +31,13 @@ import {
   unpackRun,
 } from "@/share/packed";
 
-const LOCATIONS: readonly string[] = [...MAP_LOCATIONS];
+/**
+ * The locations links index: the map's, then the Door Randomizer's (its key
+ * drops, pots, enemies and shop items), appended so a link made before them
+ * still reads. A run without them sets none of their bits, which deflate
+ * carries in a few bytes.
+ */
+const LOCATIONS: readonly string[] = [...MAP_LOCATIONS, ...DOOR_LOCATION_IDS];
 
 /**
  * The tracker's item ids in the order links index them: the order they had
@@ -90,7 +97,8 @@ const timelineKeys = (
       ),
     ])
     .filter(isTimelineKey),
-  ...locations.map((id) => `check:${id}`),
+  // The map's alone: a Door Randomizer location is no timeline find
+  ...locations.filter((id) => MAP_LOCATIONS.has(id)).map((id) => `check:${id}`),
 ];
 
 /** The timeline keys of this version. */
@@ -458,6 +466,37 @@ export const SHARE_SETTINGS: readonly string[] = `
   hidden:glitches hidden:entranceShuffle
   goal:ganonhunt goal:completionist swords:assured swords:vanilla
   enemyHealth:easy enemyHealth:hard enemyHealth:expert
+  randomizer:dr randomizer:owr
+  doorShuffle:vanilla doorShuffle:basic doorShuffle:partitioned
+  doorShuffle:crossed
+  dropShuffle:none dropShuffle:keys dropShuffle:underworld
+  pottery:none pottery:keys pottery:cave pottery:cavekeys pottery:dungeon
+  pottery:reduced pottery:clustered pottery:nonempty pottery:lottery
+  shopsanity:false shopsanity:true
+  takeAny:none takeAny:random takeAny:fixed
+  enemyShuffle:none enemyShuffle:shuffled
+  doorEntrances:lite doorEntrances:lean doorEntrances:swapped
+  doorEntrances:district doorEntrances:dungeonssimple doorEntrances:dungeonsfull
+  owLayout:vanilla owLayout:grid owLayout:wild
+  owCrossed:none owCrossed:grouped owCrossed:polar owCrossed:unrestricted
+  owMixed:false owMixed:true
+  owWhirlpool:false owWhirlpool:true
+  owFluteShuffle:vanilla owFluteShuffle:balanced owFluteShuffle:random
+  bonkDrops:false bonkDrops:true
+  keyLogic:partial keyLogic:strict keyLogic:dangerous keyLogic:static
+  bombBag:false bombBag:true potShuffle:false potShuffle:true
+  restrictBossItems:none restrictBossItems:mapcompass restrictBossItems:dungeon
+  openPyramid:auto openPyramid:yes openPyramid:no
+  doorVersion:1.5.6 doorVersion:1.5.7 doorVersion:1.5.8
+  shuffleLinks:false shuffleLinks:true shuffleTavern:false shuffleTavern:true
+  doorIntensity:1 doorIntensity:2 doorIntensity:3
+  decoupledDoors:false decoupledDoors:true
+  prizeShuffle:none prizeShuffle:dungeon prizeShuffle:nearby prizeShuffle:wild
+  shuffleFollowers:false shuffleFollowers:true
+  customGoals:false customGoals:true
+  dungeonItems:keys
+  nearbyItems:false nearbyItems:true
+  owrVersion:0.8.0.2 owrVersion:other
 `
   .trim()
   .split(/\s+/);
@@ -465,12 +504,29 @@ export const SHARE_SETTINGS: readonly string[] = `
 /** The layout version whose settings are packed too (link 4). */
 const SETTINGS_PACKED = 4;
 
+/** The settings whose values are true or false. */
+const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
+  "bombBag",
+  "bonkDrops",
+  "customGoals",
+  "decoupledDoors",
+  "nearbyItems",
+  "owMixed",
+  "owWhirlpool",
+  "potShuffle",
+  "shopsanity",
+  "shuffleFollowers",
+  "shuffleLinks",
+  "shuffleTavern",
+  "swordless",
+]);
+
 /** An entry of `SHARE_SETTINGS` as its key and the value it stands for. */
 const entryOf = (entry: string): [string, string | number | boolean] => {
   const at = entry.indexOf(":");
   const key = entry.slice(0, at);
   const text = entry.slice(at + 1);
-  if (key === "swordless") return [key, text === "true"];
+  if (BOOLEAN_SETTINGS.has(key)) return [key, text === "true"];
   return [key, key.startsWith("crystals") ? Number(text) : text];
 };
 

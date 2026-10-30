@@ -76,6 +76,7 @@ describe("unknownCountFacts", () => {
     expect(unknownCountFacts({})).toEqual({});
     expect(UNKNOWN_COUNT_FACTS).toEqual([
       "bombsUnknown",
+      "bombUpgradeUnknown",
       "fluteActivationUnknown",
       "healthUnknown",
     ]);

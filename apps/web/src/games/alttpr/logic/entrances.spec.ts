@@ -9,6 +9,7 @@ import {
   notesFor,
   placeMarkers,
   poolOf,
+  shownNotes,
   targetById,
   targetsFor,
   targetText,
@@ -144,6 +145,172 @@ describe("the entrance assistant's model", () => {
     });
   });
 
+  it("has DR's own pool for a Door Randomizer run, in any world", () => {
+    const dr = getPreset("door-crosskeys").settings;
+    const pool = poolOf(dr);
+    expect(pool?.shuffle).toBe("crossed");
+    expect(poolOf({ ...dr })).toBe(pool);
+    // Its Inverted world's too, and its own shuffles
+    expect(poolOf({ ...dr, mode: "inverted" })?.shuffle).toBe("crossed");
+    expect(
+      poolOf({ ...dr, doorEntrances: "dungeonssimple" })?.entrances.length,
+    ).toBe(28);
+    // Link's House and the Tavern's back: may be moved while unset, kept
+    // where the run says so
+    const ids = (settings: typeof dr) =>
+      poolOf(settings)?.entrances.map((e) => e.id) ?? [];
+    expect(ids(dr)).toContain("links-house");
+    expect(ids(dr)).toContain("tavern-north");
+    expect(
+      ids({ ...dr, shuffleLinks: false, shuffleTavern: false }),
+    ).not.toContain("links-house");
+    expect(ids({ ...dr, shuffleLinks: true, shuffleTavern: true })).toContain(
+      "links-house",
+    );
+    expect(targetById("links-house-exit")?.place).toBe("Link's House");
+    expect(entranceById("inverted-pyramid-hole")?.kind).toBe("hole");
+    // Through Turtle Rock's front door, as in the entrance randomizer's
+    if (pool === null) throw new Error("no pool");
+    expect(
+      gameNotes(pool, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // Insanity's exits lead elsewhere: the game's doors tell nothing
+    const insanity = poolOf({ ...dr, entranceShuffle: "insanity" });
+    expect(insanity?.decoupled).toBe(true);
+    if (insanity === null) throw new Error("no pool");
+    expect(
+      gameNotes(insanity, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({});
+  });
+
+  it("has the fork's own pool for an OWR run's District or Swapped", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      owMixed: false as boolean,
+      owWhirlpool: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: false,
+    } as const;
+    const ids = (settings: Partial<typeof owr> & Record<string, unknown>) =>
+      poolOf({ ...owr, ...settings })?.entrances.map((e) => e.id) ?? [];
+    const district = poolOf({ ...owr, doorEntrances: "district" });
+    expect(district?.shuffle).toBe("district");
+    expect(district?.decoupled).toBe(false);
+    // The fork's names, no Inverted one: its Inverted world flips screens
+    expect(ids({ doorEntrances: "swapped", mode: "inverted" })).not.toContain(
+      "inverted-pyramid-hole",
+    );
+    // Without shufflelinks the start house's door stands: Link's House, the
+    // Big Bomb Shop in Inverted, neither while Mixed may flip its screen
+    expect(ids({ doorEntrances: "district" })).not.toContain("links-house");
+    expect(ids({ doorEntrances: "district" })).toContain("big-bomb-shop");
+    expect(ids({ doorEntrances: "district", mode: "inverted" })).not.toContain(
+      "big-bomb-shop",
+    );
+    expect(ids({ doorEntrances: "district", owMixed: true })).toEqual(
+      expect.arrayContaining(["links-house", "big-bomb-shop"]),
+    );
+    // Mixed not known: it may have flipped it too
+    expect(ids({ doorEntrances: "district", owMixed: undefined })).toEqual(
+      expect.arrayContaining(["links-house", "big-bomb-shop"]),
+    );
+    expect(ids({ doorEntrances: "district" })).not.toContain("tavern-north");
+    // A door seen in the game notes it, as in DR's pool
+    if (district === null || district === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(district, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({ "turtle-rock": "turtle-rock-exit-front" });
+    // District offers each entrance its own district's places, any under
+    // Mixed, whose flips move places between the worlds
+    const targetIds = (
+      settings: Partial<typeof owr> & Record<string, unknown>,
+    ) =>
+      poolOf({ ...owr, doorEntrances: "district", ...settings })
+        ?.targetsOf.get("kakariko-shop")
+        ?.map((t) => t.id) ?? [];
+    expect(targetIds({})).toContain("blinds-hideout");
+    expect(targetIds({})).not.toContain("ice-palace-exit");
+    expect(targetIds({ mode: "inverted" })).not.toContain("ice-palace-exit");
+    expect(targetIds({ owMixed: true })).toContain("ice-palace-exit");
+    // Walking out of Link's House, Mixed possibly flipping its screen: the
+    // door noted as the game shows it (entrance 1 from the door of slot 0)
+    const mixed = poolOf({ ...owr, doorEntrances: "district", owMixed: true });
+    if (mixed === null || mixed === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(mixed, {}, [{ entrance: 1, kind: "door", slot: 0 }]),
+    ).toEqual({ "links-house": "links-house-exit" });
+    // DR's own Swapped keeps DR's pool
+    expect(
+      poolOf({ ...owr, doorEntrances: "swapped", randomizer: "dr" })?.entrances
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("has the fork's own pool for an OWR run's every other shuffle", () => {
+    // The run type states DR's take-any caves: unstated here
+    const { takeAny: _, ...preset } = getPreset("door-randomizer").settings;
+    const owr = {
+      ...preset,
+      customGoals: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: false,
+    } as const;
+    const ids = (settings: Record<string, unknown>) =>
+      poolOf({ ...owr, ...settings })?.entrances.map((e) => e.id) ?? [];
+    // Crossed: every door but the start house's and the Tavern's back
+    const crossed = poolOf({ ...owr, entranceShuffle: "crossed" });
+    expect(crossed?.shuffle).toBe("crossed");
+    expect(ids({ entranceShuffle: "crossed" })).toEqual(
+      ids({ doorEntrances: "district" }),
+    );
+    // Lite keeps its fixed caves (owr:EntranceShuffle2.py:2244-2301): the
+    // take-any caves by the run's take_any, the Good Bee Cave by its bonk
+    // drops, the shops by its shopsanity
+    expect(ids({ doorEntrances: "lite" })).not.toContain("archery-game");
+    // Unstated, either may move its caves: they wait for a note
+    expect(ids({ doorEntrances: "lite" })).toContain("desert-fairy");
+    expect(ids({ doorEntrances: "lite", takeAny: "none" })).not.toContain(
+      "desert-fairy",
+    );
+    expect(ids({ doorEntrances: "lite", takeAny: "fixed" })).toContain(
+      "desert-fairy",
+    );
+    expect(ids({ doorEntrances: "lite" })).toContain("good-bee-cave");
+    expect(ids({ bonkDrops: false, doorEntrances: "lite" })).not.toContain(
+      "good-bee-cave",
+    );
+    expect(ids({ bonkDrops: true, doorEntrances: "lite" })).toContain(
+      "good-bee-cave",
+    );
+    expect(ids({ doorEntrances: "lite", shopsanity: true })).toContain(
+      "kakariko-shop",
+    );
+    // The dungeon shuffles move their dungeons' doors alone
+    expect(ids({ doorEntrances: "dungeonssimple" })).toContain(
+      "eastern-palace",
+    );
+    expect(ids({ doorEntrances: "dungeonssimple" })).not.toContain(
+      "kakariko-shop",
+    );
+    // Insanity parts a door from its way back: the game's doors tell nothing
+    const insanity = poolOf({ ...owr, entranceShuffle: "insanity" });
+    expect(insanity?.decoupled).toBe(true);
+    if (insanity === null || insanity === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(insanity, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({});
+  });
+
   it("moves the checks inside a place above the door noted to lead there", () => {
     const blinds = MARKERS.find((m) => m.id === "blinds-hideout");
     const tomb = MARKERS.find((m) => m.id === "kings-tomb");
@@ -188,6 +355,57 @@ describe("the entrance assistant's model", () => {
     }
   });
 
+  it("shows what an OWR Swapped run's notes tell of their partners, District's nothing", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      customGoals: false,
+      owCrossed: "none",
+      owFluteShuffle: "vanilla",
+      owLayout: "vanilla",
+      // Unset, Mixed may flip the towers' screens: their trade not known
+      owMixed: false as boolean,
+      owWhirlpool: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    } as const;
+    const swapped = poolOf({ ...owr, doorEntrances: "swapped" });
+    const district = poolOf({ ...owr, doorEntrances: "district" });
+    if (!swapped || !district) throw new Error("no pool");
+    // The hideout's hole into the well: the well's hole into the hideout
+    const noted = { "lost-woods-hideout-drop": "kakariko-well-top" };
+    const shown = shownNotes(swapped, noted);
+    expect(shown.notes).toEqual({
+      "kakariko-well-drop": "lost-woods-hideout-top",
+      "lost-woods-hideout-drop": "kakariko-well-top",
+    });
+    expect([...shown.derived]).toEqual([
+      ["kakariko-well-drop", "lost-woods-hideout-drop"],
+    ]);
+    // The same object for the same notes, and nothing told in District
+    expect(shownNotes(swapped, noted)).toBe(shown);
+    expect(shownNotes(district, noted).notes).toBe(noted);
+    expect(shownNotes(district, noted).derived.size).toBe(0);
+    // Inverted trades the towers' exits, which a Mixed run does not know
+    const gt = { "ganons-tower": "bat-cave-exit" };
+    const inverted = poolOf({
+      ...owr,
+      doorEntrances: "swapped",
+      mode: "inverted",
+    });
+    const mixed = poolOf({ ...owr, doorEntrances: "swapped", owMixed: true });
+    if (!inverted || !mixed) throw new Error("no pool");
+    expect(shownNotes(swapped, gt).notes["bat-cave-cave"]).toBe(
+      "ganons-tower-exit",
+    );
+    expect(shownNotes(inverted, gt).notes["bat-cave-cave"]).toBe(
+      "agahnims-tower-exit",
+    );
+    expect(shownNotes(mixed, gt).derived.size).toBe(0);
+  });
+
   it("says an entrance and where it leads", () => {
     const door = entranceById("blinds-hideout");
     const target = targetById("elder-house-exit-east");
@@ -198,6 +416,11 @@ describe("the entrance assistant's model", () => {
     );
     expect(entranceText(door, undefined)).toBe(
       "Blind's Hideout: not known yet",
+    );
+    const hole = entranceById("kakariko-well-drop");
+    if (hole === undefined) throw new Error("missing");
+    expect(entranceText(door, target, hole)).toBe(
+      "Blind's Hideout: leads to Elder House (East), swapped with Kakariko Well Drop (hole)",
     );
   });
 });

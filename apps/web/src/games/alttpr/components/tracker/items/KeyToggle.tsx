@@ -1,6 +1,11 @@
+import { doorDropKeysCounted } from "@/games/alttpr/data/doorRando";
 import { useControlShortcuts } from "@/games/alttpr/hooks/useControlShortcuts";
 import { useStepHandlers } from "@/games/alttpr/hooks/useStepHandlers";
-import { dungeonName, smallKeysMax } from "@/games/alttpr/logic/settings";
+import {
+  dungeonAt,
+  dungeonName,
+  smallKeysMax,
+} from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import { useGridFocusable } from "@/hooks/useGridNavigation";
@@ -54,7 +59,9 @@ type KeyToggleProps = {
  * and compass while they leave their dungeons (MC Shuffle and up). The held-or-not items (big key, map,
  * compass) step their item in the store; the small keys step their count.
  * An item not held yet is greyed, as any missing item; the cell's count says
- * how many small keys are found.
+ * how many small keys are found: in a Door Randomizer run whose world counts
+ * the keys of the dungeon's enemies and pots itself, those from chests, as
+ * the game's HUD counts them, and the label says so.
  * @param dungeonIndex - The key dungeon index (0-12, KEY_DUNGEONS)
  * @param row - Grid row for positioning
  * @param col - Grid column for positioning
@@ -77,6 +84,7 @@ export const KeyToggle = ({
         : 0,
   );
   const handleItemClick = useGameStore((state) => state.handleItemClick);
+  const settings = useGameStore((state) => state.settings);
   const handleSmallKeyClick = useGameStore(
     (state) => state.handleSmallKeyClick,
   );
@@ -88,9 +96,11 @@ export const KeyToggle = ({
     else handleItemClick(control, direction);
   }, shortcuts.aria);
   const dungeon = dungeonName(dungeonIndex);
+  const fromChests =
+    isSmallKey && doorDropKeysCounted(dungeonAt(dungeonIndex), settings);
 
   const label = isSmallKey
-    ? `${dungeon} ${name}: ${held} of ${smallKeysMax(dungeonIndex)}`
+    ? `${dungeon} ${name}${fromChests ? " from chests" : ""}: ${held} of ${smallKeysMax(dungeonIndex, settings)}`
     : `${dungeon} ${name}: ${held === 1 ? "obtained" : "not obtained"}`;
 
   return (

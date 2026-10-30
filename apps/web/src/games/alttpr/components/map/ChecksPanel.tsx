@@ -205,9 +205,10 @@ const CheckRow = memo(
           <Swatch state={state} />
           {labelOf(state, words)}
         </span>
-        {explained && state !== "available" && state !== "opened" && (
-          <Why check={check} />
-        )}
+        {explained &&
+          !check.door &&
+          state !== "available" &&
+          state !== "opened" && <Why check={check} />}
       </li>
     );
   },

@@ -19,6 +19,7 @@ vi.mock("@/games/alttpr/stores/gameStore", () => ({ useGameStore: vi.fn() }));
 
 const applyRun = vi.fn();
 const updateSettings = vi.fn();
+const updateDoorSettings = vi.fn();
 const hideSetting = vi.fn();
 const setBigKeysVisible = vi.fn();
 const setTricks = vi.fn();
@@ -293,6 +294,121 @@ describe("PresetSelector", () => {
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
     expect(within(dialog).getAllByRole("combobox")).toHaveLength(14);
+  });
+
+  it("offers a Door Randomizer run's own settings, changed in place", () => {
+    Object.assign(fakeState, {
+      presetId: "door-randomizer",
+      settings: { ...getPreset("door-randomizer").settings, pottery: "keys" },
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+
+    expect(
+      within(dialog).getByText("Randomizer").nextSibling,
+    ).toHaveTextContent("Door Randomizer");
+    const pottery = within(dialog).getByRole("combobox", { name: "Pottery" });
+    expect(pottery).toHaveValue("keys");
+    fireEvent.change(pottery, { target: { value: "lottery" } });
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Shopsanity" }),
+      { target: { value: "true" } },
+    );
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ pottery: "lottery" }],
+      [{ shopsanity: true }],
+    ]);
+    // No overworld setting in a DR run, only in an OWR one
+    expect(
+      within(dialog).queryByRole("combobox", { name: "Overworld layout" }),
+    ).toBeNull();
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("offers a Door Randomizer run DR's own entrance shuffles", () => {
+    Object.assign(fakeState, {
+      presetId: "door-crosskeys",
+      settings: getPreset("door-crosskeys").settings,
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    const entrances = within(dialog).getByRole("combobox", {
+      name: "Entrances",
+    });
+    expect(entrances).toHaveValue("crossed");
+    expect(
+      within(entrances)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "Vanilla",
+      "Simple",
+      "Restricted",
+      "Full",
+      "Lite",
+      "Lean",
+      "Swapped",
+      "Crossed",
+      "Insanity",
+      "Dungeons + Full",
+      "Dungeons + Simple",
+    ]);
+    fireEvent.change(entrances, { target: { value: "lite" } });
+    fireEvent.change(entrances, { target: { value: "full" } });
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ doorEntrances: "lite", entranceShuffle: "none" }],
+      [{ doorEntrances: undefined, entranceShuffle: "full" }],
+    ]);
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("offers a Door Randomizer run's entrances as not known in a Mystery", () => {
+    Object.assign(fakeState, {
+      presetId: "door-randomizer",
+      settings: {
+        ...getPreset("door-randomizer").settings,
+        hidden: ["entranceShuffle"],
+      },
+    });
+    render(<PresetSelector />);
+    const entrances = within(openList()).getByRole("combobox", {
+      name: "Entrances",
+    });
+    expect(entrances).toHaveValue("?");
+    fireEvent.change(entrances, { target: { value: "?" } });
+    expect(hideSetting).toHaveBeenCalledWith("entranceShuffle");
+  });
+
+  it("offers Link's House and the Tavern's back as not known until set", () => {
+    Object.assign(fakeState, {
+      presetId: "door-crosskeys",
+      settings: {
+        ...getPreset("door-crosskeys").settings,
+        shuffleLinks: false,
+      },
+      updateDoorSettings,
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    const tavern = within(dialog).getByRole("combobox", {
+      name: "Back of Tavern",
+    });
+    expect(tavern).toHaveValue("?");
+    expect(
+      within(tavern).getByRole("option", { name: "? Not known" }),
+    ).toBeInTheDocument();
+    const links = within(dialog).getByRole("combobox", {
+      name: "Link's House",
+    });
+    expect(links).toHaveValue("false");
+    fireEvent.change(tavern, { target: { value: "true" } });
+    fireEvent.change(links, { target: { value: "?" } });
+    expect(updateDoorSettings.mock.calls).toEqual([
+      [{ shuffleTavern: true }],
+      [{ shuffleLinks: undefined }],
+    ]);
   });
 
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {

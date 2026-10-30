@@ -1,0 +1,359 @@
+ALttP Dungeon Randomizer Version 1.5.7-u  -  Seed: 135444540
+
+Hash: Rod, Hookshot, Flippers, Boomerang, Key
+Filling Algorithm:               balanced
+Players:                         1
+Teams:                           1
+Settings Code:                   AAAAAoA8OAAAAAEACQA=
+Logic:                           noglitches
+Mode:                            open
+Swords:                          random
+Goal:                            ganon
+
+Accessibility:                   items
+Restricted Boss Items:           none
+Difficulty:                      normal
+Item Functionality:              normal
+Flute Mode:                      normal
+Bow Mode:                        progressive
+Bombbag:                         No
+Pseudoboots:                     No
+Mirror Scroll:                   No
+
+Shopsanity:                      No
+Pottery Mode:                    none
+Pot Shuffle (Legacy):            No
+Enemy Drop Shuffle:              none
+Take Any Caves:                  none
+
+Entrance Shuffle:                vanilla
+Pyramid hole pre-opened:         auto
+
+Map shuffle:                     No
+Compass shuffle:                 No
+Small Key shuffle:               none
+Big Key shuffle:                 No
+Key Logic Algorithm:'            partial
+Door Shuffle:                    vanilla
+Experimental:                    No
+Dungeon Counters:                on
+
+Boss shuffle:                    none
+Enemy shuffle:                   none
+Enemy health:                    default
+Enemy damage:                    default
+
+Hints:                           No
+Race:                            Yes
+
+Requirements:
+
+Misery Mire: Bombos Medallion
+Turtle Rock: Ether Medallion
+Crystals Required for GT:          7
+Crystals Required for Ganon:       7
+
+
+Locations:
+
+Master Sword Pedestal: Arrows (10)
+Mushroom: Rupees (50)
+Ether Tablet: Bombs (3)
+Spectacle Rock: Boss Heart Container
+Floating Island: Rupees (20)
+King Zora: Lamp
+Zora's Ledge: Arrows (10)
+Bottle Merchant: Arrows (10)
+Maze Race: Rupees (300)
+Flute Spot: Magic Mirror
+Hobo: Bombs (3)
+Desert Ledge: Rupees (20)
+Bombos Tablet: Rupee (1)
+Lake Hylia Island: Arrows (10)
+Purple Chest: Rupees (20)
+Sunken Treasure: Bombos
+Bumper Cave Ledge: Boss Heart Container
+Catfish: Arrows (10)
+Pyramid: Bombs (3)
+Dark Blacksmith Ruins: Pick Up Purple Chest
+Digging Game: Bottle (Fairy)
+Frog: Get Frog
+Stumpy: Rupees (20)
+Lost Woods Hideout: Rupees (50)
+Lumberjack Tree: Sanctuary Heart Container
+Old Man: Piece of Heart
+Spectacle Rock Cave: Rupees (20)
+Spiral Cave: Rupees (20)
+Mimic Cave: Bombs (3)
+Paradox Cave Lower - Far Left: Rupees (20)
+Paradox Cave Lower - Left: Moon Pearl
+Paradox Cave Lower - Right: Piece of Heart
+Paradox Cave Lower - Far Right: Cape
+Paradox Cave Lower - Middle: Rupees (20)
+Paradox Cave Upper - Left: Piece of Heart
+Paradox Cave Upper - Right: Rupees (20)
+Waterfall Fairy - Left: Rupees (5)
+Waterfall Fairy - Right: Bombs (3)
+Bonk Rock Cave: Bombs (3)
+Graveyard Cave: Bottle (Red Potion)
+King's Tomb: Piece of Heart
+Potion Shop: Piece of Heart
+Kakariko Well - Left: Ocarina
+Kakariko Well - Middle: Boss Heart Container
+Kakariko Well - Right: Progressive Shield
+Kakariko Well - Bottom: Piece of Heart
+Kakariko Well - Top: Rupees (20)
+Blind's Hideout - Left: Rupees (20)
+Blind's Hideout - Right: Rupees (20)
+Blind's Hideout - Far Left: Hookshot
+Blind's Hideout - Far Right: Progressive Sword
+Blind's Hideout - Top: Ether
+Chicken House: Piece of Heart
+Sick Kid: Piece of Heart
+Kakariko Tavern: Piece of Heart
+Link's Uncle: Rupees (20)
+Secret Passage: Rupees (20)
+Sahasrahla's Hut - Left: Rupees (20)
+Sahasrahla's Hut - Middle: Boss Heart Container
+Sahasrahla's Hut - Right: Rupees (300) (Player 1)
+Sahasrahla: Magic Powder
+Blacksmith: Pegasus Boots
+Magic Bat: Rupees (20)
+Library: Piece of Heart
+Link's House: Piece of Heart
+Checkerboard Cave: Rupees (20)
+Aginah's Cave: Progressive Armor
+Cave 45: Rupees (300)
+Mini Moldorm Cave - Far Left: Rupees (20)
+Mini Moldorm Cave - Left: Piece of Heart
+Mini Moldorm Cave - Right: Rupees (20)
+Mini Moldorm Cave - Far Right: Rupees (20)
+Mini Moldorm Cave - Generous Guy: Rupees (20)
+Ice Rod Cave: Rupees (20)
+Floodgate Chest: Shovel
+Spike Cave: Bombs (3)
+Hookshot Cave - Bottom Right: Rupees (20)
+Hookshot Cave - Top Right: Progressive Sword
+Hookshot Cave - Top Left: Fire Rod
+Hookshot Cave - Bottom Left: Progressive Sword
+Superbunny Cave - Top: Progressive Sword
+Superbunny Cave - Bottom: Rupees (300)
+Chest Game: Hammer
+C-Shaped House: Progressive Bow
+Brewery: Rupees (50)
+Pyramid Fairy - Left: Bombs (3)
+Pyramid Fairy - Right: Ice Rod
+Ganon: Triforce
+Peg Cave: Arrows (10)
+Mire Shed - Left: Red Boomerang
+Mire Shed - Right: Rupees (20)
+Hype Cave - Top: Rupees (20)
+Hype Cave - Middle Right: Progressive Shield
+Hype Cave - Middle Left: Rupees (50)
+Hype Cave - Bottom: Rupees (50)
+Hype Cave - Generous Guy: Rupees (300)
+Hyrule Castle - Map Chest: Map (Escape)
+Hyrule Castle - Boomerang Chest: Mushroom
+Hyrule Castle - Zelda's Chest: Boss Heart Container
+Sewers - Dark Cross: Arrows (10)
+Sewers - Secret Room - Left: Progressive Glove
+Sewers - Secret Room - Middle: Small Key (Escape)
+Sewers - Secret Room - Right: Rupees (50)
+Sanctuary: Rupees (300)
+Eastern Palace - Cannonball Chest: Big Key (Eastern Palace)
+Eastern Palace - Map Chest: Progressive Glove
+Eastern Palace - Compass Chest: Compass (Eastern Palace)
+Eastern Palace - Big Chest: Map (Eastern Palace)
+Eastern Palace - Big Key Chest: Boss Heart Container
+Eastern Palace - Boss: Progressive Armor
+Eastern Palace - Prize: Crystal 4
+Desert Palace - Compass Chest: Map (Desert Palace)
+Desert Palace - Big Key Chest: Big Key (Desert Palace)
+Desert Palace - Map Chest: Small Key (Desert Palace)
+Desert Palace - Torch: Flippers
+Desert Palace - Big Chest: Piece of Heart
+Desert Palace - Boss: Compass (Desert Palace)
+Desert Palace - Prize: Crystal 2
+Tower of Hera - Map Chest: Rupees (100)
+Tower of Hera - Basement Cage: Big Key (Tower of Hera)
+Tower of Hera - Big Key Chest: Small Key (Tower of Hera)
+Tower of Hera - Compass Chest: Compass (Tower of Hera)
+Tower of Hera - Big Chest: Cane of Somaria
+Tower of Hera - Boss: Map (Tower of Hera)
+Tower of Hera - Prize: Green Pendant
+Castle Tower - Room 03: Small Key (Agahnims Tower)
+Castle Tower - Dark Maze: Small Key (Agahnims Tower)
+Agahnim 1: Beat Agahnim 1
+Palace of Darkness - Shooter Room: Small Key (Palace of Darkness)
+Palace of Darkness - The Arena - Bridge: Small Key (Palace of Darkness)
+Palace of Darkness - The Arena - Ledge: Boss Heart Container
+Palace of Darkness - Map Chest: Small Key (Palace of Darkness)
+Palace of Darkness - Stalfos Basement: Small Key (Palace of Darkness)
+Palace of Darkness - Big Key Chest: Small Key (Palace of Darkness)
+Palace of Darkness - Dark Maze - Top: Map (Palace of Darkness)
+Palace of Darkness - Dark Maze - Bottom: Compass (Palace of Darkness)
+Palace of Darkness - Big Chest: Boss Heart Container
+Palace of Darkness - Compass Chest: Bombs (3)
+Palace of Darkness - Dark Basement - Left: Small Key (Palace of Darkness)
+Palace of Darkness - Dark Basement - Right: Big Key (Palace of Darkness)
+Palace of Darkness - Harmless Hellway: Bombs (3)
+Palace of Darkness - Boss: Bug Catching Net
+Palace of Darkness - Prize: Crystal 6
+Thieves' Town - Map Chest: Big Key (Thieves Town)
+Thieves' Town - Ambush Chest: Piece of Heart
+Thieves' Town - Compass Chest: Compass (Thieves Town)
+Thieves' Town - Big Key Chest: Rupees (20)
+Thieves' Town - Boss: Rupees (20)
+Thieves' Town - Prize: Crystal 1
+Thieves' Town - Attic: Map (Thieves Town)
+Thieves' Town - Blind's Cell: Rupees (50)
+Thieves' Town - Big Chest: Small Key (Thieves Town)
+Skull Woods - Map Chest: Big Key (Skull Woods)
+Skull Woods - Big Chest: Bottle (Fairy)
+Skull Woods - Pinball Room: Rupees (300) (Player 1)
+Skull Woods - Pot Prison: Small Key (Skull Woods)
+Skull Woods - Compass Chest: Small Key (Skull Woods)
+Skull Woods - Big Key Chest: Compass (Skull Woods)
+Skull Woods - Bridge Room: Small Key (Skull Woods)
+Skull Woods - Boss: Map (Skull Woods)
+Skull Woods - Prize: Blue Pendant
+Swamp Palace - Entrance: Small Key (Swamp Palace)
+Swamp Palace - Map Chest: Compass (Swamp Palace)
+Swamp Palace - Big Chest: Map (Swamp Palace)
+Swamp Palace - Compass Chest: Book of Mudora
+Swamp Palace - Big Key Chest: Cane of Byrna
+Swamp Palace - West Chest: Boss Heart Container
+Swamp Palace - Flooded Room - Left: Piece of Heart
+Swamp Palace - Flooded Room - Right: Arrows (10)
+Swamp Palace - Waterfall Room: Quake
+Swamp Palace - Boss: Big Key (Swamp Palace)
+Swamp Palace - Prize: Crystal 3
+Ice Palace - Compass Chest: Big Key (Ice Palace)
+Ice Palace - Big Key Chest: Map (Ice Palace)
+Ice Palace - Spike Room: Small Key (Ice Palace)
+Ice Palace - Map Chest: Bombs (3)
+Ice Palace - Freezor Chest: Bombs (10)
+Ice Palace - Iced T Room: Single Arrow
+Ice Palace - Big Chest: Compass (Ice Palace)
+Ice Palace - Boss: Small Key (Ice Palace)
+Ice Palace - Prize: Crystal 5
+Misery Mire - Main Lobby: Small Key (Misery Mire)
+Misery Mire - Big Chest: Small Key (Misery Mire)
+Misery Mire - Map Chest: Small Key (Misery Mire)
+Misery Mire - Spike Chest: Compass (Misery Mire)
+Misery Mire - Bridge Chest: Big Key (Misery Mire)
+Misery Mire - Compass Chest: Blue Boomerang
+Misery Mire - Big Key Chest: Map (Misery Mire)
+Misery Mire - Boss: Progressive Bow
+Misery Mire - Prize: Crystal 7
+Turtle Rock - Compass Chest: Big Key (Turtle Rock)
+Turtle Rock - Roller Room - Left: Map (Turtle Rock)
+Turtle Rock - Roller Room - Right: Small Key (Turtle Rock)
+Turtle Rock - Chain Chomps: Small Key (Turtle Rock)
+Turtle Rock - Big Key Chest: Bombs (3)
+Turtle Rock - Big Chest: Compass (Turtle Rock)
+Turtle Rock - Crystaroller Room: Small Key (Turtle Rock)
+Turtle Rock - Eye Bridge - Bottom Left: Rupees (5)
+Turtle Rock - Eye Bridge - Bottom Right: Small Key (Turtle Rock)
+Turtle Rock - Eye Bridge - Top Left: Bottle (Blue Potion)
+Turtle Rock - Eye Bridge - Top Right: Piece of Heart
+Turtle Rock - Boss: Arrows (10)
+Turtle Rock - Prize: Red Pendant
+Ganons Tower - Bob's Torch: Magic Upgrade (1/2)
+Ganons Tower - Hope Room - Left: Bombs (3)
+Ganons Tower - Hope Room - Right: Small Key (Ganons Tower)
+Ganons Tower - Big Chest: Piece of Heart
+Ganons Tower - Bob's Chest: Piece of Heart
+Ganons Tower - Tile Room: Small Key (Ganons Tower)
+Ganons Tower - Compass Room - Top Left: Bombs (3)
+Ganons Tower - Compass Room - Top Right: Piece of Heart
+Ganons Tower - Compass Room - Bottom Left: Compass (Ganons Tower)
+Ganons Tower - Compass Room - Bottom Right: Boss Heart Container
+Ganons Tower - Map Chest: Piece of Heart
+Ganons Tower - Firesnake Room: Progressive Shield
+Ganons Tower - DMs Room - Top Left: Piece of Heart
+Ganons Tower - DMs Room - Top Right: Piece of Heart
+Ganons Tower - DMs Room - Bottom Left: Arrows (10)
+Ganons Tower - DMs Room - Bottom Right: Small Key (Ganons Tower)
+Ganons Tower - Randomizer Room - Top Left: Big Key (Ganons Tower)
+Ganons Tower - Randomizer Room - Top Right: Piece of Heart
+Ganons Tower - Randomizer Room - Bottom Left: Bombs (3)
+Ganons Tower - Randomizer Room - Bottom Right: Rupee (1)
+Ganons Tower - Big Key Room - Left: Bombs (3)
+Ganons Tower - Big Key Room - Right: Piece of Heart
+Ganons Tower - Big Key Chest: Small Key (Ganons Tower)
+Ganons Tower - Mini Helmasaur Room - Left: Arrows (10)
+Ganons Tower - Mini Helmasaur Room - Right: Map (Ganons Tower)
+Ganons Tower - Pre-Moldorm Chest: Rupees (5)
+Ganons Tower - Validation Chest: Arrows (10)
+Agahnim 2: Beat Agahnim 2
+
+Shops:
+
+Capacity Upgrade [Shop]
+    Bomb Upgrade (+5) — 100
+    Arrow Upgrade (+5) — 100
+
+Playthrough:
+
+0: {
+
+}
+1: {
+  Eastern Palace - Map Chest: Progressive Glove
+  Kakariko Well - Left: Ocarina
+  Blind's Hideout - Far Left: Hookshot
+  Blind's Hideout - Far Right: Progressive Sword
+  Floodgate Chest: Shovel
+  Floodgate: Open Floodgate
+}
+2: {
+  Sewers - Secret Room - Left: Progressive Glove
+  Flute Spot: Magic Mirror
+  Sunken Treasure: Bombos
+  Paradox Cave Lower - Left: Moon Pearl
+  King Zora: Lamp
+}
+3: {
+  Tower of Hera - Prize: Green Pendant
+  C-Shaped House: Progressive Bow
+  Suspicious Maiden: Maiden Rescued
+  Chest Game: Hammer
+  Hookshot Cave - Top Right: Progressive Sword
+  Tower of Hera - Big Chest: Cane of Somaria
+  Desert Palace - Prize: Crystal 2
+  Hookshot Cave - Top Left: Fire Rod
+  Frog: Get Frog
+}
+4: {
+  Missing Smith: Return Smith
+  Eastern Palace - Prize: Crystal 4
+  Attic Cracked Floor: Shining Light
+  Sahasrahla: Magic Powder
+  Palace of Darkness - Prize: Crystal 6
+  Misery Mire - Prize: Crystal 7
+}
+5: {
+  Revealing Light: Maiden Unmasked
+  Blacksmith: Pegasus Boots
+}
+6: {
+  Thieves' Town - Prize: Crystal 1
+  Desert Palace - Torch: Flippers
+}
+7: {
+  Trench 1 Switch: Trench 1 Filled
+  Ice Palace - Prize: Crystal 5
+}
+8: {
+  Swamp Drain: Drained Swamp
+}
+9: {
+  Swamp Palace - Prize: Crystal 3
+}
+10: {
+  Agahnim 2: Beat Agahnim 2
+}
+11: {
+  Ganon: Triforce
+}

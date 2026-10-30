@@ -87,7 +87,7 @@ function harnessOf(setUp, file) {
  * @param {string} source
  * @param {string} file
  */
-function classOf(source, file) {
+export function classOf(source, file) {
   const found = statementsOf(source).find((s) => s.text.startsWith("class "));
   const base = found && /^class \w+\(([\w.]+)\)$/.exec(found.text)?.[1];
   if (found === undefined || base === undefined)
@@ -104,7 +104,7 @@ function classOf(source, file) {
  * @param {string} where
  * @returns {unknown}
  */
-function caseValue(expr, names, where) {
+export function caseValue(expr, names, where) {
   switch (expr.t) {
     case "const":
       return expr.value;
@@ -133,7 +133,7 @@ function caseValue(expr, names, where) {
  * @param {ReadonlyMap<string, unknown>} names
  * @param {string} file
  */
-const valueAfter = (statement, prefix, names, file) =>
+export const valueAfter = (statement, prefix, names, file) =>
   caseValue(
     expression(
       tokens(statement.text.slice(prefix.length), 0, file, statement.line),

@@ -1,7 +1,10 @@
 // A run's settings in the alttpr pack's terms: what the app's run types mean
-// to the ALttPR v31 rules, and how many items each dungeon counter counts.
+// to the ALttPR v31 rules (and to the Door Randomizer's world), and how many
+// items each dungeon counter counts.
+import type { Settings } from "@alltp/engine";
 import {
   type AlttprSettings,
+  DR_LOCATIONS,
   type DungeonId,
   dungeon,
   dungeonItemCount,
@@ -14,6 +17,13 @@ import {
   type UpstreamConfig,
 } from "@alltp/pack-alttpr";
 import {
+  doorCounterExtra,
+  doorKeysExtra,
+  doorOf,
+  doorShuffleOf,
+  isDoorRun,
+} from "@/games/alttpr/data/doorRando";
+import {
   bossShuffleOf,
   enemyHealthOf,
   entranceRandomized,
@@ -24,6 +34,7 @@ import {
   playGlitchesOf,
   type RunSettings,
   swordsOf,
+  wildItems,
 } from "@/games/alttpr/data/presets";
 
 /** The pack's goal for each of the app's. */
@@ -94,7 +105,11 @@ const built = (
     accessibility: known("accessibility", run.accessibility),
     "crystals.ganon": known("crystalsGanon", run.crystalsGanon),
     "crystals.tower": known("crystalsTower", run.crystalsTower),
-    dungeonItems: run.dungeonItems,
+    // A DR run's small keys alone: no level of alttpr.com's, its region
+    // flag (World.php:111-129 sets the flags each level turns on)
+    ...(run.dungeonItems === "keys"
+      ? { dungeonItems: "standard" as const, "region.wildKeys": true }
+      : { dungeonItems: run.dungeonItems }),
     "enemizer.bossShuffle": known("bossShuffle", bossShuffleOf(run)),
     "enemizer.enemyHealth": enemyHealthOf(run),
     goal: known("goal", GOALS[run.goal]),
@@ -186,6 +201,142 @@ export const glitchBounds = (
   };
 };
 
+/**
+ * The pottery modes whose dungeons hold pots beyond their keys
+ * (adjust_locations, Regions.py:1165-1232).
+ */
+const DUNGEON_POTS: ReadonlySet<string> = new Set([
+  "dungeon",
+  "reduced",
+  "clustered",
+  "nonempty",
+  "lottery",
+]);
+
+const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
+
+/**
+ * Whether a DR run's pyramid hole is open from the start (is_pyramid_open,
+ * BaseClasses.py:299-311): as its `openPyramid` says, and under `auto`
+ * for the crystals goal (the tracker's Fast Ganon, the pyramid open) and
+ * ganonhunt, with vanilla or dungeon entrances alone (trinity has no run
+ * type).
+ */
+export const pyramidOpen = (run: RunSettings): boolean => {
+  const door = doorOf(run);
+  // Not known in a DR run reads as shut: open asks less
+  const pyramid = door === null ? "auto" : (door.openPyramid ?? "no");
+  if (pyramid !== "auto") return pyramid === "yes";
+  const entrances =
+    run.entranceShuffle === "none" &&
+    (door?.doorEntrances === undefined ||
+      door.doorEntrances === "dungeonssimple" ||
+      door.doorEntrances === "dungeonsfull");
+  return entrances && (run.goal === "fast-ganon" || run.goal === "ganonhunt");
+};
+
+/**
+ * The settings of the Door Randomizer's world for a DR run (doorLogic): the
+ * pack's, and what DR reads beside them (the pack's door-world, whose
+ * DR_DEFAULTS fill the rest): retro's universal keys and rupee bow, strict
+ * key logic, the drops' and pots' keys shuffled, the pots, whether pots or
+ * drops join the dungeons beyond their keys (the key analysis then left
+ * out), the bomb bag, the legacy pot shuffle, the boss items behind map and
+ * compass, the pyramid hole (`pyramidOpen`), a triforce hunt, a ganonhunt:
+ * Ganon (Rules.py:73-74) and
+ * Murahdahla (:72) ask the pieces the goal asks, which the state holds as
+ * one piece once enough are found (`doorStateOf`), so `treasureHunt` is 1.
+ * An Overworld Randomizer run adds its bonk drops and reads DR 1.5.7's
+ * world at most, the base of the fork's release the pack reads (0.8.0.2).
+ * The same run settings always give the same object, so the world compiled
+ * for it can be kept.
+ * @param run - A DR run's settings
+ */
+export const drSettingsOf = (run: RunSettings): Settings => {
+  const settings = packSettings(run);
+  const door = doorOf(run);
+  const pottery = door?.pottery ?? "none";
+  const drops = door?.dropShuffle ?? "none";
+  const keyLogic = door?.keyLogic ?? "partial";
+  // Not known reads as on: can_use_bombs (dr:BaseClasses.py:1209,
+  // owr:BaseClasses.py:1367), the one rule that reads the bag (Rules.py's
+  // bomb_escape_rule is a placement, maybe either way), then asks the +10
+  // upgrade, unknown with the bag not known (the pack's
+  // `bombUpgradeUnknown`): maybe where off would say yes and on no, the
+  // same as off elsewhere; with it known on, the bombs cell tells the bag
+  // (doorStateOf)
+  const bombBag = door?.bombBag ?? true;
+  const potShuffle = door?.potShuffle ?? false;
+  // Not known reads as restricted, whose rules ask more (Rules.py:809-825)
+  const bossItems = door?.restrictBossItems ?? "dungeon";
+  const pyramid = pyramidOpen(run);
+  const owr = door?.randomizer === "owr";
+  // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7: an
+  // older or unknown base reads as 1.5.6, which asks more (static.ts)
+  const version =
+    owr && door.doorVersion !== "1.5.6"
+      ? "1.5.7"
+      : (door?.doorVersion ?? "1.5.6");
+  // Not known reads as shuffled: no bonk then gives farmable bombs
+  // (owr:ItemList.py:731-734), which shuffled drops take away, and the
+  // drops' own places stay unlisted (`bonkDropsOf`)
+  const bonkDrops = owr && door.bonkDrops !== false;
+  // The fork's entrance shuffle its rules and groups read (`shuffle_<mode>`,
+  // OWR_DEFAULTS)
+  const entrances = owr ? doorShuffleOf(run) : undefined;
+  const key = [
+    owr,
+    bonkDrops,
+    entrances,
+    pottery,
+    drops,
+    keyLogic,
+    run.goal,
+    bombBag,
+    potShuffle,
+    bossItems,
+    pyramid,
+    version,
+  ].join("/");
+  let byKey = doorSettings.get(settings);
+  if (byKey === undefined) {
+    byKey = new Map();
+    doorSettings.set(settings, byKey);
+  }
+  let found = byKey.get(key);
+  if (found === undefined) {
+    const hunt = run.goal === "ganonhunt" || run.goal === "triforce-hunt";
+    found = {
+      ...settings,
+      bombBag,
+      // OWR's bonk drops shuffled (shuffle_bonk_drops), its rules' own
+      ...(owr ? { bonkDrops } : {}),
+      ...(entrances === undefined ? {} : { [`shuffle_${entrances}`]: true }),
+      // key_logic_algorithm: dangerous asks each door's worst case
+      dangerousKeyLogic: keyLogic === "dangerous",
+      dropShuffle: drops !== "none",
+      // DR's release as its ROM title's digits: what a later one asks less
+      drVersion: Number(version.replaceAll(".", "")),
+      dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
+      ganonHuntGoal: run.goal === "ganonhunt",
+      openPyramid: pyramid,
+      potKeys: pottery !== "none" && pottery !== "cave",
+      potShuffle,
+      pottery: pottery !== "none",
+      restrictBossItems: bossItems !== "none",
+      retroBow: settings.rupeeBow,
+      // static: the entrance randomizer's key rules, chest keys alone
+      staticKeyLogic: keyLogic === "static",
+      strictKeyLogic: keyLogic === "strict",
+      treasureHunt: hunt ? 1 : 0,
+      triforceHuntGoal: run.goal === "triforce-hunt",
+      universalKeys: settings.genericKeys,
+    };
+    byKey.set(key, found);
+  }
+  return found;
+};
+
 /** The world a run's settings build: what is kept per world is keyed by it. */
 export const worldOf = (
   settings: AlttprSettings,
@@ -237,12 +388,33 @@ export const SMALL_KEYS_MAX: readonly number[] = KEY_DUNGEONS.map(
   (id) => dungeonPool(dungeon(id)).smallKeys,
 );
 
-/** How many small keys the dungeon at a key index (0-12) holds. */
-export const smallKeysMax = (index: number): number => {
+/**
+ * How many small keys the dungeon at a key index (0-12) holds: its pool's,
+ * and in a Door Randomizer run whose key drops are shuffled the keys they
+ * bring (the pack's `drKeysAdded`).
+ */
+export const smallKeysMax = (index: number, run?: RunSettings): number => {
   const max = SMALL_KEYS_MAX[index];
   if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
-  return max;
+  return run === undefined || !isDoorRun(run)
+    ? max
+    : max + doorKeysExtra(dungeonAt(index), run);
 };
+
+/**
+ * The most small keys a dungeon at a key index may hold in any run, which a
+ * save is checked against: its pool's and every key drop's.
+ */
+export const SMALL_KEYS_CAP: readonly number[] = KEY_DUNGEONS.map(
+  (id, index) =>
+    (SMALL_KEYS_MAX[index] ?? 0) +
+    DR_LOCATIONS.filter(
+      (location) =>
+        location.kind === "keyDrop" &&
+        location.dungeon === id &&
+        location.key === "small",
+    ).length,
+);
 
 /**
  * Which of its own big key, map and compass a key dungeon's pool holds:
@@ -282,5 +454,8 @@ export const counterMax = (index: number, run: RunSettings): number => {
   }
   const max = maxima[index];
   if (max === undefined) throw new RangeError(`No dungeon at index ${index}`);
-  return max;
+  // A Door Randomizer run's key drops, pots and enemies hold items too
+  return isDoorRun(run)
+    ? max + doorCounterExtra(dungeonAt(index), run, wildItems(run))
+    : max;
 };

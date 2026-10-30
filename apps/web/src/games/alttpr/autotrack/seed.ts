@@ -20,6 +20,20 @@ import type {
   SeedUnknown,
 } from "@alltp/pack-alttpr";
 import {
+  DOOR_OPTIONS,
+  DOOR_SETTING_LABELS,
+  type DoorRunSettings,
+  type DoorSetting,
+  doorEntranceOf,
+  doorEntranceText,
+  doorFromSeed,
+  doorOf,
+  doorRows,
+  doorValueText,
+  isDoorRun,
+  sameDoorSettings,
+} from "@/games/alttpr/data/doorRando";
+import {
   ACCESSIBILITY_LABELS,
   BOSS_SHUFFLE_LABELS,
   bossShuffleOf,
@@ -209,6 +223,14 @@ const DUNGEON_ITEM_LEVELS: Readonly<
   Partial<Record<string, RunSettings["dungeonItems"]>>
 > = { "0000": "standard", "1100": "mc", "1110": "mcs", "1111": "full" };
 
+/**
+ * The Door Randomizer's mixes beside them: its options are apart
+ * (args.json), so its small keys may leave alone.
+ */
+const DOOR_DUNGEON_ITEM_LEVELS: Readonly<
+  Partial<Record<string, RunSettings["dungeonItems"]>>
+> = { ...DUNGEON_ITEM_LEVELS, "0010": "keys" };
+
 /** The dungeon items a seed shuffles, named, when only some are. */
 const WILD_NAMES = {
   wildBigKeys: "big keys",
@@ -228,9 +250,23 @@ const likeness = (preset: RunSettings, settings: RunSettings) =>
  * they are, the current one on a tie, else the first listed.
  */
 const presetFor = (settings: RunSettings, currentId: string): string => {
-  let best = getPreset(currentId);
+  // A Door Randomizer seed's run type is one of DR's, an alttpr.com seed's
+  // one of alttpr.com's; among DR's, the one of its entrances first (DR
+  // Crosskeys' race settings, its bomb bag, never outweigh a vanilla world)
+  const kin = presets.filter(
+    (preset) => isDoorRun(preset.settings) === isDoorRun(settings),
+  );
+  const sameWorld = kin.filter(
+    (preset) =>
+      !isDoorRun(settings) ||
+      (preset.settings.entranceShuffle ?? "none") ===
+        (settings.entranceShuffle ?? "none"),
+  );
+  const family = sameWorld.length > 0 ? sameWorld : kin;
+  const current = getPreset(currentId);
+  let best = family.includes(current) ? current : (family[0] ?? current);
   let score = likeness(best.settings, settings);
-  for (const preset of presets) {
+  for (const preset of family) {
     const own = likeness(preset.settings, settings);
     if (own > score) {
       best = preset;
@@ -259,8 +295,20 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   const differs = (key: TunableSetting) =>
     shown(key) && settings[key] !== preset.settings[key];
+  // A DR run's in DR's own words: Lite, Dungeons + Full…
   if (
     shown("entranceShuffle") &&
+    isDoorRun(settings) &&
+    doorEntranceOf(settings) !== doorEntranceOf(preset.settings)
+  ) {
+    parts.push(
+      doorEntranceOf(settings) === "vanilla"
+        ? "vanilla entrances"
+        : `${doorEntranceText(settings)} entrances`,
+    );
+  } else if (
+    shown("entranceShuffle") &&
+    !isDoorRun(settings) &&
     settings.entranceShuffle !== preset.settings.entranceShuffle
   ) {
     parts.push(
@@ -308,6 +356,16 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   if (shown("glitches") && settings.glitches !== undefined) {
     parts.push(GLITCHES_LABELS[settings.glitches]);
   }
+  // A Door Randomizer run's own, where they differ from its run type's
+  const door = doorOf(settings);
+  const presetDoor = doorOf(preset.settings);
+  for (const key of doorRows(settings)) {
+    if (door !== null && door[key] !== presetDoor?.[key]) {
+      parts.push(
+        `${DOOR_SETTING_LABELS[key]}: ${doorValueText(key, door[key])}`,
+      );
+    }
+  }
   return `${preset.name} (${parts.join(", ")})`;
 };
 
@@ -319,8 +377,10 @@ const mysterySeed = (
   seed: string,
   logic: SeedSetting<SeedLogic>,
   run: Run,
+  door: DoorRunSettings | null,
 ): SeedCheck => {
-  // Its file hides every setting but the logic, which the ROM may tell
+  // Its file hides every setting but the logic, which the ROM may tell; a
+  // Door Randomizer seed's ROM its generator, from the title
   const revealed = revealedGlitches(logic);
   const mystery = getPreset("mystery").settings;
   const settings = withGlitches(
@@ -330,10 +390,18 @@ const mysterySeed = (
         (key) => revealed === undefined || key !== "glitches",
       ),
       mode: run.settings.mode,
+      ...(door?.randomizer === undefined
+        ? {}
+        : { randomizer: door.randomizer }),
     },
     revealed === undefined ? { known: false, why: "mystery" } : logic,
   );
-  if (run.presetId === "mystery") {
+  // A Mystery run of another generator (alttpr.com's, the Door
+  // Randomizer's) differs, whatever its glitches
+  if (
+    run.presetId === "mystery" &&
+    settings.randomizer === run.settings.randomizer
+  ) {
     if (revealed !== undefined && isHidden(run.settings, "glitches")) {
       return {
         change: { glitches: revealed },
@@ -392,7 +460,9 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     wildMaps,
   ]);
   if (seed.seed === null) return { kind: "unread", why: why ?? "not-read" };
-  if (why === "mystery") return mysterySeed(seed.seed, seed.logic, run);
+  if (why === "mystery") {
+    return mysterySeed(seed.seed, seed.logic, run, doorFromSeed(seed, {}));
+  }
   if (
     why !== null ||
     !crystalsGanon.known ||
@@ -413,12 +483,15 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   if (runGoal === undefined)
     reasons.push(OTHER_GOALS[goal.value] ?? goal.value);
   const wild = { wildBigKeys, wildCompasses, wildKeys, wildMaps };
-  const dungeonItems =
-    DUNGEON_ITEM_LEVELS[
-      [wildMaps, wildCompasses, wildKeys, wildBigKeys]
-        .map((setting) => (setting.value ? 1 : 0))
-        .join("")
-    ];
+  const dungeonItems = (
+    seed.randomizer?.kind === "door"
+      ? DOOR_DUNGEON_ITEM_LEVELS
+      : DUNGEON_ITEM_LEVELS
+  )[
+    [wildMaps, wildCompasses, wildKeys, wildBigKeys]
+      .map((setting) => (setting.value ? 1 : 0))
+      .join("")
+  ];
   if (dungeonItems === undefined) {
     const shuffled = (Object.keys(wild) as (keyof typeof wild)[]).filter(
       (key) => wild[key].value,
@@ -462,6 +535,14 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   );
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
+  // A Door Randomizer seed's own settings, an alttpr.com seed's none
+  const door = doorFromSeed(seed, run.settings);
+  if (door !== null) {
+    for (const key of Object.keys(DOOR_OPTIONS) as DoorSetting[]) {
+      delete settings[key];
+    }
+    Object.assign(settings, door);
+  }
   // Only the file states it; none is said by its absence, as every preset
   const bossShuffle = fromFile(seed.bossShuffle, bossShuffleOf(run.settings));
   if (bossShuffle === "none") delete settings.bossShuffle;
@@ -491,7 +572,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     settings.mode === run.settings.mode &&
     (settings.entranceShuffle === run.settings.entranceShuffle ||
       (entrancesHidden && seed.entrances?.known === true)) &&
-    (sameLogic || (glitchesHidden && glitches !== undefined))
+    (sameLogic || (glitchesHidden && glitches !== undefined)) &&
+    sameDoorSettings(settings, run.settings)
   ) {
     const said: SeedChange = {
       crystalsGanon: settings.crystalsGanon,
@@ -544,7 +626,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     COMPARED.every((key) => settings[key] === run.settings[key]) &&
     bossShuffle === bossShuffleOf(run.settings) &&
     swordsOf(settings) === swordsOf(run.settings) &&
-    enemyHealthOf(settings) === enemyHealthOf(run.settings)
+    enemyHealthOf(settings) === enemyHealthOf(run.settings) &&
+    sameDoorSettings(settings, run.settings)
   ) {
     return {
       kind: "same",

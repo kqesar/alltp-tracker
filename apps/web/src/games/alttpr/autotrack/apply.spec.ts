@@ -912,3 +912,73 @@ describe("the bottles' contents and the capacities", () => {
     expect(view.items).not.toHaveProperty("arrowcapacity");
   });
 });
+
+describe("a Door Randomizer run's checks, from the game", () => {
+  /** WRAM bank $7F in the FX Pak Pro space. */
+  const BANK_7F = 0xf6_0000;
+  const POTS = BANK_7F + 0x6018; // RoomPotData (sram.asm:390)
+  const DROPS = BANK_7F + 0x6268; // SpriteDropData (sram.asm:391)
+
+  /** A DR run's board: keydrop, keys in their dungeons. */
+  const doorBoard = (): Board => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      dropShuffle: "keys",
+      pottery: "keys",
+    });
+    const { checked, items, medallions, settings, smallKeys } =
+      useGameStore.getState();
+    return { checked, items, medallions, settings, smallKeys };
+  };
+
+  it("lays the run's key drops the tables say taken, and those only", () => {
+    const memory = seedMemory({ race: false });
+    // Eastern Palace's dark square pot (room $BA, pot 4: bit $0800) and its
+    // Eyegore's key (room $99, slot 3: bit $1000)
+    memory[POTS + 0xba * 2 + 1] = 0x08;
+    memory[DROPS + 0x99 * 2 + 1] = 0x10;
+    // A pot that is no location of keydrop's: told nothing of
+    memory[POTS + 0x09 * 2 + 1] = 0x80;
+    const view = gameView(readingOf(memory), doorBoard());
+    expect(view.checked["eastern-palace/dark-square-pot-key"]).toBe(true);
+    expect(view.checked["eastern-palace/dark-eyegore-key-drop"]).toBe(true);
+    expect(view.checked["ice-palace/jelly-key-drop"]).toBe(false);
+    expect(Object.keys(view.checked).some((id) => id.includes("pot-1"))).toBe(
+      false,
+    );
+  });
+
+  it("leaves them unsettled while their table is not read", () => {
+    const view = gameView(
+      readingOf(seedMemory({ race: false }), { unread: ["door-pots"] }),
+      doorBoard(),
+    );
+    expect(view.checked).not.toHaveProperty(
+      "eastern-palace/dark-square-pot-key",
+    );
+    expect(view.checked["eastern-palace/dark-eyegore-key-drop"]).toBe(false);
+  });
+
+  it("lays none in an alttpr.com run, whatever the tables hold", () => {
+    const memory = seedMemory({ race: false });
+    memory[POTS + 0xba * 2 + 1] = 0x08;
+    const view = gameView(readingOf(memory), fresh());
+    expect(view.checked).not.toHaveProperty(
+      "eastern-palace/dark-square-pot-key",
+    );
+  });
+
+  it("counts them in the dungeon's counter", () => {
+    const memory = seedMemory({ race: false });
+    const board = doorBoard();
+    const before = gameView(readingOf(memory), board).counters.chest0;
+    memory[POTS + 0xba * 2 + 1] = 0x08;
+    memory[DROPS + 0x99 * 2 + 1] = 0x10;
+    const after = gameView(readingOf(memory), board).counters.chest0;
+    expect(before).toBeDefined();
+    expect(after).toBeDefined();
+    // Two of its locations more taken, no key of its found: the most it can
+    // have left goes down by two
+    expect(after?.[1]).toBe((before?.[1] ?? 0) - 2);
+  });
+});

@@ -79,7 +79,7 @@ test("says when alttpr.com has no such seed, or the text is no seed", async ({
 
   await load(page, "a seed please");
   await expect(status).toHaveText(
-    "Paste the seed's link from alttpr.com, or its hash.",
+    "Paste the seed's link from alttpr.com (or its hash), avianart.games or Hyrule Town Hall.",
   );
   await load(page, "9MQ9gO1wMD");
   await expect(status).toHaveText("alttpr.com has no seed with this hash.");

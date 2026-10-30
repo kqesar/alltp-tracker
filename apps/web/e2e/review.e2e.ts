@@ -438,7 +438,7 @@ test.describe("reviewing a finished SMZ3 run", () => {
     );
     await page.getByTestId("review-file").setInputFiles(spoiler(HASH, NAME));
     await expect(page.getByTestId("review-error")).toContainText(
-      "alttpr.com spoiler log",
+      "A Link to the Past spoiler log",
     );
     await expect(page.getByTestId("review-notice")).toHaveCount(0);
   });

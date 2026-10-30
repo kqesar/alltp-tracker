@@ -237,6 +237,17 @@ describe("GameStore", () => {
       crystalsTower: 5,
     };
 
+    it("shows the key cells once a Door Randomizer run's small keys alone leave their dungeons", () => {
+      const state = useGameStore.getState();
+      state.applyRun("door-randomizer", getPreset("door-randomizer").settings);
+      expect(useGameStore.getState().bigKeysVisible).toBe(false);
+      useGameStore.getState().updateSettings({ dungeonItems: "keys" });
+      expect(useGameStore.getState().settings.dungeonItems).toBe("keys");
+      expect(useGameStore.getState().bigKeysVisible).toBe(true);
+      useGameStore.getState().updateSettings({ dungeonItems: "standard" });
+      expect(useGameStore.getState().bigKeysVisible).toBe(false);
+    });
+
     it("starts a run of other settings as one undo step, laying the game on it", () => {
       const state = useGameStore.getState();
       state.handleItemClick("hookshot");
@@ -330,6 +341,55 @@ describe("GameStore", () => {
       // Another logic drops them
       store().updateSettings({ glitches: "major_glitches" });
       expect(store().settings).not.toHaveProperty("playGlitches");
+    });
+
+    it("starts a bomb-bag run's bombs at none, and steps them a bag at a time", () => {
+      const store = () => useGameStore.getState();
+      store().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        bombBag: true,
+      });
+      expect(store().items.bombcapacity).toBe(0);
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(10);
+      // Turned off, the run's own 10; on again, none: a 10 kept would say
+      // the bag found
+      store().updateDoorSettings({ bombBag: false });
+      expect(store().items.bombcapacity).toBe(10);
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(15);
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(0);
+      // A +10 recorded while the bag was not known on: the bag found, kept
+      store().updateDoorSettings({ bombBag: undefined });
+      store().handleItemClick("bombcapacity");
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(20);
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(10);
+      // The 10 of a run without the bag alone: none
+      store().updateDoorSettings({ bombBag: false });
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(0);
+      // Not known: the cell is left as it is
+      store().handleItemClick("bombcapacity");
+      store().updateDoorSettings({ bombBag: undefined });
+      expect(store().items.bombcapacity).toBe(10);
+      store().applyPreset("door-randomizer");
+      expect(store().items.bombcapacity).toBe(10);
+    });
+
+    it("sets a Door Randomizer setting back to unset, as its absence", () => {
+      useGameStore.getState().applyPreset("door-crosskeys");
+      useGameStore.getState().updateDoorSettings({ shuffleLinks: false });
+      expect(useGameStore.getState().settings.shuffleLinks).toBe(false);
+
+      useGameStore.getState().updateDoorSettings({ shuffleLinks: undefined });
+
+      expect(useGameStore.getState().settings).not.toHaveProperty(
+        "shuffleLinks",
+      );
+      expect(useGameStore.getState().past).toHaveLength(3);
     });
 
     it("records no step for settings that change nothing", () => {
@@ -521,6 +581,24 @@ describe("GameStore", () => {
       storeSave({ mapView: "list" }, PERSIST_VERSION);
       await useGameStore.persist.rehydrate();
       expect(useGameStore.getState().mapView).toBe("map");
+    });
+
+    it("takes no note of this tab's run from a save that holds none", async () => {
+      // An older version's tab starts a New game: its save holds no door,
+      // entrance or overworld notes, nor a seed
+      useGameStore.setState({
+        doors: { links: { a: "b" } },
+        entrances: { "links-house": "links-house" },
+        overworld: { flute: [0x18] },
+      });
+      storeSave({ items: { flute: true } }, PERSIST_VERSION);
+      await useGameStore.persist.rehydrate();
+      const state = useGameStore.getState();
+      expect(state.items.flute).toBe(true);
+      expect(state.doors).toEqual({});
+      expect(state.entrances).toEqual({});
+      expect(state.overworld).toEqual({});
+      expect(state.seed).toBeNull();
     });
 
     it("restores the valid fields of a damaged save and resets the rest", async () => {
@@ -1007,6 +1085,78 @@ describe("GameStore", () => {
       expect(store().entrances).toEqual({
         "kakariko-shop": "elder-house-exit-east",
       });
+    });
+  });
+
+  describe("the doors noted", () => {
+    const store = () => useGameStore.getState();
+    const DR = getPreset("door-randomizer").settings;
+
+    it("notes a door shuffle as one undo step, and saves it with the run", () => {
+      store().applyRun("door-randomizer", { ...DR, doorShuffle: "basic" });
+      const past = store().past.length;
+      store().noteDoors({
+        keys: { "Eastern Palace": 2 },
+        kinds: { "eastern-cannonball-n": "small" },
+        links: {
+          "eastern-cannonball-n": "eastern-courtyard-ledge-s",
+          "eastern-courtyard-ledge-s": "eastern-cannonball-n",
+        },
+        lobbies: { eastern: "eastern-lobby-s" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      expect(isFreshRun(store())).toBe(false);
+      // The same again records nothing
+      store().noteDoors({ kinds: { "eastern-cannonball-n": "small" } });
+      expect(store().past).toHaveLength(past + 1);
+      const file = JSON.parse(store().exportState());
+      expect(file.progress.doors.links["eastern-cannonball-n"]).toBe(
+        "eastern-courtyard-ledge-s",
+      );
+      store().noteDoors({ keys: { "Eastern Palace": null } });
+      expect(store().doors.keys).toBeUndefined();
+      store().undo();
+      store().undo();
+      expect(store().doors).toEqual({});
+      store().reset();
+      expect(store().doors).toEqual({});
+      importSave(JSON.stringify(file));
+      expect(store().doors.lobbies).toEqual({ eastern: "eastern-lobby-s" });
+    });
+  });
+
+  describe("an OWR run's overworld notes", () => {
+    const store = () => useGameStore.getState();
+
+    it("are one undo step each, saved with the run, none in a new one", () => {
+      store().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        owWhirlpool: true,
+        randomizer: "owr",
+      });
+      const past = store().past.length;
+      store().noteOverworld({
+        whirlpools: { "C Whirlpool": "Zora Whirlpool" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      expect(isFreshRun(store())).toBe(false);
+      // The same again records nothing
+      store().noteOverworld({
+        whirlpools: { "Zora Whirlpool": "C Whirlpool" },
+      });
+      expect(store().past).toHaveLength(past + 1);
+      const file = JSON.parse(store().exportState());
+      expect(file.progress.overworld.whirlpools["Zora Whirlpool"]).toBe(
+        "C Whirlpool",
+      );
+      store().undo();
+      expect(store().overworld).toEqual({});
+      store().reset();
+      expect(store().overworld).toEqual({});
+      importSave(JSON.stringify(file));
+      expect(store().overworld.whirlpools?.["C Whirlpool"]).toBe(
+        "Zora Whirlpool",
+      );
     });
   });
 

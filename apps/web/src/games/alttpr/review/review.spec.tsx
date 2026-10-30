@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { RunTimer } from "@/games/alttpr/components/map/RunTimer";
 import {
+  doorRunOf,
+  doorSpoilerFile,
+  doorSpoilerLog,
+  doorSpoilerText,
   spoilerFile,
   spoilerLog,
   spoilerText,
@@ -248,6 +252,129 @@ describe("a log of a mode whose spoiler writes it otherwise", () => {
     await screen.findByTestId("review-notice");
     expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
       "Small keys are generic in Retro",
+    );
+  });
+});
+
+describe("a Door Randomizer log", () => {
+  const SEED = "660701088";
+
+  /** The run the log's seed makes, over, with the log picked. */
+  const open = async () => {
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED));
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED));
+    await screen.findByTestId("review-notice");
+  };
+
+  it("opens on the run its ROM title names, and says which randomizer", async () => {
+    await open();
+    expect(screen.getByTestId("review-binding")).toHaveTextContent(
+      "Seed 1_1_660701088: the log's seed is this run's",
+    );
+    expect(await screen.findByTestId("review-facts")).toHaveTextContent(
+      "RandomizerDoor Randomizer 1.5.6",
+    );
+    expect(screen.getByTestId("review-facts")).toHaveTextContent(
+      "Title screen codePowder, Key, Bottle, Compass, Pearl",
+    );
+  });
+
+  it("reads a place of DR's as taken, not timed, and says why", async () => {
+    const drops = doorSpoilerLog("278438665");
+    const { presetId, seed, settings } = doorRunOf(drops);
+    useGameStore.setState({ presetId, seed, settings });
+    act(() => store().toggleChecks(["thieves-town/map-chest"]));
+    act(() => store().toggleChecks(["thieves-town/hallway-pot-key"]));
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile("278438665"));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-door-untimed")).toHaveTextContent(
+      "1 place of the Door Randomizer (a key drop, pot, enemy drop or shop item) taken",
+    );
+  });
+
+  it("refuses it on a run of another seed, in words", async () => {
+    useGameStore.setState({ seed: "1_1_111111111" });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED));
+    expect(await screen.findByTestId("review-error")).toBeInTheDocument();
+    expect(useReviewStore.getState().review).toBeNull();
+  });
+
+  it("says a DR seed's waits are not shown while a setting is not modelled", async () => {
+    // The same seed with its dungeon items in their dungeons and its
+    // enemies shuffled, which DR's world does not model
+    const text = doorSpoilerText(SEED)
+      .replace(
+        "Map shuffle:                     Yes",
+        "Map shuffle:                     No",
+      )
+      .replace(
+        "Compass shuffle:                 Yes",
+        "Compass shuffle:                 No",
+      )
+      .replace(
+        "Small Key shuffle:               wild",
+        "Small Key shuffle:               none",
+      )
+      .replace(
+        "Big Key shuffle:                 Yes",
+        "Big Key shuffle:                 No",
+      )
+      .replace(
+        "Enemy shuffle:                   none",
+        "Enemy shuffle:                   shuffled",
+      );
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED, text));
+    expect(settings.enemyShuffle).toBe("shuffled");
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED, text));
+    await screen.findByTestId("review-notice");
+    expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
+      "a mode or a Door or Overworld Randomizer setting it does not model, which the map's note names",
+    );
+  });
+
+  it("reads DR's static key logic in DR's world, refusing it no more", async () => {
+    // The same seed with its dungeon items kept in their dungeons, which
+    // would otherwise be the first thing said (keys wild)
+    const text = doorSpoilerText(SEED)
+      .replace(
+        "Map shuffle:                     Yes",
+        "Map shuffle:                     No",
+      )
+      .replace(
+        "Compass shuffle:                 Yes",
+        "Compass shuffle:                 No",
+      )
+      .replace(
+        "Small Key shuffle:               wild",
+        "Small Key shuffle:               none",
+      )
+      .replace(
+        "Big Key shuffle:                 Yes",
+        "Big Key shuffle:                 No",
+      );
+    const { presetId, seed, settings } = doorRunOf(doorSpoilerLog(SEED, text));
+    expect(settings.dungeonItems).toBe("standard");
+    useGameStore.setState({ presetId, seed, settings });
+    render(<Board />);
+    finishRun();
+    await importFile(doorSpoilerFile(SEED, text));
+    await screen.findByTestId("review-notice");
+    // An unstable 1.5.6 build's static key logic, DR's since 1.5.7: DR's
+    // world models it, so what stops the waits here is only that nothing
+    // was played
+    expect(settings.keyLogic).toBe("static");
+    expect(await screen.findByTestId("review-hidden")).toHaveTextContent(
+      "Nothing the seed needed has a time on this run",
     );
   });
 });

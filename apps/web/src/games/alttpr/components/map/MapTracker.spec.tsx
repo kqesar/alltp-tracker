@@ -3,7 +3,10 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MapTracker } from "@/games/alttpr/components/map/MapTracker";
+import { setBonkDrops } from "@/games/alttpr/data/doorRando";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { useTooltipStore } from "@/stores/tooltipStore";
 
 const LOCATION_MARKERS = MARKERS.filter((marker) => !marker.dungeon);
 
@@ -38,6 +41,45 @@ describe("MapTracker", () => {
       expect(screen.getByTestId(id)).toBeInTheDocument();
     }
     expect(screen.getByTestId("boss-marker-ganons-tower")).toBeInTheDocument();
+  });
+
+  it("draws an OWR run's bonk drops by their place, once loaded", async () => {
+    act(() =>
+      useGameStore.getState().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        bonkDrops: true,
+        randomizer: "owr",
+      }),
+    );
+    render(<MapTracker />);
+    expect(screen.queryAllByTestId(/^marker-bonk-/)).toEqual([]);
+    const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
+    act(() => {
+      setBonkDrops(BONK_DROPS);
+      useGameStore.setState({});
+    });
+    // The pyramid's tree, in the dark world where the fork's map draws it
+    const dark = screen.getByTestId("map-world-dark");
+    const tree = within(dark).getByRole("button", {
+      name: /^Bonk drop: Pyramid Tree: /,
+    });
+    // Three drops of one rock pile share a marker
+    expect(
+      within(dark).getByRole("button", {
+        name: /^Bonk drops \(3\): Dark Tree Line Tree 2, /,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByTestId(/^marker-bonk-/)).toHaveLength(32);
+    // Named on hover, as a chest is
+    await userEvent.hover(tree);
+    expect(useTooltipStore.getState().target).toMatchObject({
+      kind: "text",
+      title: "Bonk drop: Pyramid Tree",
+    });
+    await userEvent.unhover(tree);
+    await userEvent.click(tree);
+    expect(useGameStore.getState().checked["pyramid-tree"]).toBe(true);
+    expect(tree).toHaveAttribute("aria-pressed", "true");
   });
 
   it("renders without React warnings such as duplicate keys", () => {

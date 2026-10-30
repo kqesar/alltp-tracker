@@ -39,3 +39,6 @@ test-results/
 
 # playwright-cli snapshots and screenshots, wherever it ran
 .playwright-cli/
+
+# Vitest reports written by hand (--reporter=json)
+.vitest/

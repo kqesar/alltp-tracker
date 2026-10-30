@@ -1,0 +1,49 @@
+{
+  "file": "test/dungeons/TestEasternPalace.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "overrideBombCheck": true,
+    "source": "test/dungeons/TestDungeon.py:9@1ada5b5",
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Eastern Palace - Compass Chest", true, []],
+        ["Eastern Palace - Cannonball Chest", true, []],
+        ["Eastern Palace - Big Chest", false, []],
+        ["Eastern Palace - Big Chest", false, [], ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Big Chest", true, ["Big Key (Eastern Palace)"]],
+        ["Eastern Palace - Map Chest", true, []],
+        ["Eastern Palace - Big Key Chest", false, []],
+        ["Eastern Palace - Big Key Chest", false, [], ["Lamp"]],
+        ["Eastern Palace - Big Key Chest", true, ["Lamp"]],
+        ["Eastern Palace - Boss", false, []],
+        ["Eastern Palace - Boss", false, [], ["Lamp"]],
+        ["Eastern Palace - Boss", false, [], ["Progressive Bow"]],
+        ["Eastern Palace - Boss", false, [], ["Big Key (Eastern Palace)"]],
+        [
+          "Eastern Palace - Boss",
+          true,
+          ["Lamp", "Progressive Bow", "Big Key (Eastern Palace)"]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testEastern",
+      "startingRegions": ["Eastern Lobby"]
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

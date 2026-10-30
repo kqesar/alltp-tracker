@@ -83,12 +83,35 @@ export const BOTTLE_CONTENT_NAMES: Readonly<Record<BottleContents, string>> = {
  * at the start, each upgrade adding 5 (or 10 at once) up to 50 and 70
  * (newitems.asm .bombs_5 to .arrows_70). A click steps 5 between the two.
  */
-export const CAPACITIES: Readonly<
-  Record<string, { readonly start: number; readonly top: number }>
-> = {
-  arrowcapacity: { start: 30, top: 70 },
-  bombcapacity: { start: 10, top: 50 },
+export const CAPACITIES: Readonly<Record<string, Capacity>> = {
+  arrowcapacity: { start: 30, step: 5, top: 70 },
+  bombcapacity: { start: 10, step: 5, top: 50 },
 };
+
+/** A capacity's range: where a run starts, the step of an upgrade, the most. */
+export type Capacity = {
+  readonly start: number;
+  readonly step: number;
+  readonly top: number;
+};
+
+/**
+ * The bombs of a Door Randomizer run with the bomb bag (`--bombbag`), DR
+ * 1.5.8's lines (OWR 0.8.0.2's after): none to start with
+ * (InitialSram.py:68; :72), each of the pool's two +10 upgrades a bag
+ * (ItemList.py:67; :69), every other upgrade out of the pool and the shop
+ * (ItemList.py:983-986 and :697-706; :1162-1165 and :862-871), one found
+ * anyway turned into ten bombs (Rom.py:1063; :1130): 0, 10 or 20.
+ */
+export const BAG_BOMBS: Capacity = { start: 0, step: 10, top: 20 };
+
+/**
+ * A capacity's range in a run: the bombs of a bomb-bag run step by bags.
+ * @param id - `bombcapacity` or `arrowcapacity`
+ * @param bag - Whether the run is known to have the bomb bag on
+ */
+export const capacityOf = (id: string, bag = false): Capacity | undefined =>
+  bag && id === "bombcapacity" ? BAG_BOMBS : CAPACITIES[id];
 
 /**
  * The two cells that show what the goal asks for in crystals, Ganon's
@@ -625,25 +648,28 @@ export const bottleAfter = (
 };
 
 /**
- * A capacity's value once stepped: 5 more, round from the most a seed gives
- * to the start, or 5 fewer, round from the start to the most. A value off
- * those steps (a customized seed's, read from the game) steps from the
- * nearest one.
+ * A capacity's value once stepped: an upgrade more (5), round from the most
+ * a seed gives to the start, or one fewer, round from the start to the
+ * most; a bomb-bag run's bombs step by bags (BAG_BOMBS). A value off those
+ * steps (a customized seed's, read from the game) steps from the nearest
+ * one.
  * @param id - `bombcapacity` or `arrowcapacity`
  * @param value - The capacity now
  * @param direction - 1 forward, -1 back
+ * @param bag - Whether the run is known to have the bomb bag on
  */
 export const capacityAfter = (
   id: string,
   value: number,
   direction: 1 | -1,
+  bag = false,
 ): number => {
-  const range = CAPACITIES[id];
+  const range = capacityOf(id, bag);
   if (range === undefined) return value;
-  const { start, top } = range;
-  const step = Math.round((Math.min(top, Math.max(start, value)) - start) / 5);
-  const steps = (top - start) / 5 + 1;
-  return start + ((step + direction + steps) % steps) * 5;
+  const { start, step, top } = range;
+  const at = Math.round((Math.min(top, Math.max(start, value)) - start) / step);
+  const steps = (top - start) / step + 1;
+  return start + ((at + direction + steps) % steps) * step;
 };
 
 /** The prizes Link holds: the green pendant, the other two, the crystals. */

@@ -23,6 +23,11 @@ import {
   type Find,
 } from "@alltp/spoiler";
 import { COMPARED, checkSeed } from "@/games/alttpr/autotrack/seed";
+import {
+  type DoorRunSettings,
+  doorLocationsOf,
+  doorOf,
+} from "@/games/alttpr/data/doorRando";
 import { isHidden, type TunableSetting } from "@/games/alttpr/data/presets";
 import { isCleared, runZones } from "@/games/alttpr/logic/checks";
 import { PACK_ITEMS, packReading } from "@/games/alttpr/logic/packItems";
@@ -60,6 +65,71 @@ const padOf = (value: number | undefined): string | null =>
     ? (MEDALLIONS[value - 1] ?? null)
     : null;
 
+/** Which randomizer wrote a seed, in the words of a refusal. */
+const randomizerName = (settings: DoorRunSettings): string => {
+  const door = doorOf(settings);
+  return door === null
+    ? "alttpr.com's"
+    : door.randomizer === "owr"
+      ? "the Overworld Randomizer's"
+      : "the Door Randomizer's";
+};
+
+/**
+ * What a log and a run both state of the seed: which
+ * randomizer wrote it, and the settings the game's ROM states exactly
+ * (doors shuffled or not, drops, pottery or not, shops, take-any caves,
+ * enemies). The finer ones (which door shuffle, which pottery) a run read
+ * from its ROM only approximates, so they refuse nothing here.
+ */
+const doorFacts = (
+  file: DoorRunSettings,
+  run: DoorRunSettings,
+  fileIsDoor: boolean,
+): Fact[] => {
+  const facts: Fact[] = [
+    {
+      file: fileIsDoor ? randomizerName(file) : randomizerName({}),
+      name: "door:randomizer",
+      run: randomizerName(run),
+    },
+  ];
+  const one = doorOf(file);
+  const two = doorOf(run);
+  if (!fileIsDoor || one === null || two === null) return facts;
+  const yes = (on: boolean) => (on ? "on" : "off");
+  facts.push(
+    {
+      file: one.doorShuffle === "vanilla" ? "vanilla" : "shuffled",
+      name: "door:doors",
+      run: two.doorShuffle === "vanilla" ? "vanilla" : "shuffled",
+    },
+    { file: one.dropShuffle, name: "door:drops", run: two.dropShuffle },
+    {
+      file: yes(one.pottery !== "none"),
+      name: "door:pottery",
+      run: yes(two.pottery !== "none"),
+    },
+    {
+      file: yes(one.shopsanity),
+      name: "door:shopsanity",
+      run: yes(two.shopsanity),
+    },
+    // Not known on either side: no fact
+    {
+      file: one.takeAny === undefined ? null : yes(one.takeAny !== "none"),
+      name: "door:take-any",
+      run: two.takeAny === undefined ? null : yes(two.takeAny !== "none"),
+    },
+    {
+      file: one.enemyShuffle ?? null,
+      name: "door:enemies",
+      run: two.enemyShuffle ?? null,
+    },
+  );
+  return facts;
+};
+
 /**
  * The settings both the run and the log state, as facts for `bindSeed`: the
  * run type's compared settings in the run's own terms (through `checkSeed`,
@@ -85,6 +155,9 @@ const factsOf = (log: AlttprSpoilerLog, run: ReviewedRun): Fact[] => {
           run: run.settings[key] as FactValue,
         });
       }
+      facts.push(
+        ...doorFacts(file, run.settings, log.extra.door !== undefined),
+      );
     }
   }
   const { mire, turtleRock } = log.extra.medallions;
@@ -108,16 +181,34 @@ const factsOf = (log: AlttprSpoilerLog, run: ReviewedRun): Fact[] => {
   return facts;
 };
 
+/** A DR ROM title's seed, `<team>_<player>_<seed>` (the pack's `seedRomOf`). */
+const TITLE_SEED = /^\d+_\d+_/;
+
+/**
+ * The log's seed id to set against the run's. A Door Randomizer log may
+ * state two (`extra.door`): the seed as the ROM's title names it, which
+ * autotracking records as the run's, and avianart's hash, which a run
+ * started from an avianart link keeps until autotracking reads the ROM. The
+ * one of the run's kind is compared; a log without it proves nothing.
+ */
+const fileSeed = (log: AlttprSpoilerLog, run: ReviewedRun): string | null => {
+  const { door } = log.extra;
+  if (door === undefined) return log.seed.id;
+  if (run.seed === null) return door.title ?? door.avianart;
+  return TITLE_SEED.test(run.seed) ? door.title : door.avianart;
+};
+
 /**
  * Whether a log is the run's: the seed ids (the log's hash, or the one its
- * file name carries, against the run's), then every setting, medallion and
- * prize both sides state. A contradiction refuses; a run with no seed (kept
- * by hand) or a log with none (a renamed file) is "not verified".
+ * file name carries, against the run's; a Door Randomizer log's of the run's
+ * kind, `fileSeed`), then every setting, medallion and prize both sides
+ * state. A contradiction refuses; a run with no seed (kept by hand) or a log
+ * with none (a renamed file) is "not verified".
  */
 export const bindRun = (log: AlttprSpoilerLog, run: ReviewedRun): Binding =>
   bindSeed({
     facts: factsOf(log, run),
-    seed: { file: log.seed.id, run: run.seed },
+    seed: { file: fileSeed(log, run), run: run.seed },
   });
 
 const BEATEN = /^item:boss(\d+):2$/;
@@ -191,7 +282,10 @@ export type RowState =
   | "in-order"
   /** Found after something the playthrough has later. */
   | "late"
-  /** Done on the board, with no time (a counted dungeon, a save without times). */
+  /**
+   * Done on the board, with no time: a counted dungeon, a save without
+   * times, a Door Randomizer location (the timeline never dates one).
+   */
   | "untimed"
   /** Never found. */
   | "missed"
@@ -222,9 +316,11 @@ export interface ReviewComparison {
 
 /**
  * Locations whose state the board cannot tell: those it does not track as a
- * check (the bottles' and medallions' pads, Ganon), and a dungeon's, when the
- * dungeon was only counted (a manual run, or a race tracked by an earlier version:
- * autotracking checks them one by one otherwise) and it is not finished.
+ * check (the bottles' and medallions' pads, Ganon, a Door Randomizer location
+ * the run's settings leave out), and a dungeon's, when the dungeon was only
+ * counted (a manual run, or a race tracked by an earlier version:
+ * autotracking checks them one by one otherwise) and it is not finished. A
+ * DR location the run tracks is known: checked or not, never with a time.
  */
 const unknownLocations = (
   log: AlttprSpoilerLog,
@@ -232,9 +328,16 @@ const unknownLocations = (
 ): { unknown: Set<string>; counted: ReviewComparison["counted"] } => {
   const unknown = new Set<string>();
   const dungeonPrizes = new Set(DUNGEONS.map((d) => `${d.id}/prize`));
+  const door = new Set(
+    doorLocationsOf(run.settings).locations.map(({ id }) => id),
+  );
   for (const { location } of log.placements) {
     // A prize follows its boss, which the board knows
-    if (!MAP_LOCATIONS.has(location) && !dungeonPrizes.has(location)) {
+    if (
+      !MAP_LOCATIONS.has(location) &&
+      !dungeonPrizes.has(location) &&
+      !door.has(location)
+    ) {
       unknown.add(location);
     }
   }
