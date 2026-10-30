@@ -10,7 +10,10 @@
 // log's `Maps`) and of test/owr-entrance-spoilers/ (… owr-entrances: the
 // fork's own entrance shuffles, each of its modes, a District and a Crossed
 // seed with Mixed, a Crossed one with its edges crossed, Crossed and Lite in
-// the Inverted world, each entrance noted as its `Entrances` says), in the world the app
+// the Inverted world, each entrance noted as its `Entrances` says) and of
+// test/owr-standard-spoilers/ (… owr-standard: the Standard world, its
+// overworld and entrances vanilla, with bonk drops, Mixed, or entrances
+// shuffled), in the world the app
 // solves an OWR run in (drWorld on OWR_DATA, its bonk drops added as the
 // app adds them, `doorAddedOf`).
 //
@@ -65,7 +68,7 @@ const SETS: Readonly<
     {
       readonly crossed?: boolean;
       readonly mixed?: boolean;
-      readonly entrances: boolean;
+      readonly entrances?: boolean;
     }
   >
 > = {
@@ -73,6 +76,7 @@ const SETS: Readonly<
   "owr-entrance-spoilers": { entrances: true },
   "owr-mixed-spoilers": { entrances: false, mixed: true },
   "owr-spoilers": { crossed: false, entrances: false, mixed: false },
+  "owr-standard-spoilers": { crossed: false },
 };
 
 /** Each log, by `<set>/<file>`. */
@@ -91,12 +95,21 @@ const read = (path: string) => {
   return readFixture(set, name);
 };
 
+/** A log's world: Open, Standard or Inverted. */
+const modeOf = (meta: Log["meta"]): "open" | "standard" | "inverted" =>
+  meta.mode === "inverted" || meta.mode === "standard" ? meta.mode : "open";
+
 /** A log's set's kind. */
 const setOf = (path: string) => {
   const set = SETS[path.split("/")[0] ?? ""];
   if (set === undefined) throw new RangeError(`No set for ${path}`);
   return set;
 };
+
+/** Whether a log's entrances are shuffled: its set's, else its meta's. */
+const shuffledLog = (path: string): boolean =>
+  setOf(path).entrances ??
+  (JSON.parse(read(path)) as { meta: Json }).meta.shuffle !== "vanilla";
 
 /** Whether a log's edges are crossed (grouped or unrestricted). */
 const crossedLog = (path: string): boolean => {
@@ -134,6 +147,17 @@ const STRICT_SAFE =
  */
 const DECOUPLED =
   "Insanity: what lies past a cave's exit, which no note links (decoupled), the rest as STRICT_SAFE";
+
+/**
+ * Standard's escape (standard_rules, Rules.py:1728-1747): its rooms' kill
+ * rules read Uncle's item (bomb_escape_rule), `maybe` while Link holds
+ * nothing to fight with; the fork's playthrough counts them in Uncle's own
+ * sphere. Its castle keeps the strict-safe rule (keys.ts: no analysis for
+ * Standard's Hyrule Castle once entrances are shuffled), so Zelda's
+ * delivery waits on its keys.
+ */
+const ESCAPE =
+  "Standard's escape: its kill rules read Uncle's item, nothing held in sphere 1";
 
 /**
  * Where the world's answer is not `yes`, by log: `sphere:location` → the
@@ -264,6 +288,47 @@ const REVIEWED: Readonly<
     },
     why: `Skull Woods, Turtle Rock: ${STRICT_SAFE}`,
   },
+  "owr-standard-spoilers/avianart-0pr3QtXLU.json": {
+    at: {
+      "1:Zelda Pickup": "maybe",
+      "2:Zelda Drop Off": "maybe",
+      "9:Skull Woods - Prize": "maybe",
+      "11:Turtle Rock - Prize": "maybe",
+      "12:Desert Palace - Prize": "maybe",
+    },
+    why: `${ESCAPE}; Hyrule Castle, Skull Woods, Turtle Rock, Desert Palace: ${STRICT_SAFE}`,
+  },
+  "owr-standard-spoilers/avianart-0rrVwugI5.json": {
+    at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    why: ESCAPE,
+  },
+  "owr-standard-spoilers/avianart-AjT8OHdZc.json": {
+    at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    why: ESCAPE,
+  },
+  "owr-standard-spoilers/avianart-CK14WlYnG.json": {
+    at: {
+      "1:Zelda Pickup": "maybe",
+      "2:Zelda Drop Off": "maybe",
+      "15:Ice Block Drop": "maybe",
+      "15:Ice Palace - Freezor Chest": "maybe",
+      "15:Skull Woods - Prize": "maybe",
+      "16:Ice Palace - Prize": "maybe",
+    },
+    why: `${ESCAPE}; Hyrule Castle, Ice Palace, Skull Woods: ${STRICT_SAFE}`,
+  },
+  "owr-standard-spoilers/avianart-mGEeueUjZ.json": {
+    at: {
+      "1:Zelda Pickup": "maybe",
+      "2:Sewers - Secret Room - Middle": "maybe",
+      "2:Zelda Drop Off": "maybe",
+    },
+    why: `${ESCAPE}; Hyrule Castle: ${STRICT_SAFE}`,
+  },
+  "owr-standard-spoilers/avianart-mhKQq39uX.json": {
+    at: { "1:Hyrule Castle - Map Chest": "maybe", "1:Zelda Pickup": "maybe" },
+    why: ESCAPE,
+  },
 };
 
 /** The prize-pack farms taken out of each log (PRIZE_FARM), reviewed. */
@@ -279,6 +344,15 @@ const FARMS: Readonly<Record<string, readonly string[]>> = {
   ],
   "owr-mixed-spoilers/avianart-t8B3wJpHK.json": [
     "1:Lost Woods East Area Crab Drop",
+  ],
+  "owr-standard-spoilers/avianart-0rrVwugI5.json": [
+    "3:Lost Woods East Area Crab Drop",
+  ],
+  "owr-standard-spoilers/avianart-mGEeueUjZ.json": [
+    "3:Hyrule Castle Courtyard Tree Pull",
+  ],
+  "owr-standard-spoilers/avianart-mhKQq39uX.json": [
+    "3:Bumper Cave Area Tree Pull",
   ],
 };
 
@@ -326,6 +400,7 @@ const shuffleOf = (log: Log): OwrShuffle => {
 const owrPoolOf = (meta: Log["meta"]) => ({
   ...poolOf(meta),
   bonkDrops: flag(meta.bonk_drops),
+  mode: modeOf(meta),
   takeAny: String(meta.take_any ?? "none"),
 });
 
@@ -390,7 +465,7 @@ function logOf(name: string): {
     flag(meta.bombbag),
   ]).toEqual([
     "vanilla",
-    set.entrances,
+    shuffledLog(name),
     "noglitches",
     "vanilla",
     "none",
@@ -410,7 +485,7 @@ function logOf(name: string): {
     notes: owrNotesFromSpoiler(
       json as Parameters<typeof owrNotesFromSpoiler>[0],
     ),
-    ...(set.entrances ? { entrances: entranceNotesOf(log) } : {}),
+    ...(shuffledLog(name) ? { entrances: entranceNotesOf(log) } : {}),
   };
 }
 
@@ -436,6 +511,7 @@ const worldOf = (
     {
       ...settingsFor(meta),
       ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
+      ...(meta.mode === "standard" ? { standardMode: true } : {}),
       ...(bonks ? { bonkDrops: true } : {}),
       ...(entrances === undefined
         ? {}
@@ -461,7 +537,7 @@ const worldOf = (
 describe("the Overworld Randomizer's world against its own seeds' playthroughs", () => {
   const logs = LOGS;
 
-  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped, entrances shuffled", () => {
+  it("reads Open, Inverted and Standard seeds, bonk drops, whirlpools and flute spots shuffled and not, edges crossed, screens flipped, entrances shuffled", () => {
     const seen = logs.map((name) => {
       const { meta } = logOf(name).log;
       return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle} ${meta.ow_crossed} ${flag(meta.ow_mixed)} ${meta.shuffle} ${meta.keyshuffle}`;
@@ -496,20 +572,22 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       "open false true random none false vanilla none",
       "open false true vanilla none true vanilla none",
       "open true false vanilla none false vanilla none",
+      "standard false false vanilla none false crossed none",
+      "standard false false vanilla none false dungeonssimple none",
+      "standard false false vanilla none false lite none",
+      "standard false false vanilla none false vanilla none",
+      "standard false false vanilla none true vanilla none",
+      "standard true false vanilla none false vanilla none",
     ]);
   });
 
   it("offers each entrance a shuffled seed moved, and its target; the rest stand", () => {
-    const shuffled = logs.filter((name) => setOf(name).entrances);
-    expect(shuffled).toHaveLength(17);
+    const shuffled = logs.filter(shuffledLog);
+    expect(shuffled).toHaveLength(20);
     const maps = vanillaEntrances(false);
     for (const name of shuffled) {
       const { log, notes, entrances } = logOf(name);
-      const screens = owrScreensOf(
-        OWR_DATA,
-        log.meta.mode === "inverted" ? "inverted" : "open",
-        notes,
-      );
+      const screens = owrScreensOf(OWR_DATA, modeOf(log.meta), notes);
       const shuffle = shuffleOf(log);
       const pool = owrEntrancePool(shuffle, {
         ...owrPoolOf(log.meta),
@@ -580,7 +658,7 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       ).toBeGreaterThan(10);
       const screens = owrScreensOf(
         OWR_DATA,
-        json.meta.mode === "inverted" ? "inverted" : "open",
+        modeOf(json.meta as Log["meta"]),
         notes,
       );
       expect(
@@ -612,11 +690,7 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       expect(moved.length, name).toBeGreaterThan(0);
       // As a player notes them, a crossing per pair: the same links, where
       // Mixed flipped one screen of a pair turned round by its flips
-      const screens = owrScreensOf(
-        OWR_DATA,
-        log.meta.mode === "inverted" ? "inverted" : "open",
-        notes,
-      );
+      const screens = owrScreensOf(OWR_DATA, modeOf(log.meta), notes);
       const crossings = crossingsOf(
         OWR_DATA,
         edges,

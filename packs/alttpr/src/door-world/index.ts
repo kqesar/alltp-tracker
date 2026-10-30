@@ -1164,10 +1164,12 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const added = new Map<string, string[]>();
   if (all.triforceHuntGoal === true || all.trinityGoal === true) {
     added.set("Hyrule Castle Courtyard", [MURAHDAHLA]);
-    // Rules.py:72
+    // Rules.py:72; the fork's Standard waits for Zelda's delivery
+    // (owr:Rules.py:1770-1774)
+    const hunt = "count(triforcePiece, powerStar) >= setting(treasureHunt)";
     locations.set(
       MURAHDAHLA,
-      "count(triforcePiece, powerStar) >= setting(treasureHunt)",
+      owr && mode === "standard" ? and(hunt, "zeldaDelivered") : hunt,
     );
   }
   // OWR's farms and the flute's activation (create_farm_locations,

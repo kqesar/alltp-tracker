@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed|owr-entrances]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed|owr-entrances|owr-standard]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -91,6 +91,10 @@ const OUT_OWR_MIXED = join(
 const OUT_OWR_ENTRANCES = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/owr-entrance-spoilers",
+);
+const OUT_OWR_STANDARD = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-standard-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -260,6 +264,24 @@ export const OWR_ENTRANCE_SEEDS = [
   "DLSrm8B0f",
   "ERKxf6EjS",
   "tZeE1P1Du",
+];
+
+/**
+ * The Standard set (test/owr-standard-spoilers/): avianart.games seeds of
+ * OWR 0.8.0.2 as OWR_SEEDS', in the Standard world, generated 2026-10-30
+ * (`[{"args":{"branch":"OWR","worldstate":"standard","spoiler":"full"}}]`):
+ * its overworld and entrances vanilla, with bonk drops shuffled
+ * (`"bonk_drops":true`), with Mixed (`"mixed":true`), and its entrances
+ * shuffled Crossed, Dungeons + Simple and Lite (`"entranceshuffle":
+ * "crossed"`, `"dungeonssimple"`, `"lite"`).
+ */
+export const OWR_STANDARD_SEEDS = [
+  "AjT8OHdZc",
+  "0rrVwugI5",
+  "mhKQq39uX",
+  "mGEeueUjZ",
+  "0pr3QtXLU",
+  "CK14WlYnG",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
@@ -484,6 +506,12 @@ async function main() {
       OUT_OWR_ENTRANCES,
       await recordAvianart(OWR_ENTRANCE_SEEDS, OUT_OWR_ENTRANCES, OWR_KEYS),
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-entrances): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its entrances shuffled by its own modes. Record again, never edit.",
+    );
+  if (only === undefined || only === "owr-standard")
+    writeIndex(
+      OUT_OWR_STANDARD,
+      await recordAvianart(OWR_STANDARD_SEEDS, OUT_OWR_STANDARD, OWR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-standard): avianart.games seeds' JSON spoilers of the Overworld Randomizer in its Standard world. Record again, never edit.",
     );
   if (only === undefined || only === "doors")
     writeIndex(

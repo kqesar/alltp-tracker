@@ -1899,7 +1899,19 @@ in any of them; what is not `yes` in time is reviewed (`REVIEWED`): key
 doors left strict-safe where the walk does not reach all of a dungeon's
 ways in (a tower behind Skull Woods' back door or Ice Palace's water, a
 castle door on Bumper Cave's ledge), each `yes` once the dungeon's keys
-are held, and Insanity's caves past an exit no note links. The app's side
+are held, and Insanity's caves past an exit no note links. The Standard set
+(`test/owr-standard-spoilers/`, `record-dr-spoilers owr-standard`) holds
+six seeds of its Standard world, which no suite of the fork covers: its
+overworld and entrances vanilla (`AjT8OHdZc`), with bonk drops
+(`0rrVwugI5`), with Mixed (`mhKQq39uX`), and its entrances Crossed
+(`mGEeueUjZ`), Dungeons + Simple (`0pr3QtXLU`) and Lite (`CK14WlYnG`).
+The fork's `standard_rules` (`Rules.py:1693-1784`) is DR's port but for
+Murahdahla, who waits for Zelda's delivery (`:1770-1774`), and the Old Man's
+save point, which its rules carry; both walks hold but the escape's first
+rooms, whose kill rules read Uncle's item (`maybe` with nothing held: the
+fork counts them in Uncle's own sphere), and the strict-safe castle
+behind shuffled entrances. The Crossed seed found the fork's bunny reading
+(above). The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

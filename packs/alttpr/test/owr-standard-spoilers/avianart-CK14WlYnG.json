@@ -1,0 +1,967 @@
+{
+  "meta": {
+    "version": "1.5.7-u",
+    "versions": {
+      "Door": "1.5.7-u",
+      "Overworld": "0.8.0.2-u"
+    },
+    "logic": "noglitches",
+    "mode": "standard",
+    "bombbag": false,
+    "weapons": "random",
+    "flute_mode": "normal",
+    "bow_mode": "progressive",
+    "goal": "ganon",
+    "custom_goals": {
+      "gtentry": null,
+      "ganongoal": null,
+      "pedgoal": null,
+      "murahgoal": null
+    },
+    "ow_layout": "vanilla",
+    "ow_parallel": false,
+    "ow_terrain": false,
+    "ow_crossed": "none",
+    "ow_keepsimilar": false,
+    "ow_mixed": false,
+    "ow_whirlpool": false,
+    "ow_fluteshuffle": "vanilla",
+    "ow_fog": false,
+    "bonk_drops": false,
+    "shuffle_followers": false,
+    "shuffle": "lite",
+    "shuffleganon": true,
+    "shufflelinks": false,
+    "shuffletavern": true,
+    "skullwoods": "original",
+    "linked_drops": "unset",
+    "take_any": "none",
+    "overworld_map": "default",
+    "door_shuffle": "vanilla",
+    "intensity": 3,
+    "door_type_mode": "original",
+    "trap_door_mode": "optional",
+    "key_logic": "partial",
+    "decoupledoors": false,
+    "door_self_loops": false,
+    "dungeon_counters": "default",
+    "item_pool": "normal",
+    "item_functionality": "normal",
+    "beemizer": "0",
+    "gt_crystals": 7,
+    "ganon_crystals": 7,
+    "open_pyramid": "auto",
+    "accessibility": "items",
+    "restricted_boss_items": "none",
+    "hints": false,
+    "mapshuffle": "none",
+    "compassshuffle": "none",
+    "keyshuffle": "none",
+    "bigkeyshuffle": "none",
+    "prizeshuffle": "none",
+    "boss_shuffle": "none",
+    "enemy_shuffle": "none",
+    "enemy_health": "default",
+    "enemy_damage": "default",
+    "any_enemy_logic": "allow_all",
+    "players": 1,
+    "teams": 1,
+    "experimental": false,
+    "dropshuffle": "none",
+    "pottery": "none",
+    "potshuffle": false,
+    "shopsanity": false,
+    "pseudoboots": false,
+    "mirrorscroll": false,
+    "triforcegoal": 0,
+    "triforcepool": 0,
+    "race": false,
+    "user_notes": "",
+    "code": "CAgAA4A4OAAAAAEAAAAJAA==",
+    "seed": 172437518,
+    "limited_run": "none",
+    "limited_run_args": "",
+    "hash": "Shield, Pendant, Shovel, Potion, Hammer",
+    "gentime": 1793398615
+  },
+  "Entrances": [
+    {
+      "entrance": "Links House",
+      "exit": "Links House Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hyrule Castle Secret Entrance Drop",
+      "exit": "Hyrule Castle Secret Entrance",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Hyrule Castle Entrance (South)",
+      "exit": "Hyrule Castle Exit (South)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hyrule Castle Secret Entrance Stairs",
+      "exit": "Hyrule Castle Secret Entrance Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Skull Woods First Section Hole (East)",
+      "exit": "Skull Pinball",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Skull Woods First Section Hole (West)",
+      "exit": "Skull Pot Circle",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Skull Woods First Section Hole (North)",
+      "exit": "Skull Back Drop",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Skull Woods Second Section Hole",
+      "exit": "Skull Left Drop",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Skull Woods First Section Door",
+      "exit": "Skull Woods Second Section Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Skull Woods Second Section Door (East)",
+      "exit": "Skull Woods Second Section Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Skull Woods Second Section Door (West)",
+      "exit": "Skull Woods First Section Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Bat Cave Cave",
+      "exit": "Sanctuary Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Bat Cave Drop",
+      "exit": "Sewer Drop",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "North Fairy Cave",
+      "exit": "North Fairy Cave Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "North Fairy Cave Drop",
+      "exit": "North Fairy Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Sanctuary",
+      "exit": "Lumberjack Tree Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Sanctuary Grave",
+      "exit": "Lumberjack Tree (top)",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Lost Woods Hideout Stump",
+      "exit": "Lost Woods Hideout Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Lost Woods Hideout Drop",
+      "exit": "Lost Woods Hideout (top)",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Kakariko Well Cave",
+      "exit": "Bat Cave Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Kakariko Well Drop",
+      "exit": "Bat Cave (right)",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Lumberjack Tree Cave",
+      "exit": "Kakariko Well Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Lumberjack Tree Tree",
+      "exit": "Kakariko Well (top)",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Pyramid Entrance",
+      "exit": "Pyramid Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Pyramid Hole",
+      "exit": "Pyramid",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Blacksmiths Hut",
+      "exit": "Blacksmiths Hut",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Waterfall of Wishing",
+      "exit": "Big Bomb Shop",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Tavern North",
+      "exit": "Mire Shed",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Mimic Cave",
+      "exit": "C-Shaped House",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Ice Rod Cave",
+      "exit": "Chest Game",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Chicken House",
+      "exit": "Cave 45",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Cave 45",
+      "exit": "Dam",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Aginahs Cave",
+      "exit": "Tavern",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Potion Shop",
+      "exit": "Mimic Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Brewery",
+      "exit": "Sick Kids House",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Mini Moldorm Cave",
+      "exit": "Checkerboard Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Checkerboard Cave",
+      "exit": "Mini Moldorm Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Sahasrahlas Hut",
+      "exit": "Chicken House",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Big Bomb Shop",
+      "exit": "Waterfall of Wishing",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Bonk Rock Cave",
+      "exit": "Kings Grave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Kings Grave",
+      "exit": "Hype Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Pyramid Fairy",
+      "exit": "Blinds Hideout",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Hammer Peg Cave",
+      "exit": "Ice Rod Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Graveyard Cave",
+      "exit": "Potion Shop",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Blinds Hideout",
+      "exit": "Aginahs Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Chest Game",
+      "exit": "Pyramid Fairy",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "C-Shaped House",
+      "exit": "Spike Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Dam",
+      "exit": "Hammer Peg Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Spike Cave",
+      "exit": "Bonk Rock Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Library",
+      "exit": "Brewery",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Mire Shed",
+      "exit": "Graveyard Cave",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Sick Kids House",
+      "exit": "Library",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Hype Cave",
+      "exit": "Sahasrahlas Hut",
+      "direction": "entrance"
+    },
+    {
+      "entrance": "Spectacle Rock Cave Peak",
+      "exit": "Old Man Cave Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Spectacle Rock Cave (Bottom)",
+      "exit": "Hyrule Castle Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Two Brothers House (East)",
+      "exit": "Hyrule Castle Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Old Man House (Top)",
+      "exit": "Agahnims Tower Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Desert Palace Entrance (North)",
+      "exit": "Eastern Palace Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Spiral Cave (Bottom)",
+      "exit": "Tower of Hera Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Death Mountain Return Cave (East)",
+      "exit": "Desert Palace Exit (South)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Old Man Cave (West)",
+      "exit": "Desert Palace Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Old Man Cave (East)",
+      "exit": "Desert Palace Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Paradox Cave (Middle)",
+      "exit": "Desert Palace Exit (North)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Dark Death Mountain Ledge (West)",
+      "exit": "Ice Palace Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Ganons Tower",
+      "exit": "Misery Mire Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Palace of Darkness",
+      "exit": "Ganons Tower Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Skull Woods Final Section",
+      "exit": "Turtle Rock Exit (Front)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Misery Mire",
+      "exit": "Turtle Rock Isolated Ledge Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Dark Death Mountain Ledge (East)",
+      "exit": "Turtle Rock Ledge Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Bumper Cave (Bottom)",
+      "exit": "Turtle Rock Ledge Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Swamp Palace",
+      "exit": "Skull Woods Final Section Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Desert Palace Entrance (East)",
+      "exit": "Two Brothers House Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Eastern Palace",
+      "exit": "Two Brothers House Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Turtle Rock Isolated Ledge Entrance",
+      "exit": "Death Mountain Return Cave Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hookshot Cave",
+      "exit": "Death Mountain Return Cave Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hookshot Cave Back Entrance",
+      "exit": "Bumper Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Thieves Town",
+      "exit": "Bumper Cave Exit (Bottom)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Bumper Cave (Top)",
+      "exit": "Superbunny Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Superbunny Cave (Top)",
+      "exit": "Superbunny Cave Exit (Bottom)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Old Man House (Bottom)",
+      "exit": "Old Man Cave Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Two Brothers House (West)",
+      "exit": "Old Man House Exit (Bottom)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Fairy Ascension Cave (Bottom)",
+      "exit": "Old Man House Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Turtle Rock",
+      "exit": "Spectacle Rock Cave Exit (Peak)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Ice Palace",
+      "exit": "Spectacle Rock Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Superbunny Cave (Bottom)",
+      "exit": "Spectacle Rock Cave Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Paradox Cave (Top)",
+      "exit": "Paradox Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Spiral Cave",
+      "exit": "Paradox Cave Exit (Middle)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Desert Palace Entrance (West)",
+      "exit": "Paradox Cave Exit (Bottom)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Fairy Ascension Cave (Top)",
+      "exit": "Hookshot Cave Back Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Elder House (East)",
+      "exit": "Hookshot Cave Front Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Desert Palace Entrance (South)",
+      "exit": "Fairy Ascension Cave Exit (Bottom)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Spectacle Rock Cave",
+      "exit": "Fairy Ascension Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Agahnims Tower",
+      "exit": "Spiral Cave Exit (Top)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hyrule Castle Entrance (West)",
+      "exit": "Spiral Cave Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Paradox Cave (Bottom)",
+      "exit": "Elder House Exit (East)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Hyrule Castle Entrance (East)",
+      "exit": "Elder House Exit (West)",
+      "direction": "both"
+    },
+    {
+      "entrance": "Elder House (West)",
+      "exit": "Palace of Darkness Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Death Mountain Return Cave (West)",
+      "exit": "Swamp Palace Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Tower of Hera",
+      "exit": "Thieves Town Exit",
+      "direction": "both"
+    },
+    {
+      "entrance": "Links House",
+      "exit": "Chris Houlihan Room Exit",
+      "direction": "exit"
+    }
+  ],
+  "Light World": {
+    "Master Sword Pedestal": "Bombs (3)",
+    "Mushroom": "Shovel",
+    "Ether Tablet": "Piece of Heart",
+    "Spectacle Rock": "Bombs (10)",
+    "Old Man": "Rupees (50)",
+    "Floating Island": "Sanctuary Heart Container",
+    "King Zora": "Arrows (10)",
+    "Zora's Ledge": "Rupees (20)",
+    "Bottle Merchant": "Bombs (3)",
+    "Flute Activation": "Ocarina (Activated)",
+    "Maze Race": "Rupees (50)",
+    "Flute Spot": "Hookshot",
+    "Hobo": "Piece of Heart",
+    "Desert Ledge": "Piece of Heart",
+    "Bombos Tablet": "Piece of Heart",
+    "Lake Hylia Island": "Piece of Heart",
+    "Purple Chest": "Bombs (3)",
+    "Sunken Treasure": "Bombs (3)"
+  },
+  "Dark World": {
+    "Bumper Cave Ledge": "Bombs (3)",
+    "Catfish": "Boss Heart Container",
+    "Pyramid": "Progressive Shield",
+    "Digging Game": "Piece of Heart",
+    "Stumpy": "Rupees (50)"
+  },
+  "Caves": {
+    "Lost Woods Hideout": "Boss Heart Container",
+    "Lumberjack Tree": "Boss Heart Container",
+    "Spectacle Rock Cave": "Piece of Heart",
+    "Spiral Cave": "Rupees (20)",
+    "Mimic Cave": "Progressive Sword",
+    "Paradox Cave Lower - Far Left": "Bombs (3)",
+    "Paradox Cave Lower - Left": "Rupees (5)",
+    "Paradox Cave Lower - Right": "Rupees (5)",
+    "Paradox Cave Lower - Far Right": "Piece of Heart",
+    "Paradox Cave Lower - Middle": "Hammer",
+    "Paradox Cave Upper - Left": "Single Arrow",
+    "Paradox Cave Upper - Right": "Bottle (Fairy)",
+    "Waterfall Fairy - Left": "Piece of Heart",
+    "Waterfall Fairy - Right": "Ice Rod",
+    "Bonk Rock Cave": "Rupees (20)",
+    "Graveyard Cave": "Rupees (20)",
+    "King's Tomb": "Rupees (20)",
+    "Potion Shop": "Rupees (20)",
+    "Kakariko Well - Left": "Rupees (20)",
+    "Kakariko Well - Middle": "Boss Heart Container",
+    "Kakariko Well - Right": "Ocarina",
+    "Kakariko Well - Bottom": "Rupees (300)",
+    "Kakariko Well - Top": "Rupees (20)",
+    "Blind's Hideout - Left": "Rupees (20)",
+    "Blind's Hideout - Right": "Rupees (20)",
+    "Blind's Hideout - Far Left": "Rupees (5)",
+    "Blind's Hideout - Far Right": "Rupees (20)",
+    "Blind's Hideout - Top": "Bottle (Good Bee)",
+    "Chicken House": "Rupees (20)",
+    "Sick Kid": "Pegasus Boots",
+    "Kakariko Tavern": "Boss Heart Container",
+    "Link's Uncle": "Progressive Bow",
+    "Secret Passage": "Piece of Heart",
+    "Sahasrahla's Hut - Left": "Book of Mudora",
+    "Sahasrahla's Hut - Middle": "Rupees (20)",
+    "Sahasrahla's Hut - Right": "Piece of Heart",
+    "Sahasrahla": "Piece of Heart",
+    "Blacksmith": "Rupees (5)",
+    "Magic Bat": "Bombs (3)",
+    "Library": "Rupees (20)",
+    "Link's House": "Piece of Heart",
+    "Checkerboard Cave": "Rupees (300)",
+    "Aginah's Cave": "Piece of Heart",
+    "Cave 45": "Rupees (100)",
+    "Mini Moldorm Cave - Far Left": "Rupees (20)",
+    "Mini Moldorm Cave - Left": "Rupees (20)",
+    "Mini Moldorm Cave - Right": "Bombs (3)",
+    "Mini Moldorm Cave - Far Right": "Progressive Armor",
+    "Mini Moldorm Cave - Generous Guy": "Magic Powder",
+    "Ice Rod Cave": "Boss Heart Container",
+    "Floodgate Chest": "Boss Heart Container",
+    "Spike Cave": "Rupees (20)",
+    "Hookshot Cave - Bottom Right": "Lamp",
+    "Hookshot Cave - Top Right": "Rupees (50)",
+    "Hookshot Cave - Top Left": "Bottle (Bee)",
+    "Hookshot Cave - Bottom Left": "Rupees (50)",
+    "Superbunny Cave - Top": "Bombs (3)",
+    "Superbunny Cave - Bottom": "Arrows (10)",
+    "Chest Game": "Arrows (10)",
+    "C-Shaped House": "Arrows (10)",
+    "Brewery": "Piece of Heart",
+    "Pyramid Fairy - Left": "Progressive Glove",
+    "Pyramid Fairy - Right": "Rupees (20)",
+    "Ganon": "Triforce",
+    "Peg Cave": "Rupees (20)",
+    "Mire Shed - Left": "Piece of Heart",
+    "Mire Shed - Right": "Piece of Heart",
+    "Hype Cave - Top": "Progressive Shield",
+    "Hype Cave - Middle Right": "Progressive Sword",
+    "Hype Cave - Middle Left": "Piece of Heart",
+    "Hype Cave - Bottom": "Piece of Heart",
+    "Hype Cave - Generous Guy": "Bombs (3)"
+  },
+  "Hyrule Castle": {
+    "Hyrule Castle - Map Chest": "Rupees (300)",
+    "Hyrule Castle - Boomerang Chest": "Rupees (50)",
+    "Hyrule Castle - Zelda's Chest": "Piece of Heart",
+    "Sewers - Dark Cross": "Small Key (Escape)",
+    "Sewers - Secret Room - Left": "Piece of Heart",
+    "Sewers - Secret Room - Middle": "Map (Escape)",
+    "Sewers - Secret Room - Right": "Blue Boomerang",
+    "Sanctuary": "Rupees (300)"
+  },
+  "Eastern Palace": {
+    "Eastern Palace - Cannonball Chest": "Cane of Byrna",
+    "Eastern Palace - Map Chest": "Map (Eastern Palace)",
+    "Eastern Palace - Compass Chest": "Big Key (Eastern Palace)",
+    "Eastern Palace - Big Chest": "Compass (Eastern Palace)",
+    "Eastern Palace - Big Key Chest": "Rupees (20)",
+    "Eastern Palace - Boss": "Bug Catching Net",
+    "Eastern Palace - Prize": "Crystal 1"
+  },
+  "Desert Palace": {
+    "Desert Palace - Compass Chest": "Map (Desert Palace)",
+    "Desert Palace - Big Key Chest": "Bottle",
+    "Desert Palace - Map Chest": "Compass (Desert Palace)",
+    "Desert Palace - Torch": "Big Key (Desert Palace)",
+    "Desert Palace - Big Chest": "Small Key (Desert Palace)",
+    "Desert Palace - Boss": "Rupees (20)",
+    "Desert Palace - Prize": "Crystal 6"
+  },
+  "Tower of Hera": {
+    "Tower of Hera - Map Chest": "Big Key (Tower of Hera)",
+    "Tower of Hera - Basement Cage": "Map (Tower of Hera)",
+    "Tower of Hera - Big Key Chest": "Flippers",
+    "Tower of Hera - Compass Chest": "Compass (Tower of Hera)",
+    "Tower of Hera - Big Chest": "Rupees (300)",
+    "Tower of Hera - Boss": "Small Key (Tower of Hera)",
+    "Tower of Hera - Prize": "Crystal 4"
+  },
+  "Agahnims Tower": {
+    "Castle Tower - Room 03": "Small Key (Agahnims Tower)",
+    "Castle Tower - Dark Maze": "Small Key (Agahnims Tower)",
+    "Agahnim 1": "Beat Agahnim 1"
+  },
+  "Palace of Darkness": {
+    "Palace of Darkness - Shooter Room": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - The Arena - Bridge": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - The Arena - Ledge": "Map (Palace of Darkness)",
+    "Palace of Darkness - Map Chest": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - Stalfos Basement": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - Big Key Chest": "Compass (Palace of Darkness)",
+    "Palace of Darkness - Dark Maze - Top": "Moon Pearl",
+    "Palace of Darkness - Dark Maze - Bottom": "Rupees (20)",
+    "Palace of Darkness - Big Chest": "Rupees (50)",
+    "Palace of Darkness - Compass Chest": "Progressive Sword",
+    "Palace of Darkness - Dark Basement - Left": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - Dark Basement - Right": "Big Key (Palace of Darkness)",
+    "Palace of Darkness - Harmless Hellway": "Small Key (Palace of Darkness)",
+    "Palace of Darkness - Boss": "Boss Heart Container",
+    "Palace of Darkness - Prize": "Green Pendant"
+  },
+  "Thieves Town": {
+    "Thieves' Town - Map Chest": "Map (Thieves Town)",
+    "Thieves' Town - Ambush Chest": "Arrows (10)",
+    "Thieves' Town - Compass Chest": "Big Key (Thieves Town)",
+    "Thieves' Town - Big Key Chest": "Small Key (Thieves Town)",
+    "Thieves' Town - Boss": "Arrows (10)",
+    "Thieves' Town - Prize": "Crystal 7",
+    "Thieves' Town - Attic": "Compass (Thieves Town)",
+    "Thieves' Town - Blind's Cell": "Rupees (20)",
+    "Thieves' Town - Big Chest": "Boss Heart Container"
+  },
+  "Skull Woods": {
+    "Skull Woods - Map Chest": "Big Key (Skull Woods)",
+    "Skull Woods - Big Chest": "Small Key (Skull Woods)",
+    "Skull Woods - Pinball Room": "Progressive Armor",
+    "Skull Woods - Pot Prison": "Small Key (Skull Woods)",
+    "Skull Woods - Compass Chest": "Small Key (Skull Woods)",
+    "Skull Woods - Big Key Chest": "Piece of Heart",
+    "Skull Woods - Bridge Room": "Compass (Skull Woods)",
+    "Skull Woods - Boss": "Map (Skull Woods)",
+    "Skull Woods - Prize": "Crystal 5"
+  },
+  "Swamp Palace": {
+    "Swamp Palace - Entrance": "Small Key (Swamp Palace)",
+    "Swamp Palace - Map Chest": "Map (Swamp Palace)",
+    "Swamp Palace - Big Chest": "Compass (Swamp Palace)",
+    "Swamp Palace - Compass Chest": "Red Boomerang",
+    "Swamp Palace - Big Key Chest": "Mushroom",
+    "Swamp Palace - West Chest": "Bombs (3)",
+    "Swamp Palace - Flooded Room - Left": "Ether",
+    "Swamp Palace - Flooded Room - Right": "Fire Rod",
+    "Swamp Palace - Waterfall Room": "Arrows (10)",
+    "Swamp Palace - Boss": "Big Key (Swamp Palace)",
+    "Swamp Palace - Prize": "Crystal 2"
+  },
+  "Ice Palace": {
+    "Ice Palace - Compass Chest": "Progressive Sword",
+    "Ice Palace - Big Key Chest": "Big Key (Ice Palace)",
+    "Ice Palace - Spike Room": "Map (Ice Palace)",
+    "Ice Palace - Map Chest": "Small Key (Ice Palace)",
+    "Ice Palace - Freezor Chest": "Progressive Glove",
+    "Ice Palace - Iced T Room": "Compass (Ice Palace)",
+    "Ice Palace - Big Chest": "Small Key (Ice Palace)",
+    "Ice Palace - Boss": "Quake",
+    "Ice Palace - Prize": "Crystal 3"
+  },
+  "Misery Mire": {
+    "Misery Mire - Main Lobby": "Piece of Heart",
+    "Misery Mire - Big Chest": "Cane of Somaria",
+    "Misery Mire - Map Chest": "Compass (Misery Mire)",
+    "Misery Mire - Spike Chest": "Small Key (Misery Mire)",
+    "Misery Mire - Bridge Chest": "Small Key (Misery Mire)",
+    "Misery Mire - Compass Chest": "Map (Misery Mire)",
+    "Misery Mire - Big Key Chest": "Big Key (Misery Mire)",
+    "Misery Mire - Boss": "Small Key (Misery Mire)",
+    "Misery Mire - Prize": "Blue Pendant"
+  },
+  "Turtle Rock": {
+    "Turtle Rock - Compass Chest": "Compass (Turtle Rock)",
+    "Turtle Rock - Roller Room - Left": "Map (Turtle Rock)",
+    "Turtle Rock - Roller Room - Right": "Big Key (Turtle Rock)",
+    "Turtle Rock - Chain Chomps": "Small Key (Turtle Rock)",
+    "Turtle Rock - Big Key Chest": "Piece of Heart",
+    "Turtle Rock - Big Chest": "Progressive Bow",
+    "Turtle Rock - Crystaroller Room": "Bombs (3)",
+    "Turtle Rock - Eye Bridge - Bottom Left": "Bombos",
+    "Turtle Rock - Eye Bridge - Bottom Right": "Small Key (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Top Left": "Small Key (Turtle Rock)",
+    "Turtle Rock - Eye Bridge - Top Right": "Small Key (Turtle Rock)",
+    "Turtle Rock - Boss": "Bombs (3)",
+    "Turtle Rock - Prize": "Red Pendant"
+  },
+  "Ganons Tower": {
+    "Ganons Tower - Bob's Torch": "Magic Mirror",
+    "Ganons Tower - Hope Room - Left": "Small Key (Ganons Tower)",
+    "Ganons Tower - Hope Room - Right": "Rupees (20)",
+    "Ganons Tower - Big Chest": "Rupee (1)",
+    "Ganons Tower - Bob's Chest": "Rupees (20)",
+    "Ganons Tower - Tile Room": "Small Key (Ganons Tower)",
+    "Ganons Tower - Compass Room - Top Left": "Bombs (3)",
+    "Ganons Tower - Compass Room - Top Right": "Map (Ganons Tower)",
+    "Ganons Tower - Compass Room - Bottom Left": "Bombs (3)",
+    "Ganons Tower - Compass Room - Bottom Right": "Arrows (10)",
+    "Ganons Tower - Map Chest": "Rupee (1)",
+    "Ganons Tower - Firesnake Room": "Magic Upgrade (1/2)",
+    "Ganons Tower - DMs Room - Top Left": "Cape",
+    "Ganons Tower - DMs Room - Top Right": "Arrows (10)",
+    "Ganons Tower - DMs Room - Bottom Left": "Arrows (10)",
+    "Ganons Tower - DMs Room - Bottom Right": "Small Key (Ganons Tower)",
+    "Ganons Tower - Randomizer Room - Top Left": "Arrows (10)",
+    "Ganons Tower - Randomizer Room - Top Right": "Progressive Shield",
+    "Ganons Tower - Randomizer Room - Bottom Left": "Rupees (20)",
+    "Ganons Tower - Randomizer Room - Bottom Right": "Boss Heart Container",
+    "Ganons Tower - Big Key Room - Left": "Rupees (20)",
+    "Ganons Tower - Big Key Room - Right": "Arrows (10)",
+    "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)",
+    "Ganons Tower - Mini Helmasaur Room - Left": "Rupees (20)",
+    "Ganons Tower - Mini Helmasaur Room - Right": "Small Key (Ganons Tower)",
+    "Ganons Tower - Pre-Moldorm Chest": "Compass (Ganons Tower)",
+    "Ganons Tower - Validation Chest": "Bombs (3)",
+    "Agahnim 2": "Beat Agahnim 2"
+  },
+  "Starting Inventory": [],
+  "Special": {
+    "Misery Mire": "Ether",
+    "Turtle Rock": "Bombos"
+  },
+  "Shops": [
+    {
+      "location": "Capacity Upgrade",
+      "type": "Shop",
+      "item_0": "Bomb Upgrade (+5) u2014 100",
+      "item_1": "Arrow Upgrade (+5) u2014 100"
+    }
+  ],
+  "Bosses": {
+    "Eastern Palace": "Armos Knights",
+    "Desert Palace": "Lanmolas",
+    "Tower of Hera": "Moldorm",
+    "Hyrule Castle": "Agahnim",
+    "Palace of Darkness": "Helmasaur King",
+    "Swamp Palace": "Arrghus",
+    "Skull Woods": "Mothula",
+    "Thieves Town": "Blind",
+    "Ice Palace": "Kholdstare",
+    "Misery Mire": "Vitreous",
+    "Turtle Rock": "Trinexx",
+    "Ganons Tower Basement": "Armos Knights",
+    "Ganons Tower Middle": "Lanmolas",
+    "Ganons Tower Top": "Moldorm",
+    "Ganons Tower": "Agahnim 2",
+    "Ganon": "Ganon"
+  },
+  "playthrough": [
+    [],
+    {
+      "Link's Uncle": "Progressive Bow",
+      "Zelda Pickup": "Zelda Herself"
+    },
+    {
+      "Zelda Drop Off": "Zelda Delivered"
+    },
+    {
+      "Mushroom": "Shovel"
+    },
+    {
+      "Flute Spot": "Hookshot"
+    },
+    {
+      "Hookshot Cave - Bottom Right": "Lamp",
+      "Palace of Darkness - Compass Chest": "Progressive Sword",
+      "Hookshot Cave - Top Left": "Bottle (Bee)"
+    },
+    {
+      "Tower of Hera - Prize": "Crystal 4",
+      "Palace of Darkness - Dark Maze - Top": "Moon Pearl",
+      "Agahnim 1": "Beat Agahnim 1",
+      "Tower of Hera - Big Key Chest": "Flippers"
+    },
+    {
+      "Pyramid Fairy - Left": "Progressive Glove",
+      "Sick Kid": "Pegasus Boots",
+      "Kiki": "Pick Up Kiki"
+    },
+    {
+      "Kakariko Well - Right": "Ocarina",
+      "Kiki Assistance": "Dark Palace Opened",
+      "Desert Palace - Prize": "Crystal 6"
+    },
+    {
+      "Flute Activation": "Ocarina (Activated)",
+      "Ganons Tower - Bob's Torch": "Magic Mirror"
+    },
+    {
+      "Attic Cracked Floor": "Shining Light",
+      "Eastern Palace - Prize": "Crystal 1",
+      "Hype Cave - Middle Right": "Progressive Sword",
+      "Paradox Cave Lower - Middle": "Hammer",
+      "Floodgate": "Open Floodgate",
+      "Suspicious Maiden": "Maiden Rescued"
+    },
+    {
+      "Ganons Tower - DMs Room - Top Left": "Cape",
+      "Revealing Light": "Maiden Unmasked"
+    },
+    {
+      "Trench 1 Switch": "Trench 1 Filled",
+      "Thieves' Town - Prize": "Crystal 7"
+    },
+    {
+      "Swamp Drain": "Drained Swamp"
+    },
+    {
+      "Swamp Palace - Prize": "Crystal 2",
+      "Swamp Palace - Flooded Room - Right": "Fire Rod"
+    },
+    {
+      "Skull Woods - Prize": "Crystal 5",
+      "Ice Palace - Freezor Chest": "Progressive Glove",
+      "Ice Block Drop": "Convenient Block"
+    },
+    {
+      "Mini Moldorm Cave - Generous Guy": "Magic Powder",
+      "Ice Palace - Prize": "Crystal 3"
+    },
+    {
+      "Misery Mire - Big Chest": "Cane of Somaria"
+    },
+    {
+      "Agahnim 2": "Beat Agahnim 2"
+    },
+    {
+      "Ganon": "Triforce"
+    }
+  ],
+  "Overworld": [],
+  "Whirlpools": [],
+  "Maps": []
+}

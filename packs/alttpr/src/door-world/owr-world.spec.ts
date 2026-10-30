@@ -1,4 +1,4 @@
-import type { Settings } from "@alltp/engine";
+import type { Settings, State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { OWR_FLIP_SCREENS, owrFlipGroups } from "../door-rando/owr-flips";
 import { solveFacts } from "../facts";
@@ -47,6 +47,37 @@ const settings = (mode: Mode): Settings => ({
 const overworld = OWR_DATA.overworld;
 
 describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
+  it("keeps Murahdahla waiting for Zelda's delivery in the fork's Standard", () => {
+    // owr:Rules.py:1770-1774, beside Rules.py:72's pieces; DR's has no such
+    // rule. With nothing to fight with, the escape (and her delivery) is
+    // not sure, while the courtyard is reached
+    const hunt = (mode: Mode) =>
+      drWorld(
+        {
+          ...settings(mode),
+          ...OWR_DEFAULTS,
+          treasureHunt: 20,
+          triforceHuntGoal: true,
+        },
+        { data: OWR_DATA, regions: ["Hyrule Castle Courtyard"] },
+      );
+    const at = (mode: Mode, state: State) =>
+      solveFacts(hunt(mode), {
+        ...state,
+        heartContainer: 3,
+        triforcePiece: 20,
+      });
+    const bare = at("standard", {});
+    expect(bare.location(regionProbeId("Hyrule Castle Courtyard"))).toBe("yes");
+    expect(bare.location("murahdahla")).not.toBe("yes");
+    expect(
+      at("standard", everything(settingsFromUpstream("standard"))).location(
+        "murahdahla",
+      ),
+    ).toBe("yes");
+    expect(at("open", {}).location("murahdahla")).toBe("yes");
+  });
+
   it("links every edge with its vanilla partner, both ways", () => {
     for (const mode of ["open", "inverted"] as const) {
       const c = vanillaConnections(OWR_DATA, mode);
