@@ -37,6 +37,7 @@
       "!packs/alttpr/src/door-rando/locations.json",
       "!packs/alttpr/src/door-rando/world",
       "!packs/alttpr/test/dr-seeds",
+      "!packs/alttpr/test/dr-door-spoilers",
       "!packs/sm/test/spoilers",
       "!packages/archipelago/test/fixtures",
       "!packages/archipelago/test/datapackages",

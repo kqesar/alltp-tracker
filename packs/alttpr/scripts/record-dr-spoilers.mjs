@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -44,6 +44,16 @@
 // race): its permalink serves DR's JSON spoiler whole, cut to what the
 // contract reads: meta, Entrances, the locations by region, Special,
 // Starting Inventory, Shops, Bosses and the playthrough.
+//
+// The door-shuffle set (test/dr-door-spoilers/): no spoiler of a door-shuffled
+// race was found (the door-shuffled races of racetime.gg, about 2 to 3 % of
+// the DR races, run on Hyrule Town Hall and avianart seeds whose permalinks
+// keep their meta alone; the spoiler races above are vanilla doors), so it
+// holds avianart.games seeds generated for these fixtures on
+// 2026-10-30, not races: the door presets players race (the doors league's
+// and ladder's partitioned, Lightspeed's and Kekpriest's crossed) and the
+// customizer's basic, partitioned and crossed at each intensity, each
+// spoiler cut to the keys above and its Doors, Lobbies and DoorTypes.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -57,6 +67,10 @@ const OUT = join(
 const OUT_ENTRANCES = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/dr-entrance-spoilers",
+);
+const OUT_DOORS = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/dr-door-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -105,6 +119,30 @@ export const ENTRANCE_RACES = [
 export const AVIANART_SEEDS = [
   // "crosskeys": crossed entrances, keysanity, doors vanilla
   "7E8eFbBNH",
+];
+
+/**
+ * avianart.games seeds of the door shuffles, generated on 2026-10-30 for
+ * these fixtures (DR 1.5.8-u, not races): a preset's (`?action=generate&
+ * preset=`) or the customizer's (`?action=generate`, its settings named).
+ */
+export const DOOR_SEEDS = [
+  // basic, intensity 1, open (customizer)
+  "D14rBE1uq",
+  // basic, intensity 2, open (customizer)
+  "giw5Y13cP",
+  // basic, intensity 3, door types all, keysanity (customizer)
+  "1d6rBFvOW",
+  // partitioned, intensity 1, standard: "DR Beginner Week 1 & 2" (doors league)
+  "xd8m0E50c",
+  // partitioned, intensity 2, standard: "Ladder Beginner Doors"
+  "w6Jx8UcW6",
+  // crossed, intensity 2, open, keysanity (customizer)
+  "uMJQnKFrH",
+  // crossed, intensity 3, open (customizer)
+  "CURaRjUhM",
+  // crossed, intensity 3, standard, door types all: "Lightspeed w/ Crossed Doors"
+  "fKa1LLrNU",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
@@ -231,11 +269,18 @@ async function recordRaces(races, out) {
   return index;
 }
 
+/** What the door contract reads beside `KEPT_KEYS`. */
+const DOOR_KEYS = ["Doors", "Lobbies", "DoorTypes"];
+
 /**
- * Records avianart.games seeds' JSON spoilers, cut to `KEPT_KEYS`.
+ * Records avianart.games seeds' JSON spoilers, cut to `KEPT_KEYS` (and
+ * `extra`), into `out`.
  * @param {readonly string[]} hashes
+ * @param {string} out
+ * @param {readonly string[]} extra
  */
-async function recordAvianart(hashes) {
+async function recordAvianart(hashes, out = OUT_ENTRANCES, extra = []) {
+  mkdirSync(out, { recursive: true });
   const recorded = new Date().toISOString().slice(0, 10);
   /** @type {Record<string, unknown>} */
   const index = {};
@@ -245,10 +290,10 @@ async function recordAvianart(hashes) {
     const spoiler = json?.response?.spoiler;
     if (spoiler === undefined || spoiler.playthrough === undefined)
       throw new Error(`${hash}: no whole spoiler (a race seed's?)`);
-    const kept = KEPT_KEYS.filter((key) => key in spoiler);
+    const kept = [...KEPT_KEYS, ...extra].filter((key) => key in spoiler);
     const name = `avianart-${hash}.json`;
     writeFileSync(
-      join(OUT_ENTRANCES, name),
+      join(out, name),
       `${JSON.stringify(Object.fromEntries(kept.map((key) => [key, spoiler[key]])), null, 2)}\n`,
     );
     index[name] = {
@@ -292,6 +337,12 @@ async function main() {
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (vanilla|entrances): spoiler races' DR text logs and avianart.games seeds' JSON spoilers, entrances shuffled. Record again, never edit.",
     );
   }
+  if (only === undefined || only === "doors")
+    writeIndex(
+      OUT_DOORS,
+      await recordAvianart(DOOR_SEEDS, OUT_DOORS, DOOR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (doors): avianart.games seeds' JSON spoilers, doors shuffled. Record again, never edit.",
+    );
 }
 
 if (
