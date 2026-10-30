@@ -1037,7 +1037,14 @@ maps and compasses, which set the same bits; the map HUD counter; glitched
 logics' flags). A seed of 1.5.6 or 1.5.7 is read with these rules, since each
 only asks more (the kill chest; the drop's lamp, which the west room asked
 from the east already): the world never says yes where such a seed's logic
-says no.
+says no. One change of 1.5.7 asks less: its vanilla Inverted world links
+the Dark Sanctuary's exit to the place of its entrance (3c4307e,
+`EntranceShuffle2.py:171-176` at 1.5.8), which 1.5.6 left to the shuffles
+(`:222-235`), so its save point led nowhere. The world grants it only to a
+seed known to be 1.5.7's or later: its setting `drVersion` (DR's title
+digits, 156 by default, for 1.5.6, an older release or none known) comes
+from the run's `doorVersion`, which a seed read tells (the ROM's version
+text or title, a spoiler's meta).
 
 **The ROM.** DR names its seeds `DR` and its version's first three digits,
 then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1452-1456`); OWR
@@ -1234,11 +1241,10 @@ connections swap as `link_entrances_new` swaps them, the flute leaves from
 the dark world and the mirror from the light, the bunny is the light
 world's. `test/inverted` is held but `TestInvertedTurtleRock` (every test
 disabled upstream) and `TestInvertedBombRules` (code, no case), with the
-cases upstream's own world answers otherwise: DR's vanilla Inverted world
-never links the Dark Sanctuary's exit (`do_vanilla_connections`; only a
-shuffle does, `EntranceShuffle2.py:216-229`), so its save point leads
-nowhere, and DR names the castle's entrance `Agahnims Tower` whatever it
-leads to. `drWorld`'s `connections` option builds the world on other
+cases upstream's own world answers otherwise: DR names the castle's
+entrance `Agahnims Tower` whatever it leads to. The tests run at 1.5.8
+(`drVersion` 158), whose vanilla Inverted world links the Dark Sanctuary's
+exit (below). `drWorld`'s `connections` option builds the world on other
 connections than the vanilla ones; its `dropsAndPots` adds a run's pots and
 enemy drops to their regions, as `adjust_locations` does, with the rules the
 translation read for them by name (`pot_rules`, `drop_rules`, the dark rooms'

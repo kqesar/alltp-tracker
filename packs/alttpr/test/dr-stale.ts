@@ -20,8 +20,6 @@ const WHY = {
     "no Moon Pearl: a dark world dungeon's location asks it (set_bunny_rules, Rules.py:2191-2196)",
   byrna:
     "the Cane of Byrna kills Mire 2's wizzrobes with the pool's magic (the kill room's rule, EnemyLogic.py)",
-  darkSanctuary:
-    "DR's vanilla Inverted world never links the Dark Sanctuary's exit (do_vanilla_connections, EntranceShuffle2.py:162-170; only a shuffle does, :216-229): its save point leads nowhere",
   events:
     "TestDungeon never sweeps events: the Convenient Block or Maiden Unmasked is no item of the case",
   iceberg:
@@ -378,61 +376,6 @@ export const STALE: Readonly<Record<string, string>> = {
     WHY.beetles,
   "test/dungeons/TestTowerOfHera.py:6#12 Tower of Hera - Big Chest true":
     WHY.beetles,
-  "test/inverted/TestInvertedDarkWorld.py:6#0 Brewery true": WHY.darkSanctuary,
-  "test/inverted/TestInvertedDarkWorld.py:6#1 C-Shaped House true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDarkWorld.py:6#2 Chest Game true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:6#3 Old Man true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:6#13 Spectacle Rock Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#10 Spiral Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#21 Paradox Cave Lower - Far Left true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#32 Paradox Cave Lower - Left true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#43 Paradox Cave Lower - Middle true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#54 Paradox Cave Lower - Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#65 Paradox Cave Lower - Far Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#76 Paradox Cave Upper - Left true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:25#87 Paradox Cave Upper - Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#2 Superbunny Cave - Top true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#7 Superbunny Cave - Bottom true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#13 Hookshot Cave - Bottom Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#16 Hookshot Cave - Bottom Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#22 Hookshot Cave - Bottom Left true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#28 Hookshot Cave - Top Left true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:160#34 Hookshot Cave - Top Right true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#6 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#7 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#9 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#10 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#12 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#14 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#16 Spike Cave true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedDeathMountain.py:206#18 Spike Cave true":
-    WHY.darkSanctuary,
   "test/inverted/TestInvertedEntrances.py:6#41 Agahnims Tower false":
     WHY.atgtNames,
   "test/inverted/TestInvertedEntrances.py:6#42 Agahnims Tower false":
@@ -449,15 +392,7 @@ export const STALE: Readonly<Record<string, string>> = {
     WHY.atgtNames,
   "test/inverted/TestInvertedEntrances.py:6#48 Agahnims Tower true":
     WHY.atgtNames,
-  "test/inverted/TestInvertedEntrances.py:6#58 Thieves Town true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedEntrances.py:6#59 Skull Woods First Section Door true":
-    WHY.darkSanctuary,
-  "test/inverted/TestInvertedEntrances.py:6#62 Skull Woods Final Section true":
-    WHY.darkSanctuary,
   "test/inverted/TestInvertedEntrances.py:6#65 Ice Palace true": WHY.iceberg,
-  "test/inverted/TestInvertedEntrances.py:6#82 Turtle Rock true":
-    WHY.darkSanctuary,
   "test/inverted/TestInvertedEntrances.py:6#87 Ganons Tower false":
     WHY.atgtNames,
   "test/inverted/TestInvertedEntrances.py:6#88 Ganons Tower false":

@@ -81,10 +81,21 @@ export type RestrictBossItems = "none" | "mapcompass" | "dungeon";
  */
 export type OpenPyramid = "auto" | "yes" | "no";
 
+/**
+ * The DR release a seed was built by, as far as its logic goes: 1.5.7 asks
+ * less than 1.5.6 in one place (the Inverted world's save point leads out,
+ * EntranceShuffle2.py:171-176 at 1.5.8), so the tracker grants it only to a
+ * seed known to be 1.5.7's or later. "1.5.6" stands for an older release
+ * or one not known; a newer release than 1.5.8 reads as 1.5.8.
+ */
+export type DoorVersion = "1.5.6" | "1.5.7" | "1.5.8";
+
 /** The settings a DR run adds, each absent from an alttpr.com run. */
 export type DoorRunSettings = {
   /** DR's generator; absent for an alttpr.com seed. */
   randomizer?: Randomizer;
+  /** The DR release that built the seed, from the seed; absent: not known. */
+  doorVersion?: DoorVersion;
   doorShuffle?: DoorShuffle;
   keyLogic?: DoorKeyLogic;
   dropShuffle?: DropShuffle;
@@ -126,6 +137,7 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   bombBag: false,
   bonkDrops: false,
   doorShuffle: "vanilla",
+  doorVersion: "1.5.6",
   dropShuffle: "none",
   enemyShuffle: "none",
   keyLogic: "partial",
@@ -179,6 +191,11 @@ export const DOOR_OPTIONS = {
     ["basic", "Basic"],
     ["partitioned", "Partitioned"],
     ["crossed", "Crossed"],
+  ],
+  doorVersion: [
+    ["1.5.6", "1.5.6 or older"],
+    ["1.5.7", "1.5.7"],
+    ["1.5.8", "1.5.8"],
   ],
   dropShuffle: [
     ["none", "None"],
@@ -270,6 +287,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   bonkDrops: "Bonk drops",
   doorEntrances: "DR entrances",
   doorShuffle: "Door shuffle",
+  doorVersion: "DR version",
   dropShuffle: "Enemy drops",
   enemyShuffle: "Enemies",
   keyLogic: "Key logic",
@@ -289,6 +307,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
 
 /** The DR settings the summary shows, in DR's order; OWR's in an OWR run. */
 const DR_ROWS = [
+  "doorVersion",
   "doorShuffle",
   "keyLogic",
   "dropShuffle",
@@ -594,9 +613,15 @@ export const doorFromSeed = (
   const randomizer = seed.randomizer;
   if (randomizer === undefined) return null;
   if (randomizer.kind === "vt") return {};
+  // The version DR's ROM writes as text, else its title's digits, else a
+  // spoiler's meta (doorMetaReading puts it in both)
+  const version = doorVersionOf(
+    seed.door?.version.known ? seed.door.version.value : randomizer.version,
+  );
   const own: DoorSettings = {
     ...DOOR_DEFAULTS,
     ...run,
+    ...(version === undefined ? {} : { doorVersion: version }),
     randomizer: randomizer.overworld ? "owr" : "dr",
   };
   // A spoiler's meta names each (an avianart permalink): taken as named,
@@ -702,6 +727,26 @@ export const doorFromSeed = (
     }
   }
   return withoutDefaults(door);
+};
+
+/**
+ * The release a DR version names, as a run keeps it (`DoorVersion`): 1.5.6
+ * for 1.5.6 or an older one, 1.5.8 for 1.5.8 or a newer one; undefined
+ * when the seed tells none ("1.5.7-u", a ROM title's "1.5.7", a spoiler's
+ * meta).
+ */
+export const doorVersionOf = (
+  version: string | null | undefined,
+): DoorVersion | undefined => {
+  const parts = /^(\d+)\.(\d+)\.(\d+)/.exec(version ?? "");
+  if (parts === null) return undefined;
+  const [major, minor, patch] = parts.slice(1).map(Number) as [
+    number,
+    number,
+    number,
+  ];
+  const release = major * 10_000 + minor * 100 + patch;
+  return release <= 10_506 ? "1.5.6" : release === 10_507 ? "1.5.7" : "1.5.8";
 };
 
 /** Whether two runs hold the same Door Randomizer settings. */

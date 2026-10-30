@@ -487,6 +487,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   bombBag:false bombBag:true potShuffle:false potShuffle:true
   restrictBossItems:none restrictBossItems:mapcompass restrictBossItems:dungeon
   openPyramid:auto openPyramid:yes openPyramid:no
+  doorVersion:1.5.6 doorVersion:1.5.7 doorVersion:1.5.8
 `
   .trim()
   .split(/\s+/);

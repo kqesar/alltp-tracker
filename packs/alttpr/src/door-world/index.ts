@@ -370,6 +370,12 @@ export const DR_DEFAULTS: Settings = {
   // dropshuffle and pottery: the enemies' and the pots' vanilla keys are
   // forced items, events DR sweeps (keys.ts)
   dropShuffle: false,
+  // The DR release the seed was built by, as its ROM title's digits (158
+  // for 1.5.8): where a later release asks less than an earlier one, the
+  // world asks it only of a seed known to be that release's or later
+  // (vanillaConnections). 1.5.6 stands for an older or unknown one too;
+  // where a later release asks more, the world always asks it
+  drVersion: 156,
   // Pots or enemy drops of the dungeons beyond their keys (pottery beyond
   // keys and caves, the drops of every enemy): adjust_locations adds them
   // to the dungeons before DR's key analysis counts their locations
@@ -653,7 +659,8 @@ export function drWorld(
     },
     all.dangerousKeyLogic === true,
   );
-  const connections = options.connections ?? vanillaConnections(mode);
+  const connections =
+    options.connections ?? vanillaConnections(mode, Number(all.drVersion));
   const exits = exitsOf(connections, mode, options);
   const locations = new Map<string, string>();
   for (const region of DR_REGIONS)

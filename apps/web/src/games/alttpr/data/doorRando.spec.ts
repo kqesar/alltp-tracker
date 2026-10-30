@@ -7,6 +7,7 @@ import {
   doorNotes,
   doorReasons,
   doorTablesOf,
+  doorVersionOf,
   isDoorSettings,
   sameDoorSettings,
 } from "@/games/alttpr/data/doorRando";
@@ -337,6 +338,62 @@ const read = (door: Partial<NonNullable<SeedSettingsReading["door"]>>) =>
     randomizer: { kind: "door", overworld: false, version: "1.5.6" },
   }) as unknown as SeedSettingsReading;
 
+describe("the DR version a run keeps", () => {
+  it("reads a version as the release whose logic it is, older and newer folded", () => {
+    expect(
+      ["1.5.2", "1.5.6-u", "1.5.7-u", "1.5.8", "1.5.10", "1.6.0"].map(
+        doorVersionOf,
+      ),
+    ).toEqual(["1.5.6", "1.5.6", "1.5.7", "1.5.8", "1.5.8", "1.5.8"]);
+    expect([null, undefined, "hth", ""].map(doorVersionOf)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("takes it from the seed, else keeps the run's, 1.5.6 when none", () => {
+    // DRVersionInfo, the ROM's text
+    expect(
+      doorFromSeed(read({ version: { known: true, value: "1.5.7" } }), {}),
+    ).toMatchObject({ doorVersion: "1.5.7" });
+    // The title's digits when the text is not read (Race Mode)
+    const title = {
+      ...read({ version: { known: false, why: "race-mode" } }),
+      randomizer: { kind: "door", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    expect(doorFromSeed(title, {})).toMatchObject({ doorVersion: "1.5.8" });
+    // A title of a site's tag tells none: the run's stands
+    const tag = {
+      ...read({ version: { known: false, why: "race-mode" } }),
+      randomizer: { kind: "door", overworld: true, version: null },
+    } as unknown as SeedSettingsReading;
+    expect(doorFromSeed(tag, { doorVersion: "1.5.7" })).toMatchObject({
+      doorVersion: "1.5.7",
+    });
+    // 1.5.6, the default, is left out of what a run holds
+    expect(doorFromSeed(read({}), {})).not.toHaveProperty("doorVersion");
+    expect(isDoorSettings({ doorVersion: "1.5.8", randomizer: "dr" })).toBe(
+      true,
+    );
+    expect(isDoorSettings({ doorVersion: "1.5.9", randomizer: "dr" })).toBe(
+      false,
+    );
+  });
+
+  it("hands DR's world the release, the Inverted save point's way out with it", () => {
+    expect(drSettingsOf(DR)).toMatchObject({ drVersion: 156 });
+    expect(drSettingsOf(with_(DR, { doorVersion: "1.5.7" }))).toMatchObject({
+      drVersion: 157,
+    });
+    expect(drSettingsOf(with_(DR, { doorVersion: "1.5.8" }))).toMatchObject({
+      drVersion: 158,
+    });
+    expect(doorLogic(with_(DR, { doorVersion: "1.5.8" }))).toBe(true);
+  });
+});
+
 describe("doorFromSeed", () => {
   it("lays what a DR ROM states, and no DR setting for an alttpr.com seed", () => {
     expect(
@@ -414,6 +471,7 @@ describe("doorFromSeed", () => {
     } as unknown as SeedSettingsReading;
     expect(doorFromSeed(meta, { pottery: "keys" })).toEqual({
       doorEntrances: "lite",
+      doorVersion: "1.5.8",
       enemyShuffle: "shuffled",
       owCrossed: "polar",
       owFluteShuffle: "balanced",

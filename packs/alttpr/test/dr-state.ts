@@ -131,4 +131,6 @@ export function itemsOf(
 export const settingsOf = (mode: "open" | "inverted"): Settings => ({
   ...DR_DEFAULTS,
   ...settingsFromUpstream(mode),
+  // The release whose harness and world the tests run in
+  drVersion: 158,
 });

@@ -2,7 +2,7 @@
 // and vanilla entrances, as DR links them: link_overworld
 // (OverworldShuffle.py:5-20), create_dynamic_exits (:31-73),
 // link_entrances_new on its vanilla path (source/overworld/
-// EntranceShuffle2.py:45-88, do_vanilla_connections :162-170, the
+// EntranceShuffle2.py:45-88, do_vanilla_connections :162-176 at 1.5.8, the
 // Inverted swaps :64-78) and link_doors_prep's vanilla doors
 // (DoorShuffle.py:56-129, connect_portal :735-748).
 import {
@@ -91,9 +91,17 @@ function linkOverworld(c: Map<string, string>, mode: DrMode): void {
  * vanilla exit, two ways for a cave or dungeon (entrance_map) and one way
  * for a drop or a single cave (drop_map, single_entrance_map), with the
  * swaps of the Inverted world (:64-78) and its pyramid's names
- * (inverted_sub_table, :1322-1329).
+ * (inverted_sub_table, :1328-1335 at 1.5.8). The Inverted world's Dark
+ * Sanctuary exit, which no table links, is linked to the place its
+ * entrance stands since 1.5.7 (3c4307e, :171-176 at 1.5.8): a seed of an
+ * older or unknown version keeps its save point leading nowhere, as its
+ * logic did (`version`, DR's title digits, 156 for 1.5.6).
  */
-function linkEntrances(c: Map<string, string>, mode: DrMode): void {
+function linkEntrances(
+  c: Map<string, string>,
+  mode: DrMode,
+  version: number,
+): void {
   for (const [exit, region] of pairsOf(
     "EntranceShuffle2",
     "mandatory_connections",
@@ -162,7 +170,12 @@ function linkEntrances(c: Map<string, string>, mode: DrMode): void {
       exits.delete(region);
     }
   }
+  if (inverted && version >= 157 && !c.has(DARK_SANCTUARY_EXIT))
+    c.set(DARK_SANCTUARY_EXIT, parentOf("Dark Sanctuary Hint"));
 }
+
+/** The Inverted world's save point's way out (EntranceShuffle2.py:174). */
+const DARK_SANCTUARY_EXIT = "Dark Sanctuary Hint Exit";
 
 /**
  * link_doors_prep with vanilla doors (DoorShuffle.py:56-129), door
@@ -218,11 +231,13 @@ export const REMOVED_EXITS: ReadonlySet<string> = new Set([
 /**
  * The vanilla world's connections for a mode: every exit DR links, by
  * name, to the region it leads to.
+ * @param version - The DR release the seed was built by, as its ROM title's
+ *   digits (157 for 1.5.7), 156 for 1.5.6 or an older or unknown one
  */
-export function vanillaConnections(mode: DrMode): DrConnections {
+export function vanillaConnections(mode: DrMode, version = 156): DrConnections {
   const c = new Map<string, string>();
   linkOverworld(c, mode);
-  linkEntrances(c, mode);
+  linkEntrances(c, mode, version);
   linkDoors(c);
   for (const exit of REMOVED_EXITS) c.delete(exit);
   return c;

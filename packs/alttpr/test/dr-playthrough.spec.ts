@@ -72,10 +72,14 @@ const REVIEWED: Readonly<
 
 /** The world's settings for a log's header (DR's `meta`). */
 function settingsFor(meta: Log["meta"]) {
+  // The release that built it, as its ROM title's digits ("1.5.7-u": 157)
+  const release = /^(\d)\.(\d)\.(\d)\b/.exec(String(meta.version));
+  if (release === null) throw new Error(`no version in "${meta.version}"`);
   return {
     ...settingsOf("open"),
     crystalsGanon: Number(meta.ganon_crystals),
     crystalsTower: Number(meta.gt_crystals),
+    drVersion: Number(release.slice(1).join("")),
     ...(meta.keyshuffle === "wild" ? { wildKeys: true } : {}),
     ...(meta.keyshuffle === "universal" ? { universalKeys: true } : {}),
     ...(meta.bigkeyshuffle === true ? { wildBigKeys: true } : {}),

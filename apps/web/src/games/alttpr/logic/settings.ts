@@ -254,6 +254,7 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const potShuffle = door?.potShuffle ?? false;
   const bossItems = door?.restrictBossItems ?? "none";
   const pyramid = pyramidOpen(run);
+  const version = door?.doorVersion ?? "1.5.6";
   const key = [
     pottery,
     drops,
@@ -263,6 +264,7 @@ export const drSettingsOf = (run: RunSettings): Settings => {
     potShuffle,
     bossItems,
     pyramid,
+    version,
   ].join("/");
   let byKey = doorSettings.get(settings);
   if (byKey === undefined) {
@@ -278,6 +280,8 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       // key_logic_algorithm: dangerous asks each door's worst case
       dangerousKeyLogic: keyLogic === "dangerous",
       dropShuffle: drops !== "none",
+      // DR's release as its ROM title's digits: what a later one asks less
+      drVersion: Number(version.replaceAll(".", "")),
       dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
       ganonHuntGoal: run.goal === "ganonhunt",
       openPyramid: pyramid,

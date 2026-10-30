@@ -68,6 +68,27 @@ describe("the Door Randomizer's world (door-world)", () => {
     }
   });
 
+  it("lets the Inverted save point out from 1.5.7 on, never for an older seed", () => {
+    // do_vanilla_connections links the Dark Sanctuary's exit to the place
+    // of its entrance since 1.5.7 (3c4307e; EntranceShuffle2.py:171-176 at
+    // 1.5.8); a 1.5.6 seed's logic, or one of no version known, never did
+    const exit = "Dark Sanctuary Hint Exit";
+    expect(vanillaConnections("inverted").has(exit)).toBe(false);
+    expect(vanillaConnections("inverted", 156).has(exit)).toBe(false);
+    expect(vanillaConnections("inverted", 157).get(exit)).toBe(
+      "Dark Chapel Area",
+    );
+    expect(vanillaConnections("open", 158).has(exit)).toBe(false);
+    // The brewery from the start: through that way out alone
+    // (TestInvertedDarkWorld.py:6)
+    const brewery = drLocationId("Brewery");
+    const at = (drVersion: number) =>
+      solveFacts(drWorld({ ...settings("inverted"), drVersion }), {
+        heartContainer: 3,
+      }).location(brewery);
+    expect([at(156), at(157), at(158)]).toEqual(["no", "yes", "yes"]);
+  });
+
   it("swaps the Inverted world's entrances (EntranceShuffle2.py:64-78)", () => {
     const open = vanillaConnections("open");
     const inverted = vanillaConnections("inverted");
