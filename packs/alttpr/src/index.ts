@@ -170,6 +170,14 @@ export {
   derivedFacts,
 } from "./derived";
 export {
+  DOOR_TARGETS,
+  type DrEntrancePool,
+  type DrPoolSettings,
+  type DrShuffle,
+  drDecoupled,
+  drEntrancePool,
+} from "./door-rando/entrances";
+export {
   DR_LOCATIONS,
   DR_UPSTREAM,
   type DrLocation,

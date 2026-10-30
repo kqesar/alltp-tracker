@@ -37,6 +37,7 @@ const DUNGEONS = "Dungeons.py";
 const OVERWORLD = "OverworldShuffle.py";
 const ENTRANCES = "source/overworld/EntranceShuffle2.py";
 const DOOR_SHUFFLE = "DoorShuffle.py";
+const ENTRANCE_DATA = "source/overworld/EntranceData.py";
 
 /** @type {readonly Mode[]} */
 export const MODES = ["open", "standard", "inverted"];
@@ -80,7 +81,12 @@ export const TABLES = {
     "default_dungeon_connections",
     "open_default_dungeon_connections",
     "inverted_default_dungeon_connections",
+    "modes",
+    "default_lw",
+    "default_dw",
+    "exit_ids",
   ],
+  [ENTRANCE_DATA]: ["door_addresses"],
   [OVERWORLD]: [
     "mandatory_connections",
     "open_mandatory_connections",
@@ -677,6 +683,18 @@ function readDoors(source) {
 }
 
 /**
+ * What a table keeps of each entry where it is more than the world needs:
+ * of door_addresses, a door's slot of the game's door table or a hole's
+ * addresses of its hole table (the layout bytes after them are left out);
+ * of exit_ids, the entrance number a target loads.
+ * @type {Readonly<Record<string, (entry: unknown) => unknown>>}
+ */
+const LEAN = {
+  door_addresses: (entry) => (Array.isArray(entry) ? entry[0] : entry),
+  exit_ids: (entry) => (Array.isArray(entry) ? entry[0] : entry),
+};
+
+/**
  * The connection tables, each with its line.
  * @param {(file: string) => string} read
  */
@@ -688,7 +706,21 @@ function readTables(read) {
     tables[file] = Object.fromEntries(
       list.map((name) => {
         const { line, value } = assigned(source, name, file);
-        return [name, { line, value }];
+        const lean = LEAN[name];
+        return [
+          name,
+          {
+            line,
+            value:
+              lean === undefined
+                ? value
+                : Object.fromEntries(
+                    Object.entries(
+                      /** @type {Record<string, unknown>} */ (value),
+                    ).map(([key, entry]) => [key, lean(entry)]),
+                  ),
+          },
+        ];
       }),
     );
   }

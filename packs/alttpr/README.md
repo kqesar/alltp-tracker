@@ -1099,6 +1099,33 @@ world with, as written, each with its line. `world-data.spec.ts` holds the
 counts and that every exit is linked, but the doors the vanilla world never
 leaves by.
 
+**Its entrance shuffles** (`src/door-rando/entrances.ts`, over
+`EntranceShuffle2.py`'s `modes`, maps and `exit_ids` and `EntranceData.py`'s
+door slots and hole bytes, which the same import keeps, the layout bytes
+left out): `drShuffled(shuffle, settings)` is what a DR shuffle may move in
+a world, every entrance of `link_entrances_new`'s pool (`:45-80`, Inverted's
+names put in) less what it surely leaves vanilla: Standard's escape and
+Link's House (`do_standard_connections`), Link's House without
+`shufflelinks` and the Tavern's back without `shuffletavern`, the caves of a
+kept pool whose condition holds (`do_vanilla_connect`: lite's and lean's
+shops, pots' and drops' caves, as the run's shopsanity, pottery, drop and
+enemy shuffles say), and in `dungeonssimple`/`dungeonsfull` every entrance no
+pool names. Where an option a run does not record could move an entrance
+(`skullwoods`, `shuffle_ganon`), it counts as moved: not noted, it leads
+nowhere. `drEntrancePool` gives each moved entrance the targets the moved
+entrances lead to in the vanilla world: a hole a drop, a dungeon's door a
+dungeon where the mode places dungeons among dungeons, any door any door's
+target otherwise; no note settles another (`linked_drops` and `skullwoods`
+decide that, unrecorded), and `insanity` is decoupled. Its ids are the
+entrance randomizer's (`src/entrances.ts`), so a Crosskeys run's notes read
+the same; the names DR spells otherwise are mapped (`Mire Fairy` is `Dark
+Desert Fairy`, `Skull Pinball` is `Skull Woods First Section (Right)`), and
+Link's House and the Tavern's back, which only DR shuffles, are targets of
+its own (`DOOR_TARGETS`). DR writes the game's door table, hole table and
+exit numbers as the entrance randomizer does (`Rom.py:500-549`), with the
+same slot, bytes and number for every name: `entrances.spec.ts` holds it, so
+autotracking reads where Link went in a DR seed through the same tables.
+
 **Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
 `Rules.py` and `Bosses.py` in the engine's language, through the entrance
 randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`, "Its rules" below) under DR's

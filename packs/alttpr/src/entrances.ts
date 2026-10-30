@@ -356,7 +356,8 @@ export type ErShuffle = "simple" | "restricted" | "full" | "crossed";
 
 /** What an entrance shuffle mixes, for a run's world. */
 export interface EntrancePool {
-  readonly shuffle: ErShuffle;
+  /** The shuffle's name: the entrance randomizer's or the Door Randomizer's. */
+  readonly shuffle: string;
   /** The entrances it shuffles: doors, then holes. */
   readonly entrances: readonly OverworldEntrance[];
   /**
