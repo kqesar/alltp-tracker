@@ -220,8 +220,13 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       bonkDrops: flagOf(meta.bonk_drops) ?? false,
       crossed: String(meta.ow_crossed ?? "none"),
       fluteShuffle: String(meta.ow_fluteshuffle ?? "vanilla"),
+      // Each moves what the fork's rules read: a prize becomes an item
+      // placed elsewhere (ItemList.py:786), a follower's quest a location of
+      // its own (ItemList.py:1740-1745, BaseClasses.py:1751)
+      followers: flagOf(meta.shuffle_followers) ?? false,
       layout: String(meta.ow_layout),
       mixed: flagOf(meta.ow_mixed) ?? false,
+      prizeShuffle: String(meta.prizeshuffle ?? "none"),
       whirlpool: flagOf(meta.ow_whirlpool) ?? false,
     },
   };

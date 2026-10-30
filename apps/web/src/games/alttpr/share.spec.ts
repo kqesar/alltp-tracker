@@ -955,11 +955,13 @@ describe("the settings in a link (link 4)", () => {
     ]);
   });
 
-  it("carries an Overworld Randomizer run's bonk drops taken", () => {
+  it("carries an Overworld Randomizer run's settings and bonk drops taken", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
       bonkDrops: true,
+      prizeShuffle: "nearby",
       randomizer: "owr",
+      shuffleFollowers: true,
     };
     const save = withProgress(runWith(settings, "door-randomizer"), {
       checked: { "links-house": true, "pyramid-tree": true },
@@ -967,6 +969,7 @@ describe("the settings in a link (link 4)", () => {
     const unpacked = unpackLink(packLink(save));
     if (!unpacked.ok) throw new Error(unpacked.reason);
     const back = JSON.parse(unpacked.save).progress;
+    expect(back.settings).toEqual(settings);
     expect(Object.keys(back.checked).sort()).toEqual([
       "links-house",
       "pyramid-tree",

@@ -71,6 +71,17 @@ describe("a Door Randomizer run's logic", () => {
         "Overworld Randomizer seed: the logic is the fork's own (0.8.0.2, on DR 1.5.7).",
       ]);
     }
+    // Its prizes or followers moved: the fork's world reads neither
+    expect(
+      unmodelledReasons(
+        with_(DR, { prizeShuffle: "nearby", randomizer: "owr" }),
+      ),
+    ).toEqual(["shuffled dungeon prizes"]);
+    expect(
+      unmodelledReasons(
+        with_(DR, { randomizer: "owr", shuffleFollowers: true }),
+      ),
+    ).toEqual(["shuffled followers"]);
     // What the fork's world does not model yet stays named
     expect(
       unmodelledReasons(with_(DR, { owMixed: true, randomizer: "owr" })),
@@ -723,8 +734,10 @@ describe("doorFromSeed", () => {
           bonkDrops: false,
           crossed: "polar",
           fluteShuffle: "balanced",
+          followers: true,
           layout: "vanilla",
           mixed: true,
+          prizeShuffle: "wild",
           whirlpool: false,
         },
         pottery: "a mode of a newer DR",
@@ -742,7 +755,9 @@ describe("doorFromSeed", () => {
       owMixed: true,
       // A pottery mode the tracker has no option for keeps the run's
       pottery: "keys",
+      prizeShuffle: "wild",
       randomizer: "owr",
+      shuffleFollowers: true,
       takeAny: "fixed",
     });
   });

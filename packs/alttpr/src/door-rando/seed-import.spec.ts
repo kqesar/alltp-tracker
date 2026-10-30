@@ -104,8 +104,10 @@ describe("avianartReading", () => {
         bonkDrops: false,
         crossed: "none",
         fluteShuffle: "vanilla",
+        followers: false,
         layout: "vanilla",
         mixed: false,
+        prizeShuffle: "none",
         whirlpool: false,
       },
     });
@@ -115,6 +117,34 @@ describe("avianartReading", () => {
     expect(reading && shown(reading.entrances ?? { known: false })).toBe(
       "?unrecognized",
     );
+  });
+
+  it("reads OWR 0.8.0.2's prize shuffle and followers, which its rules read", () => {
+    const json = avianart("4kxBlrWuP") as {
+      response: { spoiler: { meta: Record<string, unknown> } };
+    };
+    const reading = avianartReading(json, "4kxBlrWuP");
+    expect(reading?.door?.version).toMatchObject({ value: "1.5.7" });
+    expect(reading?.doorExact?.overworld).toMatchObject({
+      followers: false,
+      prizeShuffle: "none",
+    });
+    // A seed that moves them (the same meta, as the fork writes it)
+    const { meta } = json.response.spoiler;
+    const moved = avianartReading(
+      {
+        response: {
+          spoiler: {
+            meta: { ...meta, prizeshuffle: "wild", shuffle_followers: true },
+          },
+        },
+      },
+      "4kxBlrWuP",
+    );
+    expect(moved?.doorExact?.overworld).toMatchObject({
+      followers: true,
+      prizeShuffle: "wild",
+    });
   });
 
   it("reads every enemy, lottery pots and shopsanity, crossed entrances", () => {

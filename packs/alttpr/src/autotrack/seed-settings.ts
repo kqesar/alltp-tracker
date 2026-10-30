@@ -362,6 +362,10 @@ export interface DoorExactSettings {
     readonly whirlpool: boolean;
     readonly fluteShuffle: string;
     readonly bonkDrops: boolean;
+    /** OWR's prize shuffle (`prizeshuffle`: none, dungeon, nearby, wild). */
+    readonly prizeShuffle: string;
+    /** OWR's followers shuffled (`shuffle_followers`). */
+    readonly followers: boolean;
   };
 }
 

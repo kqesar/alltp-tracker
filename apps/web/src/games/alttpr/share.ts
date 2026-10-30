@@ -491,6 +491,8 @@ export const SHARE_SETTINGS: readonly string[] = `
   shuffleLinks:false shuffleLinks:true shuffleTavern:false shuffleTavern:true
   doorIntensity:1 doorIntensity:2 doorIntensity:3
   decoupledDoors:false decoupledDoors:true
+  prizeShuffle:none prizeShuffle:dungeon prizeShuffle:nearby prizeShuffle:wild
+  shuffleFollowers:false shuffleFollowers:true
 `
   .trim()
   .split(/\s+/);
@@ -507,6 +509,7 @@ const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
   "owWhirlpool",
   "potShuffle",
   "shopsanity",
+  "shuffleFollowers",
   "shuffleLinks",
   "shuffleTavern",
   "swordless",

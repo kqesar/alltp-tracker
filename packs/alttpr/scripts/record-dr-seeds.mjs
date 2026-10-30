@@ -29,6 +29,9 @@ const AVIANART = [
   "u6BKiwo1E",
   // DR 1.5.6, vanilla doors, crossed entrances, lottery pots, every enemy
   "uv7P2Luey",
+  // OWR 0.8.0.2 on DR 1.5.7 (the release the pack's OWR world reads),
+  // avianart's Swapkeys: swapped entrances, every dungeon item wild
+  "4kxBlrWuP",
 ];
 const HTH = [
   // DR156_1_1_367825107: vanilla doors, mirror scroll, Hyrule Town Hall's

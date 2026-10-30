@@ -81,6 +81,13 @@ export type OverworldCrossed = "none" | "grouped" | "polar" | "unrestricted";
 export type FluteShuffle = "vanilla" | "balanced" | "random";
 
 /**
+ * OWR's prize shuffle (`--prizeshuffle`, 0.8.0.2's args.json): each
+ * dungeon's pendant or crystal an item placed in the dungeon, near it or
+ * anywhere (ItemList.py:786).
+ */
+export type PrizeShuffle = "none" | "dungeon" | "nearby" | "wild";
+
+/**
  * DR's restricted boss items (`--restrict_boss_items`, args.json): any but
  * none puts each prize, boss and Agahnim 2 behind its dungeon's map and
  * compass (Rules.py:809-825).
@@ -123,6 +130,15 @@ export type DoorRunSettings = {
   owWhirlpool?: boolean;
   owFluteShuffle?: FluteShuffle;
   bonkDrops?: boolean;
+  /**
+   * OWR's prize shuffle and its followers shuffled (`--shuffle_followers`:
+   * each follower's quest a location, ItemList.py:1740-1745), which its
+   * rules read: a spoiler's meta names them, no ROM table the tracker reads
+   * does, so a run read from its ROM alone holds the fork's defaults (none)
+   * until the player sets them.
+   */
+  prizeShuffle?: PrizeShuffle;
+  shuffleFollowers?: boolean;
   /**
    * The settings DR's rules read that no ROM table states: the bomb bag
    * (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
@@ -195,8 +211,10 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   owWhirlpool: false,
   potShuffle: false,
   pottery: "none",
+  prizeShuffle: "none",
   restrictBossItems: "none",
   shopsanity: false,
+  shuffleFollowers: false,
   takeAny: "none",
 };
 
@@ -311,6 +329,12 @@ export const DOOR_OPTIONS = {
     ["nonempty", "Non-empty pots"],
     ["lottery", "Lottery"],
   ],
+  prizeShuffle: [
+    ["none", "None"],
+    ["dungeon", "In their dungeon"],
+    ["nearby", "Nearby"],
+    ["wild", "Anywhere"],
+  ],
   randomizer: [
     ["dr", "Door Randomizer"],
     ["owr", "Overworld Randomizer"],
@@ -323,6 +347,10 @@ export const DOOR_OPTIONS = {
   shopsanity: [
     [false, "Off"],
     [true, "On"],
+  ],
+  shuffleFollowers: [
+    [false, "Off"],
+    [true, "Shuffled"],
   ],
   shuffleLinks: [
     [false, "Off"],
@@ -364,9 +392,11 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   owWhirlpool: "Whirlpools",
   potShuffle: "Pot shuffle",
   pottery: "Pottery",
+  prizeShuffle: "Prizes",
   randomizer: "Randomizer",
   restrictBossItems: "Boss items",
   shopsanity: "Shopsanity",
+  shuffleFollowers: "Followers",
   shuffleLinks: "Link's House",
   shuffleTavern: "Back of Tavern",
   takeAny: "Take-any caves",
@@ -394,6 +424,8 @@ const OWR_ROWS = [
   "owWhirlpool",
   "owFluteShuffle",
   "bonkDrops",
+  "prizeShuffle",
+  "shuffleFollowers",
 ] as const satisfies readonly DoorSetting[];
 
 /** The door shuffle's own settings, shown while doors are shuffled. */
@@ -682,6 +714,10 @@ export const doorReasons = (
   if (door.owMixed) reasons.push("a mixed overworld");
   if (door.owWhirlpool) reasons.push("shuffled whirlpools");
   if (door.owFluteShuffle !== "vanilla") reasons.push("shuffled flute spots");
+  // A prize an item placed elsewhere, a follower's quest a location: the
+  // fork's world reads neither (ItemList.py:786, :1740-1745)
+  if (door.prizeShuffle !== "none") reasons.push("shuffled dungeon prizes");
+  if (door.shuffleFollowers) reasons.push("shuffled followers");
   return reasons;
 };
 
@@ -1014,6 +1050,8 @@ export const doorFromSeed = (
             owLayout: option("owLayout", ow.layout),
             owMixed: ow.mixed,
             owWhirlpool: ow.whirlpool,
+            prizeShuffle: option("prizeShuffle", ow.prizeShuffle),
+            shuffleFollowers: ow.followers,
           }),
     });
   }
