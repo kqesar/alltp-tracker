@@ -323,7 +323,7 @@ export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   restrictBossItems: "Boss items",
   shopsanity: "Shopsanity",
   shuffleLinks: "Link's House",
-  shuffleTavern: "Tavern's back door",
+  shuffleTavern: "Back of Tavern",
   takeAny: "Take-any caves",
 };
 

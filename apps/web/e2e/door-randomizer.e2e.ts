@@ -86,3 +86,42 @@ for (const width of WIDTHS) {
     expect(overflow).toBe(false);
   });
 }
+
+test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async ({
+  page,
+}) => {
+  await page.goto("./");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose a run type" });
+  await dialog.getByRole("button", { name: /^DR Crosskeys/ }).click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  // The shuffle's own settings, while entrances are shuffled
+  await expect(
+    dialog.getByRole("combobox", { name: "Back of Tavern" }),
+  ).toHaveValue("true");
+  await expect(
+    dialog.getByRole("combobox", { name: "Link's House" }),
+  ).toHaveValue("false");
+  await auditPage(page);
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+
+  // DR's crossed pool: the entrance randomizer's doors and the Tavern's back
+  await expect(page.getByTestId(/^entrance-/)).toHaveCount(139);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The logic follows the entrances you noted",
+  );
+  await expect(page.getByTestId("logic-note-door")).toHaveText(
+    /the logic is DR's own/,
+  );
+  await page.getByTestId("entrance-tavern-north").click();
+  await page.keyboard.type("tavern");
+  await page.getByTestId("entrance-option-tavern").click();
+  await expect(page.getByTestId("entrance-tavern-north")).toHaveAccessibleName(
+    "Tavern North: leads to Tavern",
+  );
+  // Map pins: WCAG 2.5.8's exception, as in a Crosskeys run
+  await auditPage(page, ".mapspan");
+});
