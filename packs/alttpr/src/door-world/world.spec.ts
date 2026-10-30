@@ -6,12 +6,14 @@ import { everything } from "../keys";
 import { OPEN, settingsFromUpstream } from "../settings";
 import { addBunnyRules } from "./bunny";
 import {
+  type DrNotedDoors,
   dynamicExits,
   isStaticExit,
   REMOVED_EXITS,
   vanillaConnections,
 } from "./connections";
 import { DR_DATA } from "./data";
+import { type DoorKindNote, doorId } from "./doors";
 import {
   DR_DEFAULTS,
   drKeyLogic,
@@ -21,6 +23,7 @@ import {
   regionProbeId,
 } from "./index";
 import { worldKeys } from "./keys";
+import { bunnyWall } from "./shuffle";
 import { zeldaPath } from "./standard";
 
 const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
@@ -414,6 +417,46 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(helpers.get(`bunny${doors.length - 1}`)).toContain(
       `@bunny${doors.length - 2}`,
     );
+  });
+
+  it("stops a bunny at a wall it cannot pass, by its door's kind", () => {
+    // doors_to_check (Rules.py:2196-2201): a normal or interior door whose
+    // kind in its room is a dashable, bombable or hidden wall
+    expect(bunnyWall(DR_DATA, "Sewers Rat Path WS")).toBe("yes");
+    expect(bunnyWall(DR_DATA, "PoD Arena Ledge ES")).toBe("yes");
+    expect(bunnyWall(DR_DATA, "Tower Altar NW")).toBe("yes");
+    expect(bunnyWall(DR_DATA, "PoD Lobby N")).toBe("no");
+    expect(bunnyWall(DR_DATA, "Links House S&Q")).toBe("no");
+    // A door shuffle that may change the kind: the noted one, else maybe
+    const door = "Eastern Dark Square Key Door WN";
+    const noted = (kinds: Record<string, DoorKindNote>): DrNotedDoors => ({
+      notes: { kinds },
+      settings: {
+        decoupled: false,
+        intensity: 2,
+        shuffle: "basic",
+        trapMode: "optional",
+      },
+    });
+    expect(bunnyWall(DR_DATA, door, noted({}))).toBe("maybe");
+    expect(bunnyWall(DR_DATA, door, noted({ [doorId(door)]: "dash" }))).toBe(
+      "yes",
+    );
+    expect(bunnyWall(DR_DATA, door, noted({ [doorId(door)]: "small" }))).toBe(
+      "no",
+    );
+    // Inverted, the castle's sewers are the bunny's: the secret room behind
+    // the rat path's dashable wall asks the pearl, which the wall's region
+    // never gives without it
+    const world = drWorld(settings("inverted"), {
+      regions: ["Sewers Secret Room"],
+    });
+    const secret = regionProbeId("Sewers Secret Room");
+    const all = everything(settingsFromUpstream("inverted"));
+    expect(solveFacts(world, { ...all, moonPearl: 0 }).location(secret)).toBe(
+      "no",
+    );
+    expect(solveFacts(world, all).location(secret)).toBe("yes");
   });
 
   it("makes the light world the bunny's in Inverted", () => {

@@ -1,10 +1,11 @@
 import type { Settings } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
+import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
 import { vanillaConnections } from "./connections";
 import { DR_DATA } from "./data";
-import { DR_DEFAULTS, drLocationId, drWorld } from "./index";
+import { DR_DEFAULTS, drLocationId, drWorld, regionProbeId } from "./index";
 import {
   fluteSpots,
   isTileSwapped,
@@ -14,6 +15,7 @@ import {
   owrSettings,
 } from "./overworld";
 import { OWR_DATA } from "./owr-data";
+import { bunnyWall } from "./shuffle";
 import { readFacts } from "./text";
 
 type Mode = "open" | "standard" | "inverted";
@@ -157,6 +159,22 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
     const zora = drLocationId("Zora's Ledge");
     expect(solveFacts(world, {}).location(zora)).toBe("no");
     expect(solveFacts(world, { flippers: 1 }).location(zora)).toBe("yes");
+  });
+
+  it("stops a bunny at a wall of its own door kinds", () => {
+    // owr:Rules.py:2024-2029: the castle's sewers in Inverted, the rat
+    // path's dashable wall
+    expect(bunnyWall(OWR_DATA, "Sewers Rat Path WS")).toBe("yes");
+    const world = drWorld(settings("inverted"), {
+      data: OWR_DATA,
+      regions: ["Sewers Secret Room"],
+    });
+    const secret = regionProbeId("Sewers Secret Room");
+    const all = everything(settingsFromUpstream("inverted"));
+    expect(solveFacts(world, { ...all, moonPearl: 0 }).location(secret)).toBe(
+      "no",
+    );
+    expect(solveFacts(world, all).location(secret)).toBe("yes");
   });
 
   it("counts events in a count as facts, at maybe while reached at maybe", () => {

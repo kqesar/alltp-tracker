@@ -49,6 +49,36 @@ export function kindIn(
   return doors.notes.kinds?.[doorId(door.name)];
 }
 
+/** Room kinds a bunny cannot pass (doors_to_check, Rules.py:2196-2201). */
+const BUNNY_WALLS: ReadonlySet<string> = new Set([
+  "Dashable",
+  "Bombable",
+  "Hidden",
+]);
+
+/**
+ * Whether a door is a wall a bunny cannot pass (set_bunny_rules'
+ * doors_to_check, Rules.py:2196-2201 at DR 1.5.8, owr:Rules.py:2024-2029):
+ * a normal or interior door whose kind in its room is dashable, bombable or
+ * hidden. Its room's kind, or under a door shuffle that may change it the
+ * noted one: a bombable or dashable note is a wall, any other none, no note
+ * `maybe`. An exit that is no door is none.
+ */
+export function bunnyWall(
+  data: DrData,
+  name: string,
+  doors?: DrNotedDoors,
+): "yes" | "no" | "maybe" {
+  const door = data.doorByName.get(name);
+  if (door === undefined || !["Normal", "Interior"].includes(door.type))
+    return "no";
+  if (doors === undefined || !kindShuffled(door, doors.settings))
+    return BUNNY_WALLS.has(door.kind ?? "") ? "yes" : "no";
+  const note = kindIn(door, doors);
+  if (note === undefined) return "maybe";
+  return note === "bomb" || note === "dash" ? "yes" : "no";
+}
+
 /**
  * Whether a trap door shuts as an exit (is_trap_door_blocked,
  * DoorShuffle.py:2533-2534): every trap but trap_door_exceptions

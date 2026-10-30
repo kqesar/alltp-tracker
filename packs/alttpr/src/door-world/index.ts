@@ -86,6 +86,7 @@ import {
 } from "./overworld";
 import {
   addShuffledDoorRules,
+  bunnyWall,
   isShut,
   roomDungeons,
   sanctuaryRoute,
@@ -1124,17 +1125,14 @@ export function drWorld(
   }
   if (isStatic) addStaticKeyRules(data, exits, locations, keys, mode, trCase);
   addBombShopRule(data, exits, mode, version);
-  const bunny = addBunnyRules(
-    data,
-    exits,
-    locations,
-    marked,
-    mode,
+  const bunny = addBunnyRules(data, exits, locations, marked, mode, {
     added,
-    owr && isTileSwapped(mode, 0x03)
-      ? ["Death Mountain Return Cave (right)"]
-      : [],
-  );
+    moreCaves:
+      owr && isTileSwapped(mode, 0x03)
+        ? ["Death Mountain Return Cave (right)"]
+        : [],
+    wallOf: (name) => bunnyWall(data, name, doors),
+  });
   const bunnyBodies = [...bunny.values()];
 
   // The events: each a fact once its location is reached. A flood switch

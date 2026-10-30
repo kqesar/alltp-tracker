@@ -13,9 +13,10 @@
 // Crosskeys race of DR 1.4.8.1) grew sevenfold a room, to 157 million
 // characters at its boss, and the world ran out of memory.
 //
-// Not ported: the doors a bunny cannot pass by their kind in the room's
-// data (dashable, bombable, hidden walls, :2175-2180), which RoomData.py
-// holds and import-dr does not read yet.
+// The doors a bunny cannot pass by their kind in their room (a dashable,
+// bombable or hidden wall, Rules.py:2196-2201 at DR 1.5.8, owr:Rules.py:
+// 2024-2029) read the kind the run gives the door (`wallOf`): its room's,
+// or the noted one under a door shuffle, unknown (`maybe`) until noted.
 
 import type { DrData, DrMode } from "./data";
 import { and, or } from "./text";
@@ -45,6 +46,30 @@ const listsOf = (data: DrData) =>
 
 const PEARL = "moonPearl";
 
+/** Whether a door is a wall a bunny cannot pass, as the run knows it. */
+export type BunnyWall = "yes" | "no" | "maybe";
+
+/** What a world adds to set_bunny_rules' own lists. */
+export interface BunnyOptions {
+  /**
+   * The locations added to regions beside their own (the run's pots and
+   * drops, Murahdahla), by region.
+   */
+  readonly added?: ReadonlyMap<string, readonly string[]>;
+  /**
+   * Caves a bunny cannot cross beside the list's: OWR's Death Mountain
+   * Return Cave once its screen flips with vanilla-like entrances
+   * (owr:Rules.py:2002-2008).
+   */
+  readonly moreCaves?: readonly string[];
+  /**
+   * Whether an exit is a door of a normal or interior type, open as an
+   * exit, whose kind in its room is a dashable, bombable or hidden wall
+   * (doors_to_check, Rules.py:2196-2201): none by default.
+   */
+  readonly wallOf?: (exit: string) => BunnyWall;
+}
+
 /**
  * Adds the bunny's rules to the exits and locations, as set_bunny_rules
  * does last: each rule a path reads is the one its entrance has when the
@@ -54,11 +79,6 @@ const PEARL = "moonPearl";
  * @param data - The release's world (data.ts)
  * @param exits - The world's exits, the trapped dungeon doors left out
  * @param locations - Each location's rule, by name
- * @param added - The locations added to regions beside their own (the
- *   run's pots and drops, Murahdahla), by region
- * @param moreCaves - Caves a bunny cannot cross beside the list's: OWR's
- *   Death Mountain Return Cave once its screen flips with vanilla-like
- *   entrances (owr:Rules.py:2002-2008)
  */
 export function addBunnyRules(
   data: DrData,
@@ -69,8 +89,7 @@ export function addBunnyRules(
     readonly dark: ReadonlySet<string>;
   },
   mode: DrMode,
-  added: ReadonlyMap<string, readonly string[]> = new Map(),
-  moreCaves: readonly string[] = [],
+  { added = new Map(), moreCaves = [], wallOf = () => "no" }: BunnyOptions = {},
 ): Map<string, string> {
   /** The rules found, each a helper read by name, in the order found. */
   const helpers = new Map<string, string>();
@@ -155,6 +174,16 @@ export function addBunnyRules(
       isBunny(exit.from)
     )
       add(exit, ruleToAdd(exit.from));
+  }
+  // The walls a bunny cannot pass (doors_to_check, Rules.py:2196-2201: its
+  // filter `x not in bunny_impassible_doors` sets a door against names, so
+  // it leaves none out); a kind not known yet is maybe a wall
+  for (const exit of exits) {
+    if (exit.blocked === true || !isBunny(exit.from)) continue;
+    const wall = wallOf(exit.name);
+    if (wall === "no") continue;
+    const rule = ruleToAdd(exit.from);
+    add(exit, wall === "yes" ? rule : or(rule, "maybe"));
   }
   // Every location of a bunny's region but those it can get (:2191-2196)
   const accessible = new Set(lists.accessibleLocations.value);

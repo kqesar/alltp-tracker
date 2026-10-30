@@ -1329,8 +1329,10 @@ save-and-quit exits, adds the bomb shop's case, sets the derived settings
 from the connections (the worlds' light and dark regions, the swamp patch,
 the doors' vanilla flags) and sweeps DR's events as facts (`src/facts.ts`,
 shared with the entrance randomizer's world). `bunny.ts` ports
-`set_bunny_rules`, but the door kinds `RoomData.py` holds (dashable,
-bombable, hidden walls), which the import does not read yet. Each rule it
+`set_bunny_rules`, the walls a bunny cannot pass included (`doors_to_check`,
+`Rules.py:2196-2201`: a normal or interior door whose kind in its room is
+dashable, bombable or hidden, `bunnyWall`): the room's kind, or under a door
+shuffle that may change it the noted one, `maybe` until noted. Each rule it
 finds is a helper of the world's own (`@bunny<n>`, compiled once and
 memoized like DR's helpers), as DR's paths share the rules they capture
 (`path + [entrance.access_rule]`): written out as text, a dungeon whose
@@ -1646,8 +1648,8 @@ fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
   (`keep_better_requirement`, `source/logic/AccessRule.py:472-491`), a
   pruning meant to drop only paths no easier than one kept; the port keeps
   them, so where the atoms judge exactly the rule is the same, and the
-  vanilla and Inverted suites hold. Its door kinds a bunny cannot pass
-  (`Rules.py:2024-2029`) are not read, as for DR.
+  vanilla and Inverted suites hold. The walls a bunny cannot pass
+  (`Rules.py:2024-2029`) are read as for DR.
 
 `test/owr-contract.spec.ts` holds the ported files in the fork's harness
 (drVersion 157, `overrideBombCheck` as the fixture records it); a case it
