@@ -15,11 +15,13 @@
 //
 // A setting is folded at compile time, so the real world cannot hold a trick
 // for some states and not others. This world rewrites each rule instead:
-// `setting(canFakeFlipper)` becomes the item `trickFakeFlipper`, and a test
-// whose threshold is `setting(requireLamp)` becomes `(lamp >=
-// setting(requireLamp) | trickDarkRooms)`. With a trick's item at 1 it reads
-// as the real world compiled with that flag on (or requireLamp at 0), with
-// all of them at 0 as the real world; tricks.spec.ts holds both. The fill
+// `setting(canFakeFlipper)` becomes `(setting(canFakeFlipper) |
+// trickFakeFlipper)`, and a test whose threshold is `setting(requireLamp)`
+// becomes `(lamp >= setting(requireLamp) | trickDarkRooms)`. With a trick's
+// item at 1 it reads as the real world compiled with that flag on (or
+// requireLamp at 0), with all of them at 0 as the real world; tricks.spec.ts
+// holds both. A logic that counts a trick (Overworld Glitches counts four,
+// `tricksInLogic`) keeps its flag on, so the trick is no item to get there. The fill
 // rules are left as they are: the seed was placed under NoGlitches, so where
 // an item may sit does not move.
 import {
@@ -104,6 +106,20 @@ export const TRICK_ITEMS: readonly string[] = TRICK_IDS.map(
   (id) => TRICKS[id].item,
 );
 
+/**
+ * The tricks a run's logic counts on already: those whose flag its logic
+ * turns on (Overworld Glitches and up: fake flipper, water walk, super
+ * bunny and dungeon revival, `config/logic.php:5-13`), and the dark rooms
+ * when no Lamp is required. The tricks world opens their branches whatever
+ * the player knows.
+ */
+export function tricksInLogic(settings: AlttprSettings): readonly TrickId[] {
+  return TRICK_IDS.filter((id) => {
+    const value = settings[TRICKS[id].setting];
+    return id === "darkRooms" ? value === 0 : value === true;
+  });
+}
+
 /** The state that holds these tricks: each one's item at 1. */
 export function trickState(
   tricks: Iterable<TrickId>,
@@ -138,7 +154,7 @@ function rewrite(e: Expr, req: string): Expr {
       if (e.negated) {
         throw new RangeError(`"${req}" asks a trick to be off: ${e.name}`);
       }
-      return { min: 1, name: item, type: "item" };
+      return { args: [e, { min: 1, name: item, type: "item" }], type: "or" };
     }
     case "item":
     case "count":

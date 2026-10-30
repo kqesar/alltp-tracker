@@ -75,19 +75,39 @@ describe("MapPanel", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
 
-    // Crosskeys with its keys in their dungeons: the entrance randomizer
-    // keeps them there, which the tracker does not track
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
-      useGameStore.getState().updateSettings({ dungeonItems: "mcs" });
+      useGameStore.getState().updateSettings({ entranceShuffle: "insanity" });
     });
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
+      "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
     );
     expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
-  it("says a glitched seed's logic is not modelled, and shows no marker in logic", () => {
+  it("reads a glitched seed behind shuffled entrances as the entrance randomizer's NoGlitches", () => {
+    // vt hands it to the randomizer as noglitches, without the boots
+    // (EntranceRandomizer.php:84-91, Randomizer.php:122-131)
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      act(() =>
+        useGameStore.getState().applyRun("crosskeys", {
+          ...getPreset("crosskeys").settings,
+          glitches,
+        }),
+      );
+      const { unmount } = render(<MapPanel />);
+      expect(screen.getByTestId("logic-note")).toHaveTextContent(
+        "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic. A seed with shuffled entrances is filled without glitches, whatever its Glitches: the map shows what is in logic without them, and Link starts without the boots.",
+      );
+      unmount();
+    }
+  });
+
+  it("reads an Overworld Glitches seed by its logic, the boots given", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
@@ -96,13 +116,15 @@ describe("MapPanel", () => {
     );
     render(<MapPanel />);
 
-    expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for Overworld Glitches yet: every check shows as maybe.",
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+    // Under the bridge with a fake flipper (South.php:131), in logic here
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      /: available$/,
     );
-    expect(screen.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
-      /: maybe available$/,
+    act(() => useGameStore.getState().updateSettings({ glitches: "none" }));
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      /: out of logic$/,
     );
-    expect(screen.queryByTestId("go-mode")).not.toBeInTheDocument();
   });
 
   it("says what a Door Randomizer seed's logic rests on, and names what it cannot model", () => {
@@ -117,9 +139,24 @@ describe("MapPanel", () => {
 
     act(() => useGameStore.getState().updateDoorSettings({ pottery: "keys" }));
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for shuffled key drops with keys outside their dungeons yet: every check shows as maybe.",
+      "Not modelled yet: shuffled key drops with keys outside their dungeons. Every check shows as maybe.",
     );
     expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+
+    // DR's glitched logics are not alttpr.com's, which the pack ports
+    act(() => useGameStore.getState().applyPreset("door-randomizer"));
+    act(() =>
+      useGameStore
+        .getState()
+        .updateSettings({ glitches: "overworld_glitches" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the Door Randomizer's Overworld Glitches. Every check shows as maybe.",
+    );
+    expect(screen.queryByTestId("logic-note-door")).not.toBeInTheDocument();
+    expect(screen.getByTestId("marker-hobo")).toHaveAccessibleName(
+      "Hobo: maybe available",
+    );
 
     act(() => useGameStore.getState().applyPreset("door-randomizer"));
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
@@ -140,39 +177,84 @@ describe("MapPanel", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
-        entranceShuffle: "full",
+        entranceShuffle: "insanity",
       }),
     );
     render(<MapPanel />);
     const note = screen.getByTestId("logic-note");
     expect(note).toHaveTextContent(
-      "The tracker has no logic for Full entrance shuffle yet: every check shows as maybe.",
+      "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
     );
     expect(note).not.toHaveTextContent("Open runs");
+  });
+
+  it("follows the entrances noted in a Simple, Restricted or Full run with its keys wild", () => {
+    for (const entranceShuffle of ["simple", "restricted", "full"] as const) {
+      act(() =>
+        useGameStore.getState().applyRun("crosskeys", {
+          ...getPreset("crosskeys").settings,
+          entranceShuffle,
+        }),
+      );
+      const { unmount } = render(<MapPanel />);
+      expect(screen.getByTestId("logic-note")).toHaveTextContent(
+        "The logic follows the entrances you noted",
+      );
+      unmount();
+    }
   });
 
   it("names every cause when several apply", () => {
     act(() =>
       useGameStore.getState().applyRun("open", {
         ...getPreset("open").settings,
-        entranceShuffle: "simple",
+        entranceShuffle: "insanity",
+        mode: "inverted",
+      }),
+    );
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "Not modelled yet: the Insanity entrance shuffle and shuffled entrances in the Inverted world. Every check shows as maybe.",
+    );
+  });
+
+  it("says a No Logic seed promises no route, and what the map shows", () => {
+    act(() =>
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
         glitches: "no_logic",
       }),
     );
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for No Logic and Simple entrance shuffle yet: every check shows as maybe.",
+      "No Logic: the seed promises no route, so nothing is in logic. The map shows what you can reach without glitches (set under Played with in Mode). A key may sit behind its own door: a key door stays maybe until every spot its key may sit in is reached, or you mark its keys (Show key cells).",
     );
   });
 
-  it("says shuffled bosses behind shuffled entrances are not modelled", () => {
+  it("tells a Mystery run to set its entrances, then its glitches", () => {
+    act(() => useGameStore.getState().applyPreset("mystery"));
+    render(<MapPanel />);
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The entrances are not set yet: they may be shuffled, so every check shows as maybe until you set Entrances in Mode.",
+    );
+    act(() =>
+      useGameStore.getState().updateSettings({ entranceShuffle: "none" }),
+    );
+    expect(screen.getByTestId("logic-note")).toHaveTextContent(
+      "The glitches are not set yet: a check only a glitched logic reaches, or whose key may sit behind its own door (as in No Logic), shows as maybe until you set Glitches in Mode.",
+    );
+    act(() => useGameStore.getState().updateSettings({ glitches: "none" }));
+    expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
+  });
+
+  it("models shuffled bosses behind shuffled entrances", () => {
     act(() => {
       useGameStore.getState().applyPreset("crosskeys");
       useGameStore.getState().updateSettings({ bossShuffle: "full" });
     });
     render(<MapPanel />);
     expect(screen.getByTestId("logic-note")).toHaveTextContent(
-      "The tracker has no logic for shuffled bosses behind Crossworld entrances yet: every check shows as maybe.",
+      "The logic follows the entrances you noted: a check behind a door you have not noted stays out of logic.",
     );
   });
 
@@ -192,7 +274,12 @@ describe("MapPanel", () => {
       expect(goMode).toHaveTextContent("Go mode: goal unknown");
       expect(goMode.tagName).toBe("SPAN");
 
+      // Its entrances not known yet, every check is maybe: no go mode
       act(() => useGameStore.getState().updateSettings({ goal: "ganon" }));
+      expect(screen.queryByTestId("go-mode")).toBeNull();
+      act(() =>
+        useGameStore.getState().updateSettings({ entranceShuffle: "none" }),
+      );
       expect(screen.getByTestId("go-mode")).toHaveAccessibleName(
         "Go mode: not yet",
       );

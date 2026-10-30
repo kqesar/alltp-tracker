@@ -7,6 +7,7 @@ import type { RunSettings } from "@/games/alttpr/data/presets";
 import { analyzeNow } from "@/games/alttpr/hooks/useRunAnalysis";
 import { analyzeRun, type GoModeLeft } from "@/games/alttpr/logic/missing";
 import type { Need } from "@/games/alttpr/logic/needs";
+import { SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import { useAnalysisStore } from "@/games/alttpr/stores/analysisStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -250,6 +251,31 @@ describe("GoMode", () => {
     const panel = await openPanel();
     expect(panel).toHaveTextContent("Every step to the goal is in logic.");
     expect(within(panel).queryByRole("list", { hidden: true })).toBeNull();
+  });
+
+  it("says a No Logic run's go mode reachable, never in logic", async () => {
+    // A key may sit behind its own door: marked by hand, every one is in hand
+    setRun(
+      Object.fromEntries(
+        [...Array(10).keys(), 12].map((index) => [`bigkey${index}`, 1]),
+      ),
+      { glitches: "no_logic" },
+    );
+    act(() => useGameStore.setState({ smallKeys: [...SMALL_KEYS_MAX] }));
+    render(<GoMode />);
+    act(() => analyzeNow());
+
+    expect(screen.getByTestId("go-mode")).toHaveAccessibleName(
+      "Go mode: reachable",
+    );
+    const panel = await openPanel();
+    expect(panel).toHaveTextContent(
+      "Every step to the goal is reachable without glitches.",
+    );
+    expect(panel).not.toHaveTextContent(/in logic/i);
+    expect(screen.getByTestId("go-mode-status")).toHaveTextContent(
+      "Go mode: reachable",
+    );
   });
 
   it("counts a triforce hunt's pieces left, in logic once the goal's are found", async () => {

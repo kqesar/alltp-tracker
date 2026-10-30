@@ -27,7 +27,7 @@ describe("a dungeon's known boss", () => {
     expect(bossOfValue(1)).toBe("armosKnights");
     expect(bossOfValue(10)).toBe("trinexx");
     expect(valueOfBoss("blind")).toBe(7);
-    expect(knownBossText(7)).toBe("Blind");
+    expect(knownBossText(7)).toBe("Blind the Thief");
     expect(knownBossText(0)).toBe("unknown");
     expect(knownBossIndex("knownboss8")).toBe(MIRE);
     expect(knownBossIndex("boss8")).toBeNull();

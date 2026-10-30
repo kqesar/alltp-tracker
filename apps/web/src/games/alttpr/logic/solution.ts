@@ -51,6 +51,7 @@ import {
   doorLogic,
   isHidden,
   logicModelled,
+  portedShuffleOf,
   type RunSettings,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
@@ -63,6 +64,7 @@ import type {
 import { packReading } from "@/games/alttpr/logic/packItems";
 import {
   drSettingsOf,
+  glitchBounds,
   KEY_DUNGEONS,
   packSettings,
   worldOf,
@@ -82,17 +84,6 @@ export type LocationStatus = MarkerStatus | "margin" | "seen" | "trick";
 
 /** What a marker shows: what is left in logic, or done. */
 export type MarkerState = LocationStatus | "opened";
-
-/** The words a screen reader hears for each state; the glyph says it on screen. */
-export const STATE_LABELS: Record<MarkerState, string> = {
-  available: "available",
-  margin: "out of logic, doable outside Basic's safety margin",
-  opened: "done",
-  possible: "maybe available",
-  seen: "visible, not reachable yet",
-  trick: "out of logic, doable with a trick",
-  unavailable: "out of logic",
-};
 
 /**
  * What locations left show, from their tris, what can be seen of them
@@ -160,13 +151,19 @@ const padOf = (value: number | undefined): Medallion | "unknown" =>
  * What the player recorded, as the pack's TrackerInput: the items, bosses
  * beaten and prizes through the app's one table (packReading), the
  * medallion pads (Misery Mire's slot 8, Turtle Rock's 9), the small keys
- * by grid dungeon, and the events checked on the map.
+ * by grid dungeon, the Triforce pieces found and asked for, and the events
+ * checked on the map.
  */
 export const trackerInput = (inputs: Inputs): TrackerInput => {
   const { items, medallions, smallKeys } = inputs;
   const events = eventsOf(inputs);
   return {
     ...packReading(items),
+    // The pieces a ganonhunt's Ganon wants, as the board counts them
+    goalPieces: {
+      found: Number(items.triforce ?? 0),
+      required: Number(items.goalpieces ?? 0),
+    },
     ...(events === ""
       ? {}
       : {
@@ -220,7 +217,9 @@ export interface Solution {
   readonly keyed: KeyedSolution;
   /**
    * A run with shuffled entrances (crossedLogic): the entrance randomizer's
-   * world solved for the entrances noted, whose tris the tracker shows.
+   * world solved for the entrances noted, its keys read by its own key
+   * model, whose tris the tracker shows. `keyed` above is then vt's world's,
+   * which nothing of the run reads.
    */
   readonly crossed?: CrossedRun & {
     readonly solver: CrossedSolver;
@@ -231,7 +230,36 @@ export interface Solution {
    * solved for the run's settings, whose tris the tracker shows.
    */
   readonly door?: DoorRun & { readonly solver: DoorSolver };
+  /**
+   * A run whose glitches are not known yet (Mystery): solved again in the
+   * most permissive logic (`glitchBounds`), `settings` and `keyed` being
+   * the least. Its tris are those two met (`meetTri`).
+   */
+  readonly upper?: {
+    readonly settings: AlttprSettings;
+    readonly keyed: KeyedSolution;
+  };
 }
+
+/**
+ * What holds between two bounds of a location: `yes` once the least
+ * permissive logic says so, `no` once the most permissive does, else
+ * maybe. Every logic in between reads as one of them would.
+ */
+export const meetTri = (lower: Tri, upper: Tri): Tri =>
+  lower === "yes" ? "yes" : upper === "no" ? "no" : "maybe";
+
+/** Two bounds' tris met, location by location. */
+const meetTris = (
+  lower: Readonly<Record<string, Tri>>,
+  upper: Readonly<Record<string, Tri>>,
+): Readonly<Record<string, Tri>> =>
+  Object.fromEntries(
+    Object.entries(lower).map(([id, low]) => [
+      id,
+      meetTri(low, upper[id] ?? "yes"),
+    ]),
+  );
 
 /**
  * The world of its own a run is solved in, with its solver: the entrance
@@ -280,10 +308,8 @@ export const setDoorSolver = (solver: DoorSolver): void => {
  * too, Eastern Palace's among them): DR's world reads a key door below its
  * number as maybe while the keys stay in their dungeons, never no.
  */
-const doorStateOf = (inputs: Inputs, settings: AlttprSettings): State => {
-  const state: Record<string, State[string]> = {
-    ...toState(trackerInput(inputs), settings),
-  };
+const doorStateOf = (recorded: State, inputs: Inputs): State => {
+  const state: Record<string, State[string]> = { ...recorded };
   KEY_DUNGEONS.forEach((id, index) => {
     const keys = inputs.smallKeys[index] ?? 0;
     const item = `key${dungeon(id).code}`;
@@ -347,17 +373,31 @@ export const solutionOf = (state: Inputs): Solution => {
     return last.solution;
   }
   const settings = packSettings(state.settings);
-  const keyed = solveWithKeys(
-    fillerOf(settings),
-    toState(trackerInput(state), settings),
-  );
-  // Shuffled entrances: the entrance randomizer's world once its solver is
-  // loaded, every check maybe until then
-  const solved =
-    entrances === undefined || crossed === undefined
+  const input = trackerInput(state);
+  const recorded = toState(input, settings);
+  const keyed = solveWithKeys(fillerOf(settings), recorded);
+  // Glitches not known yet: the most permissive logic too
+  const bounds = glitchBounds(state.settings);
+  const upper =
+    bounds === undefined
       ? undefined
       : {
-          ...crossed.solve(settings, entrances, keyed.state),
+          keyed: solveWithKeys(
+            fillerOf(bounds.upper),
+            toState(input, bounds.upper),
+          ),
+          settings: bounds.upper,
+        };
+  // Shuffled entrances: the entrance randomizer's world once its solver is
+  // loaded, every check maybe until then. It reads what the player recorded,
+  // its own key model the keys it kept in their dungeons: vt's keys surely
+  // in hand are those of another world
+  const shuffle = portedShuffleOf(state.settings);
+  const solved =
+    entrances === undefined || crossed === undefined || shuffle === undefined
+      ? undefined
+      : {
+          ...crossed.solve(settings, shuffle, entrances, recorded),
           entrances,
           solver: crossed,
         };
@@ -371,7 +411,7 @@ export const solutionOf = (state: Inputs): Solution => {
           ...door.solve(
             drSettingsOf(state.settings),
             doorAddedOf(state.settings),
-            doorStateOf(state, settings),
+            doorStateOf(recorded, state),
           ),
           solver: door,
         };
@@ -381,12 +421,22 @@ export const solutionOf = (state: Inputs): Solution => {
     (!doorRun || doorSolved !== undefined);
   const unknown = (tris: Readonly<Record<string, Tri>>) =>
     Object.fromEntries(Object.keys(tris).map((id) => [id, "maybe" as const]));
-  const own = solved ?? doorSolved;
-  const tris = own?.solution.locations() ?? keyed.locations();
-  const visibles = own?.solution.visibles() ?? keyed.solution.visibles();
+  const tris =
+    solved?.keyed.locations() ??
+    doorSolved?.solution.locations() ??
+    (upper === undefined
+      ? keyed.locations()
+      : meetTris(keyed.locations(), upper.keyed.locations()));
+  const visibles =
+    solved?.solution.visibles() ??
+    doorSolved?.solution.visibles() ??
+    (upper === undefined
+      ? keyed.solution.visibles()
+      : meetTris(keyed.solution.visibles(), upper.keyed.solution.visibles()));
   const solution = {
     ...(solved === undefined ? {} : { crossed: solved }),
     ...(doorSolved === undefined ? {} : { door: doorSolved }),
+    ...(upper === undefined ? {} : { upper }),
     keyed,
     modelled,
     settings,

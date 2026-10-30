@@ -1,0 +1,22 @@
+{
+  "description": "A link of a Door Randomizer run as the unreleased door-randomizer branch packed it (commit 49e42ff8, never deployed), its settings table v2.66.0's then the Door Randomizer's: v2.67.0 put its own entries in those places first, so this link is refused as another version's, never misread. Recorded by that commit's packLink; never change it.",
+  "link": {
+    "format": "alltp-tracker-link",
+    "game": "alttpr",
+    "link": 4,
+    "progress": {
+      "checked": "gIAKCtoYPQBMFCQkIBBCiOzwBzkABGz4khEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "entrances": {},
+      "items": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAICAgICAgICAgIGBAQKDAQIBgQKKAAAAAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAFDw",
+      "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "presetId": "door-randomizer",
+      "seed": null,
+      "settings": "JyQcCQ0ELyUqABNFTE8",
+      "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "timeline": "QLCz28uYNBwFDzYdDseD8gEMiESi0YkEilUumEymlOqFWr1it10v2Eymi1m24HI53Q6nW7Hi8nm9Hq9nu_YBAYFD4vGI1G5BIZFI5JJpTLJbMbUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1MLUwtTC1ML-1L4A"
+    },
+    "sizes": [1817, 125, 116],
+    "table": "1PYm-w",
+    "version": 12
+  }
+}

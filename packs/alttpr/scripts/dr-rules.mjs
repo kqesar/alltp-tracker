@@ -73,6 +73,11 @@ import {
  * @typedef {import("./rules-core.mjs").Context} Context
  * @typedef {import("./rules-core.mjs").Dialect} Dialect
  * @typedef {import("./rules-core.mjs").Scope} Scope
+ * @typedef {Context & {
+ *   bossOfRegion: (region: string, level?: string) => string,
+ * }} DrContext
+ *   The core's context, and the vanilla boss of a region's dungeon, which
+ *   DR's boss expressions compare by name.
  */
 
 /**
@@ -413,7 +418,7 @@ function bossOf(ctx, expr, scope) {
   if (dungeon.t !== "attr" || dungeon.name !== "dungeon") return undefined;
   const region = regionNamed(dungeon.of, scope);
   if (region === undefined) return undefined;
-  return ctx.bossOfRegion(region, level);
+  return /** @type {DrContext} */ (ctx).bossOfRegion(region, level);
 }
 
 /**
@@ -1275,20 +1280,30 @@ export function importDrRules(read, world, extras) {
     return baseSource.slice(0, at).split("\n").length;
   };
 
-  /** @type {Context} */
+  /**
+   * The vanilla boss a region's dungeon fights (at `level` in Ganon's
+   * Tower): boss shuffle is not read.
+   * @param {string} region
+   * @param {string} [level]
+   */
+  const bossOfRegion = (region, level) => {
+    const dungeon = dungeonOfRegion.get(region);
+    const boss =
+      dungeon === undefined
+        ? undefined
+        : level === undefined
+          ? bossOfDungeon.get(dungeon)
+          : towerBosses.get(level);
+    if (boss === undefined || boss === null)
+      throw new Untranslatable(`no boss in ${region}`);
+    return boss;
+  };
+
+  /** @type {DrContext} */
   const ctx = {
-    bossOfRegion: (region, level) => {
-      const dungeon = dungeonOfRegion.get(region);
-      const boss =
-        dungeon === undefined
-          ? undefined
-          : level === undefined
-            ? bossOfDungeon.get(dungeon)
-            : towerBosses.get(level);
-      if (boss === undefined || boss === null)
-        throw new Untranslatable(`no boss in ${region}`);
-      return boss;
-    },
+    bossHelper: (region, level) =>
+      `drDefeat${pascal(bossOfRegion(region, level))}`,
+    bossOfRegion,
     derived: new Map(),
     dialect: DR,
     events,
@@ -1431,7 +1446,14 @@ export function importDrRules(read, world, extras) {
           { item, location, source: `ItemList.py:${line}` },
         ]),
     ),
-    fill: [...new Set(fill)],
+    // The lines alone: no key model reads DR's yet
+    fill: [
+      ...new Set(
+        [...fill.forbid, ...fill.always, ...fill.itemRules].map(({ source }) =>
+          Number(source.slice("Rules.py:".length)),
+        ),
+      ),
+    ].sort((a, b) => a - b),
     helpers: sortedOf(ctx.helpers),
     kill: sortedOf(enemies.kill),
     locations: rulesOf("location"),

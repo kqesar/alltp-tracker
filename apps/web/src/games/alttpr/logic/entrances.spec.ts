@@ -4,6 +4,7 @@ import { getPreset } from "@/games/alttpr/data/presets";
 import {
   entranceById,
   entranceText,
+  gameNotes,
   layoutOf,
   notesFor,
   placeMarkers,
@@ -26,14 +27,50 @@ describe("the entrance assistant's model", () => {
     expect(poolOf({ ...crosskeys, mode: "inverted" })).toBeNull();
   });
 
-  it("has a pool of its own for the full shuffle, and none for the shuffles it does not port", () => {
-    const full = { ...crosskeys, entranceShuffle: "full" as const };
-    expect(poolOf(full)).not.toBe(poolOf(crosskeys));
-    expect(poolOf(full)?.entrances).toHaveLength(138);
-    expect(poolOf({ ...full, mode: "inverted" })).toBeNull();
-    // Simple, Restricted and Insanity mix other doors with other targets
-    for (const entranceShuffle of ["simple", "restricted", "insanity"] as const)
-      expect(poolOf({ ...crosskeys, entranceShuffle })).toBeNull();
+  it("offers a Retro run's doors its take-any caves", () => {
+    const retro = { ...crosskeys, mode: "retro" as const };
+    const ids = (settings: typeof crosskeys) =>
+      poolOf(settings)
+        ?.targetsOf.get("kakariko-shop")
+        ?.map((t) => t.id) ?? [];
+    expect(ids(retro)).toContain("take-any-1");
+    expect(ids(retro)).toContain("old-man-sword-cave");
+    expect(ids(crosskeys)).not.toContain("take-any-1");
+    expect(ids({ ...retro, entranceShuffle: "full" })).toContain("take-any-1");
+  });
+
+  it("has a pool of its own for each shuffle it ports, made once, and none for Insanity", () => {
+    const seen = new Set<unknown>();
+    for (const entranceShuffle of [
+      "simple",
+      "restricted",
+      "full",
+      "crossed",
+    ] as const)
+      for (const mode of ["open", "retro", "standard"] as const) {
+        const settings = { ...crosskeys, entranceShuffle, mode };
+        const pool = poolOf(settings);
+        expect(pool?.shuffle).toBe(entranceShuffle);
+        expect(poolOf({ ...settings })).toBe(pool);
+        seen.add(pool);
+        // Whatever the dungeon items: the assistant is not the logic
+        expect(poolOf({ ...settings, dungeonItems: "standard" })).toBe(pool);
+        expect(poolOf({ ...settings, mode: "inverted" })).toBeNull();
+      }
+    expect(seen.size).toBe(12);
+    expect(
+      poolOf({ ...crosskeys, entranceShuffle: "simple" })?.entrances,
+    ).toHaveLength(138);
+    // Standard's simple shuffle keeps the castle's doors
+    expect(
+      poolOf({
+        ...crosskeys,
+        entranceShuffle: "simple",
+        mode: "standard",
+      })?.entrances.map((e) => e.id),
+    ).not.toContain("agahnims-tower");
+    // Insanity parts a door from its way out: not modelled yet
+    expect(poolOf({ ...crosskeys, entranceShuffle: "insanity" })).toBeNull();
   });
 
   const pool = poolOf(crosskeys);
@@ -56,6 +93,54 @@ describe("the entrance assistant's model", () => {
     });
     expect(notesFor(pool, "kakariko-shop", "blinds-hideout")).toEqual({
       "kakariko-shop": "blinds-hideout",
+    });
+  });
+
+  it("notes a four-door dungeon whole, and a simple pair's cave, where the shuffle moves them whole", () => {
+    const simple = poolOf({ ...crosskeys, entranceShuffle: "simple" });
+    const restricted = poolOf({ ...crosskeys, entranceShuffle: "restricted" });
+    if (simple === null || restricted === null) throw new Error("no pool");
+    // The Desert's doors lead into Hyrule Castle and Agahnim's Tower
+    const desert = {
+      "desert-palace-entrance-east": "hyrule-castle-exit-east",
+      "desert-palace-entrance-north": "agahnims-tower-exit",
+      "desert-palace-entrance-south": "hyrule-castle-exit-south",
+      "desert-palace-entrance-west": "hyrule-castle-exit-west",
+    };
+    for (const shuffled of [simple, restricted])
+      expect(
+        notesFor(
+          shuffled,
+          "desert-palace-entrance-north",
+          "agahnims-tower-exit",
+        ),
+      ).toEqual(desert);
+    expect(
+      notesFor(pool, "desert-palace-entrance-north", "agahnims-tower-exit"),
+    ).toEqual({ "desert-palace-entrance-north": "agahnims-tower-exit" });
+    // A pair of doors takes a two-door cave whole in the simple shuffle
+    const pair = {
+      "elder-house-east": "superbunny-cave-exit-bottom",
+      "elder-house-west": "superbunny-cave-exit-top",
+    };
+    expect(
+      notesFor(simple, "elder-house-west", "superbunny-cave-exit-top"),
+    ).toEqual(pair);
+    expect(
+      notesFor(restricted, "elder-house-west", "superbunny-cave-exit-top"),
+    ).toEqual({ "elder-house-west": "superbunny-cave-exit-top" });
+  });
+
+  it("notes what the game shows Link went through with what it settles", () => {
+    const simple = poolOf({ ...crosskeys, entranceShuffle: "simple" });
+    if (simple === null) throw new Error("no pool");
+    // Through Turtle Rock's front door (its slot 52) into its front (exit_ids: 53)
+    const notes = gameNotes(simple, {}, [
+      { entrance: 53, kind: "door", slot: 52 },
+    ]);
+    expect(notes).toMatchObject({
+      "dark-death-mountain-ledge-east": "turtle-rock-ledge-exit-east",
+      "turtle-rock": "turtle-rock-exit-front",
     });
   });
 

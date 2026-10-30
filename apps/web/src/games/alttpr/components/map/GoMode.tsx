@@ -12,6 +12,7 @@ import {
   goModeStatusOf,
 } from "@/games/alttpr/logic/missing";
 import type { Need } from "@/games/alttpr/logic/needs";
+import { type LogicWords, useLogicWords } from "@/games/alttpr/logic/words";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { getAssetPath } from "@/games/alttpr/utils";
 import { placeUnder } from "@/utils/popover";
@@ -97,10 +98,13 @@ const Line = ({ children }: { children: string }) => (
 const GoModeDetail = ({
   pieces,
   tri,
+  words,
 }: {
   /** A triforce hunt's pieces left to find; undefined for any other goal */
   pieces: number | undefined;
   tri: Shown;
+  /** The run's words: a No Logic run's go mode is reachable, never in logic */
+  words: LogicWords;
 }) => {
   const left = useGoModeLeft();
   if (pieces !== undefined) {
@@ -113,7 +117,9 @@ const GoModeDetail = ({
     );
   }
   if (tri === "yes") {
-    return <p className="missing">Every step to the goal is in logic.</p>;
+    return (
+      <p className="missing">Every step to the goal is {words.yesFull}.</p>
+    );
   }
   return (
     <>
@@ -126,7 +132,7 @@ const GoModeDetail = ({
           before the seed relies on it.
         </p>
       )}
-      <GoModeLeftDetail left={left} tri={tri} />
+      <GoModeLeftDetail left={left} tri={tri} words={words} />
     </>
   );
 };
@@ -135,9 +141,11 @@ const GoModeDetail = ({
 const GoModeLeftDetail = ({
   left,
   tri,
+  words,
 }: {
   left: GoModeLeft | undefined;
   tri: Shown;
+  words: LogicWords;
 }) => {
   if (left === undefined) {
     return <p className="missing missing--pending">Working it out…</p>;
@@ -155,8 +163,7 @@ const GoModeLeftDetail = ({
     case "unknown":
       return (
         <Line>
-          No item puts it in logic yet: it hangs on a setting not known yet or
-          on where an item sits.
+          {`No item puts it ${words.noLogic ? "within reach" : "in logic"} yet: it hangs on a setting not known yet or on where an item sits.`}
         </Line>
       );
     case "door":
@@ -166,7 +173,7 @@ const GoModeLeftDetail = ({
   if (sets.length === 0) {
     return <Line>More than three items away, crystals aside.</Line>;
   }
-  const lead = tri === "no" ? "Missing" : "In logic with";
+  const lead = tri === "no" ? "Missing" : words.yesWith;
   const [first] = sets;
   if (sets.length === 1 && first !== undefined) {
     return (
@@ -215,6 +222,7 @@ export const GoMode = () => {
   const margin = useGameStore(goModeMarginOf);
   const tri: Shown | undefined = margin ? "margin" : status;
   const goalHidden = useGameStore((state) => isHidden(state.settings, "goal"));
+  const logicWords = useLogicWords();
   const hunt = useGameStore((state) => isHunt(state.settings));
   const found = useGameStore((state) => state.items.triforce as number);
   const asked = useGameStore((state) => state.items.goalpieces as number);
@@ -236,7 +244,8 @@ export const GoMode = () => {
     );
   }
   if (tri === undefined) return null;
-  const { glyph, words } = STATES[tri];
+  const { glyph } = STATES[tri];
+  const words = tri === "yes" ? logicWords.yes : STATES[tri].words;
 
   return (
     <>
@@ -261,7 +270,7 @@ export const GoMode = () => {
         id={panelId}
         popover="auto"
       >
-        <GoModeDetail pieces={piecesLeft} tri={tri} />
+        <GoModeDetail pieces={piecesLeft} tri={tri} words={logicWords} />
       </div>
       <span className="sr-only" data-testid="go-mode-status" role="status">
         Go mode: {words}

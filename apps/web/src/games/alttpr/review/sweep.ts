@@ -32,7 +32,13 @@ import {
 } from "@alltp/pack-alttpr";
 import { DOOR_LOCATION_IDS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
-import { doorLogic, logicModelled } from "@/games/alttpr/data/presets";
+import {
+  doorLogic,
+  type Glitches,
+  glitchesOf,
+  logicModelled,
+  noLogicRun,
+} from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
 import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
@@ -64,8 +70,13 @@ export type Hidden =
   /** Entrances are shuffled: the run does not time them. */
   | "entrances"
   /**
+   * The seed has No Logic: it promises no route, so no place is ever in
+   * logic, and nothing waited for it.
+   */
+  | "no-logic"
+  /**
    * The pack does not model the run's logic: settings hidden, the bosses
-   * shuffled, a glitched logic.
+   * shuffled, a logic other than the run's.
    */
   | "not-modelled"
   /**
@@ -92,6 +103,18 @@ export type Hidden =
    * finds go by item.
    */
   | "race-mode";
+
+/**
+ * The log's `meta.logic` for each of the run's glitches (vt's config
+ * logic names, app/Http/Controllers/RandomizerController.php:110-116).
+ */
+const LOG_LOGIC: Readonly<Record<Glitches | "none", string>> = {
+  hybrid_major_glitches: "HybridMajorGlitches",
+  major_glitches: "MajorGlitches",
+  no_logic: "NoLogic",
+  none: "NoGlitches",
+  overworld_glitches: "OverworldGlitches",
+};
 
 const required = (rows: readonly ReviewRow[]) =>
   rows.filter(({ entry }) => entry.placement.sphere !== null);
@@ -125,13 +148,22 @@ export const hiddenReason = (
   if (settings.entranceShuffle !== "none" || log.format === "er") {
     return "entrances";
   }
-  // The pack ports vt's NoGlitches rules with the vanilla bosses
   const logic = log.extra.settings?.logic;
+  // No route is promised: "in logic from" has no meaning
+  if (
+    noLogicRun(settings) ||
+    (logic?.known === true && logic.value === LOG_LOGIC.no_logic)
+  ) {
+    return "no-logic";
+  }
+  // The waits are the run's logic's (a glitched one's included: the pack
+  // models them all), with the vanilla bosses; a log of another logic is
+  // not this run's settings
   if (
     !logicModelled(settings) ||
     (settings.hidden?.length ?? 0) > 0 ||
     log.extra.bosses !== null ||
-    (logic?.known === true && logic.value !== "NoGlitches")
+    (logic?.known === true && logic.value !== LOG_LOGIC[glitchesOf(settings)])
   ) {
     return "not-modelled";
   }

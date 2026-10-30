@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest";
 import { loadFixtures } from "../test/fixtures";
 import {
   type AlttprSettings,
+  LOGIC_FLAGS,
+  LOGICS,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,
+  UNKNOWN,
   UPSTREAM_TEST,
 } from "./settings";
+import { EMPTY_INPUT, toState } from "./tracker";
 
 const GLITCHES = [
   "canBootsClip",
@@ -63,15 +68,37 @@ describe("the settings", () => {
     expect(world.locationIds).toHaveLength(Object.keys(UPSTREAM_TEST).length);
   });
 
-  it("model NoGlitches only: every glitch flag is off", () => {
+  it("turn no glitch flag on in NoGlitches", () => {
     for (const settings of [OPEN, STANDARD, UPSTREAM_TEST]) {
       expect(Object.values(pick(settings, GLITCHES))).toEqual(
         GLITCHES.map(() => false),
       );
+      expect(settings.bootsAtStart).toBe(false);
+      expect(settings.noLogic).toBe(false);
+    }
+  });
+
+  it("turn on each logic's flags, and start a glitched world with the boots", () => {
+    for (const logic of LOGICS) {
+      const settings = settingsFromUpstream("open", { logic });
+      expect(GLITCHES.filter((flag) => settings[flag]).sort(), logic).toEqual(
+        [...LOGIC_FLAGS[logic]].sort(),
+      );
+      // Randomizer.php:122-131
+      expect(settings.bootsAtStart, logic).toBe(logic !== "NoGlitches");
+      expect(
+        settingsFromUpstream("open", { difficulty: "custom", logic })
+          .bootsAtStart,
+      ).toBe(false);
     }
     expect(() =>
-      settingsFromUpstream("standard", { logic: "OverworldGlitches" }),
-    ).toThrow(/"logic" cannot be "OverworldGlitches"/);
+      settingsFromUpstream("standard", { logic: "NoLogic" }),
+    ).toThrow(/"logic" cannot be "NoLogic"/);
+  });
+
+  it("read a No Logic seed with a logic's rules, the boots given", () => {
+    const settings = noLogicSettings(OPEN);
+    expect(settings).toEqual({ ...OPEN, bootsAtStart: true, noLogic: true });
   });
 });
 
@@ -132,8 +159,15 @@ describe("the presets", () => {
     expect(configs.length).toBeGreaterThan(23);
     const worlds = new Set(configs.map((settings) => JSON.stringify(settings)));
     // Standard, Open, Inverted and retro, and the ways the cases set maps
-    // and compasses in Standard's and Inverted's
-    expect(worlds.size).toBe(8);
+    // and compasses in Standard's and Inverted's; Standard, Open and
+    // Inverted in Overworld Glitches and in Major Glitches
+    expect(worlds.size).toBe(14);
+    expect(configs).toContainEqual(
+      settingsFromUpstream("standard", {
+        difficulty: "test_rules",
+        logic: "OverworldGlitches",
+      }),
+    );
     expect(configs).toContainEqual(UPSTREAM_TEST);
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, standardMode: false });
     expect(configs).toContainEqual({
@@ -150,6 +184,33 @@ describe("the presets", () => {
     });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildMaps: true });
     expect(configs).toContainEqual({ ...UPSTREAM_TEST, wildCompasses: true });
+  });
+});
+
+describe("the weapons", () => {
+  it("start Link with a sword when assured (Randomizer.php:256-260)", () => {
+    const assured = settingsFromUpstream("open", { "mode.weapons": "assured" });
+    expect(assured.swordAtStart).toBe(true);
+    expect(toState(EMPTY_INPUT, assured).sword).toBe(1);
+    // A sword found counts on top of nothing: the pre-collected one is it
+    expect(
+      toState({ ...EMPTY_INPUT, items: { sword: 3 } }, assured).sword,
+    ).toBe(3);
+  });
+
+  it("read vanilla as randomized: no rule asks where the swords are", () => {
+    const vanilla = settingsFromUpstream("open", { "mode.weapons": "vanilla" });
+    const randomized = settingsFromUpstream("open", {
+      "mode.weapons": "randomized",
+    });
+    expect(vanilla).toEqual(randomized);
+    expect(toState(EMPTY_INPUT, vanilla).sword).toBeUndefined();
+  });
+
+  it("leave the sword out while they are not known", () => {
+    const hidden = settingsFromUpstream("open", { "mode.weapons": UNKNOWN });
+    expect(hidden.swordAtStart).toEqual(UNKNOWN);
+    expect(toState(EMPTY_INPUT, hidden).sword).toBeUndefined();
   });
 });
 

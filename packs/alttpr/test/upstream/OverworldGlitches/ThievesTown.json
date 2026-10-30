@@ -1,0 +1,78 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/ThievesTownTest.php",
+  "class": "OverworldGlitches\\ThievesTownTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":76,"location":"Thieves' Town - Attic","method":"testFillLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":77,"location":"Thieves' Town - Attic","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":79,"location":"Thieves' Town - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":81,"location":"Thieves' Town - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":83,"location":"Thieves' Town - Compass Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":85,"location":"Thieves' Town - Ambush Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":87,"location":"Thieves' Town - Big Chest","method":"testFillLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":88,"location":"Thieves' Town - Big Chest","method":"testFillLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":90,"location":"Thieves' Town - Blind's Cell","method":"testFillLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"BigKeyD4","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"fill","line":92,"location":"Thieves' Town - Boss","method":"testFillLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","item":"KeyD4","items":{"add":[],"base":"allItems","except":["KeyD4"]},"kind":"fill","line":93,"location":"Thieves' Town - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":100,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":101,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":102,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots","KeyD4","BigKeyD4"],"base":"setUp"},"kind":"location","line":103,"location":"Thieves' Town - Attic","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":105,"location":"Thieves' Town - Big Key Chest","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":106,"location":"Thieves' Town - Big Key Chest","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":107,"location":"Thieves' Town - Big Key Chest","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":109,"location":"Thieves' Town - Map Chest","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":110,"location":"Thieves' Town - Map Chest","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":111,"location":"Thieves' Town - Map Chest","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":113,"location":"Thieves' Town - Compass Chest","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":114,"location":"Thieves' Town - Compass Chest","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":115,"location":"Thieves' Town - Compass Chest","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":117,"location":"Thieves' Town - Ambush Chest","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":118,"location":"Thieves' Town - Ambush Chest","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":119,"location":"Thieves' Town - Ambush Chest","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":121,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":122,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":123,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots","Hammer","KeyD4","BigKeyD4"],"base":"setUp"},"kind":"location","line":124,"location":"Thieves' Town - Big Chest","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":126,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":127,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":128,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["MoonPearl","PegasusBoots","BigKeyD4"],"base":"setUp"},"kind":"location","line":129,"location":"Thieves' Town - Blind's Cell","method":"testLocation"},
+    {"dataSet":24,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":131,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":25,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":132,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":26,"expected":false,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":[],"base":"allItems","except":["BigKeyD4"]},"kind":"location","line":133,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","ProgressiveSword"],"base":"setUp"},"kind":"location","line":134,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","UncleSword"],"base":"setUp"},"kind":"location","line":135,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","MasterSword"],"base":"setUp"},"kind":"location","line":136,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":30,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","L3Sword"],"base":"setUp"},"kind":"location","line":137,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":31,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","L4Sword"],"base":"setUp"},"kind":"location","line":138,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":32,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","CaneOfByrna"],"base":"setUp"},"kind":"location","line":139,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":33,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","CaneOfSomaria"],"base":"setUp"},"kind":"location","line":140,"location":"Thieves' Town - Boss","method":"testLocation"},
+    {"dataSet":34,"expected":true,"file":"tests/OverworldGlitches/ThievesTownTest.php","items":{"add":["KeyD4","MoonPearl","PegasusBoots","BigKeyD4","Hammer"],"base":"setUp"},"kind":"location","line":141,"location":"Thieves' Town - Boss","method":"testLocation"}
+  ]
+}

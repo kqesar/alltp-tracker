@@ -1,0 +1,54 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php",
+  "class": "InvertedMajorGlitches\\DarkWorld\\DeathMountain\\WestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Gloves"]},"kind":"location","line":52,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Hammer"]},"kind":"location","line":53,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Cape","CaneOfByrna"]},"kind":"location","line":54,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","ProgressiveGlove","Cape"],"base":"setUp"},"kind":"location","line":55,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","PowerGlove","Cape"],"base":"setUp"},"kind":"location","line":56,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","TitansMitt","Cape"],"base":"setUp"},"kind":"location","line":57,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","ProgressiveGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":58,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","PowerGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":59,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["Bottle","Hammer","TitansMitt","CaneOfByrna"],"base":"setUp"},"kind":"location","line":60,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","ProgressiveGlove","Cape"],"base":"setUp"},"kind":"location","line":61,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","PowerGlove","Cape"],"base":"setUp"},"kind":"location","line":62,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","TitansMitt","Cape"],"base":"setUp"},"kind":"location","line":63,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","ProgressiveGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":64,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","PowerGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":65,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["HalfMagic","Hammer","TitansMitt","CaneOfByrna"],"base":"setUp"},"kind":"location","line":66,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","ProgressiveGlove","Cape"],"base":"setUp"},"kind":"location","line":67,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","PowerGlove","Cape"],"base":"setUp"},"kind":"location","line":68,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","TitansMitt","Cape"],"base":"setUp"},"kind":"location","line":69,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","ProgressiveGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":70,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","PowerGlove","CaneOfByrna"],"base":"setUp"},"kind":"location","line":71,"location":"Spike Cave","method":"testLocation"},
+    {"dataSet":21,"expected":true,"file":"tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php","items":{"add":["QuarterMagic","Hammer","TitansMitt","CaneOfByrna"],"base":"setUp"},"kind":"location","line":72,"location":"Spike Cave","method":"testLocation"}
+  ]
+}

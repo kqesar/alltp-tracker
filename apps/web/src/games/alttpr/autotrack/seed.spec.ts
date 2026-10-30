@@ -114,10 +114,16 @@ describe("checkSeed", () => {
       "This seed is Mystery (Open, Ganon, 5/7, MC Shuffle, Swordless): its settings are laid on your Mystery run.",
     );
 
+    // The ROM tells NoGlitches apart: the hidden glitches are None
+    const { enemyHealth, glitches, swords, ...change } = check.change;
+    // Only the file states where the swords are and the enemies' health
+    expect([enemyHealth, swords]).toEqual([undefined, undefined]);
+    expect(glitches).toBe("none");
+
     // Once laid, the seed and the run agree
     const settings = {
       ...getPreset("mystery").settings,
-      ...check.change,
+      ...change,
       hidden: [
         "itemPlacement",
         "itemPool",
@@ -189,14 +195,36 @@ describe("checkSeed", () => {
       runText: "Keysanity",
       seedText: "Crosskeys (Open, Ganon, 7/7)",
     });
-    // Nor does a Mystery run take a seed of other entrances in place
+    // A Mystery run takes them in place while its entrances are hidden
     const vanilla = {
       ...seedOf({}),
       entrances: { known: true, value: "none" },
     } as const;
     expect(
       checkSeed({ ...vanilla, entrances: crosskeys.entrances }, run("mystery")),
+    ).toMatchObject({
+      change: { entranceShuffle: "crossed" },
+      kind: "reveals",
+    });
+    // Once set, a seed of other entrances is another run
+    const mystery = getPreset("mystery").settings;
+    expect(
+      checkSeed(
+        { ...vanilla, entrances: crosskeys.entrances },
+        {
+          presetId: "mystery",
+          settings: {
+            ...mystery,
+            hidden: mystery.hidden?.filter((key) => key !== "entranceShuffle"),
+          },
+        },
+      ),
     ).toMatchObject({ kind: "differs", seedText: /Crossworld entrances/ });
+    // Without the file, the ROM says nothing of them: they stay hidden
+    const rom = checkSeed(seedOf({}), run("mystery"));
+    expect(rom).toMatchObject({ kind: "reveals" });
+    if (rom.kind !== "reveals") throw new Error("expected reveals");
+    expect(rom.change).not.toHaveProperty("entranceShuffle");
     expect(checkSeed(vanilla, run("open"))).toMatchObject({ kind: "same" });
   });
 
@@ -267,10 +295,42 @@ describe("checkSeed", () => {
       reasons: ["only its small keys outside their dungeons"],
       seed: "OPEN",
     });
-    expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toEqual({
-      kind: "unsupported",
-      reasons: ["the Ganonhunt goal"],
-      seed: "OPEN",
+  });
+
+  it("takes where the swords are and the enemies' health from the seed's file", () => {
+    const seed = {
+      ...seedOf({}),
+      enemyHealth: { known: true, value: "hard" },
+      weapons: { known: true, value: "assured" },
+    } as const;
+    expect(checkSeed(seed, run("open"))).toMatchObject({
+      kind: "differs",
+      seedText: "Open (Open, Ganon, 7/7, Assured swords, Hard enemy health)",
+      settings: { enemyHealth: "hard", swords: "assured" },
+    });
+    // The ROM alone says neither: the run's own stand
+    expect(checkSeed(seedOf({}), run("open"))).toMatchObject({ kind: "same" });
+    // A Mystery run takes them in place
+    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      change: { enemyHealth: "hard", swords: "assured" },
+      kind: "reveals",
+    });
+  });
+
+  it("holds the Ganonhunt and Completionist goals", () => {
+    expect(checkSeed(seedOf({ goal: "ganonhunt" }), run("open"))).toMatchObject(
+      {
+        kind: "differs",
+        presetId: "ganonhunt",
+        seedText: "Ganonhunt (Open, Ganonhunt, 7/7)",
+      },
+    );
+    expect(
+      checkSeed(seedOf({ goal: "completionist" }), run("open")),
+    ).toMatchObject({
+      kind: "differs",
+      seedText: "Open (Open, Completionist, 7/7)",
+      settings: { goal: "completionist" },
     });
   });
 
@@ -306,7 +366,7 @@ describe("checkSeed", () => {
     );
   });
 
-  it("carries a glitched seed's logic, which the tracker does not model", () => {
+  it("carries a glitched seed's logic, modelled once ported", () => {
     const check = checkSeed(
       seedOf({ logic: "OverworldGlitches" }),
       run("open"),
@@ -323,7 +383,7 @@ describe("checkSeed", () => {
       },
     });
     if (check.kind !== "differs") throw new Error("expected differs");
-    expect(logicModelled(check.settings)).toBe(false);
+    expect(logicModelled(check.settings)).toBe(true);
     // The same seed again is the run's
     expect(
       checkSeed(seedOf({ logic: "OverworldGlitches" }), {
@@ -369,17 +429,79 @@ describe("checkSeed", () => {
     expect(checkSeed(seed, glitched)).toMatchObject({ kind: "same" });
   });
 
-  it("switches a Mystery run to a glitched Mystery seed's logic", () => {
+  it("reveals a glitched Mystery seed's logic to a Mystery run that hides it", () => {
     const seed = {
       ...mysterySeed(),
       logic: { known: true, value: "HybridMajorGlitches" },
     } as const;
 
+    const check = checkSeed(seed, run("mystery"));
+    expect(check).toMatchObject({
+      change: { glitches: "hybrid_major_glitches" },
+      kind: "reveals",
+      seedText: "Mystery (Open, Hybrid Major Glitches)",
+    });
+  });
+
+  it("switches a Mystery run to a Door Randomizer's Mystery seed, never revealing into it", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+      randomizer: { kind: "door", overworld: false, version: "1.5.6" },
+    } as const;
+
     expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      kind: "differs",
+      presetId: "mystery",
+      settings: { glitches: "hybrid_major_glitches", randomizer: "dr" },
+    });
+  });
+
+  it("switches a Mystery run whose glitches are set to another logic's seed", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+    } as const;
+    const mystery = getPreset("mystery").settings;
+    expect(
+      checkSeed(seed, {
+        presetId: "mystery",
+        settings: {
+          ...mystery,
+          hidden: mystery.hidden?.filter((key) => key !== "glitches"),
+        },
+      }),
+    ).toMatchObject({
       kind: "differs",
       presetId: "mystery",
       seedText: "Mystery (Open, Hybrid Major Glitches)",
       settings: { glitches: "hybrid_major_glitches" },
+    });
+  });
+
+  it("never reveals glitches from the ROM's Major Glitches, which three logics write", () => {
+    const rom = checkSeed(seedOf({ logic: "MajorGlitches" }), run("mystery"));
+    if (rom.kind !== "reveals") throw new Error("expected reveals");
+    expect(rom.change).not.toHaveProperty("glitches");
+    const overworld = checkSeed(
+      seedOf({ logic: "OverworldGlitches" }),
+      run("mystery"),
+    );
+    expect(overworld).toMatchObject({
+      change: { glitches: "overworld_glitches" },
+      kind: "reveals",
+    });
+  });
+
+  it("reveals nothing in Race Mode, the glitches and entrances included", () => {
+    const check = checkSeed(
+      seedOf({ logic: "OverworldGlitches" }, { race: true }),
+      run("mystery"),
+    );
+    expect(check).toEqual({ kind: "unread", why: "race-mode" });
+    expect(checkSeed(mysterySeed(), run("mystery"))).toEqual({
+      kind: "unread",
+      why: "mystery",
     });
   });
 
@@ -451,13 +573,12 @@ describe("seedLineText", () => {
     expect(seedLineText(checkSeed(seedOf({}), run("open")), false)).toBe(
       "The run type matches this seed: Open (Open, Ganon, 7/7).",
     );
-    expect(
-      seedLineText(
-        checkSeed(seedOf({ goal: "ganonhunt" }), run("open")),
-        false,
-      ),
-    ).toBe(
-      "No run type here holds this seed (the Ganonhunt goal): the run type stays yours.",
+    const keysOnly = {
+      ...seedOf({}),
+      wildKeys: { known: true, value: true },
+    } as const;
+    expect(seedLineText(checkSeed(keysOnly, run("open")), false)).toBe(
+      "No run type here holds this seed (only its small keys outside their dungeons): the run type stays yours.",
     );
     expect(
       seedLineText(checkSeed(seedOf({}, { race: true }), run("open")), false),

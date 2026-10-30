@@ -127,12 +127,19 @@ export interface TrackerInput {
    */
   readonly bosses?: BossKnowledge;
   /**
-   * The small keys found in each dungeon, with wild keys (keysanity). The
-   * player does not track them otherwise, and they are not read then: the
-   * key model (keys.ts) stands in for them. Nor are they with generic keys
+   * The small keys found in each dungeon, with wild keys (keysanity) or
+   * under No Logic, where the key model cannot vouch for a key behind its
+   * own door. The player does not track them otherwise, and they are not
+   * read then: the key model (keys.ts) stands in for them. Nor are they with generic keys
    * (the retro world), which no dungeon owns.
    */
   readonly keys?: Readonly<Partial<Record<DungeonId, number>>>;
+  /**
+   * The Triforce pieces found and the pieces the goal asks for, as the
+   * game counts them (GoalCounter, GoalItemRequirement): a ganonhunt's
+   * Ganon wants them (`ganonhuntPieces`). Left out, none are found.
+   */
+  readonly goalPieces?: { readonly found: number; readonly required: number };
   /**
    * The locations checked on the map, by id. Only the events of
    * EVENT_CHECKS are read: an item location tells nothing of what it held.
@@ -165,7 +172,9 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * The engine state of what the player records, under the run's settings.
  * Items keep their counts, within their pool, and every world's
  * pre-collected items are added to them (PRE_COLLECTED_STATE,
- * app/Randomizer.php:46-56): Link's 3 starting hearts. Zelda is rescued
+ * app/Randomizer.php:46-56): Link's 3 starting hearts, and the Pegasus
+ * Boots in a world that starts with them (`bootsAtStart`), and a sword in
+ * one whose weapons are assured (`swordAtStart`). Zelda is rescued
  * from the start in an Open world (app/Randomizer.php:133-135), once Hyrule
  * Castle is finished in a Standard one; Agahnim is defeated once Castle
  * Tower is, Agahnim 2 once Ganon's Tower is. A finished dungeon's prize,
@@ -177,7 +186,7 @@ function count(id: string, value: number, max = MAX.get(id) ?? 0): number {
  * is left, so a count makes a crystal red only when there are more crystals
  * than regular ones. The pads' facts read an unknown pad as unknown, the
  * boss slots' an unknown boss as unknown. The
- * keys count only with wild keys that are not generic. A checked
+ * keys count only with wild keys that are not generic, or under No Logic. A checked
  * event gives its item (EVENT_CHECKS). A count not known holds its fact
  * (unknown-counts.ts).
  *
@@ -195,6 +204,20 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
   }
   for (const [id, given] of Object.entries(PRE_COLLECTED_STATE)) {
     state[id] = (state[id] ?? 0) + given;
+  }
+  // A glitched or No Logic world's boots (Randomizer.php:122-131)
+  if (settings.bootsAtStart) state.pegasusBoots = 1;
+  // Assured weapons pre-collect Uncle's sword (Randomizer.php:256-260)
+  if (settings.swordAtStart === true)
+    state.sword = Math.max(state.sword ?? 0, 1);
+  // A ganonhunt's Ganon wants the pieces asked for (NorthEast.php:187-192)
+  const pieces = input.goalPieces;
+  if (
+    pieces !== undefined &&
+    pieces.required > 0 &&
+    pieces.found >= pieces.required
+  ) {
+    state.ganonhuntPieces = 1;
   }
   const finished = (d: DungeonId) => input.beaten[d] === true;
   if (!settings.standardMode || finished("hyrule-castle")) {
@@ -230,7 +253,9 @@ export function toState(input: TrackerInput, settings: AlttprSettings): State {
       }
     }
   }
-  if (settings.wildKeys && !settings.genericKeys) {
+  // Under No Logic a key may sit behind its own door: the keys a player
+  // marks by hand are then the only ones known in hand
+  if ((settings.wildKeys || settings.noLogic) && !settings.genericKeys) {
     for (const d of DUNGEONS) {
       const found = count(
         `key${d.code}`,

@@ -787,12 +787,24 @@ describe("the checkout", () => {
     write("tests/NoGlitches/Dark/SampleTest.php", TEST_CLASS);
     write("tests/NoGlitches/TestCase.php", "<?php // not a test class");
     write("tests/Inverted/TestCase.php", "<?php // not a test class");
+    write("tests/OverworldGlitches/TestCase.php", "<?php // not a test class");
+    write(
+      "tests/InvertedOverworldGlitches/TestCase.php",
+      "<?php // not a test class",
+    );
+    write("tests/MajorGlitches/TestCase.php", "<?php // not a test class");
+    write(
+      "tests/InvertedMajorGlitches/TestCase.php",
+      "<?php // not a test class",
+    );
     // A test file of its own, at the top of tests/
     write("tests/RetroBowTest.php", TEST_CLASS);
     write("app/Item.php", ITEM_PHP);
     write("resources/lang/en/item.php", ENGLISH_PHP);
     for (const [file, text] of Object.entries(WORLDS)) write(file, text);
     write("out/NoGlitches/Removed.json", "{}");
+    // Another importer's, which this one keeps
+    write("out/rupee-texts.json", "{}");
 
     const out = join(root, "out");
     const { items, locations, summary, upstream } = importAll(root, out);
@@ -819,6 +831,7 @@ describe("the checkout", () => {
     const first = readFileSync(written, "utf8");
     expect(JSON.parse(first).cases).toHaveLength(5);
     expect(() => readFileSync(join(out, "NoGlitches/Removed.json"))).toThrow();
+    expect(readFileSync(join(out, "rupee-texts.json"), "utf8")).toBe("{}");
     expect(readFileSync(join(out, "LICENSE"), "utf8")).toContain("sporchia");
 
     importAll(root, out);

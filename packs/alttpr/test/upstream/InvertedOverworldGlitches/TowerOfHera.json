@@ -1,0 +1,72 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/TowerOfHeraTest.php",
+  "class": "InvertedOverworldGlitches\\TowerOfHeraTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":50,"method":"testEntry","region":"Tower of Hera"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"regionEnter","line":51,"method":"testEntry","region":"Tower of Hera"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl"],"base":"setUp"},"kind":"regionEnter","line":52,"method":"testEntry","region":"Tower of Hera"},
+    {"dataSet":0,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":103,"location":"Tower of Hera - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"KeyP3","items":{"add":[],"base":"allItems","except":["KeyP3"]},"kind":"fill","line":104,"location":"Tower of Hera - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":106,"location":"Tower of Hera - Basement Cage","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":108,"location":"Tower of Hera - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":110,"location":"Tower of Hera - Compass Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":112,"location":"Tower of Hera - Big Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","item":"BigKeyP3","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"fill","line":114,"location":"Tower of Hera - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":121,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["Lamp","FireRod"]},"kind":"location","line":122,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":123,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["KeyP3"]},"kind":"location","line":124,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["Lamp","PegasusBoots","MoonPearl","KeyP3"],"base":"setUp"},"kind":"location","line":125,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["FireRod","PegasusBoots","MoonPearl","KeyP3"],"base":"setUp"},"kind":"location","line":126,"location":"Tower of Hera - Big Key Chest","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":128,"location":"Tower of Hera - Basement Cage","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":129,"location":"Tower of Hera - Basement Cage","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl"],"base":"setUp"},"kind":"location","line":130,"location":"Tower of Hera - Basement Cage","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":132,"location":"Tower of Hera - Map Chest","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":133,"location":"Tower of Hera - Map Chest","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl"],"base":"setUp"},"kind":"location","line":134,"location":"Tower of Hera - Map Chest","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":136,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":137,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":138,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","BigKeyP3"],"base":"setUp"},"kind":"location","line":139,"location":"Tower of Hera - Compass Chest","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":141,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":142,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":143,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","BigKeyP3"],"base":"setUp"},"kind":"location","line":144,"location":"Tower of Hera - Big Chest","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":146,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":147,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["AnySword","Hammer"]},"kind":"location","line":148,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":23,"expected":false,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP3"]},"kind":"location","line":149,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","Hammer","BigKeyP3"],"base":"setUp"},"kind":"location","line":150,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":25,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","UncleSword","BigKeyP3"],"base":"setUp"},"kind":"location","line":151,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":26,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","ProgressiveSword","BigKeyP3"],"base":"setUp"},"kind":"location","line":152,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","MasterSword","BigKeyP3"],"base":"setUp"},"kind":"location","line":153,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","L3Sword","BigKeyP3"],"base":"setUp"},"kind":"location","line":154,"location":"Tower of Hera - Boss","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/InvertedOverworldGlitches/TowerOfHeraTest.php","items":{"add":["PegasusBoots","MoonPearl","L4Sword","BigKeyP3"],"base":"setUp"},"kind":"location","line":155,"location":"Tower of Hera - Boss","method":"testLocation"}
+  ]
+}

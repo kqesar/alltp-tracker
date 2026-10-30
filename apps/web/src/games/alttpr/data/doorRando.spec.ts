@@ -13,6 +13,8 @@ import {
 import {
   crossedLogic,
   doorLogic,
+  GLITCHES_LABELS,
+  type Glitches,
   getPreset,
   logicModelled,
   type RunSettings,
@@ -115,6 +117,53 @@ describe("a Door Randomizer run's logic", () => {
       const run = with_(DR, change);
       expect(unmodelledReasons(run), reason).toContain(reason);
       expect(logicModelled(run), reason).toBe(false);
+    }
+  });
+
+  it("names DR's glitched logics, which the pack does not port, as alttpr.com's it does", () => {
+    const glitched: Glitches[] = [
+      "overworld_glitches",
+      "hybrid_major_glitches",
+      "major_glitches",
+      "no_logic",
+    ];
+    for (const glitches of glitched) {
+      const reason = `the Door Randomizer's ${GLITCHES_LABELS[glitches]}`;
+      for (const base of [DR, DR_CROSSKEYS]) {
+        const run = with_(base, { glitches });
+        expect(unmodelledReasons(run), glitches).toContain(reason);
+        expect(logicModelled(run), glitches).toBe(false);
+        expect(doorLogic(run), glitches).toBe(false);
+        expect(crossedLogic(run), glitches).toBe(false);
+      }
+      // alttpr.com's own glitched logic is the pack's
+      expect(
+        unmodelledReasons(with_(getPreset("open").settings, { glitches })),
+      ).toEqual([]);
+    }
+  });
+
+  it("holds DR's shuffled entrances to its Crosskeys, as the entrance randomizer's world reads them", () => {
+    const cases: [Partial<RunSettings>, string][] = [
+      [
+        { entranceShuffle: "simple" },
+        "the Door Randomizer's Simple entrance shuffle",
+      ],
+      [
+        { dungeonItems: "standard" },
+        "Crossworld entrances with dungeon items kept in their dungeons",
+      ],
+      [{ mode: "retro" }, "Crossworld entrances in the Retro world"],
+      [{ bossShuffle: "full" }, "shuffled bosses behind Crossworld entrances"],
+    ];
+    for (const [change, reason] of cases) {
+      const run = with_(DR_CROSSKEYS, change);
+      expect(crossedLogic(run), reason).toBe(false);
+      expect(unmodelledReasons(run), reason).toEqual([reason]);
+      // An alttpr.com seed of the same settings is that world's
+      const vt = with_(getPreset("crosskeys").settings, change);
+      expect(crossedLogic(vt), reason).toBe(true);
+      expect(unmodelledReasons(vt), reason).toEqual([]);
     }
   });
 

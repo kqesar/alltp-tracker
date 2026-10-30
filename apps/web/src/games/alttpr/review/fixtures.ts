@@ -19,25 +19,49 @@ import doorInDungeon from "../../../../../../packs/alttpr/test/dr-spoilers/DR_23
 import doorDrops from "../../../../../../packs/alttpr/test/dr-spoilers/DR_278438665_Spoiler.txt?raw";
 import doorKeysanity from "../../../../../../packs/alttpr/test/dr-spoilers/DR_660701088_Spoiler.txt?raw";
 import entrances from "../../../../../../packs/alttpr/test/spoilers/0yAObedRMV.txt?raw";
+import noLogic from "../../../../../../packs/alttpr/test/spoilers/4v5L3pl6Mq.txt?raw";
 import standard from "../../../../../../packs/alttpr/test/spoilers/6v1ab7qmv7.txt?raw";
 import vt from "../../../../../../packs/alttpr/test/spoilers/9MQ9gO1wMD.txt?raw";
 import daily from "../../../../../../packs/alttpr/test/spoilers/eM43RgZ4Gj.txt?raw";
+import overworldGlitches from "../../../../../../packs/alttpr/test/spoilers/kGZmYlABym.txt?raw";
+import hybridMajorGlitches from "../../../../../../packs/alttpr/test/spoilers/lMjaek1VGo.txt?raw";
 import retro from "../../../../../../packs/alttpr/test/spoilers/VMR3zKaKv5.txt?raw";
+import majorGlitches from "../../../../../../packs/alttpr/test/spoilers/ZGLqKd8NMk.txt?raw";
 
-/** A seed the pack holds: vt's own layout, the entrance randomizer's, a daily's (no placements), a retro seed's and a Standard seed's (its playthrough starts at sphere 0). */
+/**
+ * A seed the pack holds: vt's own layout, the entrance randomizer's, a
+ * daily's (no placements), a retro seed's, a Standard seed's (its
+ * playthrough starts at sphere 0), and an Open seed of each glitched logic
+ * (`GLITCHED_FIXTURES`).
+ */
 export type FixtureHash =
   | "0yAObedRMV"
   | "9MQ9gO1wMD"
   | "eM43RgZ4Gj"
   | "VMR3zKaKv5"
-  | "6v1ab7qmv7";
+  | "6v1ab7qmv7"
+  | GlitchedHash;
+
+/** The Open seeds of each glitched logic, by its `glitches`. */
+export const GLITCHED_FIXTURES = {
+  hybrid_major_glitches: "lMjaek1VGo",
+  major_glitches: "ZGLqKd8NMk",
+  no_logic: "4v5L3pl6Mq",
+  overworld_glitches: "kGZmYlABym",
+} as const;
+
+type GlitchedHash = (typeof GLITCHED_FIXTURES)[keyof typeof GLITCHED_FIXTURES];
 
 const TEXTS: Readonly<Record<FixtureHash, string>> = {
   "0yAObedRMV": entrances,
+  "4v5L3pl6Mq": noLogic,
   "6v1ab7qmv7": standard,
   "9MQ9gO1wMD": vt,
   eM43RgZ4Gj: daily,
+  kGZmYlABym: overworldGlitches,
+  lMjaek1VGo: hybridMajorGlitches,
   VMR3zKaKv5: retro,
+  ZGLqKd8NMk: majorGlitches,
 };
 
 /** The file as the site's Save Spoiler button writes it. */

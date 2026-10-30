@@ -17,6 +17,22 @@
       "recorded": "2026-10-25T16:37:39.231Z",
       "sha256": "9b64948b9842ece11a3a3df525c15bc07e8f3a2cd59658bc11c3536aea65d680"
     },
+    "4v5L3pl6Mq": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/4v5L3pl6Mq.json",
+      "bytes": 18964,
+      "generated": "2026-10-28T22:18:48+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "NoLogic",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-29T10:33:10.802Z",
+      "sha256": "85d29d76298b2864cf378d0ea1f47e63d3a948520b5343253f62dd2e385d470f"
+    },
     "6v1ab7qmv7": {
       "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/6v1ab7qmv7.json",
       "bytes": 22458,
@@ -65,6 +81,38 @@
       "recorded": "2026-10-25T16:37:39.364Z",
       "sha256": "7e42554ae5f5c032db18b4741f05a1d2302a081a4a275ddcc577804d70d9dd33"
     },
+    "kGZmYlABym": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/kGZmYlABym.json",
+      "bytes": 21940,
+      "generated": "2026-10-28T22:18:42+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "OverworldGlitches",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-29T10:33:10.366Z",
+      "sha256": "fe8bf27b62998e0dcf7b6001b78f5fc9900f6152ae037f246bbcb2225a794f2f"
+    },
+    "lMjaek1VGo": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/lMjaek1VGo.json",
+      "bytes": 21757,
+      "generated": "2026-10-28T22:18:44+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "HybridMajorGlitches",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-29T10:33:10.514Z",
+      "sha256": "499aa95368ab42b6ce625cb330e9c6fc64b0ef05e7bb36fbf37b80c1dda0b8bf"
+    },
     "VMR3zKaKv5": {
       "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/VMR3zKaKv5.json",
       "bytes": 23710,
@@ -96,6 +144,22 @@
       },
       "recorded": "2026-10-25T16:37:39.509Z",
       "sha256": "11ef67cf2a012993a444e69b37a5dd32876419a493b6564ba24bcaca7b1ee482"
+    },
+    "ZGLqKd8NMk": {
+      "address": "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/ZGLqKd8NMk.json",
+      "bytes": 21707,
+      "generated": "2026-10-28T22:18:46+00:00",
+      "layout": "vt",
+      "meta": {
+        "goal": "ganon",
+        "logic": "MajorGlitches",
+        "mode": "open",
+        "name": null,
+        "spoilers": "on",
+        "tournament": false
+      },
+      "recorded": "2026-10-29T10:33:10.643Z",
+      "sha256": "d04157ca7a21692720b8d9fc0ddc5fa2c55452b6d98196b85ff980a6fff7af70"
     }
   }
 }

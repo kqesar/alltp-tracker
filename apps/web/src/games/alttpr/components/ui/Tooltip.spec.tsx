@@ -518,6 +518,44 @@ describe("Tooltip", () => {
     expect(rows().every((row) => row.endsWith(" available"))).toBe(true);
   });
 
+  it("never says in logic in a No Logic run: reachable with what it is played with", () => {
+    act(() => {
+      useGameStore.getState().updateSettings({ glitches: "no_logic" });
+      analyzeNow();
+    });
+    renderMap();
+    const marker = screen.getByTestId("marker-kings-tomb");
+
+    fireEvent.pointerEnter(marker, { pointerType: "mouse" });
+
+    expect(rows()).toEqual(["Not reachable without glitches unavailable"]);
+    expect(marker).toHaveAccessibleName(
+      "King's Tomb: not reachable without glitches",
+    );
+
+    act(() =>
+      useGameStore
+        .getState()
+        .updateSettings({ playGlitches: "overworld_glitches" }),
+    );
+    fireEvent.pointerEnter(screen.getByTestId("boss-marker-eastern-palace"), {
+      pointerType: "mouse",
+    });
+    // Its big key may sit behind its own door: marked, it is in hand
+    act(() => {
+      const state = useGameStore.getState();
+      state.handleItemClick("bow");
+      state.handleItemClick("bow");
+      state.handleItemClick("lantern");
+      state.handleItemClick("chest0");
+      state.setItem("bigkey0", 1);
+    });
+    expect(screen.getByTestId("tooltip-count")).toHaveTextContent(
+      "2 items left, at least 2 reachable",
+    );
+    expect(tooltip()).not.toHaveTextContent(/in logic/i);
+  });
+
   it("shows on keyboard focus and hides on blur", () => {
     renderMap();
     const marker = screen.getByTestId("marker-kings-tomb");

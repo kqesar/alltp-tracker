@@ -5,6 +5,8 @@ import { packSettings } from "@/games/alttpr/logic/settings";
 import { locationName, trackerInput } from "@/games/alttpr/logic/solution";
 import { compareReview, type ReviewedRun } from "@/games/alttpr/review/adapter";
 import {
+  type FixtureHash,
+  GLITCHED_FIXTURES,
   type Played,
   playedRun,
   spoilerLog,
@@ -90,8 +92,38 @@ describe("when the waits are shown", () => {
     expect(hiddenReason(shuffled, run, comparison)).toBe("not-modelled");
   });
 
+  it("not for a No Logic run, which no route is promised to", () => {
+    const changed = {
+      ...run,
+      settings: { ...run.settings, glitches: "no_logic" as const },
+    };
+    expect(hiddenReason(log, changed, comparison)).toBe("no-logic");
+    const noLogicLog = spoilerLog(GLITCHED_FIXTURES.no_logic);
+    expect(hiddenReason(noLogicLog, run, comparison)).toBe("no-logic");
+  });
+
+  it("not for a No Logic run behind shuffled entrances: the entrances come first", () => {
+    const changed = {
+      ...run,
+      settings: {
+        ...run.settings,
+        entranceShuffle: "full" as const,
+        glitches: "no_logic" as const,
+      },
+    };
+    expect(hiddenReason(log, changed, comparison)).toBe("entrances");
+  });
+
+  it("not for a run whose glitches are not the log's", () => {
+    const changed = {
+      ...run,
+      settings: { ...run.settings, glitches: "major_glitches" as const },
+    };
+    expect(hiddenReason(log, changed, comparison)).toBe("not-modelled");
+  });
+
   it.each(["OverworldGlitches", "MajorGlitches"] as const)(
-    "not for a %s seed, whose logic is not the pack's",
+    "not for a %s seed of a run without its glitches",
     (logic) => {
       const { settings } = log.extra;
       expect(settings).not.toBeNull();
@@ -355,6 +387,79 @@ describe("a run taken in the playthrough's order", () => {
     const turtleRock = result.dungeons.find(({ id }) => id === "turtle-rock");
     expect(turtleRock?.full).not.toBeNull();
     expect(turtleRock?.full).toBeLessThanOrEqual(result.end);
+  });
+});
+
+/**
+ * A log's playthrough taken in its own order (`inOrder`'s plan over that
+ * log): what its logic had in logic at each step.
+ */
+const inOrderOf = (seed: ReturnType<typeof spoilerLog>): Played[] => {
+  const plan: Played[] = seed.placements
+    .filter((p) => p.sphere !== null)
+    .sort(
+      (a, b) =>
+        (a.sphere ?? 0) - (b.sphere ?? 0) ||
+        a.locationName.localeCompare(b.locationName),
+    )
+    .map((p, index) => ({ location: p.location, minute: 2 * (index + 1) }));
+  let last = plan.at(-1)?.minute ?? 0;
+  const keys = seed.placements
+    .filter((p) => /^key[A-Z]/.test(p.item ?? ""))
+    .map((p) => {
+      const dungeon = p.location.split("/")[0];
+      const first = plan.find((q) => q.location.startsWith(`${dungeon}/`));
+      return { location: p.location, minute: first?.minute ?? last };
+    });
+  const taken = new Set([...plan, ...keys].map(({ location }) => location));
+  const rest = seed.placements
+    .filter((p) => !taken.has(p.location))
+    .map((p) => {
+      last += 1;
+      return { location: p.location, minute: last };
+    });
+  return [...plan, ...keys, ...rest].sort((a, b) => a.minute - b.minute);
+};
+
+describe.each([
+  ["overworld_glitches", GLITCHED_FIXTURES.overworld_glitches],
+  ["hybrid_major_glitches", GLITCHED_FIXTURES.hybrid_major_glitches],
+  ["major_glitches", GLITCHED_FIXTURES.major_glitches],
+] as const)("a %s seed taken in its playthrough's order", (glitches, hash) => {
+  const seed = spoilerLog(hash as FixtureHash);
+  const plan = inOrderOf(seed);
+  const start = fresh();
+  const glitched = {
+    ...start,
+    seed: hash,
+    settings: { ...start.settings, glitches },
+  };
+  const played = playedRun(seed, plan, glitched);
+  const compared = compareReview(seed, played);
+  const end = ((plan.at(-1)?.minute ?? 0) + 2) * 60_000;
+
+  it("has its waits told, in its own logic", () => {
+    expect(hiddenReason(seed, played, compared)).toBeNull();
+  });
+
+  it("takes nothing before its logic has it, every needed item in logic", () => {
+    const result = drain(sweepRun(seed, played, compared, end));
+    expect(result.waits.length).toBeGreaterThan(0);
+    const ahead = result.waits.filter(
+      (wait) => wait.waited !== null && wait.waited < 0,
+    );
+    expect(ahead.map(({ location }) => location)).toEqual([]);
+    for (const wait of result.waits) expect(wait.reach).not.toBeNull();
+  });
+
+  it("is a glitched seed: the NoGlitches logic would not have it in logic", () => {
+    const plain = { ...played, settings: start.settings };
+    const result = drain(sweepRun(seed, plain, compared, end));
+    expect(
+      result.waits.some(
+        (wait) => wait.reach === null || (wait.waited ?? 0) < 0,
+      ),
+    ).toBe(true);
   });
 });
 

@@ -131,6 +131,7 @@ export {
   type SeedBossShuffle,
   type SeedDoorShuffle,
   type SeedDropShuffle,
+  type SeedEnemyHealth,
   type SeedEntrances,
   type SeedGoal,
   type SeedItemFunctionality,
@@ -145,6 +146,7 @@ export {
   type SeedSettingsRangeId,
   type SeedSettingsReading,
   type SeedUnknown,
+  type SeedWeapons,
 } from "./autotrack/seed-settings";
 export {
   BOSS_FACTS,
@@ -201,11 +203,13 @@ export {
   dungeonStatus,
 } from "./dungeons";
 export {
-  type CrossedPool,
   crossedPool,
   ENTRANCES,
+  type EntrancePool,
   type EntranceTarget,
+  type ErShuffle,
   entranceNamed,
+  entrancePool,
   erLocationId,
   fullPool,
   type GameLink,
@@ -213,15 +217,25 @@ export {
   linksOf,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
+  restrictedPool,
+  simplePool,
   TARGETS,
   targetNamed,
 } from "./entrances";
+export {
+  type ErDungeon,
+  erDungeons,
+  erUntracked,
+  solveErWithKeys,
+  withErUntracked,
+} from "./er-keys";
 export {
   analyzeFacts,
   crossedConnections,
   type ErConnections,
   type ErOptions,
   type ErWorld,
+  erConnections,
   erWorld,
   mandatoryConnections,
   solveFacts,
@@ -237,6 +251,7 @@ export {
   PRIZE_ITEMS,
 } from "./fill";
 export {
+  GANONHUNT,
   GO_MODES,
   type GoMode,
   type GoModeStatus,
@@ -345,7 +360,13 @@ export { seedFileUrl, seedHashOf } from "./seed-link";
 export {
   type AlttprSettings,
   BOSS_SHUFFLES,
+  type GlitchFlag,
+  GOAL_FACTS,
+  LOGIC_FLAGS,
+  LOGICS,
+  type Logic,
   type Mode,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,
@@ -382,6 +403,7 @@ export {
   trickModules,
   trickRequirement,
   trickState,
+  tricksInLogic,
 } from "./tricks";
 export {
   type CountKnowledge,

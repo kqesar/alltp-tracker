@@ -1,0 +1,77 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php",
+  "class": "InvertedOverworldGlitches\\HyruleCastleEscapeTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":72,"location":"Sanctuary","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":74,"location":"Sewers - Secret Room - Left","method":"testFillLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":76,"location":"Sewers - Secret Room - Middle","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":78,"location":"Sewers - Secret Room - Right","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":80,"location":"Sewers - Dark Cross","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":82,"location":"Hyrule Castle - Boomerang Chest","method":"testFillLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":84,"location":"Hyrule Castle - Map Chest","method":"testFillLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","item":"KeyH2","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"fill","line":86,"location":"Hyrule Castle - Zelda's Cell","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":93,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":94,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["Lamp","DefeatAgahnim","KeyH2"],"base":"setUp"},"kind":"location","line":95,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":96,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":97,"location":"Sanctuary","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":99,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","ProgressiveGlove","PegasusBoots"],"base":"setUp"},"kind":"location","line":100,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":101,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":102,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["DefeatAgahnim","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":103,"location":"Sewers - Secret Room - Left","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":105,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","ProgressiveGlove","PegasusBoots"],"base":"setUp"},"kind":"location","line":106,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":107,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":108,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["DefeatAgahnim","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":109,"location":"Sewers - Secret Room - Middle","method":"testLocation"},
+    {"dataSet":15,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":111,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","ProgressiveGlove","PegasusBoots"],"base":"setUp"},"kind":"location","line":112,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":113,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","PegasusBoots","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":114,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["DefeatAgahnim","Lamp","KeyH2"],"base":"setUp"},"kind":"location","line":115,"location":"Sewers - Secret Room - Right","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":117,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":118,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["Lamp","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":119,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["Lamp","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":120,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["Lamp","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":121,"location":"Sewers - Dark Cross","method":"testLocation"},
+    {"dataSet":25,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":123,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":26,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"location","line":124,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":125,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":126,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":127,"location":"Hyrule Castle - Boomerang Chest","method":"testLocation"},
+    {"dataSet":30,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":129,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":31,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["DefeatAgahnim"],"base":"setUp"},"kind":"location","line":130,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":32,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":131,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":33,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":132,"location":"Hyrule Castle - Map Chest","method":"testLocation"},
+    {"dataSet":34,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":134,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":35,"expected":false,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":[],"base":"allItems","except":["KeyH2"]},"kind":"location","line":135,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":36,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":136,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":37,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":137,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"},
+    {"dataSet":38,"expected":true,"file":"tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php","items":{"add":["KeyH2","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":138,"location":"Hyrule Castle - Zelda's Cell","method":"testLocation"}
+  ]
+}

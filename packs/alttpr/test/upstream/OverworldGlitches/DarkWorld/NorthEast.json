@@ -1,0 +1,56 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/DarkWorld/NorthEastTest.php",
+  "class": "OverworldGlitches\\DarkWorld\\NorthEastTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Catfish","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":52,"location":"Catfish","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":53,"location":"Catfish","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":55,"location":"Pyramid","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":56,"location":"Pyramid","method":"testLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":58,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"location","line":59,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MagicMirror","PegasusBoots","UncleSword"],"base":"setUp"},"kind":"location","line":60,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MagicMirror","PegasusBoots","ProgressiveSword"],"base":"setUp"},"kind":"location","line":61,"location":"Pyramid Fairy - Sword","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":63,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["AnyBow"]},"kind":"location","line":64,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MagicMirror","PegasusBoots","BowAndArrows"],"base":"setUp"},"kind":"location","line":65,"location":"Pyramid Fairy - Bow","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":67,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":68,"location":"Pyramid Fairy - Left","method":"testLocation"},
+    {"dataSet":14,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":70,"location":"Pyramid Fairy - Right","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":71,"location":"Pyramid Fairy - Right","method":"testLocation"},
+    {"dataSet":16,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":73,"location":"Ganon","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["MoonPearl"]},"kind":"location","line":74,"location":"Ganon","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["DefeatAgahnim2"]},"kind":"location","line":75,"location":"Ganon","method":"testLocation"},
+    {"dataSet":19,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["FireRod","Lamp"]},"kind":"location","line":76,"location":"Ganon","method":"testLocation"},
+    {"dataSet":20,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"location","line":77,"location":"Ganon","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["MoonPearl","MagicMirror"],"base":"setUp"},"kind":"location","line":79,"location":"Pyramid","method":"testLocation"},
+    {"dataSet":22,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["PegasusBoots","MoonPearl","MagicMirror"],"base":"setUp"},"kind":"location","line":80,"location":"Pyramid","method":"testLocation"},
+    {"dataSet":23,"expected":true,"file":"tests/OverworldGlitches/DarkWorld/NorthEastTest.php","items":{"add":["Lamp","ProgressiveGlove","MoonPearl","MagicMirror"],"base":"setUp"},"kind":"location","line":81,"location":"Pyramid","method":"testLocation"}
+  ]
+}

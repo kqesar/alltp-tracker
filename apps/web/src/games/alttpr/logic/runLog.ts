@@ -3,6 +3,7 @@
 // they fell, as a speedrun timer splits a run.
 import { itemLabels, TOGGLE_ITEMS } from "@/games/alttpr/data/items";
 import { withCost } from "@/games/alttpr/logic/costs";
+import { type BossNaming, bossName } from "@/games/alttpr/logic/knownBosses";
 import { dungeonName } from "@/games/alttpr/logic/settings";
 import { locationName } from "@/games/alttpr/logic/solution";
 import type { Timeline } from "@/games/alttpr/logic/timeline";
@@ -57,8 +58,12 @@ const itemOf = (key: string): [id: string, level: number | undefined] => {
   return [id, level === undefined ? undefined : Number(level)];
 };
 
-/** A find's name: the item at its level, the boss beaten, the location. */
-export const findName = (key: string): string => {
+/**
+ * A find's name: the item at its level, the boss beaten, the location. A
+ * dungeon's boss beaten is named by `bossName` from the run it fell in;
+ * without one, by its dungeon.
+ */
+export const findName = (key: string, run?: BossNaming): string => {
   if (key.startsWith("check:")) {
     return withCost(locationName(key.slice(6)), key.slice(6));
   }
@@ -72,7 +77,12 @@ export const findName = (key: string): string => {
     const [, kind = "", index = ""] = dungeonItem;
     return `${dungeonName(Number(index))} ${DUNGEON_ITEM_NAMES[kind]}`;
   }
-  return BOSS.test(key) ? `${itemLabels(id)} beaten` : itemLabels(id);
+  const [, dungeonBoss] = BOSS.exec(key) ?? [];
+  if (dungeonBoss === undefined) {
+    return BOSS.test(key) ? `${itemLabels(id)} beaten` : itemLabels(id);
+  }
+  const index = Number(dungeonBoss);
+  return `${run === undefined ? `${dungeonName(index)} boss` : bossName(index, run)} beaten`;
 };
 
 /**

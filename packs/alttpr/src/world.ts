@@ -130,6 +130,70 @@ export function extendModule(
   return { file, regions };
 }
 
+/**
+ * A region whose can_enter has a branch that needs two regions at once
+ * (`$this->world->getRegion(...)->canEnter()` beside the one its way comes
+ * from), which an entrance cannot say: it reads one region only. The way
+ * comes `from` one of them, and every location of the region (its rule, what
+ * it needs holding an item, what seeing it needs) also asks `guard`, which
+ * names the others through `reach()`: the guard holds whenever the region's
+ * other ways do, so it changes nothing reached through them. A guard folds
+ * to true where the branch's setting is off, so the region reads as before.
+ */
+export function enteredAlsoFrom(
+  module: RegionModule,
+  id: string,
+  entrance: Entrance,
+  guard: string,
+): RegionModule {
+  const and = (req: string) => `(${guard}) & (${req})`;
+  let found = false;
+  const regions = module.regions.map((region) => {
+    if (region.id !== id) return region;
+    found = true;
+    return {
+      ...region,
+      entrances: [...region.entrances, entrance],
+      locations: region.locations.map((location) => {
+        const holding = location.fill?.holding;
+        return {
+          ...location,
+          req: and(location.req),
+          ...(location.visible?.req === undefined
+            ? {}
+            : {
+                visible: {
+                  ...location.visible,
+                  req: and(location.visible.req),
+                },
+              }),
+          ...(holding === undefined || location.fill === undefined
+            ? {}
+            : {
+                fill: {
+                  ...location.fill,
+                  holding: {
+                    ...holding,
+                    items: Object.fromEntries(
+                      Object.entries(holding.items).map(([item, req]) => [
+                        item,
+                        and(req),
+                      ]),
+                    ),
+                    ...(holding.otherwise === undefined
+                      ? {}
+                      : { otherwise: and(holding.otherwise) }),
+                  },
+                },
+              }),
+        };
+      }),
+    };
+  });
+  if (!found) throw new RangeError(`${module.file}: no region ${id}`);
+  return { ...module, regions };
+}
+
 /** 'North East Light World' is northEastLightWorld, 'Ganons Tower' ganonsTower. */
 export function regionId(name: string): string {
   const words = name.split(/[^A-Za-z0-9]+/).filter((word) => word !== "");
@@ -225,8 +289,8 @@ export function refuseKeptDungeonItems(source: Source): readonly Refusal[] {
  * Region::canFill (Region.php:232-246): whether the item may be placed in
  * the region. A dungeon item stays in its own dungeon unless its class is
  * wild, and the sewers key stays in the escape of a Standard world; a
- * region's own items are always welcome. NoGlitches is the only logic
- * modeled, so NoLogic's exception does not arise.
+ * region's own items are always welcome. No Logic lets the sewers key
+ * out (Region.php:238).
  */
 export function canFill(
   region: RegionDef,
@@ -239,7 +303,7 @@ export function canFill(
   return !(
     (kind === "key" && !settings.wildKeys) ||
     (kind === "bigKey" && !settings.wildBigKeys) ||
-    (item === "KeyH2" && settings.standardMode) ||
+    (item === "KeyH2" && settings.standardMode && !settings.noLogic) ||
     (kind === "map" && !settings.wildMaps) ||
     (kind === "compass" && !settings.wildCompasses)
   );

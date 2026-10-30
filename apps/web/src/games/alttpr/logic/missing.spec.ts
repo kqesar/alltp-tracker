@@ -193,6 +193,20 @@ describe("analyzeRun", () => {
     expect(missing.size).toBeGreaterThan(150);
   });
 
+  it("says a check is maybe by a Mystery run's glitches alone, and what puts it in logic", () => {
+    const hidden = inputsOf(
+      {},
+      { settings: { ...getPreset("open").settings, hidden: ["glitches"] } },
+    );
+    // Major Glitches starts Link with the boots: the Library is theirs
+    expect(words(analysisOf(hidden).missing.get("library"))).toEqual({
+      doubts: [{ kind: "glitches" }],
+      inLogic: "Pegasus Boots",
+      possible: undefined,
+      tri: "maybe",
+    });
+  });
+
   it("asks only for what the cells can mark", () => {
     const { missing } = analysisOf(FRESH);
     const named = [...missing.values()].flatMap((m) =>
@@ -299,6 +313,14 @@ describe("what the go mode is missing, crystals aside", () => {
     const found = analysisOf(inputs).goMode;
     return found?.kind === "items" ? waysText(found.ways) : found?.kind;
   };
+
+  it("asks a Ganonhunt for its pieces, then Ganon without Agahnim 2", () => {
+    const hunt = (triforce: number) =>
+      endGame({ agahnim2: 0, goalpieces: 40, triforce }, { goal: "ganonhunt" });
+    expect(goModeStatusOf(hunt(39))?.tri).toBe("no");
+    expect(left(hunt(39))).toBe("Triforce pieces");
+    expect(goModeStatusOf(hunt(40))?.tri).toBe("yes");
+  });
 
   it("lists the items left, never the crystals", () => {
     // Was "Titan's Mitt + Hookshot + 7 crystals": the crystals are the board's
@@ -515,6 +537,54 @@ describe("a Door Randomizer run", () => {
     expect(
       goModeStatusOf(inputs)?.steps.map(({ location }) => location),
     ).toEqual(["agahnim-2", "ganon"]);
+  });
+});
+
+describe("a run with shuffled entrances, its keys in their dungeons", () => {
+  it("says which spots of a key it waits on, the key never an item to find", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    setCrossedSolver(solver);
+    const inputs: Inputs = {
+      ...inputsOf(
+        {
+          boots: true,
+          glove: 2,
+          lantern: true,
+          mirror: true,
+          moonpearl: true,
+          sword: 2,
+        },
+        {
+          settings: {
+            ...getPreset("crosskeys").settings,
+            dungeonItems: "standard",
+          },
+        },
+      ),
+      // The castle's front door alone: its key may sit in the sewers'
+      // secret room, which the grave's hole, not noted, may drop into
+      entrances: { "hyrule-castle-entrance-south": "hyrule-castle-exit-south" },
+    };
+    const found = analysisOf(inputs).missing.get("sewers/secret-room/left");
+    expect(words(found)).toMatchInlineSnapshot(`
+      {
+        "doubts": [
+          {
+            "dungeon": "Hyrule Castle",
+            "key": "small key",
+            "kind": "keys",
+            "spots": [
+              "Sewers - Secret Room - Left",
+              "Sewers - Secret Room - Middle",
+              "Sewers - Secret Room - Right",
+            ],
+          },
+        ],
+        "inLogic": "",
+        "possible": undefined,
+        "tri": "maybe",
+      }
+    `);
   });
 });
 

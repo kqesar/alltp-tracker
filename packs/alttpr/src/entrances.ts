@@ -14,11 +14,15 @@
 // Its place groups a dungeon's or a cave's sides, which the player knows by
 // one name; its label spells the names as the game does (Blind's Hideout).
 //
-// The crossed shuffle is what alttpr.com runs for Crosskeys (vt passes
-// --shuffle crossed; the randomizer shuffles Ganon's Tower by default,
-// EntranceRandomizer.py:228): crossedPool says which entrances it shuffles
-// and which targets it shuffles them with (EntranceShuffle.py:365-460,
-// scramble_holes, skull_woods_shuffle).
+// vt hands the randomizer the shuffle a seed names (--shuffle simple,
+// restricted, full or crossed: Crosskeys is crossed; the randomizer shuffles
+// Ganon's Tower by default, EntranceRandomizer.py:228). Its rules never ask
+// which (Rules.py), so a shuffle is what it mixes and how: entrancePool says
+// which entrances it shuffles, which targets each may lead to, and what one
+// note settles beside it (EntranceShuffle.py:63-440, scramble_holes,
+// skull_woods_shuffle, simple_shuffle_dungeons). The retro world then gives
+// five doors that lead to some single caves a take-any cave instead
+// (ItemList.py set_up_take_anys).
 
 import type { EntranceLink } from "./autotrack/decode";
 import er from "./entrances/er.json" with { type: "json" };
@@ -243,7 +247,23 @@ export const TARGETS: readonly EntranceTarget[] = [
     "Pyramid",
     ...skullHoleTargets,
   ].map((name) => target(name, "drop", dropParts(name))),
+  // The retro world's alone: the old man's sword cave, then the take-anys,
+  // alike but for their number ("Take-Any #1")
+  ...er.takeAnys.regions.map(({ name }) => {
+    const [, place = name, side] = /^(.*?) #(\d+)$/.exec(name) ?? [];
+    return target(
+      name,
+      "single",
+      side === undefined ? { place } : { place: `${place} Cave`, side },
+    );
+  }),
 ];
+
+/** The retro world's take-any caves, by id (set_up_take_anys). */
+const TAKE_ANYS = new Set(er.takeAnys.regions.map(({ name }) => slug(name)));
+
+/** The caves whose door may lead to a take-any instead, by id. */
+const TAKE_ANY_CAVES = new Set(er.takeAnys.caves.value.map(slug));
 
 const TARGET_BY_NAME = new Map(TARGETS.map((t) => [t.name, t]));
 
@@ -316,9 +336,9 @@ export const linksOf = (links: readonly EntranceLink[]): GameLink[] =>
 
 /**
  * The caves a hole drops into, by their door's exit and the hole's drop:
- * scramble_holes shuffles each pair as one (EntranceShuffle.py:1814-1849),
- * with Sanctuary's in the crossed shuffle (:1838-1839) and the Pyramid's as
- * Ganon's Tower is shuffled (:1820-1825).
+ * scramble_holes shuffles each pair as one (EntranceShuffle.py:1806-1849).
+ * The Pyramid takes one of them as Ganon's Tower is shuffled (:1820-1825),
+ * Sanctuary's among them in the crossed shuffle alone (:1838-1844).
  */
 const HOLE_CAVES: readonly (readonly [exit: string, drop: string])[] = [
   ...holeTargets,
@@ -327,8 +347,16 @@ const HOLE_CAVES: readonly (readonly [exit: string, drop: string])[] = [
   ["Pyramid Exit", "Pyramid"],
 ];
 
-/** What the crossed shuffle mixes, for a run's world. */
-export interface CrossedPool {
+/**
+ * The entrance shuffles the pack ports: alttpr.com's but Insanity, which
+ * parts a door from its way out. Each is the doors it mixes and how it
+ * connects them (EntranceShuffle.py:63-440).
+ */
+export type ErShuffle = "simple" | "restricted" | "full" | "crossed";
+
+/** What an entrance shuffle mixes, for a run's world. */
+export interface EntrancePool {
+  readonly shuffle: ErShuffle;
   /** The entrances it shuffles: doors, then holes. */
   readonly entrances: readonly OverworldEntrance[];
   /**
@@ -339,171 +367,538 @@ export interface CrossedPool {
   /**
    * What each entrance may lead to, by id: a hole to a drop, the door of a
    * cave a hole drops into to such a cave's exit, Skull Woods' doors and
-   * holes among their own, any other door to the rest.
+   * holes among their own, any other door to what its shuffle may give
+   * that door.
    */
   readonly targetsOf: ReadonlyMap<string, readonly EntranceTarget[]>;
   /**
-   * The other entrance a note settles, and its target: a hole and its
-   * cave's door lead into the same cave, the one by its drop, the other by
-   * its exit. Undefined for any other entrance.
+   * The other entrances a note settles, each with its target: what the
+   * shuffle always connects along with `entrance` led to `target`. A hole
+   * and its cave's door; in the simple shuffle, a pair of doors and the
+   * two-door cave it takes; in the simple and restricted ones, a four-door
+   * dungeon's doors. Empty for any other note.
    */
-  partner(
+  partners(
     entrance: string,
     target: string,
-  ): readonly [entrance: string, target: string] | undefined;
+  ): readonly (readonly [entrance: string, target: string])[];
+}
+
+/** A table's names, its caves' exits one by one. */
+const names = (name: keyof typeof er.tables): string[] =>
+  flat(table(name)).map(String);
+
+/** The names of a few tables, as a set. */
+const namesIn = (...tables: (keyof typeof er.tables)[]) =>
+  new Set(tables.flatMap(names));
+
+/**
+ * The dungeons with one door, which the simple and restricted shuffles mix
+ * among themselves (simple_shuffle_dungeons, EntranceShuffle.py:2031-2045,
+ * Ganon's Tower as it is shuffled).
+ */
+const ONE_DOOR_DUNGEONS: readonly (readonly [door: string, exit: string])[] = [
+  "Eastern Palace",
+  "Tower of Hera",
+  "Thieves Town",
+  "Skull Woods Final Section",
+  "Palace of Darkness",
+  "Ice Palace",
+  "Misery Mire",
+  "Swamp Palace",
+  "Ganons Tower",
+].map((door) => [door, `${door} Exit`]);
+
+/** The dungeons with four doors, as simple_shuffle_dungeons names them. */
+type FourDoors = "Desert" | "Hyrule Castle" | "Turtle Rock";
+
+/**
+ * Each four-door dungeon's doors, Hyrule Castle's with Agahnim's Tower's
+ * (:2064-2110), in the order of FOUR_DOOR_EXITS.
+ */
+const FOUR_DOORS: Readonly<Record<FourDoors, readonly string[]>> = {
+  Desert: [
+    "Desert Palace Entrance (South)",
+    "Desert Palace Entrance (East)",
+    "Desert Palace Entrance (West)",
+    "Desert Palace Entrance (North)",
+  ],
+  "Hyrule Castle": [
+    "Hyrule Castle Entrance (South)",
+    "Hyrule Castle Entrance (East)",
+    "Hyrule Castle Entrance (West)",
+    "Agahnims Tower",
+  ],
+  "Turtle Rock": [
+    "Turtle Rock",
+    "Turtle Rock Isolated Ledge Entrance",
+    "Dark Death Mountain Ledge (West)",
+    "Dark Death Mountain Ledge (East)",
+  ],
+};
+
+const CASTLE_EXITS = [
+  "Hyrule Castle Exit (South)",
+  "Hyrule Castle Exit (East)",
+  "Hyrule Castle Exit (West)",
+  "Agahnims Tower Exit",
+];
+const DESERT_EXITS = [
+  "Desert Palace Exit (South)",
+  "Desert Palace Exit (East)",
+  "Desert Palace Exit (West)",
+  "Desert Palace Exit (North)",
+];
+const TURTLE_ROCK_EXITS = [
+  "Turtle Rock Exit (Front)",
+  "Turtle Rock Isolated Ledge Exit",
+  "Turtle Rock Ledge Exit (West)",
+  "Turtle Rock Ledge Exit (East)",
+];
+
+/**
+ * Where a four-door dungeon placed at another's doors leads each of them,
+ * in FOUR_DOORS' order: simple_shuffle_dungeons moves the dungeons whole,
+ * by a fixed table (:2064-2110). `[dungeon][at]` is the dungeon's exits
+ * behind `at`'s doors.
+ */
+const FOUR_DOOR_EXITS: Readonly<
+  Record<FourDoors, Readonly<Record<FourDoors, readonly string[]>>>
+> = {
+  Desert: {
+    Desert: DESERT_EXITS,
+    "Hyrule Castle": DESERT_EXITS,
+    "Turtle Rock": DESERT_EXITS,
+  },
+  "Hyrule Castle": {
+    Desert: CASTLE_EXITS,
+    "Hyrule Castle": CASTLE_EXITS,
+    "Turtle Rock": CASTLE_EXITS,
+  },
+  "Turtle Rock": {
+    Desert: TURTLE_ROCK_EXITS,
+    // Its ledges behind the castle's side doors, the isolated ledge behind
+    // Agahnim's Tower (:2096-2100)
+    "Hyrule Castle": [
+      "Turtle Rock Exit (Front)",
+      "Turtle Rock Ledge Exit (East)",
+      "Turtle Rock Ledge Exit (West)",
+      "Turtle Rock Isolated Ledge Exit",
+    ],
+    "Turtle Rock": TURTLE_ROCK_EXITS,
+  },
+};
+
+/** A four-door dungeon's door: whose, and which of its four. */
+const FOUR_DOOR_AT = new Map(
+  (Object.entries(FOUR_DOORS) as [FourDoors, readonly string[]][]).flatMap(
+    ([at, doors]) => doors.map((door, index) => [door, { at, index }] as const),
+  ),
+);
+
+/** The four-door dungeons a world moves: the castle stays in Standard. */
+const fourDoorDungeons = (open: boolean): readonly FourDoors[] =>
+  open ? ["Desert", "Turtle Rock", "Hyrule Castle"] : ["Desert", "Turtle Rock"];
+
+/** The two-door caves, each as its two exits (Cave_Exits_Base). */
+const TWO_DOOR_CAVES = table(
+  "Cave_Exits_Base",
+) as unknown as readonly (readonly [string, string])[];
+
+/**
+ * The simple shuffle's pairs of doors, each of which takes one two-door
+ * cave (Two_Door_Caves_Directional, Two_Door_Caves; :76-95): the first
+ * door its cave's first exit, the second its second.
+ */
+const DOOR_PAIRS = [
+  ...table("Two_Door_Caves_Directional"),
+  ...table("Two_Door_Caves"),
+] as unknown as readonly (readonly [first: string, second: string])[];
+
+/** Each door of a pair to the other. */
+const OTHER_OF_PAIR = new Map(
+  DOOR_PAIRS.flatMap(([first, second]) => [
+    [first, second],
+    [second, first],
+  ]),
+);
+
+/**
+ * Caves the randomizer keeps as tuples, which unbias_some_entrances leaves
+ * in order (it shuffles a cave's exits only when its table holds a list,
+ * :2161-2165): Superbunny Cave's and Spiral Cave's (:2262-2263).
+ */
+const IN_ORDER_CAVES: readonly (readonly [first: string, second: string])[] = [
+  ["Superbunny Cave Exit (Bottom)", "Superbunny Cave Exit (Top)"],
+  ["Spiral Cave Exit (Top)", "Spiral Cave Exit"],
+];
+
+/**
+ * The exits a must-exit door never leads to: connect_mandatory_exits gives
+ * it a cave's last exit (:1938), so never the first of a two-door tuple
+ * (IN_ORDER_CAVES), of Spectacle Rock Cave's tuple only its own exit (:2266,
+ * its branch at :1949), and never Turtle Rock's east ledge, which unbias
+ * puts first (:2182-2189).
+ */
+const NEVER_LAST = new Set([
+  ...IN_ORDER_CAVES.map(([first]) => first),
+  "Spectacle Rock Cave Exit (Peak)",
+  "Spectacle Rock Cave Exit (Top)",
+  "Turtle Rock Ledge Exit (East)",
+]);
+
+/**
+ * What each door that is neither a hole's nor Skull Woods' may lead to, by
+ * the randomizer's names, in a shuffle: the tables it hands each of its
+ * steps (EntranceShuffle.py:63-440). What a Standard world keeps is left to
+ * the pool.
+ */
+function doorTargetsOf(
+  shuffle: ErShuffle,
+  open: boolean,
+): (door: string) => readonly string[] {
+  const apart = shuffle === "simple" || shuffle === "restricted";
+  const twoDoor = names("Cave_Exits_Base");
+  const threeDoor = names("Cave_Three_Exits_Base");
+  const oldManHouse = names("Old_Man_House_Base");
+  const singles = names("Single_Cave_Targets");
+  const oldManWest = "Old Man Cave Exit (West)";
+  const oldManEast = "Old Man Cave Exit (East)";
+  const oneDoor = new Set(ONE_DOOR_DUNGEONS.map(([door]) => door));
+  // The Light World's doors, the only ones that may lead to its caves in
+  // the restricted and full shuffles (lw_entrances, lw_must_exits)
+  const light = namesIn(
+    "LW_Entrances",
+    "LW_Dungeon_Entrances",
+    "LW_Single_Cave_Doors",
+    "Old_Man_Entrances",
+    "LW_Dungeon_Entrances_Must_Exit",
+  ).add("Hyrule Castle Entrance (South)");
+  // Death Mountain's, which the simple shuffle fills last (:98-111)
+  const deathMountain = namesIn("LW_Entrances", "Old_Man_Entrances");
+  const mustExits = namesIn(
+    "DW_Entrances_Must_Exit",
+    "DW_Dungeon_Entrances_Must_Exit",
+    "LW_Dungeon_Entrances_Must_Exit",
+  );
+  // The Old Man's way out: one of these doors (:100-104, :155, :319, :402)
+  const oldManDoors = new Set([
+    ...names("Old_Man_Entrances"),
+    ...(apart ? [] : ["Tower of Hera"]),
+  ]);
+  // The blacksmith's and the bomb shop's doors (:113-125, :162-178,
+  // :326-342, :408-421); the bomb shop may take a blacksmith's door left
+  const smiths =
+    shuffle === "simple"
+      ? namesIn("Blacksmith_Single_Cave_Doors")
+      : namesIn("Blacksmith_Single_Cave_Doors", "Blacksmith_Multi_Cave_Doors");
+  const bombs =
+    shuffle === "simple"
+      ? namesIn("Bomb_Shop_Single_Cave_Doors", "Blacksmith_Single_Cave_Doors")
+      : namesIn(
+          "Bomb_Shop_Single_Cave_Doors",
+          "Bomb_Shop_Multi_Cave_Doors",
+          "Blacksmith_Single_Cave_Doors",
+          "Blacksmith_Multi_Cave_Doors",
+        );
+  const singleDoor = (door: string) => [
+    ...singles,
+    ...(smiths.has(door) ? ["Blacksmiths Hut"] : []),
+    ...(bombs.has(door) ? ["Big Bomb Shop"] : []),
+  ];
+  // The dungeons' exits the full and crossed shuffles place as caves:
+  // Dungeon_Exits, the castle's (:281-283, :313-315, :385-387, :396-398)
+  // and Ganon's Tower's
+  const castleSides = [
+    "Hyrule Castle Exit (West)",
+    "Hyrule Castle Exit (East)",
+  ];
+  const dungeonCaves = [
+    ...names("Dungeon_Exits_Base"),
+    ...(open ? ["Hyrule Castle Exit (South)"] : []),
+    ...castleSides,
+    "Ganons Tower Exit",
+  ];
+  // Of them, those of caves with several exits, which a must-exit door may
+  // take (connect_mandatory_exits takes no lone exit, :1925-1928); Standard
+  // places its castle's sides after the must-exits
+  const severalExits = [
+    ...flat(
+      table("Dungeon_Exits_Base").filter((row) => typeof row !== "string"),
+    ),
+    ...(open ? CASTLE_EXITS.slice(0, 3) : []),
+  ];
+
+  return (door) => {
+    if (apart && oneDoor.has(door))
+      return ONE_DOOR_DUNGEONS.map(([, exit]) => exit);
+    const four = apart ? FOUR_DOOR_AT.get(door) : undefined;
+    if (four !== undefined)
+      return fourDoorDungeons(open).map(
+        (dungeon) => FOUR_DOOR_EXITS[dungeon][four.at][four.index] ?? "",
+      );
+    if (shuffle === "simple") {
+      if (OTHER_OF_PAIR.has(door)) {
+        // A pair's first door takes its cave's first exit: a tuple's
+        // first, only ever there (:82-84, :91-93)
+        const first = DOOR_PAIRS.some(([one]) => one === door);
+        const never = new Set(
+          IN_ORDER_CAVES.map(([one, two]) => (first ? two : one)),
+        );
+        return twoDoor.filter((exit) => !never.has(exit));
+      }
+      if (deathMountain.has(door))
+        return [
+          ...twoDoor,
+          ...oldManHouse,
+          ...threeDoor,
+          oldManWest,
+          ...(oldManDoors.has(door) ? [oldManEast] : []),
+        ];
+      return singleDoor(door);
+    }
+    // What only the Light World holds, but in the crossed shuffle
+    const lightOnes = shuffle === "crossed" || light.has(door);
+    if (mustExits.has(door))
+      // A cave's last exit (:151, :295-306, :394)
+      return [
+        ...twoDoor,
+        ...threeDoor,
+        ...(apart ? [] : severalExits),
+        ...(shuffle === "crossed" || (shuffle === "full" && lightOnes)
+          ? oldManHouse
+          : []),
+      ].filter((exit) => !NEVER_LAST.has(exit));
+    return [
+      ...twoDoor,
+      ...threeDoor,
+      ...(apart
+        ? []
+        : dungeonCaves.filter(
+            (exit) => open || lightOnes || !castleSides.includes(exit),
+          )),
+      ...(lightOnes ? [...oldManHouse, oldManWest] : []),
+      ...(oldManDoors.has(door) ? [oldManEast] : []),
+      ...singleDoor(door),
+    ];
+  };
 }
 
 /**
- * What only the Light World may hold in the full shuffle, which keeps each
- * cave in one world (connect_caves): the Old Man House
- * (EntranceShuffle.py:301, 312), his cave (:322, 352) and, in a Standard
- * world, the castle's side doors (:315). The crossed shuffle places them
- * anywhere (:394-434).
+ * What alttpr.com's crossed shuffle mixes in an Open or Standard world
+ * (EntranceShuffle.py:365-440). Standard keeps the castle's front door and
+ * its secret passage for the escape (:379-381, scramble_holes). Inverted
+ * runs its own tables, not ported yet. In the retro world (Open's, `retro`),
+ * a door that may lead to a cave set_up_take_anys draws from may lead to a
+ * take-any cave instead.
  */
-const LIGHT_ONLY = [
-  "Old Man House Exit (Bottom)",
-  "Old Man House Exit (Top)",
-  "Old Man Cave Exit (East)",
-  "Old Man Cave Exit (West)",
-].map(slug);
-const LIGHT_ONLY_STANDARD = [
-  "Hyrule Castle Exit (West)",
-  "Hyrule Castle Exit (East)",
-].map(slug);
-
-/**
- * The entrances alttpr.com's crossed shuffle mixes in an Open or Standard
- * world (EntranceShuffle.py:365-460). Standard keeps the castle's front door
- * and its secret passage for the escape (:379-381, scramble_holes).
- * Inverted runs its own tables, not ported yet.
- */
-export const crossedPool = (mode: "open" | "standard"): CrossedPool =>
-  shufflePool("crossed", mode);
-
-/**
- * The entrances alttpr.com's full shuffle mixes (EntranceShuffle.py:260-364):
- * the same doors and holes as the crossed one, since both draw on the same
- * tables, scramble_holes and Skull Woods' shuffle; but a cave stays in the
- * world its door lies in, so a Dark World door never leads to the places
- * only the Light World holds (`LIGHT_ONLY`).
- */
-export const fullPool = (mode: "open" | "standard"): CrossedPool =>
-  shufflePool("full", mode);
-
-function shufflePool(
-  shuffle: "crossed" | "full",
+export const crossedPool = (
   mode: "open" | "standard",
-): CrossedPool {
+  retro = false,
+): EntrancePool => entrancePool("crossed", mode, retro);
+
+/**
+ * What the full shuffle mixes (:260-364): the doors and holes of the
+ * crossed one, but each cave in one world (connect_caves takes a world's
+ * doors), so a Dark World door never leads to what only the Light World
+ * holds: the Old Man's house and cave (:290-322, :351-352) and, in a
+ * Standard world, the castle's side doors (:313-315).
+ */
+export const fullPool = (
+  mode: "open" | "standard",
+  retro = false,
+): EntrancePool => entrancePool("full", mode, retro);
+
+/**
+ * What the restricted shuffle mixes (:134-204): dungeons among dungeons
+ * (simple_shuffle_dungeons), every other door among the caves and the
+ * single doors, the Old Man's house and cave in the Light World.
+ */
+export const restrictedPool = (
+  mode: "open" | "standard",
+  retro = false,
+): EntrancePool => entrancePool("restricted", mode, retro);
+
+/**
+ * What the simple shuffle mixes (:63-132): dungeons among dungeons, each
+ * pair of two-door caves' doors one two-door cave, Death Mountain's doors
+ * among its caves and those left, single doors among single caves.
+ */
+export const simplePool = (
+  mode: "open" | "standard",
+  retro = false,
+): EntrancePool => entrancePool("simple", mode, retro);
+
+/**
+ * What a shuffle mixes in an Open or Standard world, Retro's being Open's
+ * with its take-any caves (`retro`). Every pool shuffles the holes as
+ * scramble_holes does and Skull Woods' doors and holes among their own
+ * (skull_woods_shuffle); Standard keeps the escape's doors.
+ */
+export function entrancePool(
+  shuffle: ErShuffle,
+  mode: "open" | "standard",
+  retro = false,
+): EntrancePool {
+  const open = mode === "open";
+  // Dungeons among dungeons only (simple_shuffle_dungeons, :64, :135)
+  const apart = shuffle === "simple" || shuffle === "restricted";
+  // Standard keeps the escape's doors (:277-280, :379-381, scramble_holes
+  // :1827-1830), and in the simple and restricted shuffles Hyrule Castle's
+  // other doors and Agahnim's Tower's (:2054-2057)
+  const keptDoors = new Set(
+    open
+      ? []
+      : [
+          "Hyrule Castle Entrance (South)",
+          "Hyrule Castle Secret Entrance Stairs",
+          "Hyrule Castle Secret Entrance Drop",
+          ...(apart ? FOUR_DOORS["Hyrule Castle"] : []),
+        ],
+  );
+  const keptTargets = new Set(
+    open
+      ? []
+      : [
+          "Hyrule Castle Exit (South)",
+          "Hyrule Castle Secret Entrance Exit",
+          "Hyrule Castle Secret Entrance",
+          ...(apart ? CASTLE_EXITS : []),
+        ].map(slug),
+  );
   const doors = [
-    ...table("LW_Entrances"),
-    ...table("LW_Dungeon_Entrances"),
-    ...table("LW_Single_Cave_Doors"),
-    ...table("Old_Man_Entrances"),
-    ...table("DW_Entrances"),
-    ...table("DW_Dungeon_Entrances"),
-    ...table("DW_Single_Cave_Doors"),
-    ...table("DW_Entrances_Must_Exit"),
-    ...table("DW_Dungeon_Entrances_Must_Exit"),
-    ...table("LW_Dungeon_Entrances_Must_Exit"),
-    ...(mode === "open" ? ["Hyrule Castle Entrance (South)"] : []),
+    ...names("LW_Entrances"),
+    ...names("LW_Dungeon_Entrances"),
+    ...names("LW_Single_Cave_Doors"),
+    ...names("Old_Man_Entrances"),
+    ...names("DW_Entrances"),
+    ...names("DW_Dungeon_Entrances"),
+    ...names("DW_Single_Cave_Doors"),
+    ...names("DW_Entrances_Must_Exit"),
+    ...names("DW_Dungeon_Entrances_Must_Exit"),
+    ...names("LW_Dungeon_Entrances_Must_Exit"),
+    "Hyrule Castle Entrance (South)",
     "Ganons Tower",
     // The doors of the caves holes drop into, and Skull Woods' own doors
     ...holeEntrances.map(([door]) => door),
-    ...(mode === "open" ? ["Hyrule Castle Secret Entrance Stairs"] : []),
+    "Hyrule Castle Secret Entrance Stairs",
     "Pyramid Entrance",
     ...skullDoors,
-  ].map(String);
+  ];
   const holes = [
     ...holeEntrances.map(([, hole]) => hole),
-    ...(mode === "open" ? ["Hyrule Castle Secret Entrance Drop"] : []),
+    "Hyrule Castle Secret Entrance Drop",
     "Pyramid Hole",
     ...skullHoles,
   ];
   const holeDoors = new Map<string, string>(
     [
-      ...holeEntrances.map(([door, hole]) => [hole, door] as const),
-      ...(mode === "open"
-        ? [
-            [
-              "Hyrule Castle Secret Entrance Drop",
-              "Hyrule Castle Secret Entrance Stairs",
-            ] as const,
-          ]
-        : []),
-      ["Pyramid Hole", "Pyramid Entrance"] as const,
-    ].map(([hole, door]) => [slug(hole), slug(door)]),
+      ...holeEntrances,
+      [
+        "Hyrule Castle Secret Entrance Stairs",
+        "Hyrule Castle Secret Entrance Drop",
+      ] as const,
+      ["Pyramid Entrance", "Pyramid Hole"] as const,
+    ]
+      .filter(([door]) => !keptDoors.has(door))
+      .map(([door, hole]) => [slug(hole), slug(door)]),
   );
-  const entrances = [...new Set([...doors, ...holes])].map(entranceNamed);
+  const entrances = [...new Set([...doors, ...holes])]
+    .filter((name) => !keptDoors.has(name))
+    .map(entranceNamed);
 
   // The pairs of holes and doors this world shuffles, and their caves
-  const caves = HOLE_CAVES.filter(
-    ([exit]) =>
-      mode === "open" || exit !== "Hyrule Castle Secret Entrance Exit",
-  );
+  const caves = HOLE_CAVES.filter(([exit]) => !keptTargets.has(slug(exit)));
   const exitOfDrop = new Map(
     caves.map(([exit, drop]) => [slug(drop), slug(exit)]),
   );
   const dropOfExit = new Map(
     caves.map(([exit, drop]) => [slug(exit), slug(drop)]),
   );
-  const doorOfHole = holeDoors;
   const holeOfDoor = new Map(
     [...holeDoors].map(([hole, door]) => [door, hole]),
   );
-  const ids = (names: readonly string[]) => new Set(names.map(slug));
-  const skullHoleIds = ids(skullHoles);
-  const skullDoorIds = ids(skullDoors);
+  const ids = (list: readonly string[]) => new Set(list.map(slug));
   const groups = [
-    { from: new Set(doorOfHole.keys()), to: ids(caves.map(([, d]) => d)) },
+    { from: new Set(holeDoors.keys()), to: ids(caves.map(([, d]) => d)) },
     { from: new Set(holeOfDoor.keys()), to: ids(caves.map(([e]) => e)) },
-    { from: skullHoleIds, to: ids(skullHoleTargets) },
-    { from: skullDoorIds, to: ids(skullDoorTargets) },
+    { from: ids(skullHoles), to: ids(skullHoleTargets) },
+    { from: ids(skullDoors), to: ids(skullDoorTargets) },
   ];
-  const grouped = new Set(groups.flatMap(({ to }) => [...to]));
-  // Not this world's: the escape's doors Standard keeps
-  const kept = new Set(
-    mode === "open"
-      ? []
-      : [
-          "Hyrule Castle Exit (South)",
-          "Hyrule Castle Secret Entrance Exit",
-          "Hyrule Castle Secret Entrance",
-        ].map(slug),
+  // Sanctuary's cave goes under the Pyramid in the crossed shuffle alone
+  // (:1838-1844)
+  const pyramid = ids(["Pyramid Entrance", "Pyramid Hole"]);
+  const notUnderPyramid = ids(
+    shuffle === "crossed" ? [] : ["Sanctuary Exit", "Sewer Drop"],
   );
-  const lightOnly = new Set(
-    shuffle === "full"
-      ? [...LIGHT_ONLY, ...(mode === "standard" ? LIGHT_ONLY_STANDARD : [])]
-      : [],
-  );
+
+  const doorTargets = doorTargetsOf(shuffle, open);
   const targetsOf = new Map(
     entrances.map((entrance) => {
-      const group = groups.find(({ from }) => from.has(entrance.id));
-      return [
-        entrance.id,
-        TARGETS.filter((t) =>
-          group === undefined
-            ? t.kind !== "drop" &&
-              !grouped.has(t.id) &&
-              !kept.has(t.id) &&
-              !(entrance.world === "dark" && lightOnly.has(t.id))
-            : group.to.has(t.id),
-        ),
-      ];
+      const may =
+        groups.find(({ from }) => from.has(entrance.id))?.to ??
+        ids(doorTargets(entrance.name));
+      const targets = TARGETS.filter(
+        (t) =>
+          may.has(t.id) &&
+          !keptTargets.has(t.id) &&
+          !(pyramid.has(entrance.id) && notUnderPyramid.has(t.id)),
+      );
+      // A take-any takes the door of a cave it draws (set_up_take_anys)
+      const takeAny =
+        retro && targets.some((t) => TAKE_ANY_CAVES.has(t.id))
+          ? TARGETS.filter((t) => TAKE_ANYS.has(t.id))
+          : [];
+      return [entrance.id, [...targets, ...takeAny]];
     }),
   );
+
+  const nameOf = new Map(entrances.map((e) => [e.id, e.name]));
+  const targetNameOf = new Map(TARGETS.map((t) => [t.id, t.name]));
+  /** What a door's note settles beside a hole's: a cave's, a dungeon's. */
+  const settled = (
+    entrance: string,
+    target: string,
+  ): (readonly [string, string])[] => {
+    const door = nameOf.get(entrance) ?? "";
+    const exit = targetNameOf.get(target) ?? "";
+    // In the simple shuffle a pair of doors takes a two-door cave whole
+    // (:76-95): the other door leads to the cave's other exit
+    const other = shuffle === "simple" ? OTHER_OF_PAIR.get(door) : undefined;
+    if (other !== undefined) {
+      const cave = TWO_DOOR_CAVES.find((c) => c.includes(exit));
+      const otherExit = cave?.find((e) => e !== exit);
+      return otherExit === undefined ? [] : [[slug(other), slug(otherExit)]];
+    }
+    // In the simple and restricted shuffles a four-door dungeon moves
+    // whole, by its table: one door tells the other three
+    const four = apart ? FOUR_DOOR_AT.get(door) : undefined;
+    if (four === undefined) return [];
+    const dungeon = fourDoorDungeons(open).find(
+      (d) => FOUR_DOOR_EXITS[d][four.at][four.index] === exit,
+    );
+    if (dungeon === undefined) return [];
+    const exits = FOUR_DOOR_EXITS[dungeon][four.at];
+    return FOUR_DOORS[four.at].flatMap((at, index) =>
+      index === four.index
+        ? []
+        : [[slug(at), slug(exits[index] ?? "")] as const],
+    );
+  };
 
   return {
     entrances,
     holeDoors,
-    partner: (entrance, target) => {
-      const door = doorOfHole.get(entrance);
+    partners: (entrance, target) => {
+      const door = holeDoors.get(entrance);
       const exit = exitOfDrop.get(target);
-      if (door !== undefined && exit !== undefined) return [door, exit];
+      if (door !== undefined && exit !== undefined) return [[door, exit]];
       const hole = holeOfDoor.get(entrance);
       const drop = dropOfExit.get(target);
-      if (hole !== undefined && drop !== undefined) return [hole, drop];
-      return undefined;
+      if (hole !== undefined && drop !== undefined) return [[hole, drop]];
+      return settled(entrance, target);
     },
+    shuffle,
     targetsOf,
   };
 }

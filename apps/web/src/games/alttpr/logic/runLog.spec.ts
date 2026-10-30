@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { getPreset } from "@/games/alttpr/data/presets";
+import type { BossNaming } from "@/games/alttpr/logic/knownBosses";
 import {
   findIcon,
   findName,
@@ -13,6 +15,13 @@ const at = (seconds: number, timed = true) => ({
   ms: timed ? seconds * 1000 : null,
 });
 
+const open = getPreset("open").settings;
+/** A run whose bosses stay home, or may move; `knownboss*` cells as told. */
+const runOf = (
+  bossShuffle: "none" | "full",
+  items: Record<string, number> = {},
+): BossNaming => ({ items, settings: { ...open, bossShuffle } });
+
 describe("findName", () => {
   it.each([
     ["item:hookshot", "Hookshot"],
@@ -26,7 +35,6 @@ describe("findName", () => {
     ["item:bow:1", "Silver Arrows"],
     ["item:bow:2", "Bow"],
     ["item:boomerang:2", "Red Boomerang"],
-    ["item:boss0:2", "Armos Knights beaten"],
     ["item:agahnim:1", "Agahnim beaten"],
     ["item:agahnim2:1", "Agahnim 2 beaten"],
     ["item:bigkey0:1", "Eastern Palace Big Key"],
@@ -36,6 +44,59 @@ describe("findName", () => {
     ["check:eastern-palace/big-key-chest", "Eastern Palace - Big Key Chest"],
   ])("names %s %s", (key, name) => {
     expect(findName(key)).toBe(name);
+  });
+
+  describe("a boss beaten", () => {
+    const THIEVES_TOWN = "item:boss6:2";
+
+    it("is the dungeon's own boss while the bosses stay home", () => {
+      expect(findName("item:boss0:2", runOf("none"))).toBe(
+        "Armos Knights beaten",
+      );
+      expect(findName(THIEVES_TOWN, runOf("none"))).toBe(
+        "Blind the Thief beaten",
+      );
+      // Not even a stale known-boss cell renames it
+      expect(findName(THIEVES_TOWN, runOf("none", { knownboss6: 1 }))).toBe(
+        "Blind the Thief beaten",
+      );
+    });
+
+    it("is the boss the shuffled run knows", () => {
+      // knownboss6 = 1 is Armos Knights, as autotracking told it
+      expect(findName(THIEVES_TOWN, runOf("full", { knownboss6: 1 }))).toBe(
+        "Armos Knights beaten",
+      );
+    });
+
+    it("is neutral while the shuffled run does not know it", () => {
+      expect(findName(THIEVES_TOWN, runOf("full"))).toBe(
+        "Thieves' Town boss beaten",
+      );
+      expect(findName("item:boss1:2", runOf("full", { knownboss1: 0 }))).toBe(
+        "Desert Palace boss beaten",
+      );
+      expect(
+        findName(THIEVES_TOWN, {
+          items: {},
+          settings: { ...open, hidden: ["bossShuffle"] },
+        }),
+      ).toBe("Thieves' Town boss beaten");
+    });
+
+    it("never names the vanilla boss of a boss it cannot know", () => {
+      expect(findName(THIEVES_TOWN)).toBe("Thieves' Town boss beaten");
+    });
+
+    it("keeps Kholdstare in a swordless Ice Palace and the Agahnims", () => {
+      expect(
+        findName("item:boss7:2", {
+          items: {},
+          settings: { ...open, bossShuffle: "full", swordless: true },
+        }),
+      ).toBe("Kholdstare beaten");
+      expect(findName("item:agahnim:1", runOf("full"))).toBe("Agahnim beaten");
+    });
   });
 });
 

@@ -102,6 +102,9 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "",
     "    def has_Boots(self, player):",
     "        return True",
+    "",
+    "    def can_buy_unlimited(self, item, player):",
+    "        return True",
   ].join("\n"),
   "Bosses.py": [
     "def MoldormDefeatRule(state, player):",
@@ -117,28 +120,82 @@ const CHECKOUT: Readonly<Record<string, string>> = {
     "boss_table = {",
     "    'Moldorm': ('Moldorm', MoldormDefeatRule),",
     "    'Arrghus': ('Arrghus', ArrghusDefeatRule),",
+    "    'Agahnim': ('Agahnim', MoldormDefeatRule),",
     "}",
+    "",
+    "def can_place_boss(world, boss, dungeon_name, level=None):",
+    "    if world.swords in ['swordless'] and boss == 'Arrghus' and dungeon_name != 'Swamp Palace':",
+    "        return False",
+    "    if dungeon_name == 'Tower of Hera' and level == None:",
+    '        if boss in ["Moldorm"]:',
+    "            return False",
+    '    if boss in ["Agahnim"]:',
+    "        return False",
+    "    return True",
+    "",
+    "def place_bosses(world, player):",
+    "    if world.mode != 'inverted':",
+    "        boss_locations = [",
+    "            ['Tower of Hera', None],",
+    "            ['Swamp Palace', None],",
+    "        ]",
+    "    else:",
+    "        boss_locations = [",
+    "            ['Inverted Ganons Tower', 'top'],",
+    "        ]",
   ].join("\n"),
   "Dungeons.py": [
     "def create_dungeons(world, player):",
-    "    def make_dungeon(name, default_boss, dungeon_regions, big_key):",
-    "        return name",
+    "    def make_dungeon(name, default_boss, dungeon_regions, big_key, small_keys, dungeon_items):",
+    "        dungeon = Dungeon(name, dungeon_regions, big_key, [] if world.retro else small_keys, dungeon_items, player)",
+    "        return dungeon",
     "",
-    "    TH = make_dungeon('Tower of Hera', 'Moldorm', ['Tower of Hera (Top)'], None)",
-    "    SP = make_dungeon('Swamp Palace', 'Arrghus', ['Swamp Palace (North)'], None)",
+    "    TH = make_dungeon('Tower of Hera', 'Moldorm', ['Tower of Hera (Top)'], None, [], [])",
+    "    SP = make_dungeon('Swamp Palace', 'Arrghus', ['Swamp Palace (North)'], ItemFactory('Big Key (Swamp Palace)', player), ItemFactory(['Small Key (Swamp Palace)'] * 2, player), ItemFactory(['Map (Swamp Palace)', 'Compass (Swamp Palace)'], player))",
     "    if world.mode == 'inverted':",
-    "        GT = make_dungeon('Inverted Ganons Tower', 'Agahnim2', ['Ganons Tower (Top)'], None)",
+    "        GT = make_dungeon('Inverted Ganons Tower', 'Agahnim2', ['Ganons Tower (Top)'], None, [], [])",
     "    GT.bosses['top'] = BossFactory('Moldorm', player)",
+    "",
+    "def fill_dungeons_restrictive(world, shuffled_locations):",
+    "    for player in range(1, world.players + 1):",
+    "        pinball_room = world.get_location('Swamp Palace - Boss', player)",
+    "        if world.retro:",
+    "            world.push_item(pinball_room, ItemFactory('Small Key (Universal)', player), False)",
+    "        else:",
+    "            world.push_item(pinball_room, ItemFactory('Small Key (Swamp Palace)', player), False)",
   ].join("\n"),
   "ItemList.py": [
     "def generate_itempool(world, player):",
     "    world.push_item(world.get_location('Floodgate', player), ItemFactory('Open Floodgate', player), False)",
     "    world.push_item(world.get_location('Agahnim 1', player), ItemFactory('Beat Agahnim 1', player), False)",
     "    world.push_item(world.get_location('Ganon', player), ItemFactory('Triforce', player), False)",
+    "",
+    "def set_up_shops(world, player):",
+    "    if world.retro:",
+    "        rss = world.get_region('Red Shield Shop', player).shop",
+    "        rss.active = True",
+    "        rss.add_inventory(2, 'Single Arrow', 80)",
+    "    if world.retro:",
+    "        for shop in random.sample([s for s in world.shops if s.replaceable and s.type == ShopType.Shop and s.region.player == player], 5):",
+    "            shop.active = True",
+    "            shop.add_inventory(0, 'Single Arrow', 80)",
+    "            shop.add_inventory(1, 'Small Key (Universal)', 100)",
+    "",
+    "def fill_prizes(world, attempts=15):",
+    "    for player in range(1, world.players + 1):",
+    "        crystal_locations = [world.get_location('Tower of Hera - Boss', player),",
+    "                             world.get_location('Thieves\\' Town - Prize', player)]",
+    "",
+    "def get_pool_core(progressive):",
+    "    pool = []",
   ].join("\n"),
   "Items.py":
     "item_table = {'Hookshot': (True,), 'Hammer': (True,), 'Fire Rod': (True,), 'Open Floodgate': (True,), 'Small Key (Swamp Palace)': (True,)}",
   "Regions.py": [
+    "shop_table = {",
+    "    'Kakariko Shop': (0x011F, 0xA0, True),",
+    "    'Potion Shop': (0x0109, 0xFF, False),",
+    "}",
     "_basic_shop_defaults = [('Red Potion', 150)]",
     "default_shop_contents = {",
     "    'Kakariko Shop': _basic_shop_defaults,",
@@ -270,17 +327,45 @@ describe("the translation of the entrance randomizer's rules", () => {
     expect(locations["Potion Shop"]?.req).toBe("reach(dam)");
   });
 
-  it("reads a placement as maybe, a boss through its dungeon", () => {
-    const { helpers, locations } = translate();
+  it("reads a placement as maybe, a boss through its dungeon's slot", () => {
+    const { bossSlots, helpers, locations } = translate();
+    // In the retro world, has_key buys a key (BaseClasses.py:378-380)
     expect(locations["Swamp Palace - Big Chest"]?.req).toBe(
-      "keyD2 >= 2 | maybe",
+      "!setting(genericKeys) & keyD2 >= 2 | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal | maybe",
     );
-    expect(locations["Tower of Hera - Boss"]?.req).toBe("@erDefeatMoldorm");
+    // A key for sale: a shop drawn among the replaceable ones (maybe), or
+    // one the player found
+    expect(helpers.erCanBuyUnlimitedSmallKeyUniversal?.req).toBe(
+      "shopKey | maybe & reach(kakarikoShop)",
+    );
+    expect(locations["Tower of Hera - Boss"]?.req).toBe(
+      "@erDefeatTowerOfHeraBoss",
+    );
     // (set_trock_key_rules sets it again, where everything held reaches
     // the Dam)
     expect(locations["Swamp Palace - Boss"]?.req).toMatch(
-      / \| !setting\(allItemsReach_dam\) & @erDefeatArrghus$/,
+      / \| !setting\(allItemsReach_dam\) & @erDefeatSwampPalaceBoss$/,
     );
+    // Each slot place_bosses fills: its vanilla boss, and what
+    // can_place_boss refuses there, the more it refuses swordless apart
+    expect(bossSlots).toEqual({
+      erDefeatSwampPalaceBoss: {
+        boss: "Arrghus",
+        place: "swampPalace",
+        refuses: ["Agahnim"],
+        source: "Bosses.py:31",
+        swordless: [],
+        vanilla: "erDefeatArrghus",
+      },
+      erDefeatTowerOfHeraBoss: {
+        boss: "Moldorm",
+        place: "towerOfHera",
+        refuses: ["Moldorm", "Agahnim"],
+        source: "Bosses.py:30",
+        swordless: ["Arrghus"],
+        vanilla: "erDefeatMoldorm",
+      },
+    });
     // if not x: return False is x & …; if y: return True is y | …
     expect(helpers.erDefeatArrghus).toEqual({
       req: "hookshot & (hammer | fireRod & @erCanExtendMagic12)",
@@ -297,6 +382,46 @@ describe("the translation of the entrance randomizer's rules", () => {
     );
     // A location reached: its region, and its rule
     expect(helpers.erAtPotionShop?.req).toBe("reach(lightWorld) & reach(dam)");
+  });
+
+  it("reads each dungeon's keys and the spots filled before them", () => {
+    const { dungeons } = translate();
+    expect(dungeons).toEqual({
+      byName: {
+        "Swamp Palace": {
+          bigKey: true,
+          code: "D2",
+          items: ["Map (Swamp Palace)", "Compass (Swamp Palace)"],
+          regions: ["Swamp Palace (North)"],
+          smallKeys: 2,
+          source: "Dungeons.py:7",
+        },
+        "Tower of Hera": {
+          bigKey: false,
+          code: "",
+          items: [],
+          regions: ["Tower of Hera (Top)"],
+          smallKeys: 0,
+          source: "Dungeons.py:6",
+        },
+      },
+      prefilled: [
+        { location: "Floodgate", source: "ItemList.py:2" },
+        { location: "Agahnim 1", source: "ItemList.py:3" },
+        { location: "Ganon", source: "ItemList.py:4" },
+        { location: "Tower of Hera - Boss", source: "ItemList.py:19" },
+        { location: "Thieves' Town - Prize", source: "ItemList.py:20" },
+      ],
+      preplaced: [
+        {
+          id: "keyD2",
+          item: "Small Key (Swamp Palace)",
+          location: "Swamp Palace - Boss",
+          source: "Dungeons.py:18",
+        },
+      ],
+      retroSmallKeys: "Dungeons.py:3",
+    });
   });
 
   it("lists what it cannot say, and what only places items", () => {
@@ -318,7 +443,32 @@ describe("the translation of the entrance randomizer's rules", () => {
         why: "the bunny's paths, by which regions the entrances make dark",
       },
     ]);
-    expect(fill).toEqual([27, 65]);
+    // Where an item may go, as data: each forbid under its branch's
+    // settings (set_trock_key_rules' list as it stands outside the branch)
+    expect(fill).toEqual({
+      always: [],
+      forbid: [
+        {
+          item: "Hammer",
+          location: "Swamp Palace - Big Chest",
+          source: "Rules.py:27",
+          when: "true",
+        },
+        {
+          item: "Hammer",
+          location: "Tower of Hera - Boss",
+          source: "Rules.py:27",
+          when: "true",
+        },
+        {
+          item: "Hammer",
+          location: "Swamp Palace - Boss",
+          source: "Rules.py:65",
+          when: "true",
+        },
+      ],
+      itemRules: [],
+    });
     // Only the events a rule reads; Agahnim is the pack's own item
     expect(events).toEqual({
       openFloodgate: {
@@ -373,7 +523,7 @@ describe("the translation of the entrance randomizer's rules", () => {
     });
     // A count by what a location holds: 0 with the key in it, else 2
     expect(locations["Swamp Palace - Boss"]?.req).toBe(
-      "setting(allItemsReach_dam) & (maybe | keyD2 >= 2) | !setting(allItemsReach_dam) & @erDefeatArrghus",
+      "setting(allItemsReach_dam) & (!setting(genericKeys) & (maybe | keyD2 >= 2) | setting(genericKeys) & @erCanBuyUnlimitedSmallKeyUniversal) | !setting(allItemsReach_dam) & @erDefeatSwampPalaceBoss",
     );
     expect(entrances["Swamp Palace Moat"]?.req).toBe(
       "setting(swampPatch) | hammer",
@@ -447,6 +597,13 @@ describe("the entrance randomizer's rules (rules.json)", () => {
         ...Object.fromEntries(
           Object.entries(rules.helpers).map(([name, { req }]) => [name, req]),
         ),
+        // The world defines each boss slot (er-world.ts)
+        ...Object.fromEntries(
+          Object.entries(rules.bossSlots).map(([name, { vanilla }]) => [
+            name,
+            `@${vanilla}`,
+          ]),
+        ),
       },
     });
     // What hangs on the entrances, the world built from them gives
@@ -477,6 +634,22 @@ describe("the entrance randomizer's rules (rules.json)", () => {
       "!setting(cantTakeDamage) & @erHasHearts4 | caneOfByrna | cape",
     );
     expect(rules.helpers.erCanKillMostThings.req).toMatch(/\| tenBombs$/);
+  });
+
+  it("buy the retro world's arrows and keys as its shops sell them", () => {
+    // The Red Shield Shop sells arrows; five of the nine replaceable shops
+    // sell both (ItemList.py:341-352), which a key shop found tells
+    const drawn =
+      "maybe & (reach(caveShopDarkDeathMountain) | reach(redShieldShop) | reach(darkLakeHyliaShop) | reach(darkWorldLumberjackShop) | reach(villageOfOutcastsShop) | reach(darkWorldPotionShop) | reach(lightWorldDeathMountainShop) | reach(kakarikoShop) | reach(caveShopLakeHylia))";
+    expect(rules.helpers.erCanBuyUnlimitedSingleArrow.req).toBe(
+      `reach(redShieldShop) | shopArrow | shopKey | ${drawn}`,
+    );
+    expect(rules.helpers.erCanBuyUnlimitedSmallKeyUniversal.req).toBe(
+      `shopKey | ${drawn}`,
+    );
+    expect(rules.helpers.erCanShootArrows.req).toBe(
+      "bow & (!setting(rupeeBow) | @erCanBuyUnlimitedSingleArrow)",
+    );
   });
 
   it("leave out only what is code, each with its line", () => {

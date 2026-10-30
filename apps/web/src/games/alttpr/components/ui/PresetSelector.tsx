@@ -11,17 +11,19 @@ import {
   doorOf,
 } from "@/games/alttpr/data/doorRando";
 import {
-  bossShuffleOf,
   describeSettings,
   getPreset,
+  HIDDEN_ENTRANCES,
   HIDEABLE,
   type HiddenSetting,
   isHidden,
-  logicModelled,
   presets,
   type RunSettings,
+  sameSettings,
   TUNING,
   type TunableSetting,
+  tunedOf,
+  unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -29,6 +31,8 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 type PendingRun = {
   readonly name: string;
   readonly presetId: string;
+  /** The run type already in play, its settings tuned: back to its own. */
+  readonly again?: boolean;
   /** The seed's hash, for a run started from a seed: the run is its. */
   readonly seed?: string;
   readonly settings: RunSettings;
@@ -74,15 +78,7 @@ const SettingSelect = ({
         );
         if (picked) updateSettings({ [setting]: picked[0] });
       }}
-      value={
-        hidden
-          ? HIDDEN
-          : String(
-              setting === "bossShuffle"
-                ? bossShuffleOf(settings)
-                : settings[setting],
-            )
-      }
+      value={hidden ? HIDDEN : String(tunedOf(settings, setting))}
     >
       {hideable && <option value={HIDDEN}>? Unknown</option>}
       {options.map(([option, words]) => (
@@ -203,8 +199,9 @@ const TricksOption = () => {
 /**
  * PresetSelector - lets the player pick a run-type preset (Open, Keysanity,
  * Inverted, ...), or a seed of alttpr.com's, whose settings name one.
- * Picking a different run type asks for confirmation because it resets the
- * board, then applies its settings. The settings that move no dungeon
+ * Picking a different run type, or the one in play once its settings were
+ * tuned, asks for confirmation because it resets the board, then applies its
+ * settings. The settings that move no dungeon
  * counter (crystals, item placement, pool, functionality, accessibility)
  * change in place from the summary, the run kept.
  */
@@ -220,12 +217,19 @@ export const PresetSelector = () => {
   const idPrefix = useId();
 
   const handlePick = (id: string) => {
-    if (id === presetId) {
+    const preset = getPreset(id);
+    // The run type in play, as it started: nothing to switch to. Its
+    // settings tuned in place: back to its own, as a switch resets.
+    if (id === presetId && sameSettings(preset.settings, settings)) {
       setIsListOpen(false);
       return;
     }
-    const preset = getPreset(id);
-    setPending({ name: preset.name, presetId: id, settings: preset.settings });
+    setPending({
+      ...(id === presetId ? { again: true } : {}),
+      name: preset.name,
+      presetId: id,
+      settings: preset.settings,
+    });
   };
 
   const confirmSwitch = () => {
@@ -314,7 +318,10 @@ export const PresetSelector = () => {
               >
                 <span className="preset-card__header">
                   <span className="preset-card__name">{preset.name}</span>
-                  {!logicModelled(preset.settings) && (
+                  {/* Entrances not known yet are no logic missing: set, they are */}
+                  {unmodelledReasons(preset.settings).some(
+                    (reason) => reason !== HIDDEN_ENTRANCES,
+                  ) && (
                     <span
                       className="preset-card__badge"
                       title="Selectable now; accessibility logic for this mode is coming soon"
@@ -333,12 +340,16 @@ export const PresetSelector = () => {
       </Modal>
 
       <ConfirmDialog
-        confirmLabel="Switch & reset"
+        confirmLabel={pending?.again ? "Reset" : "Switch & reset"}
         isOpen={pending !== null}
-        message={`Switching to "${pending?.name}" will reset your current progress.`}
+        message={
+          pending?.again
+            ? `Going back to the settings of "${pending.name}" will reset your current progress.`
+            : `Switching to "${pending?.name}" will reset your current progress.`
+        }
         onCancel={() => setPending(null)}
         onConfirm={confirmSwitch}
-        title="Switch run type?"
+        title={pending?.again ? "Reset run type?" : "Switch run type?"}
         tone="danger"
       />
     </>

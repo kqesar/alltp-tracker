@@ -3,6 +3,11 @@ import { doorNotes } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
   doorLogic,
+  GLITCHES_LABELS,
+  glitchesOf,
+  isHidden,
+  noLogicRun,
+  playGlitchesOf,
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -16,12 +21,16 @@ const listOf = (items: readonly string[]) =>
 /**
  * What the map's states rest on, when not the whole world: with shuffled
  * entrances, the doors noted (a check behind a door not noted stays out of
- * logic); under logic the pack does not model yet, the causes by name
- * (`unmodelledReasons`: a glitched logic, an entrance shuffle, shuffled
- * bosses behind one, a Door Randomizer seed's door, overworld or enemy
- * shuffle) and that every check is maybe. A Door Randomizer seed whose logic
- * it does model says what that logic rests on (`doorNotes`).
- * Nothing for any other run.
+ * logic), and, when the run names glitches, that such a seed is filled
+ * without them; under logic the pack does not model yet, the causes by name
+ * (`unmodelledReasons`: an entrance shuffle, the Inverted world's
+ * entrances, a Door Randomizer seed's glitched logic, door, overworld or
+ * enemy shuffle), "not modelled yet", and that every check is
+ * maybe; in a No Logic run, that the seed promises no route and what the
+ * map shows instead; in a Mystery run, that its entrances or its glitches
+ * are not set yet and what the map shows meanwhile. Nothing for any other
+ * run. A Door Randomizer seed whose logic it does model says what that
+ * logic rests on (`doorNotes`).
  */
 export const LogicNote = () => {
   const reasons = useGameStore(
@@ -48,21 +57,69 @@ export const LogicNote = () => {
         {door.join(" ")}
       </p>
     ) : null;
+  const noLogic = useGameStore((state) => noLogicRun(state.settings));
+  const play = useGameStore((state) => playGlitchesOf(state.settings));
+  const entrancesHidden = useGameStore((state) =>
+    isHidden(state.settings, "entranceShuffle"),
+  );
+  const glitchesHidden = useGameStore((state) =>
+    isHidden(state.settings, "glitches"),
+  );
+  // Set to any, or not known yet: a seed behind shuffled entrances ignores
+  // them (`entranceRandomized`)
+  const glitched = useGameStore(
+    (state) =>
+      isHidden(state.settings, "glitches") ||
+      glitchesOf(state.settings) !== "none",
+  );
+  if (entrancesHidden)
+    return (
+      <p className="logic-note" data-testid="logic-note">
+        The entrances are not set yet: they may be shuffled, so every check
+        shows as maybe until you set <strong>Entrances</strong> in Mode.
+      </p>
+    );
   if (crossed)
     return (
       <>
         <p className="logic-note" data-testid="logic-note">
           The logic follows the entrances you noted: a check behind a door you
           have not noted stays out of logic.
+          {glitched && (
+            <>
+              {" "}
+              A seed with shuffled entrances is filled without glitches,
+              whatever its <strong>Glitches</strong>: the map shows what is in
+              logic without them, and Link starts without the boots.
+            </>
+          )}
         </p>
         {doorNote}
       </>
     );
+  if (reasons.length === 0 && noLogic)
+    return (
+      <p className="logic-note" data-testid="logic-note">
+        No Logic: the seed promises no route, so nothing is in logic. The map
+        shows what you can reach{" "}
+        {play === "none" ? "without glitches" : `with ${GLITCHES_LABELS[play]}`}{" "}
+        (set under <strong>Played with</strong> in Mode). A key may sit behind
+        its own door: a key door stays maybe until every spot its key may sit in
+        is reached, or you mark its keys (<strong>Show key cells</strong>).
+      </p>
+    );
+  if (reasons.length === 0 && glitchesHidden)
+    return (
+      <p className="logic-note" data-testid="logic-note">
+        The glitches are not set yet: a check only a glitched logic reaches, or
+        whose key may sit behind its own door (as in No Logic), shows as maybe
+        until you set <strong>Glitches</strong> in Mode.
+      </p>
+    );
   if (reasons.length === 0) return doorNote;
   return (
     <p className="logic-note" data-testid="logic-note">
-      The tracker has no logic for {listOf(reasons)} yet: every check shows as
-      maybe.
+      Not modelled yet: {listOf(reasons)}. Every check shows as maybe.
     </p>
   );
 };

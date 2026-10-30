@@ -4668,6 +4668,67 @@
       ]
     }
   },
+  "takeAnys": {
+    "caves": {
+      "line": 233,
+      "value": [
+        "Snitch Lady (East)",
+        "Snitch Lady (West)",
+        "Bush Covered House",
+        "Light World Bomb Hut",
+        "Fortune Teller (Light)",
+        "Lake Hylia Fortune Teller",
+        "Lumberjack House",
+        "Bonk Fairy (Light)",
+        "Bonk Fairy (Dark)",
+        "Lake Hylia Healer Fairy",
+        "Swamp Healer Fairy",
+        "Desert Healer Fairy",
+        "Dark Lake Hylia Healer Fairy",
+        "Dark Lake Hylia Ledge Healer Fairy",
+        "Dark Desert Healer Fairy",
+        "Dark Death Mountain Healer Fairy",
+        "Long Fairy Cave",
+        "Good Bee Cave",
+        "20 Rupee Cave",
+        "Kakariko Gamble Game",
+        "50 Rupee Cave",
+        "Lost Woods Gamble",
+        "Hookshot Fairy",
+        "Palace of Darkness Hint",
+        "East Dark World Hint",
+        "Archery Game",
+        "Dark Lake Hylia Ledge Hint",
+        "Dark Lake Hylia Ledge Spike Cave",
+        "Fortune Teller (Dark)",
+        "Dark Sanctuary Hint",
+        "Dark Desert Hint"
+      ]
+    },
+    "line": 243,
+    "regions": [
+      {
+        "id": "oldManSwordCave",
+        "name": "Old Man Sword Cave"
+      },
+      {
+        "id": "takeAny1",
+        "name": "Take-Any #1"
+      },
+      {
+        "id": "takeAny2",
+        "name": "Take-Any #2"
+      },
+      {
+        "id": "takeAny3",
+        "name": "Take-Any #3"
+      },
+      {
+        "id": "takeAny4",
+        "name": "Take-Any #4"
+      }
+    ]
+  },
   "upstream": {
     "commit": "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
     "copyright": "Copyright (c) 2017 LLCoolDave",

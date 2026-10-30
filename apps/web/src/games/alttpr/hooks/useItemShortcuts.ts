@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isHunt, PIECES_ITEM } from "@/games/alttpr/data/items";
+import { hasPieces, PIECES_ITEM } from "@/games/alttpr/data/items";
 import {
   actionFor,
   type ControlId,
@@ -34,7 +34,7 @@ export const isControlShown = (control: ControlId): boolean => {
   // The shops' cells are a retro run's alone
   if (control.startsWith("shop") && settings.mode !== "retro") return false;
   // The pieces are a triforce hunt's alone
-  if (control === PIECES_ITEM && !isHunt(settings)) return false;
+  if (control === PIECES_ITEM && !hasPieces(settings)) return false;
   // A dungeon's known boss, while its bosses may move
   const known = knownBossIndex(control);
   if (known !== null && !knownBossShown(known, settings)) return false;

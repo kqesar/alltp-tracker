@@ -1,0 +1,86 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php",
+  "class": "MajorGlitches\\DarkWorld\\DeathMountain\\EastTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Superbunny Cave - Top","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":53,"location":"Superbunny Cave - Bottom","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":55,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Hookshot","PegasusBoots"]},"kind":"location","line":56,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["AnyBottle","MoonPearl"]},"kind":"location","line":57,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","MoonPearl"],"base":"setUp"},"kind":"location","line":58,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","MoonPearl"],"base":"setUp"},"kind":"location","line":59,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithBee"],"base":"setUp"},"kind":"location","line":60,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBee"],"base":"setUp"},"kind":"location","line":61,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithFairy"],"base":"setUp"},"kind":"location","line":62,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithFairy"],"base":"setUp"},"kind":"location","line":63,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithRedPotion"],"base":"setUp"},"kind":"location","line":64,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithRedPotion"],"base":"setUp"},"kind":"location","line":65,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithGreenPotion"],"base":"setUp"},"kind":"location","line":66,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGreenPotion"],"base":"setUp"},"kind":"location","line":67,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithBluePotion"],"base":"setUp"},"kind":"location","line":68,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBluePotion"],"base":"setUp"},"kind":"location","line":69,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":17,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","Bottle"],"base":"setUp"},"kind":"location","line":70,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":18,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","Bottle"],"base":"setUp"},"kind":"location","line":71,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["PegasusBoots","BottleWithGoldBee"],"base":"setUp"},"kind":"location","line":72,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGoldBee"],"base":"setUp"},"kind":"location","line":73,"location":"Hookshot Cave - Bottom Right","method":"testLocation"},
+    {"dataSet":21,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":75,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Hookshot"]},"kind":"location","line":76,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":23,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["AnyBottle","MoonPearl"]},"kind":"location","line":77,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":24,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","MoonPearl"],"base":"setUp"},"kind":"location","line":78,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":25,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBee"],"base":"setUp"},"kind":"location","line":79,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":26,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithFairy"],"base":"setUp"},"kind":"location","line":80,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithRedPotion"],"base":"setUp"},"kind":"location","line":81,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGreenPotion"],"base":"setUp"},"kind":"location","line":82,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":29,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBluePotion"],"base":"setUp"},"kind":"location","line":83,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":30,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","Bottle"],"base":"setUp"},"kind":"location","line":84,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":31,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGoldBee"],"base":"setUp"},"kind":"location","line":85,"location":"Hookshot Cave - Bottom Left","method":"testLocation"},
+    {"dataSet":32,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":87,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":33,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Hookshot"]},"kind":"location","line":88,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":34,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["AnyBottle","MoonPearl"]},"kind":"location","line":89,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":35,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","MoonPearl"],"base":"setUp"},"kind":"location","line":90,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":36,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBee"],"base":"setUp"},"kind":"location","line":91,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":37,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithFairy"],"base":"setUp"},"kind":"location","line":92,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":38,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithRedPotion"],"base":"setUp"},"kind":"location","line":93,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":39,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGreenPotion"],"base":"setUp"},"kind":"location","line":94,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":40,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBluePotion"],"base":"setUp"},"kind":"location","line":95,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":41,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","Bottle"],"base":"setUp"},"kind":"location","line":96,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":42,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGoldBee"],"base":"setUp"},"kind":"location","line":97,"location":"Hookshot Cave - Top Left","method":"testLocation"},
+    {"dataSet":43,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":99,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":44,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["Hookshot"]},"kind":"location","line":100,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":45,"expected":false,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":[],"base":"allItems","except":["AnyBottle","MoonPearl"]},"kind":"location","line":101,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":46,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","MoonPearl"],"base":"setUp"},"kind":"location","line":102,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":47,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBee"],"base":"setUp"},"kind":"location","line":103,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":48,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithFairy"],"base":"setUp"},"kind":"location","line":104,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":49,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithRedPotion"],"base":"setUp"},"kind":"location","line":105,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":50,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGreenPotion"],"base":"setUp"},"kind":"location","line":106,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":51,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithBluePotion"],"base":"setUp"},"kind":"location","line":107,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":52,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","Bottle"],"base":"setUp"},"kind":"location","line":108,"location":"Hookshot Cave - Top Right","method":"testLocation"},
+    {"dataSet":53,"expected":true,"file":"tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php","items":{"add":["Hookshot","BottleWithGoldBee"],"base":"setUp"},"kind":"location","line":109,"location":"Hookshot Cave - Top Right","method":"testLocation"}
+  ]
+}

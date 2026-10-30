@@ -7,6 +7,7 @@ import {
   capacityAfter,
   crystalGoalAfter,
   defaultItemGrid,
+  hasPieces,
   heartsAfter,
   heartsOf,
   heartsText,
@@ -24,6 +25,20 @@ import {
 } from "@/games/alttpr/data/items";
 
 const dungeonIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
+  });
+});
 
 describe("item ranges", () => {
   it("starts every progressive item inside its own bounds", () => {
@@ -77,6 +92,20 @@ describe("item ranges", () => {
   });
 });
 
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
+  });
+});
+
 describe("the half magic", () => {
   it("is a cell of the equipment row, between the tunic and the boots", () => {
     expect(defaultItemGrid[1]).toEqual([
@@ -100,6 +129,20 @@ describe("the half magic", () => {
     expect([itemsMin.magic, itemsMax.magic, items.magic]).toEqual([0, 2, 0]);
     expect(TOGGLE_ITEMS.has("magic")).toBe(true);
     expect(itemLabels("magic")).toBe("Half Magic");
+  });
+});
+
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
   });
 });
 
@@ -148,6 +191,20 @@ describe("defaultItemGrid", () => {
       ["boss3", "boss4", "boss5", "boss6", "boss7", "boss8", "boss9"],
       ["keys3", "keys4", "keys5", "keys6", "keys7", "keys8", "keys9"],
     ]);
+  });
+});
+
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
   });
 });
 
@@ -200,6 +257,20 @@ describe("itemGridFor", () => {
   });
 });
 
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
+  });
+});
+
 describe("the hearts counter", () => {
   const at = (hearts: number, quarters = 0) => ({ hearts, quarters });
 
@@ -243,6 +314,20 @@ describe("the hearts counter", () => {
   });
 });
 
+describe("the pieces' cell", () => {
+  it("shows for a Ganonhunt as for a Triforce Hunt, not while the goal is hidden", () => {
+    expect(hasPieces({ goal: "ganonhunt" })).toBe(true);
+    expect(hasPieces({ goal: "triforce-hunt" })).toBe(true);
+    expect(hasPieces({ goal: "ganonhunt", hidden: ["goal"] })).toBe(false);
+    expect(hasPieces({ goal: "ganon" })).toBe(false);
+    // Only a Triforce Hunt is won by the count
+    expect(isHunt({ goal: "ganonhunt" })).toBe(false);
+    expect(itemGridFor({ goal: "ganonhunt", mode: "open" }).flat()).toContain(
+      "triforce",
+    );
+  });
+});
+
 describe("itemLabels", () => {
   it("spells out ids that are not just capitalised", () => {
     expect(itemLabels("moonpearl")).toBe("Moon Pearl");
@@ -253,9 +338,9 @@ describe("itemLabels", () => {
     expect(itemLabels("hookshot")).toBe("Hookshot");
   });
 
-  it("names bosses rather than their index", () => {
-    expect(itemLabels("boss0")).toBe("Armos Knights");
-    expect(itemLabels("boss9")).toBe("Trinexx");
+  it("never names a boss from its dungeon's index alone, bosses being shuffled", () => {
+    expect(itemLabels("boss0")).toBe("Boss 0");
+    expect(itemLabels("boss9")).toBe("Boss 9");
   });
 
   it("describes empty slots", () => {

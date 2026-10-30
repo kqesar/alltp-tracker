@@ -1,9 +1,12 @@
 // What the tracker asks of a run solved in a world of the pack's other than
 // vt's: the entrance randomizer's (logic/crossed.ts) or the Door
 // Randomizer's (logic/doorWorld.ts). Both are fact worlds (the pack's
-// src/facts.ts: events and regions reached as facts), solved, analyzed and
-// stepped through to the go mode the same way; only how each world is built
-// differs. Imported by those two modules alone, each a chunk loaded on
+// src/facts.ts: events and regions reached as facts), analyzed and solved
+// with everything held the same way. The Door Randomizer's is solved and
+// stepped through to the go mode here too, its key rules in the world; the
+// entrance randomizer's reads the keys it kept in their dungeons through its
+// own key model (src/er-keys.ts), so crossed.ts solves it and steps its go
+// mode itself. Imported by those two modules alone, each a chunk loaded on
 // demand, so no other run downloads it.
 
 import type {

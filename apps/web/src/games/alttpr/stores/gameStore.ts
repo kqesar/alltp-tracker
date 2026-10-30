@@ -1,11 +1,13 @@
+import { GANONHUNT } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
 import { requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
-import type {
-  DoorRunSettings,
-  DoorSetting,
+import {
+  DOOR_OPTIONS,
+  type DoorRunSettings,
+  type DoorSetting,
 } from "@/games/alttpr/data/doorRando";
 import type { Hearts, ItemState } from "@/games/alttpr/data/items";
 import {
@@ -31,7 +33,9 @@ import {
   getPreset,
   type HiddenSetting,
   type RunSettings,
+  type SettingsChange,
   type TunableSetting,
+  tunedOf,
   wildItems,
 } from "@/games/alttpr/data/presets";
 import {
@@ -163,9 +167,7 @@ type GameState = Progress &
      * the items found. A setting changed is no longer hidden. One undo
      * step; none when nothing changes.
      */
-    updateSettings: (
-      change: Partial<Pick<RunSettings, TunableSetting>>,
-    ) => void;
+    updateSettings: (change: SettingsChange) => void;
     /**
      * Change a Door Randomizer run's own settings in the run going, as
      * `updateSettings` does: the counters keep their items found as the
@@ -179,9 +181,7 @@ type GameState = Progress &
      * the run, its progress kept, as no step: on every snapshot of the
      * history too, like the game's other news.
      */
-    revealSettings: (
-      change: Partial<Pick<RunSettings, TunableSetting>>,
-    ) => void;
+    revealSettings: (change: SettingsChange) => void;
     setBigKeysVisible: (visible: boolean) => void;
     setMapLayout: (layout: MapLayout) => void;
     setMapView: (view: MapView) => void;
@@ -273,7 +273,14 @@ export const createProgress = (
 ): Progress => ({
   checked: {},
   entrances: {},
-  items: { ...initialItems, ...fullCounters(settings) } as ItemState,
+  items: {
+    ...initialItems,
+    ...fullCounters(settings),
+    // A ganonhunt asks for its own count of pieces (the pack's GANONHUNT)
+    ...(settings.goal === "ganonhunt"
+      ? { goalpieces: GANONHUNT.required }
+      : {}),
+  } as ItemState,
   medallions: Array(10).fill(0) as number[],
   presetId: getPreset(presetId).id,
   seed: null,
@@ -417,25 +424,47 @@ const dated = (
  */
 export const retune = (
   progress: Progress,
-  change: Partial<Pick<RunSettings, TunableSetting | DoorSetting>>,
+  change: SettingsChange & Partial<Pick<RunSettings, DoorSetting>>,
 ): { items?: ItemState; settings: RunSettings } | null => {
   const changed = (
     Object.keys(change) as (TunableSetting | DoorSetting)[]
   ).filter(
     (key) =>
-      change[key] !== progress.settings[key] ||
+      change[key] !==
+        (Object.hasOwn(DOOR_OPTIONS, key)
+          ? progress.settings[key as DoorSetting]
+          : tunedOf(progress.settings, key as TunableSetting)) ||
       progress.settings.hidden?.includes(key as HiddenSetting),
   );
   if (changed.length === 0) return null;
   const hidden = progress.settings.hidden?.filter(
     (key) => !changed.includes(key),
   );
+  const { bossShuffle, enemyHealth, glitches, playGlitches, swords, ...rest } =
+    change;
   const settings: RunSettings = {
     ...progress.settings,
-    ...change,
+    ...rest,
     ...(hidden === undefined ? {} : { hidden }),
   };
   if (hidden?.length === 0) delete settings.hidden;
+  // None is said by the glitches' absence, as every preset says it
+  if (glitches === "none") delete settings.glitches;
+  else if (glitches !== undefined) settings.glitches = glitches;
+  if (playGlitches === "none") delete settings.playGlitches;
+  else if (playGlitches !== undefined) settings.playGlitches = playGlitches;
+  // Only a No Logic run is played with glitches of the player's choice
+  if (settings.glitches !== "no_logic") delete settings.playGlitches;
+  // As in every preset, no boss shuffle is its absence
+  if (bossShuffle === "none") delete settings.bossShuffle;
+  else if (bossShuffle !== undefined) settings.bossShuffle = bossShuffle;
+  // Randomized swords and default health are said by their absence
+  if (swords === "randomized") delete settings.swords;
+  else if (swords !== undefined) settings.swords = swords;
+  if (enemyHealth === "default") delete settings.enemyHealth;
+  else if (enemyHealth !== undefined) settings.enemyHealth = enemyHealth;
+  // A swordless run's swords are nowhere
+  if (settings.swordless) delete settings.swords;
   // Each counter keeps its items found when its top moves: dungeon items
   // let out or kept, a Door Randomizer run's locations added or taken away
   if (

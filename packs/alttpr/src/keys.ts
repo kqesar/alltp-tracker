@@ -25,6 +25,7 @@ import {
   solve,
   type Tri,
 } from "@alltp/engine";
+import { bossFacts } from "./bosses";
 import { derivedFacts } from "./derived";
 import { DUNGEONS, type DungeonId, dungeonPool } from "./dungeons";
 import type { Filler } from "./fill";
@@ -32,6 +33,7 @@ import { fromUpstream, STATE_MAX } from "./items";
 import { medallionFacts } from "./medallions";
 import { RULES } from "./rules";
 import type { AlttprSettings } from "./settings";
+import type { RegionDef } from "./world";
 
 /** Every item at its count in the pool, as the derived facts read them. */
 function withFacts(
@@ -42,6 +44,8 @@ function withFacts(
     ...items,
     // Either pad may want any medallion: with all three, both open
     ...medallionFacts({ mire: "unknown", turtleRock: "unknown" }),
+    // Any slot may hold any boss it takes: with everything, each is beaten
+    ...bossFacts({}),
     ...derivedFacts(items, settings),
   };
 }
@@ -63,7 +67,8 @@ const poolOf = (
 
 /**
  * Everything a world holds: every item at its count in its pool and its
- * pre-collected items, every prize and event, both medallion pads open.
+ * pre-collected items, every prize and event, both medallion pads open,
+ * every boss slot unknown (each boss it may hold beaten).
  * What the randomizer assumes held before it places the first item.
  */
 export function everything(settings: AlttprSettings): State {
@@ -177,23 +182,67 @@ interface Model {
   /** The most small keys a dungeon holds untracked; 1 if a big key is. */
   readonly keys: number;
   readonly bigKeys: number;
-  /** The world with everything held, its untracked items at a level. */
-  everything(keys: number, bigKeys: number): Solution;
+  /**
+   * The world with everything held, but one dungeon's untracked items at a
+   * level: what the randomizer holds while it places that dungeon's items
+   * (every other dungeon's are unplaced, so assumed held, or placed where
+   * that state reaches them; RandomAssumed.php:59-135).
+   */
+  everything(dungeon: DungeonId, keys: number, bigKeys: number): Solution;
+  /**
+   * The dungeons whose untracked items a way in reads, each way behind the
+   * one-frame clip underworld (canOneFrameClipUW) of Hybrid Major Glitches
+   * and Major Glitches: from Misery Mire into Tower of Hera (keyD6) and
+   * into Swamp Palace (keyD6, bigKeyD6, and Tower of Hera's bigKeyP3, which
+   * makes Tower of Hera one too), and in Inverted from Thieves' Town into
+   * Desert Palace (keyD4, bigKeyD4). None under NoGlitches or Overworld
+   * Glitches, where no way in reads a key.
+   * The model never raises their items past what is surely in hand
+   * (`solveWithKeys`: each in logic wherever it sits, or all of a gating
+   * dungeon proven safe), so what those ways open is what the player has.
+   */
+  readonly gating: ReadonlySet<DungeonId>;
+}
+
+/**
+ * The dungeons whose untracked items (`owner`: by item, its dungeon) a way
+ * in reads. A branch the settings switch off, or through a region no state
+ * reaches, is left out (`readsOf`).
+ */
+function gatingDungeons(
+  regions: readonly RegionDef[],
+  owner: ReadonlyMap<string, DungeonId>,
+  settings: AlttprSettings,
+  closed: (region: string) => boolean,
+): Set<DungeonId> {
+  const found = new Set<DungeonId>();
+  for (const region of regions) {
+    for (const { req } of region.entrances) {
+      for (const name of readsOf(req, settings, closed) ?? []) {
+        const id = owner.get(name);
+        if (id !== undefined) found.add(id);
+      }
+    }
+  }
+  return found;
 }
 
 /**
  * `state` with every untracked item raised to a level: each dungeon's small
- * keys to `keys` (at most its count), its big key if `bigKeys` is 1. A
- * count already held is kept. No derived fact reads a key, so they stand.
+ * keys to `keys` (at most its count), its big key if `bigKeys` is 1, but a
+ * dungeon's `kept` at what `state` holds. A count already held is kept. No
+ * derived fact reads a key, so they stand.
  */
 function raise(
   state: State,
   untracked: readonly UntrackedItem[],
   keys: number,
   bigKeys: number,
+  kept: (dungeon: DungeonId) => boolean = () => false,
 ): State {
   const raised: Record<string, number> = {};
-  for (const { count, item } of untracked) {
+  for (const { count, dungeon, item } of untracked) {
+    if (kept(dungeon)) continue;
     const level = item.startsWith("bigKey") ? bigKeys * count : keys;
     raised[item] = Math.max(itemValue(state, item), Math.min(level, count));
   }
@@ -295,27 +344,49 @@ function modelOf(filler: Filler): Model {
   // Everything held, but the untracked items, which the levels set
   const none = Object.fromEntries(untracked.map((u) => [u.item, 0]));
   const lowered = { ...everything(settings), ...none };
-  const all = levels(filler.world, (k, big) =>
-    raise(lowered, untracked, k, big),
-  );
+  const top = raise(lowered, untracked, keys, bigKeys);
+  const solved = new Map<string, Solution>();
+  const all = (dungeon: DungeonId, k: number, big: number): Solution => {
+    const key = `${dungeon}/${k}/${big}`;
+    let found = solved.get(key);
+    if (found === undefined) {
+      const own = Object.fromEntries(
+        untracked.filter((u) => u.dungeon === dungeon).map((u) => [u.item, 0]),
+      );
+      found = solve(
+        filler.world,
+        raise({ ...top, ...own }, untracked, k, big, (d) => d !== dungeon),
+      );
+      solved.set(key, found);
+    }
+    return found;
+  };
   // A location belongs to the dungeons whose untracked items its rule
   // reads: its own, or Turtle Rock's for Mimic Cave, whose door is inside
   const owner = new Map(untracked.map((u) => [u.item, u.dungeon]));
-  const closed = (region: string) => all(keys, bigKeys).region(region) === "no";
+  const everyItem = solve(filler.world, top);
+  const closed = (region: string) => everyItem.region(region) === "no";
   const dungeonsOf = new Map<string, readonly DungeonId[]>();
   // The filler's own modules: a tricks world's rules read more than the run's
-  for (const region of filler.modules.flatMap((m) => m.regions)) {
+  const regions = filler.modules.flatMap((m) => m.regions);
+  for (const region of regions) {
     for (const location of region.locations) {
       const read = readsOf(location.req, settings, closed) ?? [];
       const ids = [...new Set(read.flatMap((n) => owner.get(n) ?? []))];
       if (ids.length > 0) dungeonsOf.set(location.id, ids);
     }
   }
+  // A way in that reads a key breaks what safety rests on (README.md, "The
+  // key model"): its dungeon's items are never raised past what is surely
+  // in hand. No rule where a dungeon's items may sit reads another's, but a
+  // gating one's (key-model.spec.ts), so the others' levels change nothing
+  const gating = gatingDungeons(regions, owner, settings, closed);
   const model: Model = {
     bigKeys,
     dungeons,
     dungeonsOf,
     everything: all,
+    gating,
     keys,
     untracked,
   };
@@ -363,50 +434,65 @@ export interface KeyedSolution {
   readonly solution: Solution;
 }
 
-/**
- * The key model over a state: what the tracker shows when the player does
- * not track the dungeons' small keys and big keys (keysanity tracks them,
- * and then this is the solver's answer). Pure: the same world and state
- * always give the same answers; what it caches depends on the world only.
- */
-export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
-  const model = modelOf(filler);
+/** What reads a state the player surely has: the levels, and safety. */
+interface Reading {
+  /** The world with every untracked item raised to a level. */
+  at(keys: number, bigKeys: number): Solution;
+  /**
+   * Whether no untracked item of the dungeon can hide where the player
+   * cannot follow (KeyedSolution.safe).
+   */
+  safe(dungeon: DungeonId): boolean;
+}
+
+/** The levels and the safety of the dungeons over `sure`. */
+function readingOf(filler: Filler, model: Model, sure: State): Reading {
   const { world } = filler;
-  // An untracked item is surely in hand once every place it may sit is in
-  // logic: wherever it is, Link gets there. Its count joins the state, which
-  // may let another follow.
-  let sure = state;
-  let solution = solve(world, sure);
-  for (;;) {
-    const found = model.untracked.filter(
-      (u) =>
-        !u.generic &&
-        itemValue(sure, u.item) < u.count &&
-        u.locations.every((l) => solution.location(l) === "yes"),
-    );
-    if (found.length === 0) break;
-    sure = {
-      ...sure,
-      ...Object.fromEntries(found.map((u) => [u.item, u.count])),
-    };
-    solution = solve(world, sure);
-  }
+  const { gating } = model;
   const at = levels(world, (keys, big) =>
     raise(sure, model.untracked, keys, big),
   );
+  // The player's side of a dungeon's safety: its items at a level, the
+  // other gating dungeons' held at what is surely in hand, so a way in that
+  // reads them opens only as it does for the player. Where no way in reads
+  // a key, the same solves
+  const sides = new Map<string, ReturnType<typeof levels>>();
+  const sideOf = (id: DungeonId) => {
+    if (gating.size === 0) return at;
+    const key = gating.has(id) ? id : "";
+    let found = sides.get(key);
+    if (found === undefined) {
+      found = levels(world, (keys, big) =>
+        raise(
+          sure,
+          model.untracked,
+          keys,
+          big,
+          (d) => d !== id && gating.has(d),
+        ),
+      );
+      sides.set(key, found);
+    }
+    return found;
+  };
   const safety = new Map<DungeonId, boolean>();
   const safe = (id: DungeonId): boolean => {
     const entry = model.dungeons.get(id);
     if (entry === undefined) return true;
-    // A generic key found may open another dungeon's door
-    if (entry.generic) return false;
+    // A generic key found may open another dungeon's door; under No Logic
+    // the randomizer placed no item where Link could reach it, so a key may
+    // sit behind its own door
+    if (entry.generic || filler.settings.noLogic) return false;
     let found = safety.get(id);
     if (found === undefined) {
       found = true;
+      const side = sideOf(id);
       check: for (let keys = entry.keys; keys >= 0; keys--) {
         for (let big = entry.bigKey; big >= 0; big--) {
-          const mine = at(keys, big);
-          const theirs = model.everything(keys, big);
+          const mine = side(keys, big);
+          // Only this dungeon's items at the level: a way in that reads
+          // another's opens with all of them, as the fill held them
+          const theirs = model.everything(id, keys, big);
           for (const l of entry.at) {
             if (rank(mine.location(l)) < rank(theirs.location(l))) {
               found = false;
@@ -419,13 +505,97 @@ export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
     }
     return found;
   };
+  return { at, safe };
+}
+
+/**
+ * The key model over a state: what the tracker shows when the player does
+ * not track the dungeons' small keys and big keys (keysanity tracks them,
+ * and then this is the solver's answer). Pure: the same world and state
+ * always give the same answers; what it caches depends on the world only.
+ */
+export function solveWithKeys(filler: Filler, state: State): KeyedSolution {
+  const model = modelOf(filler);
+  const { world } = filler;
+  const { gating } = model;
+  // Keys join the state as the player surely gets them, until none more do:
+  // an untracked item every place of which is in logic (wherever it is,
+  // Link gets there), its count, which may let another follow; then every
+  // item of a gating dungeon proven safe, which the player collects all of,
+  // so a way in that reads them opens for the player too. Where no way in
+  // reads a key, the first alone
+  let sure = state;
+  let solution = solve(world, sure);
+  let reading = readingOf(filler, model, sure);
+  const proven = new Set<DungeonId>();
+  for (;;) {
+    let found = model.untracked.filter(
+      (u) =>
+        !u.generic &&
+        itemValue(sure, u.item) < u.count &&
+        u.locations.every((l) => solution.location(l) === "yes"),
+    );
+    if (found.length === 0) {
+      const next = [...gating].find((d) => !proven.has(d) && reading.safe(d));
+      if (next === undefined) break;
+      proven.add(next);
+      found = model.untracked.filter(
+        (u) => u.dungeon === next && itemValue(sure, u.item) < u.count,
+      );
+      if (found.length === 0) continue;
+    }
+    sure = {
+      ...sure,
+      ...Object.fromEntries(found.map((u) => [u.item, u.count])),
+    };
+    solution = solve(world, sure);
+    reading = readingOf(filler, model, sure);
+  }
+  const { at } = reading;
+  // A dungeon proven safe stays so with more in hand
+  const safe = (id: DungeonId) => proven.has(id) || reading.safe(id);
+  const kept = (d: DungeonId) => gating.has(d);
+  // A yes read with the items of the location's own dungeons raised, safe
+  // as they must be: the player collects them all. A gating dungeon's
+  // otherwise stay at what is surely in hand, so a way in that reads them
+  // opens only as it does for the player. Where no way in reads a key, no
+  // other dungeon's items change the answer, and all are raised at once
+  const raisedFor = new Map<string, Solution>();
+  const withOwn = (ds: readonly DungeonId[]): Solution => {
+    if (gating.size === 0) return at(model.keys, model.bigKeys);
+    const key = ds.join(",");
+    let found = raisedFor.get(key);
+    if (found === undefined) {
+      const own = new Set(ds);
+      found = solve(
+        world,
+        raise(
+          sure,
+          model.untracked,
+          model.keys,
+          model.bigKeys,
+          (d) => kept(d) && !own.has(d),
+        ),
+      );
+      raisedFor.set(key, found);
+    }
+    return found;
+  };
   const location = (id: string): Tri => {
     const now = solution.location(id);
     const ds = model.dungeonsOf.get(id);
-    if (now === "yes" || ds === undefined) return now;
-    const all = at(model.keys, model.bigKeys).location(id);
-    if (all === "yes" && ds.every(safe)) return "yes";
-    return all === "no" ? "no" : "maybe";
+    if (now === "yes") return now;
+    // Out of logic with what is surely in hand, but in logic with every item
+    // held when a way in reads a gating dungeon's keys not yet proven safe:
+    // maybe, as for a location of a dungeon. The answer only falls from yes
+    // to maybe or no to maybe, never rises to yes
+    const upper = () =>
+      at(model.keys, model.bigKeys).location(id) === "no" ? "no" : "maybe";
+    if (ds === undefined)
+      return now === "no" && gating.size > 0 ? upper() : now;
+    const yes = withOwn(ds).location(id) === "yes";
+    if (yes && ds.every(safe)) return "yes";
+    return upper();
   };
   return {
     dungeons: (id) => model.dungeonsOf.get(id) ?? [],

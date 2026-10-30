@@ -58,7 +58,7 @@ test("starts a run from a seed's link, once the reset is confirmed", async ({
 
   const confirm = page.getByRole("dialog", { name: "Switch run type?" });
   await expect(confirm).toContainText(
-    'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)" will reset your current progress.',
+    'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality, Hard enemy health)" will reset your current progress.',
   );
   await confirm.getByRole("button", { name: "Switch & reset" }).click();
 
@@ -89,9 +89,7 @@ test("says when alttpr.com has no such seed, or the text is no seed", async ({
   ).toHaveAccessibleName("Mode Open");
 });
 
-test("starts a glitched seed's run with no logic, every check maybe", async ({
-  page,
-}) => {
+test("starts a glitched seed's run in its own logic", async ({ page }) => {
   // The Open seed's file, as alttpr.com writes an Overworld Glitches one
   const file = JSON.parse(
     readFileSync(
@@ -120,15 +118,14 @@ test("starts a glitched seed's run with no logic, every check maybe", async ({
   await confirm.getByRole("button", { name: "Switch & reset" }).click();
 
   await expect(dialog).toBeHidden();
-  await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Overworld Glitches yet: every check shows as maybe.",
+  // Under the bridge with a fake flipper (South.php:131), in logic there
+  await expect(page.getByTestId("marker-hobo")).toHaveAccessibleName(
+    /: available$/,
   );
-  await expect(page.getByTestId("marker-sahasrahlas-hut")).toHaveAccessibleName(
-    /: maybe available$/,
-  );
+  await expect(page.getByTestId("logic-note")).toHaveCount(0);
   await page.getByRole("button", { name: /^Mode/ }).click();
-  await expect(dialog.getByLabel("Current run settings")).toContainText(
-    "GlitchesOverworld Glitches",
+  await expect(dialog.getByRole("combobox", { name: "Glitches" })).toHaveValue(
+    "overworld_glitches",
   );
 });
 

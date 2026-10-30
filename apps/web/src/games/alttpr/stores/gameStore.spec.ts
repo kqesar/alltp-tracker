@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_KEYMAP, DEFAULT_SHORTCUTS } from "@/games/alttpr/data/keymap";
-import { getPreset } from "@/games/alttpr/data/presets";
+import { getPreset, sameSettings } from "@/games/alttpr/data/presets";
 import v1Export from "@/games/alttpr/stores/fixtures/v1-export.json";
 import v2Export from "@/games/alttpr/stores/fixtures/v2-export.json";
 import v5KeysanityExport from "@/games/alttpr/stores/fixtures/v5-keysanity-export.json";
@@ -29,6 +29,27 @@ describe("GameStore", () => {
   beforeEach(() => {
     localStorage.clear();
     useGameStore.setState(useGameStore.getInitialState(), true);
+  });
+
+  it("asks a Ganonhunt for its own 40 pieces, and keeps where swords are only with swords", () => {
+    useGameStore.getState().applyPreset("ganonhunt");
+    expect(useGameStore.getState().items.goalpieces).toBe(40);
+    expect(useGameStore.getState().items.triforce).toBe(0);
+
+    const { updateSettings } = useGameStore.getState();
+    updateSettings({ enemyHealth: "hard", swords: "assured" });
+    expect(useGameStore.getState().settings).toMatchObject({
+      enemyHealth: "hard",
+      swords: "assured",
+    });
+    // Randomized and default are said by their absence
+    updateSettings({ enemyHealth: "default", swords: "randomized" });
+    expect(useGameStore.getState().settings).not.toHaveProperty("swords");
+    expect(useGameStore.getState().settings).not.toHaveProperty("enemyHealth");
+    // Swordless: no swords to place
+    updateSettings({ swords: "vanilla" });
+    updateSettings({ swordless: true });
+    expect(useGameStore.getState().settings).not.toHaveProperty("swords");
   });
 
   it("starts a fresh Open run with nothing found", () => {
@@ -271,6 +292,44 @@ describe("GameStore", () => {
       store().undo();
       expect(store().settings).toEqual(before);
       expect(store().items.hookshot).toBe(true);
+    });
+
+    it("sets the glitches by hand, None said by their absence", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ glitches: "major_glitches" });
+      expect(store().settings.glitches).toBe("major_glitches");
+      store().updateSettings({ glitches: "none" });
+      expect(store().settings).not.toHaveProperty("glitches");
+      const past = store().past;
+      store().updateSettings({ glitches: "none" });
+      expect(store().past).toBe(past);
+    });
+
+    it("sets the boss shuffle by hand, None said by its absence as in a preset", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ bossShuffle: "simple" });
+      expect(store().settings.bossShuffle).toBe("simple");
+      store().updateSettings({ bossShuffle: "none" });
+      expect(store().settings).not.toHaveProperty("bossShuffle");
+      expect(sameSettings(store().settings, getPreset("open").settings)).toBe(
+        true,
+      );
+    });
+
+    it("keeps the glitches a No Logic run is played with to that run", () => {
+      const store = () => useGameStore.getState();
+      store().updateSettings({ glitches: "no_logic" });
+      store().updateSettings({ playGlitches: "overworld_glitches" });
+      expect(store().settings).toMatchObject({
+        glitches: "no_logic",
+        playGlitches: "overworld_glitches",
+      });
+      store().updateSettings({ playGlitches: "none" });
+      expect(store().settings).not.toHaveProperty("playGlitches");
+      store().updateSettings({ playGlitches: "overworld_glitches" });
+      // Another logic drops them
+      store().updateSettings({ glitches: "major_glitches" });
+      expect(store().settings).not.toHaveProperty("playGlitches");
     });
 
     it("records no step for settings that change nothing", () => {

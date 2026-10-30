@@ -1,5 +1,5 @@
 import type {
-  CrossedPool,
+  EntrancePool,
   EntranceTarget,
   OverworldEntrance,
 } from "@alltp/pack-alttpr";
@@ -39,7 +39,7 @@ const PickerBody = ({
   pool,
 }: {
   entrance: OverworldEntrance;
-  pool: CrossedPool;
+  pool: EntrancePool;
 }) => {
   const close = useEntrancePicker((state) => state.close);
   const entrances = useGameStore((state) => state.entrances);

@@ -66,7 +66,25 @@ test("a Mystery run finds its settings as it goes, the run kept", async ({
   await summary
     .getByRole("combobox", { name: "Dungeon items" })
     .selectOption("full");
+  // The entrances and glitches may be anything until set: every check maybe
+  await expect(
+    summary.getByRole("combobox", { name: "Entrances" }),
+  ).toHaveValue("?");
+  await expect(summary.getByRole("combobox", { name: "Glitches" })).toHaveValue(
+    "?",
+  );
   await summary.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The entrances are not set yet",
+  );
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await summary
+    .getByRole("combobox", { name: "Entrances" })
+    .selectOption("none");
+  await summary.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "The glitches are not set yet",
+  );
 
   // The run kept, Eastern Palace's 2 items found out of its 6 locations now
   await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
@@ -123,16 +141,15 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
     .getByRole("button", { name: /^Crosskeys/ })
     .click();
   await page.getByRole("button", { name: "Switch & reset" }).click();
-  // Its keys kept in their dungeons: the entrance randomizer keeps them
-  // there, which the tracker does not track
+  // A shuffle the pack does not port
   await page.getByRole("button", { name: /^Mode/ }).click();
   await runTypes(page)
-    .getByRole("combobox", { name: "Dungeon items" })
-    .selectOption("mcs");
+    .getByRole("combobox", { name: "Entrances" })
+    .selectOption("insanity");
   await runTypes(page).getByRole("button", { name: "Close" }).click();
 
   await expect(page.getByTestId("logic-note")).toHaveText(
-    "The tracker has no logic for Crossworld entrances with dungeon items kept in their dungeons yet: every check shows as maybe.",
+    "Not modelled yet: the Insanity entrance shuffle. Every check shows as maybe.",
   );
   // No marker says available or out of logic: the Open logic would be wrong
   const markers = page.getByTestId(/^marker-/);
@@ -150,6 +167,102 @@ test("a run type whose logic is not modelled says so, every check maybe", async 
     .withTags(WCAG_AA)
     .analyze();
   expect(violations.map(({ id }) => id)).toEqual([]);
+});
+
+test("a No Logic run shows what the glitches picked reach, never in logic", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = runTypes(page);
+  await dialog
+    .getByRole("combobox", { name: "Glitches" })
+    .selectOption("no_logic");
+  const played = dialog.getByRole("combobox", { name: "Played with" });
+  await expect(played).toHaveValue("none");
+  await dialog.getByRole("button", { name: "Close" }).click();
+
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "No Logic: the seed promises no route, so nothing is in logic. The map shows what you can reach without glitches",
+  );
+  const hobo = page.getByTestId("marker-hobo");
+  // Never in logic: what the glitches it is played with reach, or not
+  await expect(hobo).toHaveAccessibleName(/: not reachable without glitches$/);
+  await expect(page.getByTestId("map-legend")).toContainText(
+    "Not reachable without glitches",
+  );
+  await expect(page.getByTestId("map-legend")).not.toContainText(
+    "Out of logic",
+  );
+
+  // Under the bridge with a fake flipper, once played with Overworld Glitches
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await played.selectOption("overworld_glitches");
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(hobo).toHaveAccessibleName(/: available$/);
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "with Overworld Glitches",
+  );
+  const { violations } = await new AxeBuilder({ page })
+    .include(".map-panel")
+    .exclude(".mapspan")
+    .withTags(WCAG_AA)
+    .analyze();
+  expect(violations.map(({ id }) => id)).toEqual([]);
+});
+
+test("a shuffled-entrance run ignores its glitches: no Played with, no boots", async ({
+  page,
+}) => {
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = runTypes(page);
+  await dialog.getByRole("button", { name: /^Crosskeys/ }).click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await dialog
+    .getByRole("combobox", { name: "Glitches" })
+    .selectOption("no_logic");
+  // Nothing to pick: such a seed is filled as No Glitches
+  await expect(
+    dialog.getByRole("combobox", { name: "Played with" }),
+  ).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("logic-note")).toContainText(
+    "filled without glitches, whatever its Glitches",
+  );
+  await expect(page.getByTestId("logic-note")).not.toContainText("No Logic:");
+});
+
+test("picking the run type in play after tuning it resets it, after confirmation", async ({
+  page,
+}) => {
+  await openTracker(page);
+  const hookshot = page.getByTestId("item-hookshot");
+  await hookshot.click();
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  const dialog = runTypes(page);
+  const glitches = dialog.getByRole("combobox", { name: "Glitches" });
+  await glitches.selectOption("overworld_glitches");
+
+  // Open as the preset has it: asks, and keeps the run on Cancel
+  await dialog.getByRole("button", { name: /^Open/ }).click();
+  const confirm = page.getByRole("dialog", { name: "Reset run type?" });
+  await expect(confirm).toContainText(
+    'Going back to the settings of "Open" will reset your current progress.',
+  );
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(glitches).toHaveValue("overworld_glitches");
+
+  await dialog.getByRole("button", { name: /^Open/ }).click();
+  await confirm.getByRole("button", { name: "Reset" }).click();
+  await expect(hookshot).toHaveAccessibleName(/^Hookshot, not obtained\./);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await expect(glitches).toHaveValue("none");
+
+  // As it started: nothing to ask, the list closes
+  await dialog.getByRole("button", { name: /^Open/ }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("shows the key cells from the Mode dialog, by keyboard too", async ({
@@ -229,7 +342,7 @@ test("a boss shuffle reads each boss as any its dungeon may hold", async ({
   const known = page.getByTestId("known-boss-overlay-8");
   await expect(known).toHaveAccessibleName("Misery Mire boss: unknown");
   for (let step = 0; step < 7; step++) await known.click();
-  await expect(known).toHaveAccessibleName("Misery Mire boss: Blind");
+  await expect(known).toHaveAccessibleName("Misery Mire boss: Blind the Thief");
   await expect(boss).toHaveAccessibleName(/: boss available/);
   await known.focus();
   await page.keyboard.press("-");
@@ -249,7 +362,7 @@ for (const width of WIDTHS) {
     await openTracker(page);
     await page.getByRole("button", { name: /^Mode/ }).click();
     const dialog = runTypes(page);
-    await expect(dialog.getByRole("combobox")).toHaveCount(10);
+    await expect(dialog.getByRole("combobox")).toHaveCount(14);
 
     await expect(
       dialog.getByRole("checkbox", { name: "Show key cells" }),

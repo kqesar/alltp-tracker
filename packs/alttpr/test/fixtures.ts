@@ -133,7 +133,15 @@ function walk(dir: string): string[] {
 
 /** Every test class fixture, sorted by path. */
 /** The tests imported, as the importer's TEST_ROOTS mirror them. */
-const FIXTURE_ROOTS = ["NoGlitches", "Inverted", "RetroBow.json"];
+const FIXTURE_ROOTS = [
+  "NoGlitches",
+  "Inverted",
+  "OverworldGlitches",
+  "InvertedOverworldGlitches",
+  "MajorGlitches",
+  "InvertedMajorGlitches",
+  "RetroBow.json",
+];
 
 export function loadFixtures(): Fixture[] {
   return FIXTURE_ROOTS.flatMap((root) => walk(join(FIXTURES_DIR, root)))

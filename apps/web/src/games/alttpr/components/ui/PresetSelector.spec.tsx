@@ -182,6 +182,42 @@ describe("PresetSelector", () => {
     );
   });
 
+  it("resets the run type in play once its settings were tuned, after confirmation", () => {
+    // OPEN_RUN's crystals were tuned (a seed's own): Open again is a reset
+    render(<PresetSelector />);
+    fireEvent.click(within(openList()).getByRole("button", { name: /^open/i }));
+
+    const confirm = screen.getByRole("dialog", { name: /reset run type/i });
+    expect(confirm).toHaveTextContent(
+      'Going back to the settings of "Open" will reset your current progress.',
+    );
+    expect(applyRun).not.toHaveBeenCalled();
+    // The title says reset, so does the button
+    expect(
+      within(confirm).queryByRole("button", { name: /switch/i }),
+    ).toBeNull();
+    fireEvent.click(within(confirm).getByRole("button", { name: /^reset$/i }));
+    expect(applyRun).toHaveBeenCalledWith("open", getPreset("open").settings);
+  });
+
+  it("asks nothing of the run type in play while it keeps its own settings", () => {
+    Object.assign(fakeState, {
+      settings: { ...getPreset("open").settings },
+    });
+    render(<PresetSelector />);
+    const dialog = openList();
+    fireEvent.click(within(dialog).getByRole("button", { name: /^open/i }));
+
+    expect(
+      screen.queryByRole("dialog", { name: /reset run type/i }),
+    ).toBeNull();
+    expect(applyRun).not.toHaveBeenCalled();
+    // The list closes
+    expect(
+      screen.queryByRole("dialog", { name: /choose a run type/i }),
+    ).toBeNull();
+  });
+
   it("starts from a seed's link: its run type, once confirmed, under its settings", async () => {
     vi.stubGlobal(
       "fetch",
@@ -199,7 +235,7 @@ describe("PresetSelector", () => {
       name: /switch run type/i,
     });
     expect(confirm).toHaveTextContent(
-      'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality)"',
+      'Switching to "Inverted (Inverted, Fast Ganon, 4/7, Basic placement, Hard pool, Hard functionality, Hard enemy health)"',
     );
     expect(applyRun).not.toHaveBeenCalled();
 
@@ -210,6 +246,7 @@ describe("PresetSelector", () => {
         ...fakeState.settings,
         crystalsGanon: 7,
         crystalsTower: 4,
+        enemyHealth: "hard",
         goal: "fast-ganon",
         itemFunctionality: "hard",
         itemPlacement: "basic",
@@ -241,15 +278,22 @@ describe("PresetSelector", () => {
     });
     expect(bosses).toHaveValue("none");
     fireEvent.change(bosses, { target: { value: "full" } });
+    // Nor glitches: None, which the player sets by hand
+    const glitches = within(dialog).getByRole("combobox", {
+      name: "Glitches",
+    });
+    expect(glitches).toHaveValue("none");
+    fireEvent.change(glitches, { target: { value: "overworld_glitches" } });
 
     expect(updateSettings.mock.calls).toEqual([
       [{ itemPool: "hard" }],
       [{ crystalsTower: 0 }],
       [{ bossShuffle: "full" }],
+      [{ glitches: "overworld_glitches" }],
     ]);
     expect(applyRun).not.toHaveBeenCalled();
     // The world names the run type: it is no field
-    expect(within(dialog).getAllByRole("combobox")).toHaveLength(10);
+    expect(within(dialog).getAllByRole("combobox")).toHaveLength(14);
   });
 
   it("offers a Door Randomizer run's own settings, changed in place", () => {
@@ -285,7 +329,10 @@ describe("PresetSelector", () => {
   it("offers a Mystery run's settings as not known yet, and hides one again", () => {
     Object.assign(fakeState, {
       presetId: "mystery",
-      settings: { ...getPreset("mystery").settings, hidden: ["goal"] },
+      settings: {
+        ...getPreset("mystery").settings,
+        hidden: ["goal", "glitches", "entranceShuffle"],
+      },
     });
     render(<PresetSelector />);
     const dialog = openList();
@@ -300,6 +347,19 @@ describe("PresetSelector", () => {
     const swords = within(dialog).getByRole("combobox", { name: "Swords" });
     fireEvent.change(swords, { target: { value: "?" } });
     expect(hideSetting).toHaveBeenCalledWith("swordless");
+    // The glitches and the entrance shuffle may be unknown too
+    for (const name of ["Glitches", "Entrances"]) {
+      const select = within(dialog).getByRole("combobox", { name });
+      expect(select).toHaveValue("?");
+      expect(
+        within(select).getByRole("option", { name: "? Unknown" }),
+      ).toBeInTheDocument();
+    }
+    fireEvent.change(
+      within(dialog).getByRole("combobox", { name: "Entrances" }),
+      { target: { value: "crossed" } },
+    );
+    expect(updateSettings).toHaveBeenCalledWith({ entranceShuffle: "crossed" });
     // The dungeon items are assumed, never hidden
     expect(
       within(

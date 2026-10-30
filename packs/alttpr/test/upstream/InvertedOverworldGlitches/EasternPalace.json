@@ -1,0 +1,67 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/InvertedOverworldGlitches/EasternPalaceTest.php",
+  "class": "InvertedOverworldGlitches\\EasternPalaceTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "inverted"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":72,"location":"Eastern Palace - Compass Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":74,"location":"Eastern Palace - Cannonball Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":76,"location":"Eastern Palace - Big Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":78,"location":"Eastern Palace - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":80,"location":"Eastern Palace - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":82,"location":"Eastern Palace - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":89,"location":"Eastern Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":90,"location":"Eastern Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":2,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":91,"location":"Eastern Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["DefeatAgahnim"],"base":"setUp"},"kind":"location","line":92,"location":"Eastern Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":4,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":94,"location":"Eastern Palace - Cannonball Chest","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":95,"location":"Eastern Palace - Cannonball Chest","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":96,"location":"Eastern Palace - Cannonball Chest","method":"testLocation"},
+    {"dataSet":7,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["DefeatAgahnim"],"base":"setUp"},"kind":"location","line":97,"location":"Eastern Palace - Cannonball Chest","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":99,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"location","line":100,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":10,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["BigKeyP1","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":101,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["BigKeyP1","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":102,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":12,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["BigKeyP1","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":103,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":13,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":105,"location":"Eastern Palace - Map Chest","method":"testLocation"},
+    {"dataSet":14,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":106,"location":"Eastern Palace - Map Chest","method":"testLocation"},
+    {"dataSet":15,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":107,"location":"Eastern Palace - Map Chest","method":"testLocation"},
+    {"dataSet":16,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["DefeatAgahnim"],"base":"setUp"},"kind":"location","line":108,"location":"Eastern Palace - Map Chest","method":"testLocation"},
+    {"dataSet":17,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":110,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":18,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":111,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":19,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":112,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":20,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":113,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":21,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":114,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":22,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":116,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":23,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":117,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":24,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["AnyBow"]},"kind":"location","line":118,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":25,"expected":false,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"location","line":119,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":26,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","BowAndArrows","BigKeyP1","MoonPearl","PegasusBoots"],"base":"setUp"},"kind":"location","line":120,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":27,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","BowAndArrows","BigKeyP1","MagicMirror","PegasusBoots"],"base":"setUp"},"kind":"location","line":121,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":28,"expected":true,"file":"tests/InvertedOverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","BowAndArrows","BigKeyP1","DefeatAgahnim"],"base":"setUp"},"kind":"location","line":122,"location":"Eastern Palace - Boss","method":"testLocation"}
+  ]
+}

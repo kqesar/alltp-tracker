@@ -355,6 +355,21 @@ describe("ChecksPanel", () => {
     expect(row("library")).toHaveTextContent("Missing: Pegasus Boots");
   });
 
+  it("says a No Logic run's checks out of reach not reachable, never out of logic", async () => {
+    const user = userEvent.setup();
+    act(() => useGameStore.getState().updateSettings({ glitches: "no_logic" }));
+    render(<ChecksPanel />);
+
+    expect(filter("unavailable").closest("label")).toHaveTextContent(
+      /^Not reachable\d+$/,
+    );
+    await user.click(filter("unavailable"));
+    expect(row("kings-tomb")).toHaveTextContent("Not reachable");
+    expect(screen.getByTestId("checks-panel")).not.toHaveTextContent(
+      /out of logic/i,
+    );
+  });
+
   it("offers no why under logic it does not model, every check maybe", () => {
     // Crosskeys with its keys kept in their dungeons
     act(() => {

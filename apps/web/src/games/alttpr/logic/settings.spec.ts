@@ -17,6 +17,7 @@ import {
   counterMax,
   dungeonAt,
   dungeonName,
+  glitchBounds,
   KEY_DUNGEONS,
   ownItems,
   packSettings,
@@ -41,6 +42,26 @@ const run = (overrides: Partial<RunSettings> = {}): RunSettings => ({
 });
 
 describe("packSettings", () => {
+  it("reads alttpr.com's goals, weapons and enemy health as the pack's", () => {
+    expect(packSettings(run({ goal: "ganonhunt" })).ganonhuntGoal).toBe(true);
+    // Completionist fills for every location (Randomizer.php:99-101)
+    expect(packSettings(run({ goal: "completionist" }))).toMatchObject({
+      completionistGoal: true,
+      locationsAccessibility: true,
+    });
+    expect(packSettings(run({ swords: "assured" })).swordAtStart).toBe(true);
+    expect(packSettings(run({ swords: "vanilla" }))).toEqual(
+      packSettings(run()),
+    );
+    expect(packSettings(run()).defaultEnemyHealth).toBe(true);
+    expect(packSettings(run({ enemyHealth: "hard" })).defaultEnemyHealth).toBe(
+      false,
+    );
+    expect(packSettings(run({ enemyHealth: "easy" })).defaultEnemyHealth).toBe(
+      false,
+    );
+  });
+
   it("reads the Open and Standard presets as the site's default preset", () => {
     expect(packSettings(getPreset("open").settings)).toEqual(OPEN);
     expect(packSettings(getPreset("standard").settings)).toEqual(STANDARD);
@@ -55,6 +76,35 @@ describe("packSettings", () => {
       wildKeys: true,
       wildMaps: true,
     });
+    // ... but behind shuffled entrances the seed is the entrance randomizer's
+    // NoGlitches, without the boots, whatever it names
+    // (EntranceRandomizer.php:84-91, Randomizer.php:122-131)
+    const shuffled = run({ entranceShuffle: "full" });
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      const settings = packSettings({ ...shuffled, glitches });
+      expect(settings, glitches).toBe(packSettings(shuffled));
+      expect(settings, glitches).toMatchObject({
+        bootsAtStart: false,
+        noLogic: false,
+      });
+    }
+    expect(
+      packSettings({
+        ...shuffled,
+        glitches: "no_logic",
+        playGlitches: "major_glitches",
+      }),
+    ).toBe(packSettings(shuffled));
+    // ... hidden glitches too: no bounds to read between
+    expect(glitchBounds({ ...shuffled, hidden: ["glitches"] })).toBeUndefined();
+    expect(packSettings({ ...shuffled, hidden: ["glitches"] })).toBe(
+      packSettings(shuffled),
+    );
+    expect(glitchBounds({ ...run(), hidden: ["glitches"] })).toBeDefined();
     expect(packSettings(run())).toMatchObject({
       wildBigKeys: false,
       wildCompasses: false,
@@ -71,6 +121,22 @@ describe("packSettings", () => {
     ["triforce-hunt", { ganonGoal: true }],
   ] as const)("gives the %s goal its pack goal", (goal, expected) => {
     expect(packSettings(run({ goal }))).toMatchObject(expected);
+  });
+
+  it("gives the pack a seed's logic, No Logic read with NoGlitches' rules", () => {
+    const glitched = packSettings(run({ glitches: "overworld_glitches" }));
+    // Randomizer.php:122-131: a glitched world starts with the boots
+    expect(glitched).toMatchObject({ bootsAtStart: true, noLogic: false });
+    expect(glitched).not.toBe(packSettings(run()));
+    expect(packSettings(run({ glitches: "no_logic" }))).toEqual({
+      ...OPEN,
+      bootsAtStart: true,
+      noLogic: true,
+    });
+    expect(packSettings(run())).toMatchObject({
+      bootsAtStart: false,
+      noLogic: false,
+    });
   });
 
   it("gives the pack a seed's crystal counts and its swords", () => {

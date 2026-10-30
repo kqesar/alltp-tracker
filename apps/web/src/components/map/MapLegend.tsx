@@ -18,15 +18,19 @@ const LEGEND_ITEMS = [
  *   alone keeps out of logic (another placement: the state never shows)
  * @param trick - Whether the map marks the checks a trick opens (off: the
  *   state never shows, so the legend leaves it out)
+ * @param unavailable - The words for a check the map says no to, when not
+ *   "Out of logic" (a run whose seed has no logic says what it reaches)
  */
 export const MapLegend = ({
   margin = false,
   seen = true,
   trick = false,
+  unavailable,
 }: {
   margin?: boolean;
   seen?: boolean;
   trick?: boolean;
+  unavailable?: string;
 }) => (
   <section
     aria-label="Map availability legend"
@@ -44,7 +48,7 @@ export const MapLegend = ({
           aria-hidden="true"
           className={`map-legend__swatch state-glyph ${item.className}`}
         />
-        {item.label}
+        {(item.className === "unavailable" && unavailable) || item.label}
       </span>
     ))}
   </section>

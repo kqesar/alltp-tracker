@@ -461,6 +461,11 @@ export const SHARE_SETTINGS: readonly string[] = `
   hidden:itemFunctionality hidden:accessibility
   bossShuffle:none bossShuffle:simple bossShuffle:full bossShuffle:random
   hidden:bossShuffle
+  playGlitches:overworld_glitches playGlitches:hybrid_major_glitches
+  playGlitches:major_glitches
+  hidden:glitches hidden:entranceShuffle
+  goal:ganonhunt goal:completionist swords:assured swords:vanilla
+  enemyHealth:easy enemyHealth:hard enemyHealth:expert
   randomizer:dr randomizer:owr
   doorShuffle:vanilla doorShuffle:basic doorShuffle:partitioned
   doorShuffle:crossed

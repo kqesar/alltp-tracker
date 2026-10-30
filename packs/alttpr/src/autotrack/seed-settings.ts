@@ -288,6 +288,13 @@ export interface SeedSettingsReading {
    */
   readonly bossShuffle?: SeedSetting<SeedBossShuffle>;
   /**
+   * mode.weapons, like itemPlacement: the ROM tells swordless alone
+   * (`swordless`), not where the swords are.
+   */
+  readonly weapons?: SeedSetting<SeedWeapons>;
+  /** enemizer.enemyHealth, like itemPlacement. */
+  readonly enemyHealth?: SeedSetting<SeedEnemyHealth>;
+  /**
    * Which randomizer wrote the seed, from the title (the header, which Race
    * Mode reads): absent for a header not read or not a seed's.
    */
@@ -383,6 +390,12 @@ export interface DoorSeedSettings {
     readonly bonkDrops: SeedSetting<boolean>;
   };
 }
+
+/** upstream's mode.weapons (config/alttp.php:260-265). */
+export type SeedWeapons = "randomized" | "assured" | "vanilla" | "swordless";
+
+/** upstream's enemizer.enemyHealth (config/alttp.php:282-287). */
+export type SeedEnemyHealth = "default" | "easy" | "hard" | "expert";
 
 /** upstream's enemizer.bossShuffle (config/alttp.php:241-246). */
 export type SeedBossShuffle = "none" | "simple" | "full" | "random";

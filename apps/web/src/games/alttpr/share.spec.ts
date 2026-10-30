@@ -6,6 +6,7 @@ import {
   ACCESSIBILITY_LABELS,
   BOSS_SHUFFLE_LABELS,
   DUNGEON_ITEM_LABELS,
+  ENEMY_HEALTH_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   GLITCHES_LABELS,
@@ -16,6 +17,7 @@ import {
   PLACEMENT_LABELS,
   POOL_LABELS,
   presets,
+  SWORDS_LABELS,
 } from "@/games/alttpr/data/presets";
 import {
   packLink,
@@ -35,8 +37,10 @@ import {
   zigzag,
 } from "@/share/bytes";
 import legacyLink from "@/share/fixtures/link-alttpr-before-sizes.json";
+import doorBranchLink from "@/share/fixtures/link-alttpr-door-branch.json";
 import firstLayout from "@/share/fixtures/links-alttpr-v2.json";
 import thirdLayout from "@/share/fixtures/links-alttpr-v3.json";
+import fourthLayout from "@/share/fixtures/links-alttpr-v4.json";
 import { LINK_FORMAT, OTHER_VERSION } from "@/share/packed";
 import {
   play,
@@ -457,11 +461,14 @@ describe("an ALttPR run in a packed link", () => {
 
   // Recorded from each earlier layout's own writer (fixtures/), never
   // changed: links already shared, which must keep opening as they were made
+  // (link 4 by v2.67.0, before the Door Randomizer's settings joined the
+  // table after its own)
   it.each(
     (
       [
         [2, firstLayout.links],
         [3, thirdLayout.links],
+        [4, fourthLayout.links],
       ] as const
     ).flatMap(([version, links]) =>
       (links as readonly Recorded[]).map(
@@ -593,6 +600,24 @@ describe("an ALttPR run in a packed link", () => {
       ok: false,
       reason: OTHER_VERSION,
     });
+  });
+
+  it("refuses, as another version's, a link the unreleased Door Randomizer branch made", () => {
+    // Its settings followed v2.66.0's where v2.67.0's own now stand: the
+    // digest tells them apart, so it is never misread
+    expect(doorBranchLink.link.sizes).toEqual([LINK_LOCATIONS, 125, 116]);
+    expect(unpackLink(JSON.stringify(doorBranchLink.link))).toEqual({
+      ok: false,
+      reason: OTHER_VERSION,
+    });
+  });
+
+  it("keeps v2.67.0's settings table first, the Door Randomizer's after it", () => {
+    const [recorded] = fourthLayout.links;
+    const [, , settings] = recorded.link.sizes;
+    // Every entry v2.67.0 had, in its places: the first a DR run adds is past them
+    expect(SHARE_SETTINGS[settings - 1]).toBe("enemyHealth:expert");
+    expect(SHARE_SETTINGS[settings]).toBe("randomizer:dr");
   });
 
   it("refuses a link made against other tables", () => {
@@ -950,7 +975,18 @@ describe("the settings in a link (link 4)", () => {
       "hidden:",
       ...HIDEABLE.map((setting) => `hidden:${setting}`),
       ...Object.keys(BOSS_SHUFFLE_LABELS).map((v) => `bossShuffle:${v}`),
-      // A Door Randomizer run's own
+      // A No Logic run's: a glitched logic's, None said by its absence
+      ...Object.keys(GLITCHES_LABELS)
+        .filter((value) => value !== "none" && value !== "no_logic")
+        .map((value) => `playGlitches:${value}`),
+      // Randomized swords and default health are said by their absence
+      ...Object.keys(SWORDS_LABELS)
+        .filter((value) => value !== "randomized")
+        .map((value) => `swords:${value}`),
+      ...Object.keys(ENEMY_HEALTH_LABELS)
+        .filter((value) => value !== "default")
+        .map((value) => `enemyHealth:${value}`),
+      // A Door Randomizer run's own, after v2.67.0's
       ...Object.entries(DOOR_OPTIONS).flatMap(([key, options]) =>
         options.map(([option]) => `${key}:${String(option)}`),
       ),

@@ -1,0 +1,33 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/MajorGlitches/HyruleCastleTowerTest.php",
+  "class": "MajorGlitches\\HyruleCastleTowerTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "MajorGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"expected":false,"file":"tests/MajorGlitches/HyruleCastleTowerTest.php","items":{"add":[],"base":"allItems","except":["AnySword"]},"kind":"regionComplete","line":31,"method":"testSwordRequiredToComplete","region":"Hyrule Castle Tower"}
+  ]
+}

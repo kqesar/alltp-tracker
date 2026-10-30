@@ -3,11 +3,12 @@
 // 21) and sets every location's again, with new ways to clip in (`$mire`,
 // 23-31; `$hera`, 33-38), and a new can_enter.
 //
-// Not ported here: the glitched branch of can_enter (147-153), which needs
-// Misery Mire (`$mire`) and the Old Man's location (West Death Mountain)
-// besides South Light World: an entrance comes from one region only.
+// The glitched branch of can_enter (147-153) needs Misery Mire (`$mire`),
+// the Old Man's location (West Death Mountain) and South Light World at
+// once: a way from Misery Mire, every location guarded by the others
+// (`enteredAlsoFrom`).
 import { dungeonBoss } from "../../bosses";
-import { extendModule } from "../../world";
+import { enteredAlsoFrom, extendModule } from "../../world";
 import { SWAMP_PALACE } from "../standard/swamp-palace";
 
 const FILE = "app/Region/Inverted/SwampPalace.php";
@@ -37,7 +38,7 @@ const BOSS = dungeonBoss(
   { always: 123, file: FILE, fill: 113, holding: 108 },
 );
 
-export const INVERTED_SWAMP_PALACE = extendModule(SWAMP_PALACE, FILE, {
+const RULES = extendModule(SWAMP_PALACE, FILE, {
   swampPalace: {
     entrances: [
       {
@@ -89,6 +90,10 @@ export const INVERTED_SWAMP_PALACE = extendModule(SWAMP_PALACE, FILE, {
             },
           ],
         },
+        // Standard's, without Standard's glitched way's guard: Inverted's own
+        // follows (`enteredAlsoFrom`)
+        req: "true",
+        source: "app/Region/Standard/SwampPalace.php:50",
       },
       "swamp-palace/flooded-room/left": {
         req: `hookshot & ${PAST_PEGS}`,
@@ -111,3 +116,30 @@ export const INVERTED_SWAMP_PALACE = extendModule(SWAMP_PALACE, FILE, {
     },
   },
 });
+
+/**
+ * The glitched branch's clip and run (151-153): the boots clip, a spin speed
+ * or a one-frame clip overworld.
+ */
+const CLIP_IN =
+  "(pegasusBoots & setting(canBootsClip) | setting(canSuperSpeed) & @canSpinSpeed | setting(canOneFrameClipOW))";
+
+/** The Old Man's location reached (West.php:36): `$locations["Old Man"]->canAccess`. */
+const OLD_MAN = "reach(westDeathMountain) & lamp >= setting(requireLamp)";
+
+/** The bunny's way through, as can_enter's first part (137-145) reads it. */
+const LINK =
+  "(moonPearl | setting(canOWYBA) & @hasABottle | setting(canBunnyRevive) & @canBunnyRevive | setting(canSuperBunny) & magicMirror)";
+
+export const INVERTED_SWAMP_PALACE = enteredAlsoFrom(
+  RULES,
+  "swampPalace",
+  {
+    // can_enter (132-155), the mirror's alternative: one-frame clipping in
+    // from Misery Mire with its keys (`$mire`) and either big key
+    from: "miseryMire",
+    req: `flippers & (!setting(basicPlacement) | (setting(swordless) | @hasSword) & @hasHealth7 & @hasABottle) & ${LINK} & setting(canOneFrameClipUW) & moonPearl & (bigKeyP3 | bigKeyD6) & (keyD6 >= 3 | maybe & keyD6 >= 2) & ${CLIP_IN}`,
+    source: `${FILE}:147`,
+  },
+  `!setting(canOneFrameClipUW) | reach(southLightWorld) & (magicMirror | ${OLD_MAN})`,
+);

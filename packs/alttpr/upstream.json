@@ -556,7 +556,7 @@
     {
       "file": "app/Randomizer.php",
       "module": "src/goals.ts",
-      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches; placeBosses: the bosses each slot may hold under boss shuffle, read by src/bosses.ts",
+      "role": "prepareWorld: where each goal puts the Triforce, which go mode reaches, and the Pegasus Boots a glitched or No Logic world starts with (src/settings.ts, bootsAtStart); placeBosses: the bosses each slot may hold under boss shuffle, read by src/bosses.ts",
       "status": "ported"
     },
     {
@@ -568,7 +568,7 @@
     {
       "file": "config/logic.php",
       "module": "src/settings.ts",
-      "role": "the glitch flags World::config falls back to for each logic (all off for NoGlitches)",
+      "role": "the glitch flags World::config falls back to for each logic (LOGIC_FLAGS: none for NoGlitches; Overworld Glitches' and Major Glitches' held to their suites, Hybrid Major Glitches', which has none, to the order of the logics)",
       "status": "ported"
     },
     {
@@ -873,6 +873,456 @@
     {
       "file": "tests/RetroBowTest.php",
       "fixture": "test/upstream/RetroBow.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/Mire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/NorthEast.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/NorthWest.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DarkWorld/South.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/DesertPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/EasternPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/GanonsTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/HyruleCastleEscape.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/HyruleCastleTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/IcePalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/LightWorld.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/MiseryMire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/PalaceOfDarkness.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/SkullWoods.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/SwampPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/ThievesTown.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/TowerOfHera.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedOverworldGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/InvertedOverworldGlitches/TurtleRock.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/Mire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/NorthEast.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/NorthWest.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DarkWorld/South.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/OverworldGlitches/DesertPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/OverworldGlitches/EasternPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/OverworldGlitches/GanonsTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/OverworldGlitches/HyruleCastleEscape.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/OverworldGlitches/HyruleCastleTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/OverworldGlitches/IcePalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/OverworldGlitches/LightWorld.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/OverworldGlitches/MiseryMire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/OpenTest.php",
+      "fixture": "test/upstream/OverworldGlitches/Open.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/OverworldGlitches/PalaceOfDarkness.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/OverworldGlitches/SkullWoods.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/OverworldGlitches/SwampPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/OverworldGlitches/ThievesTown.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/OverworldGlitches/TowerOfHera.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/OverworldGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/OverworldGlitches/TurtleRock.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/Mire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/NorthEast.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/NorthWest.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DarkWorld/South.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/DesertPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/EasternPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/GanonsTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/HyruleCastleEscape.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/HyruleCastleTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/IcePalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/LightWorld.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/MiseryMire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/PalaceOfDarkness.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/SkullWoods.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/SwampPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/ThievesTown.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/TowerOfHera.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/InvertedMajorGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/InvertedMajorGlitches/TurtleRock.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/MireTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/Mire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/NorthEastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/NorthEast.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/NorthWestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/NorthWest.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DarkWorld/SouthTest.php",
+      "fixture": "test/upstream/MajorGlitches/DarkWorld/South.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DeathMountain/EastTest.php",
+      "fixture": "test/upstream/MajorGlitches/DeathMountain/East.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DeathMountain/WestTest.php",
+      "fixture": "test/upstream/MajorGlitches/DeathMountain/West.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/DesertPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/DesertPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/EasternPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/EasternPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/GanonsTowerTest.php",
+      "fixture": "test/upstream/MajorGlitches/GanonsTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/HyruleCastleEscapeTest.php",
+      "fixture": "test/upstream/MajorGlitches/HyruleCastleEscape.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/HyruleCastleTowerTest.php",
+      "fixture": "test/upstream/MajorGlitches/HyruleCastleTower.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/IcePalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/IcePalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/LightWorldTest.php",
+      "fixture": "test/upstream/MajorGlitches/LightWorld.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/MiseryMireTest.php",
+      "fixture": "test/upstream/MajorGlitches/MiseryMire.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/OpenTest.php",
+      "fixture": "test/upstream/MajorGlitches/Open.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/PalaceOfDarknessTest.php",
+      "fixture": "test/upstream/MajorGlitches/PalaceOfDarkness.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/SkullWoodsTest.php",
+      "fixture": "test/upstream/MajorGlitches/SkullWoods.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/SwampPalaceTest.php",
+      "fixture": "test/upstream/MajorGlitches/SwampPalace.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/ThievesTownTest.php",
+      "fixture": "test/upstream/MajorGlitches/ThievesTown.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/TowerOfHeraTest.php",
+      "fixture": "test/upstream/MajorGlitches/TowerOfHera.json",
+      "status": "ported"
+    },
+    {
+      "file": "tests/MajorGlitches/TurtleRockTest.php",
+      "fixture": "test/upstream/MajorGlitches/TurtleRock.json",
       "status": "ported"
     }
   ]

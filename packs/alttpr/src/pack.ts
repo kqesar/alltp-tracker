@@ -11,7 +11,7 @@ import { DERIVED_FACTS } from "./derived";
 import { ITEM_IDS } from "./items";
 import { MEDALLION_FACTS } from "./medallions";
 import { RULES } from "./rules";
-import type { AlttprSettings } from "./settings";
+import { type AlttprSettings, GOAL_FACTS } from "./settings";
 import { UNKNOWN_COUNT_FACTS } from "./unknown-counts";
 import { buildWorld, type RegionModule } from "./world";
 import { INVERTED_REGIONS } from "./worlds/inverted";
@@ -20,8 +20,8 @@ import { STANDARD_REGIONS } from "./worlds/standard";
 
 /**
  * Every name a requirement may read from the state: the items, the
- * medallion facts, the boss slots' facts, the facts derived from the items and those of the counts
- * not known. Anything that compiles a world of this pack takes its item list
+ * medallion facts, the boss slots' facts, the facts derived from the items, those of the counts
+ * not known and a goal's (ganonhunt's pieces). Anything that compiles a world of this pack takes its item list
  * from here.
  */
 export const STATE_NAMES: readonly string[] = [
@@ -30,6 +30,7 @@ export const STATE_NAMES: readonly string[] = [
   ...BOSS_FACTS,
   ...DERIVED_FACTS,
   ...UNKNOWN_COUNT_FACTS,
+  ...GOAL_FACTS,
 ];
 
 /** The region modules of the run's world: Standard's, Open's or Inverted's. */

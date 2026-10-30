@@ -1,0 +1,46 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/DeathMountain/WestTest.php",
+  "class": "OverworldGlitches\\WestTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"dataSet":0,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":51,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":1,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["UpgradedSword"]},"kind":"location","line":52,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["BookOfMudora"]},"kind":"location","line":53,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots","BookOfMudora","ProgressiveSword","ProgressiveSword"],"base":"setUp"},"kind":"location","line":54,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots","BookOfMudora","L2Sword"],"base":"setUp"},"kind":"location","line":55,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots","BookOfMudora","L3Sword"],"base":"setUp"},"kind":"location","line":56,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":6,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots","BookOfMudora","L4Sword"],"base":"setUp"},"kind":"location","line":57,"location":"Ether Tablet","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":59,"location":"Old Man","method":"testLocation"},
+    {"dataSet":8,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":60,"location":"Old Man","method":"testLocation"},
+    {"dataSet":9,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots","Lamp"],"base":"setUp"},"kind":"location","line":61,"location":"Old Man","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":63,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":11,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots"],"base":"setUp"},"kind":"location","line":64,"location":"Spectacle Rock Cave","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":66,"location":"Spectacle Rock","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/OverworldGlitches/DeathMountain/WestTest.php","items":{"add":["PegasusBoots"],"base":"setUp"},"kind":"location","line":67,"location":"Spectacle Rock","method":"testLocation"}
+  ]
+}

@@ -5,46 +5,58 @@
 // tables.
 
 import {
-  type CrossedPool,
-  crossedPool,
   type EntranceLink,
+  type EntrancePool,
   type EntranceTarget,
-  fullPool,
+  entrancePool,
   linksOf,
   type MapMarker,
   type OverworldEntrance,
   PLACE_OF_LOCATION,
   TARGETS,
 } from "@alltp/pack-alttpr";
-import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
+import {
+  entrancesKnown,
+  portedShuffleOf,
+  type RunSettings,
+} from "@/games/alttpr/data/presets";
 
-const crossed = {
-  open: crossedPool("open"),
-  standard: crossedPool("standard"),
-} as const;
-
-/** The full shuffle's pools, made when a Full run first asks. */
-let full: { open: CrossedPool; standard: CrossedPool } | undefined;
+/** The pools made so far, by shuffle and world, each made once. */
+const pools = new Map<string, EntrancePool>();
 
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
- * shuffle or world (`entrancesKnown`): the crossed and full shuffles of the
- * Open or Standard world are ported. Simple, Restricted and Insanity pool
- * their entrances otherwise, and Inverted runs tables of its own.
+ * shuffle or world (`entrancesKnown`): the pack's `entrancePool` of the
+ * run's simple, restricted, full or crossed shuffle in the Open, Retro
+ * (Open's with its take-any caves) or Standard world. Insanity parts a door
+ * from its way out, and Inverted runs tables of its own: not modelled yet.
  */
-export const poolOf = (settings: RunSettings): CrossedPool | null => {
-  if (!entrancesKnown(settings)) return null;
-  const world = settings.mode === "standard" ? "standard" : "open";
-  if (settings.entranceShuffle === "crossed") return crossed[world];
-  full ??= { open: fullPool("open"), standard: fullPool("standard") };
-  return full[world];
+export const poolOf = (settings: RunSettings): EntrancePool | null => {
+  const shuffle = portedShuffleOf(settings);
+  if (shuffle === undefined || !entrancesKnown(settings)) return null;
+  const world =
+    settings.mode === "standard" || settings.mode === "retro"
+      ? settings.mode
+      : "open";
+  const key = `${shuffle} ${world}`;
+  let pool = pools.get(key);
+  if (pool === undefined) {
+    pool = entrancePool(
+      shuffle,
+      world === "standard" ? "standard" : "open",
+      world === "retro",
+    );
+    pools.set(key, pool);
+  }
+  return pool;
 };
 
+// Every pool's entrances are among the crossed shuffle's of either world
 const ENTRANCE_BY_ID = new Map(
-  [...crossed.open.entrances, ...crossed.standard.entrances].map((e) => [
-    e.id,
-    e,
-  ]),
+  [
+    ...entrancePool("crossed", "open").entrances,
+    ...entrancePool("crossed", "standard").entrances,
+  ].map((e) => [e.id, e]),
 );
 const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 
@@ -58,34 +70,35 @@ export const targetById = (id: string): EntranceTarget | undefined =>
 
 /** What an entrance may lead to, as the shuffle has it (`targetsOf`). */
 export const targetsFor = (
-  pool: CrossedPool,
+  pool: EntrancePool,
   entrance: OverworldEntrance,
 ): readonly EntranceTarget[] => pool.targetsOf.get(entrance.id) ?? [];
 
 /**
- * What noting `target` at `entrance` notes: it, and the other way into the
- * same cave when it is a hole or a hole's door (`partner`). One step.
+ * What noting `target` at `entrance` notes: it, and what the shuffle
+ * always connects along with it (`partners`): the other way into the same
+ * cave for a hole or a hole's door; in the simple shuffle, the other door
+ * of a pair to its two-door cave's other exit; in the simple and restricted
+ * ones, a four-door dungeon's three other doors. One step.
  */
 export const notesFor = (
-  pool: CrossedPool,
+  pool: EntrancePool,
   entrance: string,
   target: string,
-): Record<string, string> => {
-  const partner = pool.partner(entrance, target);
-  return partner === undefined
-    ? { [entrance]: target }
-    : { [entrance]: target, [partner[0]]: partner[1] };
-};
+): Record<string, string> => ({
+  [entrance]: target,
+  ...Object.fromEntries(pool.partners(entrance, target)),
+});
 
 /**
  * What the game shows Link went through notes (autotracking, outside Race
- * Mode): each door or hole to its target, with its partner (`notesFor`),
+ * Mode): each door or hole to its target, with its partners (`notesFor`),
  * when the shuffle may give it that target. Of targets alike, which the
  * game loads by one entrance, it keeps the one noted there, else takes the
  * first noted nowhere. The game wins over a note it contradicts.
  */
 export const gameNotes = (
-  pool: CrossedPool,
+  pool: EntrancePool,
   noted: Readonly<Record<string, string>>,
   links: readonly EntranceLink[],
 ): Record<string, string> => {
@@ -169,10 +182,10 @@ export const layoutEntrances = (
   );
 };
 
-const layouts = new WeakMap<CrossedPool, ReturnType<typeof layoutEntrances>>();
+const layouts = new WeakMap<EntrancePool, ReturnType<typeof layoutEntrances>>();
 
 /** layoutEntrances of a pool, worked out once. */
-export const layoutOf = (pool: CrossedPool) => {
+export const layoutOf = (pool: EntrancePool) => {
   let layout = layouts.get(pool);
   if (layout === undefined) {
     layout = layoutEntrances(pool.entrances);
@@ -205,7 +218,7 @@ const SPREAD = 2.6;
  * @param markers - The run's world's markers
  */
 export const placeMarkers = (
-  pool: CrossedPool,
+  pool: EntrancePool,
   noted: Readonly<Record<string, string>>,
   markers: readonly MapMarker[],
 ): MapMarker[] => {

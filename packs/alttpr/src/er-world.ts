@@ -7,8 +7,9 @@
 // Read from cassidoxa/ALttPEntranceRandomizer at the commit upstream.json
 // pins (entranceRandomizer). What the translation leaves to the world, it
 // ports here by hand: the save-and-quit points (Rules.py:115-127), the
-// bunny's paths (set_bunny_rules, 1520-1589) and what the derived settings
-// read of the connections.
+// bunny's paths (set_bunny_rules, 1520-1589), what the derived settings
+// read of the connections, and the boss slots under boss shuffle
+// (Bosses.py place_bosses, 145-219).
 import {
   type CompiledWorld,
   compileWorld,
@@ -17,11 +18,22 @@ import {
   loadRules,
   type Region,
   type Settings,
+  type Tri,
+  type UnknownSetting,
   type World,
 } from "@alltp/engine";
 import {
+  BOSS_PLACES,
+  type BossPlaceId,
+  bossesAt,
+  SHUFFLED_BOSSES,
+  type ShuffledBoss,
+  shuffledBossRule,
+} from "./bosses";
+import {
   ENTRANCES,
   type EntranceTarget,
+  type ErShuffle,
   erLocationId,
   TARGETS,
 } from "./entrances";
@@ -51,6 +63,17 @@ interface ErRegion {
 
 const RULE_TABLES = ruleTables as unknown as {
   readonly allItemsReach: Readonly<Record<string, string>>;
+  readonly bossSlots: Readonly<
+    Record<
+      string,
+      {
+        readonly place: string;
+        readonly refuses: readonly string[];
+        readonly swordless: readonly string[];
+        readonly vanilla: string;
+      }
+    >
+  >;
   readonly bombShop: {
     readonly spot: string;
     readonly cases: readonly {
@@ -73,7 +96,21 @@ const RULE_TABLES = ruleTables as unknown as {
   readonly locations: Readonly<Record<string, SpotRule>>;
 };
 
-const REGIONS = er.regions as readonly ErRegion[];
+/**
+ * Its regions: Regions.py's, and the retro world's take-any caves
+ * (ItemList.py set_up_take_anys), which hold nothing the map shows and lead
+ * nowhere but back out.
+ */
+const REGIONS: readonly ErRegion[] = [
+  ...(er.regions as readonly ErRegion[]),
+  ...er.takeAnys.regions.map(({ id, name }) => ({
+    exits: [],
+    id,
+    kind: "cave",
+    locations: [],
+    name,
+  })),
+];
 const REGION_NAMED = new Map(REGIONS.map((r) => [r.name, r]));
 
 /** The region each entrance (or cave's exit) leaves from, by name. */
@@ -159,28 +196,54 @@ const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 
 /**
  * The crossed shuffle's, as far as the entrances noted tell
- * (EntranceShuffle.py:365-460): what it keeps (the Tavern's back door, and
- * in Standard the castle's front door and its secret passage), then each
- * noted entrance. A cave or dungeon's exit is connected both ways
- * (connect_two_way), a single cave's door or a hole one way
- * (connect_entrance, scramble_holes). An entrance not noted leads nowhere.
+ * (EntranceShuffle.py:365-460): `erConnections` of the crossed shuffle.
  * @param mode - The world's
  * @param noted - Each noted entrance's target, by the pack's ids
  */
-export function crossedConnections(
+export const crossedConnections = (
+  mode: "open" | "standard",
+  noted: Readonly<Record<string, string>>,
+): ErConnections => erConnections("crossed", mode, noted);
+
+/**
+ * A shuffle's connections, as far as the entrances noted tell
+ * (EntranceShuffle.py:63-440): what it keeps (the Tavern's back door; in
+ * Standard the castle's front door and its secret passage, and in the
+ * simple and restricted shuffles the castle's other doors and Agahnim's
+ * Tower's, which simple_shuffle_dungeons leaves, :2054-2069), then each
+ * noted entrance. A cave or dungeon's exit is connected both ways
+ * (connect_two_way), a single cave's door or a hole one way
+ * (connect_entrance, scramble_holes). An entrance not noted leads nowhere:
+ * what one note settles beside it (`EntrancePool.partners`) is noted by
+ * the tracker, not guessed here.
+ * @param shuffle - The run's
+ * @param mode - The world's
+ * @param noted - Each noted entrance's target, by the pack's ids
+ */
+export function erConnections(
+  shuffle: ErShuffle,
   mode: "open" | "standard",
   noted: Readonly<Record<string, string>>,
 ): ErConnections {
   const connections = baseConnections();
-  // The Tavern's back door is not shuffled yet (:377)
+  // The Tavern's back door is not shuffled yet (:130, :148, :275, :378)
   connections.set("Tavern North", "Tavern");
   if (mode === "standard") {
-    // The escape's doors stay (:379-381; scramble_holes, :1827-1830)
+    // The escape's doors stay (:279-280, :380-381; scramble_holes,
+    // :1827-1830)
     twoWay(
       connections,
       "Hyrule Castle Entrance (South)",
       "Hyrule Castle Exit (South)",
     );
+    // And the castle's others, in the simple and restricted shuffles
+    if (shuffle === "simple" || shuffle === "restricted")
+      for (const [door, exit] of [
+        ["Hyrule Castle Entrance (East)", "Hyrule Castle Exit (East)"],
+        ["Hyrule Castle Entrance (West)", "Hyrule Castle Exit (West)"],
+        ["Agahnims Tower", "Agahnims Tower Exit"],
+      ] as const)
+        twoWay(connections, door, exit);
     twoWay(
       connections,
       "Hyrule Castle Secret Entrance Stairs",
@@ -239,11 +302,28 @@ export interface ErOptions {
    * player, the tests to the randomizer.
    */
   readonly events?: Readonly<Record<string, string>>;
+  /**
+   * Whether a door or exit the connections leave out leads anywhere the
+   * shuffle may have led it: to every target no noted door leads to, and
+   * out by every door not noted. The world the randomizer filled, as far as
+   * the doors noted tell, which the key model reads (er-keys.ts). False by
+   * default: a door not noted leads nowhere.
+   */
+  readonly anywhere?: boolean;
 }
 
 /** A compiled world of the entrance randomizer, and its facts. */
 export interface ErWorld extends FactWorld {
   readonly compiled: CompiledWorld;
+  /** What it was built from: the connections, and how (er-keys.ts). */
+  readonly connections: ErConnections;
+  readonly options: ErOptions;
+  /**
+   * The settings it was compiled with: the run's, and the derived ones the
+   * connections give (`derived` in rules.json), which the fill's rules read
+   * too (er-keys.ts).
+   */
+  readonly settings: Settings;
   /**
    * What the solver holds once a location (pack id) is reached, as the
    * randomizer collects events (sweep_for_events): an event's item by the
@@ -288,11 +368,19 @@ const or = (...reqs: string[]): string => {
   return kept.length === 0 ? "false" : kept.map((r) => `(${r})`).join(" | ");
 };
 
-/** The worlds' light and dark regions (mark_light_world_regions). */
-function markWorlds(connections: ErConnections): {
+/**
+ * The worlds' light and dark regions (mark_light_world_regions). With
+ * `anywhere`, a door or exit not noted leads wherever it may (`anywhere`):
+ * what the seed's world may mark, the doors noted and those not.
+ */
+function markWorlds(
+  connections: ErConnections,
+  anywhere = false,
+): {
   light: ReadonlySet<string>;
   dark: ReadonlySet<string>;
 } {
+  const beyond = anywhere ? anywhereTargets(connections) : [];
   // From every region of a world, through its connected exits, never into
   // the other world's overworld (Regions.py:339-366)
   const mark = (kind: string, other: string) => {
@@ -300,13 +388,21 @@ function markWorlds(connections: ErConnections): {
       REGIONS.filter((r) => r.kind === kind).map((r) => r.name),
     );
     const queue = [...seen];
+    let through = false;
     for (let name = queue.shift(); name !== undefined; name = queue.shift()) {
       for (const exit of region(name).exits) {
         const to = connections.get(exit);
-        if (to === undefined || region(to).kind === other || seen.has(to))
-          continue;
-        seen.add(to);
-        queue.push(to);
+        let next: readonly string[] = to === undefined ? [] : [to];
+        // Into anywhere once: it leads the same wherever it is entered from
+        if (to === undefined && !through && SHUFFLED.has(exit)) {
+          through = true;
+          next = beyond;
+        }
+        for (const into of next) {
+          if (region(into).kind === other || seen.has(into)) continue;
+          seen.add(into);
+          queue.push(into);
+        }
       }
     }
     return seen;
@@ -327,9 +423,13 @@ const bombShopDoor = (connections: ErConnections): string | undefined =>
 function spotRules(
   connections: ErConnections,
   then?: Readonly<Record<string, string>>,
+  anywhere = false,
 ) {
   const exits = new Map<string, string>();
-  for (const [exit] of connections)
+  const ruled = anywhere
+    ? new Set([...connections.keys(), ...SHUFFLED])
+    : connections.keys();
+  for (const exit of ruled)
     exits.set(exit, then?.[exit] ?? RULE_TABLES.entrances[exit]?.req ?? "true");
   // set_big_bomb_rules: the case of the door the shop is entered by
   const door = bombShopDoor(connections);
@@ -343,8 +443,22 @@ function spotRules(
       RULE_TABLES.locations[name]?.req ?? "true",
     ]),
   );
+  // Rules.py:454: a ganonhunt's Ganon wants the pieces asked for. The
+  // translation reads the goal as no ganonhunt (er-rules.mjs WORLD), since
+  // `not state.has(...)` has no monotone form there; ported here as the
+  // fact the pack holds once they are found (tracker.ts `ganonhuntPieces`)
+  locations.set(
+    GANON,
+    and(
+      locations.get(GANON) ?? "true",
+      "!setting(ganonhuntGoal) | ganonhuntPieces",
+    ),
+  );
   return { exits, locations };
 }
+
+/** The location Ganon is beaten at. */
+const GANON = "Ganon";
 
 /**
  * The bunny's rules (set_bunny_rules, Rules.py:1520-1589). Where the
@@ -352,10 +466,24 @@ function spotRules(
  * in the dark world, and each location in the dark world it cannot get,
  * takes the pearl, or (for a region also in the light world) a path from
  * a region wholly in the light world, each entrance on it passable.
+ *
+ * The marks are those of the seed's world, which the doors not noted may
+ * add to (markWorlds through them, `mayBeDark`). A region the doors noted
+ * mark dark takes the rule; one only the doors not noted may make dark
+ * takes it or `maybe`, the meet of the rule and none. A path counts only
+ * from a region the doors noted mark light that none may make dark, and
+ * goes on through one that may be both. Each is the randomizer's rule
+ * or stricter, so noting a door never takes a `yes` away. The world where
+ * the doors not noted lead anywhere (er-keys.ts) holds the pearl
+ * throughout.
  */
 function addBunnyRules(
   connections: ErConnections,
-  marked: { light: ReadonlySet<string>; dark: ReadonlySet<string> },
+  marked: {
+    light: ReadonlySet<string>;
+    dark: ReadonlySet<string>;
+    mayBeDark: ReadonlySet<string>;
+  },
   exits: Map<string, string>,
   locations: Map<string, string>,
 ): void {
@@ -367,7 +495,8 @@ function addBunnyRules(
   // get_rule_to_add: read when added, so a later region's paths see the
   // rules added before, as the randomizer's lambdas do
   const ruleToAdd = (name: string): string => {
-    if (!marked.light.has(name)) return pearl;
+    if (!marked.light.has(name))
+      return marked.dark.has(name) ? pearl : or(pearl, "maybe");
     const options = [pearl];
     const seen = new Set([name]);
     const queue: [string, string[]][] = [[name, []]];
@@ -380,35 +509,77 @@ function addBunnyRules(
         const newPath = [...path, rule];
         seen.add(from);
         if (!marked.light.has(from)) continue;
-        if (marked.dark.has(from)) queue.push([from, newPath]);
+        if (marked.mayBeDark.has(from)) queue.push([from, newPath]);
         // can_reach(entrance): its region, and its rule
         else options.push(and(`reach(${region(from).id})`, rule, ...newPath));
       }
     }
-    return or(...options);
+    const rule = or(...options);
+    return marked.dark.has(name) ? rule : or(rule, "maybe");
   };
 
   for (const name of RULE_TABLES.bunny.impassableCaves.value) {
-    if (!marked.dark.has(name)) continue;
+    if (!marked.mayBeDark.has(name)) continue;
     const rule = ruleToAdd(name);
     for (const exit of region(name).exits)
       if (exits.has(exit))
         exits.set(exit, and(exits.get(exit) ?? "true", rule));
   }
   const shop = "Light World Death Mountain Shop";
-  if (marked.dark.has(shop)) {
+  if (marked.mayBeDark.has(shop)) {
     const entrance = into.get(shop)?.[0];
     if (entrance !== undefined)
       exits.set(entrance, and(exits.get(entrance) ?? "true", ruleToAdd(shop)));
   }
   const accessible = new Set(RULE_TABLES.bunny.accessibleLocations.value);
   for (const [location, name] of REGION_OF_LOCATION) {
-    if (!marked.dark.has(name) || accessible.has(location)) continue;
+    if (!marked.mayBeDark.has(name) || accessible.has(location)) continue;
     locations.set(
       location,
       and(locations.get(location) ?? "true", ruleToAdd(name)),
     );
   }
+}
+
+/** A boss of boss_table (Bosses.py) by the pack's id: `Armos Knights`. */
+const shuffledBoss = (name: string): ShuffledBoss | undefined =>
+  SHUFFLED_BOSSES.find(
+    (boss) => boss.toLowerCase() === name.replaceAll(" ", "").toLowerCase(),
+  );
+
+const bossesOf = (names: readonly string[]): ShuffledBoss[] =>
+  names.flatMap((name) => {
+    const boss = shuffledBoss(name);
+    return boss === undefined ? [] : [boss];
+  });
+
+/**
+ * Each boss slot's rule (rules.json bossSlots, the rules reading a
+ * dungeon's boss through it): its vanilla boss without boss shuffle; with
+ * it, the boss the player knows (the facts bosses.ts names, which the
+ * state holds as for vt's world) or, while unknown, every boss its
+ * can_place_boss takes (Bosses.py:123-143), each through its Bosses.py
+ * rule. A boss it refuses swordless counts then only with swords. Ice
+ * Palace's slot keeps every boss even swordless: 'chaos' (vt's 'random')
+ * may place any there, and only 'basic' and 'normal' put Kholdstare back
+ * (Bosses.py:186-191), which one flag cannot tell apart.
+ */
+function bossSlotRule(slot: string): string {
+  const { place, refuses, swordless, vanilla } =
+    RULE_TABLES.bossSlots[slot] ?? {};
+  if (place === undefined || !(place in BOSS_PLACES))
+    throw new RangeError(`No boss place for ${slot}`);
+  const at = place as BossPlaceId;
+  const held = SHUFFLED_BOSSES.filter(
+    (boss) => !bossesOf(refuses ?? []).includes(boss),
+  );
+  // The facts are vt's slots' (bosses.ts): a boss the randomizer may place
+  // that vt's slot refuses would have none
+  if (held.some((boss) => !bossesAt(at).includes(boss)))
+    throw new RangeError(`${slot} may hold a boss vt's slot refuses`);
+  const beat = (boss: ShuffledBoss) =>
+    `@erDefeat${boss.charAt(0).toUpperCase()}${boss.slice(1)}`;
+  return `!setting(bossShuffle) & @${vanilla} | setting(bossShuffle) & (${shuffledBossRule(at, held, beat, bossesOf(swordless ?? []))})`;
 }
 
 /** The pack's rules, then the randomizer's helpers, reach() as facts. */
@@ -420,6 +591,12 @@ const RULES_SOURCE = {
       Object.entries(RULE_TABLES.helpers).map(([name, { req }]) => [
         name,
         withFacts(req),
+      ]),
+    ),
+    ...Object.fromEntries(
+      Object.keys(RULE_TABLES.bossSlots).map((slot) => [
+        slot,
+        withFacts(bossSlotRule(slot)),
       ]),
     ),
   },
@@ -461,8 +638,10 @@ function graph(
   mode: "open" | "standard",
   start: readonly string[],
   reached: readonly string[],
+  options: ErOptions = {},
 ): World {
   const factRegions = new Set(reached);
+  const anywhere = options.anywhere === true;
   const saveAndQuit: Exit[] = (
     mode === "open"
       ? // Rules.py:121-123: always reached
@@ -475,9 +654,14 @@ function graph(
   const regions: Region[] = REGIONS.map((r) => {
     const out: Exit[] = r.exits.flatMap((exit) => {
       const to = connections.get(exit);
-      return to === undefined
-        ? []
-        : [{ req: withFacts(exits.get(exit) ?? "true"), to: region(to).id }];
+      if (to !== undefined)
+        return [
+          { req: withFacts(exits.get(exit) ?? "true"), to: region(to).id },
+        ];
+      // A door or exit not noted, where it may lead
+      return anywhere && SHUFFLED.has(exit)
+        ? [{ req: withFacts(exits.get(exit) ?? "true"), to: ANYWHERE }]
+        : [];
     });
     // Rules.py:118-119: in Standard, Link's House once Sanctuary is reached
     if (mode === "standard" && r.name === "Sanctuary")
@@ -497,9 +681,67 @@ function graph(
     return { exits: out, id: r.id, locations: located };
   });
   return {
-    regions: [{ exits: saveAndQuit, id: START }, ...regions],
+    regions: [
+      { exits: saveAndQuit, id: START },
+      ...regions,
+      ...(anywhere ? [anywhereRegion(connections)] : []),
+    ],
     start: START,
   };
+}
+
+/** The engine's id of where a door or exit not noted leads (`anywhere`). */
+const ANYWHERE = "anywhere";
+
+/**
+ * What the shuffles connect: the doors and holes (`ENTRANCES`), and the
+ * exits of the caves and dungeons they lead into, which lead out by a door.
+ */
+const SHUFFLED = new Set(
+  [
+    ...ENTRANCES.map((e) => e.name),
+    ...TARGETS.filter(
+      (t) => t.kind === "dungeon" || t.kind === "connector",
+    ).map((t) => t.name),
+  ].filter((name) => PARENT.has(name)),
+);
+
+/**
+ * Where a door or exit not noted may lead: into every target no noted door
+ * leads into (a cave's or dungeon's side by its exit, a single cave, a
+ * drop), and out by every door not noted, which an exit not noted may be
+ * coupled with.
+ */
+function anywhereRegion(connections: ErConnections): Region {
+  return {
+    exits: anywhereTargets(connections).map((name) => ({
+      to: region(name).id,
+    })),
+    id: ANYWHERE,
+    locations: [],
+  };
+}
+
+/** The regions `anywhereRegion` leads into, by name. */
+function anywhereTargets(connections: ErConnections): readonly string[] {
+  // What a noted door or hole leads into: a region a fixed way leads into
+  // (inside a dungeon, between Skull Woods' sections) may be a drop too
+  const entered = new Set(
+    [...connections].flatMap(([exit, to]) => (SHUFFLED.has(exit) ? [to] : [])),
+  );
+  // The Open and Standard worlds' alone: Inverted's are not ported
+  const into = TARGETS.flatMap((t) => {
+    if (t.kind === "dungeon" || t.kind === "connector")
+      return connections.has(t.name) || !SHUFFLED.has(t.name)
+        ? []
+        : [parentOf(t.name)];
+    return entered.has(t.name) || !REGION_NAMED.has(t.name) ? [] : [t.name];
+  });
+  const out = ENTRANCES.filter(
+    (e) =>
+      e.kind === "door" && SHUFFLED.has(e.name) && !connections.has(e.name),
+  ).map((e) => parentOf(e.name));
+  return [...new Set([...into, ...out])];
 }
 
 /** The randomizer's events, and any the options add, as facts. */
@@ -548,37 +790,108 @@ function derivedSettings(
     else allItems.push(name);
   }
   if (allItems.length === 0) return derived;
-  // The world as the randomizer has it then (rules.json allItemsReach),
-  // its other derived settings known, solved with everything held; a
-  // test's starting regions are set after set_rules
+  // Read once per connections: the key model's world (er-keys.ts) asks again
+  const key = JSON.stringify([
+    Object.entries(settings).filter(
+      ([name]) => !Object.hasOwn(RULE_TABLES.derived, name),
+    ),
+    derived,
+    options.events ?? {},
+  ]);
+  let read = TROCK_READ.get(connections);
+  if (read === undefined) {
+    read = new Map();
+    TROCK_READ.set(connections, read);
+  }
+  const known = read.get(key);
+  if (known !== undefined) return { ...derived, ...known };
+  // set_trock_key_rules reads what everything held reaches in the seed's
+  // whole world (all_state.can_reach, Rules.py:1007-1016), the doors not
+  // noted yet included. The doors noted bound it: where a door not noted
+  // leads nowhere, everything held reaches no more than in the seed's world
+  // (a region reached there, the flag holds); where it leads anywhere the
+  // shuffle leaves room for, no less (a region not reached there, the flag
+  // fails). In between the flag is not known, and the engine folds each
+  // rule reading it both ways and meets them (foldSettings): `yes` only if
+  // it is whatever the doors not noted lead to. Read off the doors noted
+  // alone, the eye bridge not reached yet, the doors took fewer keys than
+  // the seed's, and noting a door could turn a `yes` into `no`
+  const lower = allItemsReach(settings, connections, derived, allItems, {
+    ...options,
+    anywhere: false,
+  });
+  // The second world only where it may reach more: a door left to note
+  const upper =
+    allItems.every((name) => lower(name) === "yes") ||
+    [...SHUFFLED].every((exit) => connections.has(exit))
+      ? lower
+      : allItemsReach(settings, connections, derived, allItems, {
+          ...options,
+          anywhere: true,
+        });
+  const flags = Object.fromEntries(
+    allItems.map((name) => {
+      if (lower(name) === "yes") return [name, true];
+      return [name, upper(name) === "no" ? false : NOT_KNOWN];
+    }),
+  );
+  read.set(key, flags);
+  return { ...derived, ...flags };
+}
+
+/** A derived setting the doors noted do not settle. */
+const NOT_KNOWN: UnknownSetting = { unknown: true };
+
+/**
+ * Turtle Rock's flags (`derivedSettings`), by the connections they were
+ * read from, then by the settings and events they were read with.
+ */
+const TROCK_READ = new WeakMap<
+  ErConnections,
+  Map<string, Readonly<Record<string, boolean | UnknownSetting>>>
+>();
+
+/**
+ * What everything held reaches of each region Turtle Rock's key rules ask
+ * for, in the world as the randomizer has it then (rules.json
+ * allItemsReach), its other derived settings known; a test's starting
+ * regions are set after set_rules.
+ */
+function allItemsReach(
+  settings: AlttprSettings,
+  connections: ErConnections,
+  derived: Settings,
+  allItems: readonly string[],
+  options: ErOptions,
+): (name: string) => Tri {
   const mode = settings.standardMode ? "standard" : "open";
   const events = options.events ?? {};
   const { exits, locations } = spotRules(
     connections,
     RULE_TABLES.allItemsReach,
+    options.anywhere,
   );
   const reached = reachedBy(exits, locations);
+  const thenSettings: Settings = {
+    ...settings,
+    ...derived,
+    ...Object.fromEntries(allItems.map((name) => [name, false])),
+  };
   const then = compileWorld(
-    graph(connections, exits, locations, mode, [], reached),
+    graph(connections, exits, locations, mode, [], reached, options),
     LOADED_RULES,
-    {
-      items: itemsOf(events, reached),
-      settings: {
-        ...settings,
-        ...derived,
-        ...Object.fromEntries(allItems.map((name) => [name, false])),
-      },
-    },
+    { items: itemsOf(events, reached), settings: thenSettings },
   );
-  const solved = solveFacts(
-    { compiled: then, facts: eventFacts(events, reached) },
-    everything(settings),
-  );
-  for (const name of allItems) {
-    const of = RULE_TABLES.derived[name]?.region ?? "";
-    derived[name] = solved.region(region(of).id) === "yes";
-  }
-  return derived;
+  const thenWorld: ErWorld = {
+    compiled: then,
+    connections,
+    facts: eventFacts(events, reached),
+    options,
+    settings: thenSettings,
+  };
+  const solved = solveFacts(thenWorld, everything(settings));
+  return (name) =>
+    solved.region(region(RULE_TABLES.derived[name]?.region ?? "").id);
 }
 
 /** Every item a world's rules may read. */
@@ -612,22 +925,43 @@ export function erWorld(
       ? { dark: new Set<string>(), light: new Set<string>() }
       : markWorlds(connections);
   const events = options.events ?? {};
-  const { exits, locations } = spotRules(connections);
-  if (options.marked !== false)
-    addBunnyRules(connections, marked, exits, locations);
-  const reached = reachedBy(exits, locations);
-  const compiled = compileWorld(
-    graph(connections, exits, locations, mode, options.start ?? [], reached),
-    LOADED_RULES,
-    {
-      items: itemsOf(events, reached),
-      settings: {
-        ...settings,
-        ...derivedSettings(settings, connections, marked, options),
-      },
-    },
+  const { exits, locations } = spotRules(
+    connections,
+    undefined,
+    options.anywhere,
   );
-  return { compiled, facts: eventFacts(events, reached) };
+  if (options.marked !== false)
+    addBunnyRules(
+      connections,
+      { ...marked, mayBeDark: markWorlds(connections, true).dark },
+      exits,
+      locations,
+    );
+  const reached = reachedBy(exits, locations);
+  const compiledSettings: Settings = {
+    ...settings,
+    ...derivedSettings(settings, connections, marked, options),
+  };
+  const compiled = compileWorld(
+    graph(
+      connections,
+      exits,
+      locations,
+      mode,
+      options.start ?? [],
+      reached,
+      options,
+    ),
+    LOADED_RULES,
+    { items: itemsOf(events, reached), settings: compiledSettings },
+  );
+  return {
+    compiled,
+    connections,
+    facts: eventFacts(events, reached),
+    options,
+    settings: compiledSettings,
+  };
 }
 
 // The fact solver moved to facts.ts, which the Door Randomizer's world

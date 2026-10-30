@@ -8,6 +8,7 @@ import {
   bossPlaceOf,
   type DungeonId,
   dungeon,
+  GOAL_FACTS,
   type HeldPrize,
   type InventoryItemId,
   ITEMS,
@@ -320,6 +321,8 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
     }
   }
   for (const item of Object.values(PRIZES).flat()) reach(item, 1);
+  // A ganonhunt's pieces, which the pieces' cell counts toward its goal
+  for (const fact of GOAL_FACTS) reach(fact, 1);
   return levels;
 })();
 

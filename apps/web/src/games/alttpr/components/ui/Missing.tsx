@@ -16,6 +16,7 @@ import {
   type Spot,
 } from "@/games/alttpr/logic/missing";
 import type { Ways } from "@/games/alttpr/logic/needs";
+import { useLogicWords } from "@/games/alttpr/logic/words";
 import { getAssetPath } from "@/games/alttpr/utils";
 
 /** "a, b or c" */
@@ -41,6 +42,8 @@ export const doubtText = (doubt: Doubt): string => {
       return "it takes the Ten Bombs, which no cell records: autotracking reads them from the game";
     case "flute":
       return "it takes the flute activated, which Race Mode does not read";
+    case "glitches":
+      return "a glitched logic has it, and the seed's glitches are not set";
   }
 };
 
@@ -172,6 +175,7 @@ export const MissingLines = ({
   missing: Missing | null | undefined;
   pending?: string;
 }) => {
+  const words = useLogicWords();
   if (missing === undefined) {
     return pending ? (
       <p className="missing missing--pending">{pending}</p>
@@ -203,7 +207,7 @@ export const MissingLines = ({
       )}
       {tri === "maybe" && !isThere(inLogic) && (
         <p className="missing" data-testid="missing-in-logic">
-          <span className="missing__lead">In logic with:</span>{" "}
+          <span className="missing__lead">{words.yesWith}:</span>{" "}
           <WaysList ways={inLogic} />
         </p>
       )}
@@ -247,6 +251,9 @@ export const shortDoubts = (doubts: readonly Doubt[]): string[] => {
     ...(doubts.some(({ kind }) => kind === "placement")
       ? ["depends on where an item was placed"]
       : []),
+    ...(doubts.some(({ kind }) => kind === "glitches")
+      ? ["depends on the seed's glitches, not set"]
+      : []),
   ];
 };
 
@@ -282,69 +289,73 @@ export const MissingGroups = ({
 }: {
   groups: readonly MissingGroup[];
   guides?: boolean;
-}) => (
-  <>
-    {groups.map(({ key, missing, spots }) => {
-      const { inLogic, margin, possible, tri, tricks } = missing;
-      const doubted = shortDoubts(missing.doubts);
-      return (
-        <p
-          className="missing missing--group"
-          data-testid="missing-group"
-          key={key}
-        >
-          {tri === "no" && margin && (
-            <>
-              <span className="missing__lead">
-                {MARGIN_LEAD}; Basic placement waits for
-              </span>{" "}
-            </>
-          )}
-          {tri === "no" && !margin && tricks && (
-            <>
-              <span className="missing__lead">Doable now with</span>{" "}
-              <TrickWays guides={guides} ways={tricks} />
-              <span className="missing__lead">; or</span>{" "}
-            </>
-          )}
-          {tri === "no" && <WaysList ways={inLogic} />}
-          {tri === "no" && margin && (
-            <>
-              <HeartsHeld margin={margin} />{" "}
-              <span className="missing__lead">
-                before the seed relies on {marginSubject(margin.gates)}
-              </span>
-            </>
-          )}
-          {tri === "no" && possible && (
-            <>
-              {" "}
-              <span className="missing__lead">(possible with</span>{" "}
-              <WaysList ways={possible} />
-              <span className="missing__lead">)</span>
-            </>
-          )}
-          {tri === "maybe" && !isThere(inLogic) && (
-            <>
-              <span className="missing__lead">In logic with</span>{" "}
-              <WaysList ways={inLogic} />
-              {doubted.length > 0 && "; "}
-            </>
-          )}
-          {tri === "maybe" && doubted.length > 0 && (
-            <>
-              <span className="missing__lead">Maybe,</span> {doubted.join("; ")}
-            </>
-          )}
-          <span className="missing__lead">:</span>{" "}
-          {spots.map((spot, index) => (
-            <Fragment key={spot.name}>
-              {index > 0 && ", "}
-              <SpotName spot={spot} />
-            </Fragment>
-          ))}
-        </p>
-      );
-    })}
-  </>
-);
+}) => {
+  const words = useLogicWords();
+  return (
+    <>
+      {groups.map(({ key, missing, spots }) => {
+        const { inLogic, margin, possible, tri, tricks } = missing;
+        const doubted = shortDoubts(missing.doubts);
+        return (
+          <p
+            className="missing missing--group"
+            data-testid="missing-group"
+            key={key}
+          >
+            {tri === "no" && margin && (
+              <>
+                <span className="missing__lead">
+                  {MARGIN_LEAD}; Basic placement waits for
+                </span>{" "}
+              </>
+            )}
+            {tri === "no" && !margin && tricks && (
+              <>
+                <span className="missing__lead">Doable now with</span>{" "}
+                <TrickWays guides={guides} ways={tricks} />
+                <span className="missing__lead">; or</span>{" "}
+              </>
+            )}
+            {tri === "no" && <WaysList ways={inLogic} />}
+            {tri === "no" && margin && (
+              <>
+                <HeartsHeld margin={margin} />{" "}
+                <span className="missing__lead">
+                  before the seed relies on {marginSubject(margin.gates)}
+                </span>
+              </>
+            )}
+            {tri === "no" && possible && (
+              <>
+                {" "}
+                <span className="missing__lead">(possible with</span>{" "}
+                <WaysList ways={possible} />
+                <span className="missing__lead">)</span>
+              </>
+            )}
+            {tri === "maybe" && !isThere(inLogic) && (
+              <>
+                <span className="missing__lead">{words.yesWith}</span>{" "}
+                <WaysList ways={inLogic} />
+                {doubted.length > 0 && "; "}
+              </>
+            )}
+            {tri === "maybe" && doubted.length > 0 && (
+              <>
+                <span className="missing__lead">Maybe,</span>{" "}
+                {doubted.join("; ")}
+              </>
+            )}
+            <span className="missing__lead">:</span>{" "}
+            {spots.map((spot, index) => (
+              <Fragment key={spot.name}>
+                {index > 0 && ", "}
+                <SpotName spot={spot} />
+              </Fragment>
+            ))}
+          </p>
+        );
+      })}
+    </>
+  );
+};

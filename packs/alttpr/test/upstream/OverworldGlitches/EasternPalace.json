@@ -1,0 +1,53 @@
+{
+  "generated": "By packs/alttpr/scripts/import-upstream-tests.mjs from the upstream test file. Re-import, never edit.",
+  "upstream": {
+    "commit": "219fcafd029dab597b8db400efafd8f56f8b4edb",
+    "copyright": "Copyright (c) 2016 sporchia",
+    "license": "MIT, see LICENSE next to this file",
+    "logic": 31,
+    "repo": "sporchia/alttp_vt_randomizer"
+  },
+  "file": "tests/OverworldGlitches/EasternPalaceTest.php",
+  "class": "OverworldGlitches\\EasternPalaceTest",
+  "worlds": {
+    "world": {
+      "config": {
+        "difficulty": "test_rules",
+        "logic": "OverworldGlitches"
+      },
+      "line": 17,
+      "mode": "standard"
+    }
+  },
+  "setUp": {
+    "collected": [
+      "RescueZelda"
+    ],
+    "line": 14,
+    "locationItems": {}
+  },
+  "unsupported": [],
+  "cases": [
+    {"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"regionEnter","line":29,"method":"testNothingRequiredToEnter","region":"Eastern Palace"},
+    {"dataSet":0,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":79,"location":"Eastern Palace - Compass Chest","method":"testFillLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":81,"location":"Eastern Palace - Cannonball Chest","method":"testFillLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":83,"location":"Eastern Palace - Big Chest","method":"testFillLocation"},
+    {"dataSet":3,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":85,"location":"Eastern Palace - Map Chest","method":"testFillLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":87,"location":"Eastern Palace - Big Key Chest","method":"testFillLocation"},
+    {"dataSet":5,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","item":"BigKeyP1","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"fill","line":89,"location":"Eastern Palace - Boss","method":"testFillLocation"},
+    {"dataSet":0,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":96,"location":"Eastern Palace - Compass Chest","method":"testLocation"},
+    {"dataSet":1,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":98,"location":"Eastern Palace - Cannonball Chest","method":"testLocation"},
+    {"dataSet":2,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":100,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":3,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"location","line":101,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":4,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":["BigKeyP1"],"base":"setUp"},"kind":"location","line":102,"location":"Eastern Palace - Big Chest","method":"testLocation"},
+    {"dataSet":5,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":104,"location":"Eastern Palace - Map Chest","method":"testLocation"},
+    {"dataSet":6,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":106,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":7,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":107,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":8,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp"],"base":"setUp"},"kind":"location","line":108,"location":"Eastern Palace - Big Key Chest","method":"testLocation"},
+    {"dataSet":9,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"setUp"},"kind":"location","line":110,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":10,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["Lamp"]},"kind":"location","line":111,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":11,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["AnyBow"]},"kind":"location","line":112,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":12,"expected":false,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":[],"base":"allItems","except":["BigKeyP1"]},"kind":"location","line":113,"location":"Eastern Palace - Boss","method":"testLocation"},
+    {"dataSet":13,"expected":true,"file":"tests/OverworldGlitches/EasternPalaceTest.php","items":{"add":["Lamp","BowAndArrows","BigKeyP1"],"base":"setUp"},"kind":"location","line":114,"location":"Eastern Palace - Boss","method":"testLocation"}
+  ]
+}

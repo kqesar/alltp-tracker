@@ -1,7 +1,8 @@
 # @alltp/pack-alttpr
 
 The A Link to the Past Randomizer game pack: the v31 rules (Standard, Open and
-Inverted worlds, NoGlitches) as plain data over `@alltp/engine`, read from
+Inverted worlds, NoGlitches and every glitched logic: Overworld Glitches,
+Hybrid Major Glitches, Major Glitches; No Logic read with one of them) as plain data over `@alltp/engine`, read from
 [sporchia/alttp_vt_randomizer](https://github.com/sporchia/alttp_vt_randomizer)
 at the commit `upstream.json` pins, and held to upstream's own test cases.
 
@@ -37,7 +38,10 @@ at the commit `upstream.json` pins, and held to upstream's own test cases.
 
 `upstream.json` maps every upstream file to its module, with its status;
 `test/contract.ts` checks the pack against every case of the test files it
-marks ported.
+marks ported. `packs/alttpr/scripts/import-upstream-tests.mjs` writes them under
+`test/upstream/`: `tests/NoGlitches`, `tests/Inverted`, the glitched logics'
+`tests/OverworldGlitches`, `tests/MajorGlitches` and their Inverted suites,
+and `tests/RetroBowTest.php`.
 
 ## The world model
 
@@ -107,7 +111,8 @@ engine's graph:
   `!== 'basic'` is `!setting(basicPlacement)`, `has('Lamp',
   config('item.require.Lamp', 1))` is `lamp >= setting(requireLamp)`. A glitch
   branch keeps its flag (`setting(canBootsClip) & pegasusBoots`): NoGlitches
-  folds it away.
+  folds it away, a glitched logic keeps it (see "Glitched logics and No
+  Logic").
 - **What a tracker cannot know.** Upstream's rules may ask where an item
   sits (`$location->hasItem(...)`); a tracker does not know the placement,
   so that test is `maybe`: "the boss holds its own compass" makes
@@ -888,9 +893,18 @@ never told. Both ranges are categories no race permits (`entrances`,
 Link's room, so a race leaves the boss to the player. Not yet checked on the
 real game: the specs build the bytes by hand.
 
-The entrance randomizer's port (`src/entrances/rules.json`) is imported as
-the randomizer writes it on vt's path, with no boss shuffle: a crossed run
-with shuffled bosses is not one the pack models.
+The entrance randomizer places its bosses alike (`Bosses.py` `place_bosses`,
+145-219: vt's `simple`, `full` and `random` are its `basic`, `normal` and
+`chaos`, `app/EntranceRandomizer.php:19-23`), and its rules read a dungeon's
+boss through `dungeon.boss` (`Rules.py:68-69`, and `bosses['bottom']`,
+`['middle']`, `['top']` for Ganon's Tower, 436-444). Its world reads them
+through slots of its own, on the same facts (["Its rules"](#its-rules)):
+its `can_place_boss` (`Bosses.py:123-143`) refuses the same bosses at the
+same slots as vt's `canPlaceBoss`, which the import checks by running it.
+One difference: under `chaos`, Ice Palace may hold any boss even swordless,
+and only `basic` and `normal` put Kholdstare back there (186-191). One flag
+cannot tell them apart, so the entrance randomizer's Ice Palace slot keeps
+every boss swordless too: sound, and exact once the boss is known.
 
 No ROM table states the setting itself: only the bosses the enemizer wrote
 into each boss room, which the player is not to learn before meeting them.
@@ -903,6 +917,12 @@ A Mystery seed hides its settings: its file on alttpr.com keeps only its
 logic and build (`SendPatchToDisk.php:46-67`), its intro text is masked
 (`Rom.php:2117`), and as a tournament seed its ROM settings are not read in
 Race Mode. The player learns them as the run goes.
+
+The app hides two more, the glitches and the entrance shuffle, which
+alttpr.com's own weighted seeds roll (`config/alttp.php:296-302, 355-362`):
+it reads hidden glitches between two of this pack's worlds (NoGlitches' rules
+as a No Logic seed's, without the boots; Major Glitches'), and a hidden
+entrance shuffle as every check maybe (the app's `data/presets.ts`).
 
 `settingsFromUpstream(mode, config)` takes `UNKNOWN` for each config value
 a player discovers: `mode.weapons`, `goal`, `crystals.tower`,
@@ -960,6 +980,17 @@ keys: a key door is `maybe` until a key is for sale, and `yes` after.
 
 `test/upstream/RetroBow.json` holds the official `RetroBowTest` (32 cases)
 to the rupee bow.
+
+**With shuffled entrances**, alttpr.com sends a Retro seed to the entrance
+randomizer as `--mode open --retro` (`app/EntranceRandomizer.php:79-82`),
+whose own retro rules differ from vt's ([Its rules](#its-rules)): an arrow
+or a key is for sale once a shop selling it is reached (`can_buy_unlimited`,
+`BaseClasses.py:378-390`), and `has_key` asks for nothing else, whatever
+key and count (Misery Mire's big key included). The silver arrows do not
+shoot without a bought arrow there. Its take-any caves take the doors of
+five caves (`ItemList.py` `set_up_take_anys`): the entrance assistant
+offers them, and the world gives them a region each, holding nothing the
+map shows (the old man's sword is marked on the grid when found).
 
 ## The Door Randomizer
 
@@ -1037,7 +1068,7 @@ leaves by.
 
 **Its rules** (`src/door-rando/world/rules.json`, `packs/alttpr/scripts/dr-rules.mjs`): DR's
 `Rules.py` and `Bosses.py` in the engine's language, through the entrance
-randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`) under DR's
+randomizer's walk and translation (`packs/alttpr/scripts/rules-core.mjs`, "Its rules" below) under DR's
 dialect: Open, Standard and Inverted are settings, as are the bomb bag, the
 bow mode, the key shuffle and the goals; the glitched logics are `false`.
 What only DR writes is read as data: a crystal state read by its region
@@ -1050,7 +1081,9 @@ the dark rooms' lamp, the vanilla boss of each slot. Upstream's own slip
 stays as written: `state.can_flute` uncalled is true in Python
 (`uncalledMethods`). What is code is listed in `unported` with its line
 and why, never dropped: the key logic, Zelda's path, the bunny's paths
-(the bunny's lists are kept, `bunny`, for the world to port).
+(the bunny's lists are kept, `bunny`, for the world to port). Of the
+placement-only rules the core reads as data, `fill` keeps the lines alone:
+no key model reads DR's (the key analysis is DR's own, below).
 `rules.spec.ts` holds that list and compiles every rule in the engine.
 
 **The enemy logic** (`packs/alttpr/scripts/dr-enemies.mjs`): DR builds its kill
@@ -1279,28 +1312,149 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
 - `TARGETS`: a side of a dungeon or connector cave (its exit), a single
   door's place, or where a hole drops, grouped by the place a player knows
   (`place`, `side`);
-- `crossedPool(mode)`: what alttpr.com's crossed shuffle mixes. It
-  shuffles Ganon's Tower by default (`EntranceRandomizer.py:228`).
-  - `targetsOf`: what the shuffle may give each entrance. A hole gets a
-    drop, a hole's cave door gets such a cave's exit, Skull Woods' doors and
-    holes get their own, and any other door the rest.
-  - `partner`: what one note settles, since a hole and its cave's door
-    lead into the same cave.
-- `fullPool(mode)`: what the full shuffle mixes (`EntranceShuffle.py:
-  260-364`): the same doors and holes, as both draw on the same tables,
-  `scramble_holes` and Skull Woods' shuffle, but a cave stays in the world
-  of its door, so a Dark World door never leads to the Old Man's cave and
-  house (`:301-322, 352`) nor, in Standard, to the castle's side doors
-  (`:315`). The simple, restricted and insanity shuffles pool other doors
-  with other targets (`:63-259, 759-905`) and are not ported.
+- `entrancePool(shuffle, mode, retro)`: what a shuffle mixes in the Open
+  (Retro's with `retro`) or Standard world, one `EntrancePool` per shuffle
+  (`ErShuffle`: `simplePool`, `restrictedPool`, `fullPool`, `crossedPool`).
+  The randomizer's rules never ask which shuffle made a seed (`Rules.py`
+  branches on No Logic alone), so a shuffle is its pool and how it connects
+  doors (`EntranceShuffle.py:63-440`). It shuffles Ganon's Tower by default
+  (`EntranceRandomizer.py:228`).
+  - `entrances`: every pool shuffles the same 138 doors and holes in the
+    Open world. Standard keeps the escape's doors (the castle's front door,
+    the uncle's passage and its hole), and the simple and restricted
+    shuffles also keep the castle's side doors and Agahnim's Tower's
+    (`simple_shuffle_dungeons` leaves Hyrule Castle in Standard,
+    `:2054-2069`).
+  - `targetsOf`: what the shuffle may give each entrance, read off the
+    tables each step of the shuffle is handed. A hole gets a drop, a hole's
+    cave door such a cave's exit (the Pyramid never Sanctuary's but in the
+    crossed shuffle, `:1838-1844`), Skull Woods' doors and holes their own.
+    Any other door:
+
+    | Shuffle | Dungeons | Caves with several doors | Single doors |
+    | --- | --- | --- | --- |
+    | simple | among dungeons: a one-door dungeon's door any one-door dungeon, a four-door dungeon's door (Desert, Turtle Rock, the castle with Agahnim's Tower in Open) that door of whichever four-door dungeon moved there | each pair of two-door caves' doors (`Two_Door_Caves`) a two-door cave; Death Mountain's other doors the rest, the Old Man's house and cave among them | single caves only |
+    | restricted | as simple | any other door, the Old Man's house and cave in the Light World | any other door |
+    | full | any door | any door, each cave in one world (the Old Man's, and Standard's castle sides, in the Light World only) | any door |
+    | crossed | any door | any door | any door |
+
+    The restricted, full and crossed shuffles send a must-exit door
+    (`*_Must_Exit`: Bumper Cave's top and Hookshot Cave's back; in full and
+    crossed also Dark Death Mountain's east ledge, Turtle Rock's isolated
+    ledge and the Desert's east door) a cave's last exit
+    (`connect_mandatory_exits`), so never a single cave nor a lone exit,
+    never the first of the caves the randomizer keeps as tuples
+    (Superbunny's bottom, Spiral Cave's top, Spectacle Rock's peak and top)
+    nor Turtle Rock's east ledge, which it puts first. The Old Man's way out
+    is one of his Death Mountain doors (or Tower of Hera's, but in simple
+    and restricted), the blacksmith's and the bomb shop's huts take the
+    doors of their tables.
+  - `partners`: what one note settles beside it, only what the randomizer
+    always connects together. A hole and its cave's door lead into the same
+    cave (`scramble_holes`). In the simple shuffle a pair of doors takes a
+    two-door cave whole, its first door the cave's first exit (`:76-95`;
+    `unbias_some_entrances` shuffles a cave's exits but those it keeps as
+    tuples, so Superbunny's and Spiral Cave's keep their order). In the
+    simple and restricted shuffles a four-door dungeon moves whole by a
+    fixed table (`:2064-2110`): one door tells the other three.
+  - In the retro world, the take-any caves (`takeAnys` in `er.json`, read
+    from `ItemList.py`'s `set_up_take_anys`: the old man's sword cave and
+    four take-anys, and the caves whose doors it draws for them) join
+    every door that may lead to such a cave. The game loads a take-any by
+    another place's entrance (a cave shop's), so autotracking cannot tell
+    one from that shop: noting it is left to the player.
+  - The insanity shuffle parts a door from its way out (`:759-905`) and the
+    Inverted world runs tables of its own (`link_inverted_entrances`):
+    neither is ported.
 - `PLACE_OF_LOCATION`: the place a check inside lies in, by the region the
   randomizer puts it in. A few of its names are vt's under other words
   (`VT_NAMES`), and its bosses' and sewers' regions are told by hand
   (`REGION_PLACES`).
 
-`test/er-seeds/0yAObedRMV.json` is a real Crosskeys seed's spoiler: its
-shuffled entrances are exactly the pool, and every one leads to a target
-the model knows.
+`entrances.spec.ts` holds each pool to every recorded seed of its shuffle
+(see "Entrance randomizer seeds" below), each world's: the entrances the
+seed shuffled are exactly the pool's (what a Standard world keeps listed as
+vanilla), each leads to a target its pool offers it, and every partner a
+note settles is the seed's.
+
+### Entrance randomizer seeds
+
+`test/er-seeds/<hash>.json` are the spoilers of real alttpr.com seeds that
+shuffle entrances, as `{ generated, hash, spoiler }`: `spoiler` is the seed
+file's own on S3 (`Entrances`, the item at every location, the playthrough's
+spheres, `Special` for the pads' medallions), its patch left out, and
+`generated` says how the file was made. Written by
+
+```sh
+pnpm --filter @alltp/pack-alttpr record-er-seeds [<hash>…]
+```
+
+(no hash records the index's seeds again). It shares the fetching, the
+refusal of a `meta.notes` and the index with `spoiler-fixtures`;
+`test/er-seeds/index.json` records, per seed, the address, the time recorded,
+the file's own `generated` time, size, SHA-256 and the settings its `meta`
+states. Biome ignores the directory, so the bytes stay the script's.
+
+| Seed | Mode | Shuffle | Dungeon items | Note |
+| --- | --- | --- | --- | --- |
+| `0yAObedRMV` | open | crossed | full | the first recording |
+| `AvpDR9mgvn` | open | crossed | full | |
+| `DvW0egkQyd` | open | simple | standard | |
+| `dMEp8enPG1` | open | full | standard | |
+| `kveDj7bgMm` | open | insanity | standard | a mode that stays unmodelled |
+| `qMleRm5avd` | open | restricted | standard | |
+| `0yAObLe6MV` | open | crossed | full | boss shuffle `full` |
+| `ry08p2d9y5` | retro | crossed | full | the site took `full` |
+| `9MQ9gQwAMD` | standard | crossed | full | |
+| `6GKBQZ3pye` | standard | simple | standard | |
+
+The last five were generated for this purpose with `POST
+https://alttpr.com/api/randomizer` (spoilers `on`, tournament false, glitches
+`none`, item placement `advanced`, accessibility `items`, Ganon with 7 and 7
+crystals, normal pool, no hints; one POST each). The site accepted every
+combination asked, Retro with full dungeon items included, and spelled
+Retro's keys as bare `Key`s.
+
+`src/er-seeds.spec.ts` holds `erWorld` to each recording: every entrance of
+the seed noted (`erConnections` of its shuffle), then, sphere by sphere, every location
+of the sphere must be `yes` with the items of the earlier spheres held and
+the pads' medallions known from `Special` and the bosses from `Bosses`
+(`bossesKnown`), and in Retro the key and arrow shops marked from the first
+sphere that reaches one (`Shops`, `shopsSelling`): the randomizer reaches it,
+so the pack must say yes. The entrance randomizer spells items and locations its own
+way (`Small Key (Desert Palace)`, `Rupees (20)`; `test/er-seeds.ts`
+`holding`). A seed whose mode the pack does not model is listed in the spec's
+`PENDING` table with the reason and asserted to be still pending, so the step
+that models it has to remove it, and none is skipped silently. A seed whose
+keys stayed in their dungeons is read through the key model (below, "Its key
+model"), its keys untracked as a player's are, and its playthrough lists none
+of them: a sphere's location the model doubts must be in the spec's
+`KEY_DOUBTS`, with the placement the fill may make that would lock it. Of
+`dMEp8enPG1`'s, two: Ice Palace's prize at sphere 3 (its second key may wait
+with Kholdstare, whom one key and the Cane of Somaria reach) and Agahnim 2 at
+sphere 5 (a Ganon's Tower key may sit at Bob's Torch, behind the boots); the
+simple and restricted seeds have six more of the same kind, and only the
+insanity seed stays pending.
+
+The other way too: a playthrough's sphere lists the required locations the
+earlier spheres' items reach (`Main.py:368-385`, the keys swept in without
+keysanity), so a location of a later sphere was out of reach then, and the
+pack must not say `yes` to it in that state. The randomizer holds an event
+(the floodgate, the frog) once a sphere collects it, the pack as soon as it
+is reached, so this check runs without the events. It holds for the
+playthrough's locations alone: of the others the recording says nothing,
+and replaying its placements would need the rules that read what a spot
+holds (`item_name`, a key in its own big chest), which the pack reads as
+`maybe`.
+
+The same spec holds that noting more of a seed's doors never takes a `yes`
+away, in the playthrough's states: what a door not noted hides may only
+add. Once with each door into Turtle Rock left out, then noted alone of
+the four, its keys at every count in a keysanity seed: its key doors hang
+on what everything held reaches (`set_trock_key_rules`), which caught the
+flags read off the doors noted alone. And with the doors noted in random
+orders, a third, two thirds, then all of them: which caught the bunny's
+rules read off the doors noted alone (Sanctuary behind the Pyramid's door).
 
 ### Where Link went: autotracking the entrances
 
@@ -1364,8 +1518,12 @@ its own rules (`Rules.py`, `Bosses.py`), dungeons included: not vt's, which
 the regions of this pack port. The same run of `import-er` translates them
 into the engine's language, `src/entrances/rules.json`
 (`packs/alttpr/scripts/er-rules.mjs`, the entrance randomizer's dialect of the translation in
-`packs/alttpr/scripts/rules-core.mjs`, which the Door Randomizer's port shares, over the Python reader
-`packs/alttpr/scripts/python.mjs`).
+`packs/alttpr/scripts/rules-core.mjs`, over the Python reader `packs/alttpr/scripts/python.mjs`). The
+Door Randomizer's port (`packs/alttpr/scripts/dr-rules.mjs`) is another dialect of that one core: the
+walk, the translation, a boss read through the dialect's `bossHelper` (its slot's helper here, the
+vanilla boss's in DR's), the retro world's `has_key` and the placement-only data below are the same
+code for both. The dialect gives the world's settings, the items, the state's methods (the retro
+world's `can_shoot_arrows` is this one's) and what only its randomizer writes.
 
 ```mermaid
 flowchart LR
@@ -1380,7 +1538,7 @@ flowchart LR
 
 - **vt's path.** `set_rules` is walked as vt calls the randomizer
   (`app/EntranceRandomizer.php`): No Glitches, the Open or Standard world,
-  no retro, no boss shuffle. A branch on another value (No Logic,
+  retro or not. A branch on another value (No Logic,
   Inverted, the triforce goals) is `false` and is never read; one on a
   setting the pack has becomes `setting()`: the mode `standardMode`, the
   goals, `swordless`, `locationsAccessibility`, `cantTakeDamage`. The
@@ -1407,10 +1565,29 @@ flowchart LR
   starting hearts (`BaseClasses.py:418`), which the state holds as heart
   containers, and the contract's states start from them. `can_extend_magic` counts the bottles a potion shop
   refills, by the pack's bottle magic settings.
-- **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`),
-  each dungeon's the one `Dungeons.py` gives it.
+- **Bosses**: each `Bosses.py` rule is a helper (`@erDefeatArmosKnights`).
+  A rule reads a dungeon's boss through its slot when `place_bosses` fills
+  that slot (`boss_locations`, the Open and Standard list):
+  `@erDefeatEasternPalaceBoss`, `@erDefeatGanonsTowerTopBoss`. `bossSlots`
+  gives each its place (`src/bosses.ts`'s `BOSS_PLACES`), its vanilla boss
+  (`Dungeons.py`) and what `can_place_boss` refuses there, any world's
+  (`refuses`) and the more a swordless one's (`swordless`), worked out by
+  running that function's statements on each boss of `boss_table`; a
+  statement other than an `if` on names, literals and comparisons, or a
+  `return`, stops the import. Agahnim and Agahnim 2 never move: their
+  helpers stand.
 - **Placements** (`item_name`, `item_in_locations`) are `maybe`, as the
   pack's own rules read vt's: a tracker does not know them.
+- **The retro world** (`world.retro`, vt's Retro world, so `rupeeBow` and
+  `genericKeys`): `can_shoot_arrows` and `has_key` read
+  `can_buy_unlimited` (`@erCanBuyUnlimitedSingleArrow`,
+  `@erCanBuyUnlimitedSmallKeyUniversal`). Which shops sell what is read
+  from `set_up_shops` as written (else the import stops): the shop whose
+  stock it extends (the Red Shield Shop's arrows) by its region reached;
+  the five it draws among `shop_table`'s replaceable ones, a placement,
+  `maybe` while any of them is reached; and what the player records of a
+  shop found (`shopArrow`, `shopKey`, `SHOP_RECORDS`): a key shop is a
+  drawn one, so it sells arrows too.
 - **Events** (`Open Floodgate`, `Get Frog`, `Return Smith`, `Pick Up
   Purple Chest`) are items of their own, held once their location is
   reached (`events`, from `ItemList.py`). Agahnim's are the pack's
@@ -1432,10 +1609,29 @@ flowchart LR
 - **What is code** stays out, listed in `unported` with its line, and is
   ported by hand in the world: the save-and-quit points and the bunny's
   paths (which regions the entrances make dark, `bunny` holding its two
-  lists).
+  lists). One clause is folded away and ported there too: a ganonhunt's
+  Ganon wants the pieces asked for (Rules.py:454, `not state.has`, which has
+  no monotone form in the translation), read as the fact `ganonhuntPieces`
+  the pack holds once they are found.
 - **Placement-only rules** (`forbid_item`, `add_item_rule`,
   `set_always_allow`) decide where an item may go, not what Link can
-  reach: their lines are listed in `fill`.
+  reach. `fill` holds them as data, each with its location, its line and
+  the settings its branch asks for (`when`): the item `forbid_item`
+  refuses, the item `set_always_allow` lets in and its rule on the state
+  (`req`), a dungeon's key or big key with the pack's id (`keyD1`), and the
+  `add_item_rule` lines (Ganon's Triforce, the uncle's weapon, no dungeon
+  item's). A list a branch of `set_trock_key_rules` extends is read as it
+  stands outside the branch, so a refusal it adds there is left out: where
+  an item may go is then read wider, never narrower.
+- **The dungeons' keys** (`dungeons`): each dungeon of `create_dungeons`
+  (Open and Standard) with its regions, the code of its keys, its small
+  keys, whether it has a big key and its maps and compasses (`items`),
+  the retro world's line that drops the
+  small keys (`[] if world.retro else small_keys`), the key placed before
+  the others (`fill_dungeons_restrictive`: Skull Woods' Pinball Room) and
+  the spots filled before the dungeons' items (`generate_itempool`'s
+  locked events, `fill_prizes`' prizes). The key model reads them (below,
+  "Its key model").
 
 ### Its world
 
@@ -1444,7 +1640,7 @@ run's settings and its connections, and compiles it with the engine.
 
 ```mermaid
 flowchart LR
-  noted["entrances noted<br/>(entrance id → target id)"] --> conn["crossedConnections<br/>kept doors, mandatory,<br/>two-way caves, one-way doors"]
+  noted["entrances noted<br/>(entrance id → target id)"] --> conn["erConnections<br/>kept doors, mandatory,<br/>two-way caves, one-way doors"]
   conn --> mark["mark light / dark<br/>(mark_light_world_regions)"]
   conn --> spots["rules.json per spot<br/>+ the bomb shop's case"]
   mark --> bunny["bunny's rules<br/>(set_bunny_rules)"]
@@ -1457,9 +1653,11 @@ flowchart LR
 ```
 
 - **Connections** (`ErConnections`: an entrance's name to the region it
-  opens on). `crossedConnections(mode, noted)` makes what
-  `link_entrances` keeps (Link's House, the Tavern's back door, in
-  Standard the escape's doors) and the mandatory ones, then each noted
+  opens on). `erConnections(shuffle, mode, noted)` (`crossedConnections`
+  for the crossed shuffle) makes what `link_entrances` keeps (Link's House,
+  the Tavern's back door, in Standard the escape's doors, and in the simple
+  and restricted shuffles the castle's other doors and Agahnim's Tower's)
+  and the mandatory ones, then each noted
   entrance: a dungeon's or a connector cave's exit both ways
   (`connect_two_way`), a single cave or a hole one way. An entrance not
   noted leads nowhere, so a check is in logic only through doors the
@@ -1468,6 +1666,15 @@ flowchart LR
 - **Save-and-quit points**: the start reaches Link's House and Sanctuary
   (Standard: the uncle's passage, then Link's House once Sanctuary is),
   and the Old Man's house once his location is reached.
+- **The bunny's rules** (`set_bunny_rules`) hang on which regions the
+  connections mark light or dark, and a door noted later may mark more. A
+  region the doors noted mark dark takes the pearl, or a path from a region
+  wholly light; one only a door not noted may make dark (marked through
+  the world where those lead anywhere, below) takes that or `maybe`. A
+  path counts only from a region the doors noted mark light that no door
+  not noted may make dark: in a crossed seed where the Pyramid's door
+  leads into Sanctuary, Link starts there a bunny, which a map read off
+  the doors noted would not have known.
 - **Facts.** The engine reads `reach()` in locations only. A rule of an
   exit or of a helper that asks for a region reads the fact
   `reached_<region>` instead, given by a location of its own in that
@@ -1481,19 +1688,178 @@ flowchart LR
   location in logic, every way of it within `maxAtoms`: the Blacksmith
   wants the smith back, who wants the frog, so it misses the Titan's Mitt
   and the pearl.
+- **Boss slots** (`bossSlots`): each slot's helper is its vanilla boss
+  without `bossShuffle`; with it, as vt's slots read
+  ([Boss shuffle](#boss-shuffle), `shuffledBossRule`): the boss known
+  (`<slot>BossIs<Boss>`) through its `Bosses.py` rule, or, while unknown,
+  every boss the slot may hold (all beaten `yes`, some `maybe`), a boss it
+  refuses swordless counting only with swords. The state carries the same
+  facts as vt's world (`toState`), so a crossed run reads what the player
+  knows of the bosses with nothing more.
 - **Derived settings**: whether Swamp Palace needs its patch (its door
   and the Dam's not both vanilla), each region's light world mark, and
   Turtle Rock's `allItemsReach_*`, from a first world with the entrances'
-  rules of that moment, solved with everything held.
-- **Cost**: building a world takes about 6 to 8 ms (two compiles), done
-  once per entrance noted; a solve about 0.2 ms.
+  rules of that moment, solved with everything held. The randomizer reads
+  these in the seed's whole world, the doors not noted included: a region
+  that world reaches with only the doors noted holds, one it does not
+  reach even where they lead anywhere (below) fails, and in between the
+  setting is not known, so the engine reads each rule both ways and meets
+  them (`foldSettings`): a door noted later never takes a `yes` away. The
+  two worlds are solved once per connections, the key model's included.
+- **The world the randomizer filled** (`anywhere`): a door or exit not
+  noted leads, instead of nowhere, to a region of its own that leads into
+  every target no noted door or hole leads into and out by every door not
+  noted, with the door's or exit's rule. Whatever the doors not noted lead
+  to, that world reaches at least as much: the key model reads it (below).
+- **Cost**: building a world takes about 6 to 8 ms (two compiles, a
+  third while a door is left to note and Turtle Rock's settings wait on
+  it, about 2 ms more), done once per entrance noted; a solve about 0.2 ms.
 
 The randomizer's own tests hold it: `test/er-upstream/` (510 cases of its
 dungeon and Death Mountain tests, imported by `packs/alttpr/scripts/er-tests.mjs` with
 the world each `setUp` builds) run in `test/er-contract.spec.ts` under the
 pack's contract, upstream `true` our `yes` and `false` never `yes`. And on
 the real Crosskeys seed `0yAObedRMV`, every entrance noted from its
-spoiler, everything held reaches all its locations.
+spoiler, everything held reaches all its locations. Under boss shuffle,
+`src/er-world.spec.ts` holds the slots: without it, or with every slot
+known as its vanilla boss, every location of the Open, Standard and
+swordless worlds solves as without slots, whatever bosses are known, over
+random states.
+
+### Its key model
+
+vt sends `--keysanity` for `full` dungeon items alone
+(`app/EntranceRandomizer.php:69-71`): under any other setting the
+randomizer keeps each dungeon's small keys and big key in it, and the
+player does not track them, though the rules count them (`keyD1 >= 4`).
+`src/er-keys.ts` is the key model of this world (`solveErWithKeys`). vt's
+([The key model](#the-key-model)) does not carry over as it is, since two of
+the facts it rests on fail here:
+
+- **Keys gate regions.** vt's rules read a dungeon's keys in its locations
+  only; the randomizer's read them on the doors between its rooms
+  (`Palace of Darkness (North)`), and a dungeon's exits lead, through the
+  shuffled doors, anywhere: one dungeon's key door may stand on the only
+  way to another's spots. No location belongs to "the dungeons its rule
+  reads".
+- **The doors not noted.** The randomizer filled the whole world; the
+  tracker knows the doors noted. A spot out of reach through them may hold
+  a key all the same.
+
+What the fill does, read against the model: vt passes no `--algorithm`, so
+the randomizer's is `balanced` (`EntranceRandomizer.py:122`, `Main.py:
+96-99`), and `fill_dungeons_restrictive` places the
+dungeon items before any other (`Dungeons.py:125-153`): the big keys, then
+the small keys, then the maps and compasses, each at the first spot of a
+shuffled list where `Location.can_fill` holds (`BaseClasses.py:806-807`)
+with everything else held: the item pool, the dungeon items not placed
+yet, and those placed where that state reaches (`fill_restrictive`,
+`Fill.py:164-207`, `sweep_for_events`). Skull Woods' Pinball Room gets its
+key first. A dungeon's items stay in it (`Region.can_fill`,
+`BaseClasses.py:681-686`). `can_fill` is the spot's always-allow, or its
+region keeping the item, its item rules taking it and Link reaching it, and
+each of these only grows with the state. So, as with vt's assumed fill,
+everything held collects every dungeon item, whatever counts of them are
+already held: each item was placed where what was placed after it, held,
+reaches. Beatable only, the access is not checked once that state beats
+the game (`Fill.py:186-188`): the fill then promises nothing of where a
+key is.
+
+The model:
+
+```mermaid
+flowchart LR
+  noted["the doors noted"] --> world["erWorld:<br/>the player's world"]
+  noted --> upper["erWorld, anywhere:<br/>reaches at least what<br/>the filled world does"]
+  upper --> spots["each item's spots:<br/>can_fill with everything"]
+  upper --> levels["everything, one dungeon's<br/>items at each count"]
+  world --> sure["keys surely in hand"]
+  spots --> sure
+  levels --> safe["a dungeon proven safe:<br/>all its items in hand"]
+  sure --> safe
+  safe --> sure
+  sure --> tri["yes in that state,<br/>else maybe or no<br/>with every key"]
+```
+
+1. **Where an item may sit** (`erUntracked`): the spots of its dungeon (its
+   regions' locations but the prizes and events filled before it,
+   `prefilled`) where `can_fill` is not `no` with everything held but one
+   of that item (the fill takes each copy out of the pool it sweeps,
+   `Fill.py:174-182`: Swamp Palace's key goes to its first chest only),
+   read in the world where the doors not noted lead anywhere (`anywhere`,
+   above).
+   An always-allow lets its key in whatever reaches the spot, any branch's
+   of `set_trock_key_rules` that may hold; a `forbid_item` refuses it where
+   its branch surely holds. Beatable only, no access is asked.
+2. **Keys surely in hand**, as in vt's model: an item every spot of which is
+   `yes` joins the state.
+3. **A dungeon proven safe** joins all its items to the state: at every
+   count of them the player may hold (from those in hand up), each spot they
+   may sit at is at least as available to the player (the state, the other
+   dungeons' items at what is surely in hand, this one's at that count) as
+   to everything (every other item held, in the world where the doors not
+   noted lead anywhere). Wherever the next item is, the fill's state
+   reached it at that count, so the player does too, and by induction he
+   collects them all. Comparing `yes`, `maybe` and `no` compares the same
+   placements on both sides, as vt's model does.
+4. These repeat until nothing joins. A location is `yes` in that state,
+   else `maybe` if it is with every untracked item, `no` if not even then.
+
+It vouches for no dungeon when the seed is beatable only, nor for Turtle
+Rock while its key doors are not known: they hang on what everything held
+reaches in the world the randomizer filled (`set_trock_key_rules`,
+`allItemsReach_*`), known when the doors noted reach as much as the world
+where the others lead anywhere does. Until then both worlds read its rules
+both ways and meet them, which no longer bounds what the fill's state
+reached with Turtle Rock's own items short; every other dungeon is
+compared with those all held, which open its doors either way. The retro world's dungeons hold no
+small key (`Dungeons.py:11`): its keys are universal and the rules ask for a
+key shop instead, so its big keys alone go untracked. Keysanity tracks every
+key, and the model is then the solver.
+
+**Held to** (`src/er-keys.spec.ts`):
+
+- the data: each dungeon's keys are the pack's items at their maxima, so
+  everything holds them all; its spots lie among vt's dungeon locations and
+  it keeps as many keys, maps and compasses in them as vt's pool, so the
+  app's counters, read off vt's world, count right; no item rule sits on a
+  dungeon's spot; the always-allowed keys are among their spots, the
+  refused ones not;
+- golden cases on the randomizer's tests' world: Desert Palace waits on the
+  boots its torch wants, Kholdstare on the Cane of Somaria (his door opens
+  with one key and the Cane, so the second key may be his), beatable only
+  vouches for no dungeon;
+- its laws, over random states of that world (Open and Standard) and of
+  two real seeds' (`dMEp8enPG1`, `0yAObedRMV`'s crossed doors with the keys
+  kept): adding an item never lowers a location; a location stays between
+  the solver without the keys and with them all;
+- its soundness: placements the fill may make (`test/er-fill.ts`: each item
+  at a spot the fill surely takes, never an always-allowed or refused one,
+  drawn at random or among those the player reaches least, the big keys
+  then the small keys, each kind in any order, the randomizer's reversed
+  pool among them), drawn on the world the randomizer filled and played out
+  by the player in the world of the doors noted (part of a real seed's, at
+  random: a crossed one, a full one and a Standard simple one), reach every
+  location the model says `yes` to. The property fails when the model
+  checks one count of a dungeon's items only, takes a key once one of its
+  spots is reached, or reads its spots or everything in the world of the
+  doors noted (checked by hand). Two parts rest on the argument alone, no
+  random world having turned up what breaks them: the other dungeons' items
+  kept at what is surely in hand, and Turtle Rock's doors known. It never
+  draws a key locking itself in (a small key in the room it opens, a big
+  key in its own big chest): the door or chest then reads what the spot
+  holds (`item_name`), which the pack reads as `maybe`, so the player's
+  sweep could not follow. Nor does it catch, in its 50 runs, a spot list
+  one key short (each item's spots read with two of it missing): the golden
+  cases and `KEY_DOUBTS` do.
+
+**Cost**: the model builds the second world and solves it with everything,
+then once per untracked item without one of it (the facts everything gains
+kept, which only adds spots), about 5 to 10 ms more per entrance noted. A
+solve takes a few solves of the world: about 1 to 1.5 ms on average along a
+whole game under Vitest, up to 7 ms on the click that proves a dungeon safe,
+once per world, since a proof holds in every state that holds as much and
+is kept.
 
 ## The legacy format
 
@@ -1672,24 +2038,118 @@ rests on):
   is one `maybe` beside the branch it relaxes, so comparing yes, maybe and
   no compares the same placements on both sides.
 
+**A way in that reads a key** (the one-frame clips underworld of Hybrid
+Major Glitches and Major Glitches alone; the tests list them, each behind
+`canOneFrameClipUW`) breaks the third fact
+above, so where one exists the model reads its *gating dungeons* (those
+whose untracked items such a way reads) at what is surely in hand: a
+location's yes is read with its own dungeons' items raised and the other
+gating dungeons' kept, so such a way opens only as it does for the player;
+a dungeon's safety compares the player's side with the gating dungeons'
+items kept but its own, against everything with only its own items at the
+count, every other dungeon's at its full count, as the fill held them
+while it placed this one's (it places Misery Mire's keys before Tower of
+Hera's, and collects them: a Hera key may sit where only the clip
+reaches); a gating dungeon proven safe joins what is surely in hand with
+all of its items, which the player collects, so its way opens for the
+player then. A location of no dungeon whose only way in is such a clip reads
+`maybe`, not `no`, until then, if it is in logic with every key held. A dungeon's safety raises every other dungeon's items with
+its own but the gating ones', which holds because no rule where a
+dungeon's keys may sit reads another's items but a gating dungeon's
+(tested; the retro world's generic keys, never safe, aside). With no such
+way (every world under NoGlitches and Overworld Glitches) each of these is
+the unchanged model, so nothing moves there.
+
 **Its laws**, as fast-check properties over random states of the Open and
-Standard worlds: adding an item never lowers a location (near the top too,
+Standard worlds, under Overworld Glitches too, of the Open world under No
+Logic, and of the Open and Inverted worlds under Hybrid Major Glitches and
+Major Glitches: adding an item never lowers a location (near the top too,
 where one item turns a dungeon safe), and a location is never above the
 solver with every untracked item nor below it without them. With wild keys,
 Palace of Darkness's doors do want one key more once the hammer, a bow and
 the lamp are held, as upstream has it (`src/derived.ts`); the model is then
 the solver, so that drop stays.
 
+**Its soundness**, held as the entrance randomizer's is: placements the
+fill may make (`test/fill.ts`: vt's order, every big key then every small
+key, each at a location canFill surely takes with the items not placed yet
+held, never one an always-allow alone lets in, drawn at random or among
+those the player reaches least), played out by the player from a random
+state, reach every location the model says `yes` to, in the Open world and
+Hybrid Major Glitches' and Major Glitches' Open and Inverted ones. The
+property fails when a dungeon's safety is weighed against everything with
+every dungeon's items at its level (checked by hand), which closed Misery
+Mire's clip into Tower of Hera.
+
+The entrance randomizer's world has a key model of its own, built on the
+same argument: [Its key model](#its-key-model).
+
 **Cost.** The first call of a world builds what does not depend on the
-state (where each item may sit, the world with everything held at each
-count): about 14 ms under Vitest. Each call after that takes a few solves:
+state (where each item may sit, the world with everything held and a
+dungeon's items at each count, as safety asks for them): about 20 ms under
+Vitest. Each call after that takes a few solves:
 the keys in hand, all keys, and the counts a dungeon's safety asks about,
 about 0.2 to 0.5 ms under Vitest for every location of the world.
 
+## Glitched logics and No Logic
+
+vt has no region file per logic: a glitched logic is a set of flags
+(`config/logic.php`), each read by `config('canBootsClip', false)` in the
+same region files, and the pack ports every such branch behind its
+`setting(...)`. `settingsFromUpstream` takes the seed's `logic` and turns on
+its flags (`LOGIC_FLAGS`). A logic's flags are listed there only once its
+port holds to upstream's tests; until then it reads as NoGlitches, and the
+app counts its runs not modelled.
+
+| Logic | Flags | Held to |
+| --- | --- | --- |
+| NoGlitches | none (`logic.php:4`) | `tests/NoGlitches`, `tests/Inverted` |
+| OverworldGlitches | `canSuperBunny`, `canFakeFlipper`, `canSuperSpeed`, `canBootsClip`, `canMirrorClip`, `canWaterWalk`, `canDungeonRevive` (`logic.php:5-13`) | `tests/OverworldGlitches`, `tests/InvertedOverworldGlitches` (2650 cases, every one held) |
+| HybridMajorGlitches | Overworld Glitches' and `canOneFrameClipUW` (`logic.php:14-23`) | no suite upstream: every case Overworld Glitches' suites find true (`test/contract.spec.ts`), and the order of the logics (`src/logics.spec.ts`: none reads a location or region lower than the one before it, over random states of each world) |
+| MajorGlitches | Overworld Glitches', `canMirrorWrap`, `canOWYBA`, `canOneFrameClipOW`, `canOneFrameClipUW`, `canTransitionWrapped` (`logic.php:24-37`) | `tests/MajorGlitches`, `tests/InvertedMajorGlitches` (4170 cases, every one held) |
+
+- **The key model** rests on the same facts under Overworld Glitches: no
+  way in reads a key, and an always-allowed key locks in nothing another
+  spot needs (`src/key-model.spec.ts` checks them in the Open, Standard and
+  Inverted worlds under each logic, and the laws under the glitched logics
+  and No Logic too). Overworld Glitches opens Turtle Rock's middle way,
+  whose rules read its keys: they are then tied to it as any other. The
+  one-frame clips underworld (`canOneFrameClipUW`, which Hybrid Major
+  Glitches and Major Glitches turn on) are the only ways in that read a
+  key: from Misery Mire into Tower of Hera (`keyD6`) and into Swamp Palace
+  (`keyD6`, `bigKeyD6`, and Tower of Hera's `bigKeyP3`), and in Inverted
+  from Thieves' Town into Desert Palace (`keyD4`, `bigKeyD4`). Their
+  gating dungeons are Misery Mire and Tower of Hera, and Thieves' Town in
+  Inverted, which the key model handles strictly additively (see "The key
+  model").
+- **Two regions at once.** Swamp Palace's glitched way in (Standard
+  `SwampPalace.php:185-192`, Inverted `:147-153`) needs Misery Mire, the
+  Old Man and the palace's own side of the world at once, which an entrance
+  cannot say: it reads one region. `enteredAlsoFrom` (`src/world.ts`) adds
+  the way from Misery Mire and guards every location of the palace with the
+  others through `reach()`; the guard holds whenever the regular way does,
+  and folds to true without the one-frame clip, so NoGlitches and Overworld
+  Glitches read the palace as before.
+- **The boots.** A glitched world starts with the Pegasus Boots, unless the
+  customizer built it (`Randomizer.php:122-131`): `bootsAtStart`, which
+  `toState` adds to what the player found. Upstream's tests hold no
+  pre-collected item, so the contract never reads it.
+- **No Logic** has no rules: vt skips every region's `initalize`
+  (`World.php:93`), so every location is accessible and no fill rule holds,
+  but a dungeon's items still stay in it (`Region::canFill`), the sewers key
+  excepted (`Region.php:238`). `noLogicSettings(settings)` reads such a seed
+  with the rules of `settings`' logic, the glitches the player plays it
+  with, the boots given (`bootsAtStart`) and `noLogic` set: `canFill` keeps
+  only the region's own test (`src/fill.ts`), and the key model calls no
+  dungeon safe for keys (a key may sit behind its own door), so a key door is
+  `yes` only once every place its key may sit is reached, `maybe` before;
+  `toState` reads the small keys a player marks by hand (`TrackerInput.keys`),
+  as with wild keys, so marking them settles their doors.
+
 ## Tricks
 
-The pack models NoGlitches only, but upstream's region files already write
-what six minor tricks open, behind config flags no NoGlitches run sets. The
+Upstream's region files write what six minor tricks open, behind config
+flags no NoGlitches run sets. The
 *tricks world* (`src/tricks.ts`) keeps those branches, so the tracker can
 say which checks out of logic a trick would open, and which trick.
 
@@ -1705,15 +2165,18 @@ say which checks out of logic a trick would open, and which trick.
 No upstream logic turns these six on alone, so the tricks world is no
 seed's logic: a check it opens stays out of logic. Minor Glitches left in
 VT8.25 (`resources/views/updates.blade.php:965`), and OverworldGlitches
-adds boots clips, mirror clips and super speed (`config/logic.php:5-13`),
-which the pack does not port.
+adds boots clips, mirror clips and super speed (`config/logic.php:5-13`).
+Under a logic that counts a trick (`tricksInLogic`: Overworld Glitches'
+four), its branches are in logic already, in the tricks world too.
 
 **One world, the tricks as items.** A setting is folded at compile time, so
 the real world cannot hold a trick for one state and not another, and a
 world per combination would be 64 compiles. `trickModules(settings)` rewrites
 every requirement of the run's modules instead (entrances, locations, what
 seeing a location needs) and `TRICK_RULES` the helpers:
-`setting(canFakeFlipper)` becomes the item `trickFakeFlipper`, and
+`setting(canFakeFlipper)` becomes `(setting(canFakeFlipper) |
+trickFakeFlipper)`, its flag kept so a logic that turns it on keeps the
+branch open whatever the player knows, and
 `lamp >= setting(requireLamp)` becomes `(lamp >= setting(requireLamp) |
 trickDarkRooms)`. The rest of each rule, other glitches included, is left as
 it is. `compileTricks(settings)` compiles it with `STATE_NAMES` and
@@ -1721,7 +2184,8 @@ it is. `compileTricks(settings)` compiles it with `STATE_NAMES` and
 holds those tricks, to spread over the real world's state.
 
 **Exact, not approximate** (`src/tricks.spec.ts`, fast-check over random
-states of Open, Standard and Inverted, every location, visible and region):
+states of Open, Standard, Inverted and Standard under Overworld Glitches,
+every location, visible and region):
 
 - with a set of tricks held, the tricks world reads as the real world
   compiled with those switches on (`requireLamp` at 0 for the dark rooms);
@@ -1835,6 +2299,27 @@ advanced run's margin world is its real world, and an unknown placement
 (Mystery) folds `!setting(basicPlacement)` to maybe, so the margins are
 maybe already.
 
+## Weapons, goals and enemy health beyond the default
+
+Read at the pinned commit, beside the presets' defaults:
+
+- **Weapons** (`mode.weapons`): `swordless` is its own flag; `assured`
+  pre-collects Uncle's sword, a fifty rupees taking its place
+  (`Randomizer.php:256-260`), so `swordAtStart` makes `toState` give a sword
+  (held at least at 1); `vanilla` puts the swords at Uncle, the Pyramid
+  Fairy, the Blacksmith and the Pedestal (`:241-252`), which no rule reads:
+  it builds the same settings as `randomized` (`settings.spec.ts`).
+- **Goals.** `ganonhunt` (`ganonhuntGoal`, the go mode above) and
+  `completionist` (`completionistGoal`): Ganon reads it as no crystal goal,
+  and `prepareWorld` fills its seed for every location whatever the
+  accessibility (`Randomizer.php:99-101`), so `locationsAccessibility` is
+  true with it. Completionist has no go mode before its end.
+- **Enemy health** (`enemizer.enemyHealth`): anything but `default` drops
+  the escape's kills with bombs and the Cane of Byrna
+  (`ItemCollection.php:567-591`, `defaultEnemyHealth`, the helpers
+  `canKillEscapeThings`, `canKillMostThings`); a seed's file states it
+  (`enemizer.enemy_health`), the ROM does not.
+
 ## Go mode
 
 A run is won once Link holds the Triforce (`app/World.php:101-106`), which
@@ -1847,6 +2332,7 @@ order, each with its upstream line:
 | --- | --- |
 | `ganon` | Agahnim 2, the prize of Ganon's Tower (`GanonsTower.php:388`), then Ganon (`DarkWorld/NorthEast.php:186`), whose rule wants Agahnim 2 beaten |
 | `fastGanon` (upstream `fast_ganon`) | Ganon, who wants the crystals and the pyramid but not Agahnim 2 (`DarkWorld/NorthEast.php:226`) |
+| `ganonhunt` | Ganon, who wants the Triforce pieces the goal asks for (`DarkWorld/NorthEast.php:187-192`: the fact `ganonhuntPieces`, which `toState` sets from `TrackerInput.goalPieces` once the pieces found reach those asked, 40 of 50 by default, `GANONHUNT`, `config/alttp.php:43-53`) and not Agahnim 2 (226); no crystal count. Inverted's Ganon names no ganonhunt (`Inverted/LightWorld/NorthEast.php:144-206`): it reads as the ganon goal's, Agahnim 2 and no piece, as upstream fills it |
 | `pedestal` | the Master Sword Pedestal (`LightWorld/NorthWest.php:86`) |
 
 The solver computes no event, so a step that gives one (Agahnim 2 gives
@@ -1995,8 +2481,11 @@ checkout is read, never run.
 `9MQ9gO1wMD` (vt's own layout), `0yAObedRMV` (entrance randomizer,
 "crossed", keysanity), `eM43RgZ4Gj` (the daily challenge: a race seed whose
 spoiler is `meta` only), `xvJo0drkyJ` (a mystery seed, the same) and
-`VMR3zKaKv5` (Retro, with 19 bare `Key`s) and `6v1ab7qmv7` (Standard, assured
-weapons: a sphere 0 in its playthrough). Written by
+`VMR3zKaKv5` (Retro, with 19 bare `Key`s), `6v1ab7qmv7` (Standard, assured
+weapons: a sphere 0 in its playthrough), and one Open seed per glitched
+logic, each with its playthrough: `kGZmYlABym` (Overworld Glitches),
+`lMjaek1VGo` (Hybrid Major Glitches), `ZGLqKd8NMk` (Major Glitches) and
+`4v5L3pl6Mq` (No Logic). Written by
 
 ```sh
 pnpm --filter @alltp/pack-alttpr spoiler-fixtures <hash>…

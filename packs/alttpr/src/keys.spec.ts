@@ -49,6 +49,17 @@ describe("everything", () => {
     expect(all.podFewerKeysSuffice).toBe(0);
   });
 
+  it("beats every boss a shuffled slot may hold, so a key may sit at its drop", () => {
+    // Without the slots' facts, every boss location read no under boss
+    // shuffle, and the key model forgot the keys a boss may drop
+    const shuffled = settingsFromUpstream("open", {
+      "enemizer.bossShuffle": "full",
+    });
+    expect(everything(shuffled)).toMatchObject({ easternPalaceBossUnknown: 1 });
+    expect(where("KeyP3", shuffled)).toContain("tower-of-hera/boss");
+    expect(where("KeyD6", shuffled)).toEqual(where("KeyD6"));
+  });
+
   it("loses one of an item, or a level, and redoes the facts", () => {
     expect(everythingBut("KeyD1", OPEN).keyD1).toBe(5);
     expect(everythingBut("BigKeyD1", OPEN).bigKeyD1).toBe(0);

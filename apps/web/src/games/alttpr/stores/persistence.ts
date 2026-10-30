@@ -24,6 +24,7 @@ import {
   BOSS_SHUFFLE_LABELS,
   DEFAULT_PRESET_ID,
   DUNGEON_ITEM_LABELS,
+  ENEMY_HEALTH_LABELS,
   ENTRANCE_LABELS,
   FUNCTIONALITY_LABELS,
   GLITCHES_LABELS,
@@ -35,6 +36,7 @@ import {
   POOL_LABELS,
   presets,
   type RunSettings,
+  SWORDS_LABELS,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
 import { counterMax, SMALL_KEYS_CAP } from "@/games/alttpr/logic/settings";
@@ -498,12 +500,15 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     bossShuffle,
     crystalsGanon,
     crystalsTower,
+    enemyHealth,
     glitches,
     hidden,
+    playGlitches,
     itemFunctionality,
     itemPlacement,
     itemPool,
     swordless,
+    swords,
   } = value as Record<string, unknown>;
   const named = (option: unknown, labels: Readonly<Record<string, string>>) =>
     typeof option === "string" && Object.hasOwn(labels, option);
@@ -519,11 +524,27 @@ const isRunSettings = (value: unknown): value is RunSettings => {
   const glitchesOk =
     glitches === undefined ||
     (glitches !== "none" && named(glitches, GLITCHES_LABELS));
+  // A No Logic run's glitches, a glitched logic's; None is their absence
+  const playOk =
+    playGlitches === undefined ||
+    (glitches === "no_logic" &&
+      playGlitches !== "none" &&
+      playGlitches !== "no_logic" &&
+      named(playGlitches, GLITCHES_LABELS));
   return (
     hiddenOk &&
     glitchesOk &&
+    playOk &&
     // Absent in every save before it, and in any run without it: none
     (bossShuffle === undefined || named(bossShuffle, BOSS_SHUFFLE_LABELS)) &&
+    // Randomized swords and default health are said by their absence; a
+    // swordless run's swords are nowhere
+    (swords === undefined ||
+      (swords !== "randomized" &&
+        swordless === false &&
+        named(swords, SWORDS_LABELS))) &&
+    (enemyHealth === undefined ||
+      (enemyHealth !== "default" && named(enemyHealth, ENEMY_HEALTH_LABELS))) &&
     typeof swordless === "boolean" &&
     isIntIn(crystalsTower, 0, 7) &&
     isIntIn(crystalsGanon, 0, 7) &&

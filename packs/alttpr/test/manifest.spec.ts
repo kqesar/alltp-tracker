@@ -27,7 +27,7 @@ describe("upstream.json", () => {
       ["items.json", loadItemTable().upstream] as const,
       ["locations.json", index.upstream] as const,
     ];
-    expect(headers).toHaveLength(48);
+    expect(headers).toHaveLength(138);
     for (const [path, upstream] of headers) {
       expect(
         [upstream.repo, upstream.commit, upstream.logic],
@@ -110,7 +110,7 @@ describe("upstream.json", () => {
 
   it("lists the test file of every fixture, and a fixture for every test file", () => {
     const tests = new Map(manifest.tests.map((t) => [t.file, t]));
-    expect(fixtures).toHaveLength(46);
+    expect(fixtures).toHaveLength(136);
     for (const fixture of fixtures) {
       expect(tests.get(fixture.file)?.fixture, fixture.file).toBe(
         `test/upstream/${fixture.path}`,
@@ -152,7 +152,7 @@ describe("porting a test file", () => {
     expect(portedTooEarly(manifest, fixtures, index)).toEqual([]);
     // Tower of Hera's test ported before its region, whatever upstream.json
     // says of either today. Inverted's tower extends Standard's, so its
-    // test (ported) needs Standard's too
+    // tests (ported, Overworld Glitches' too) need Standard's too
     const early: Manifest = {
       ...manifest,
       rules: manifest.rules.map((r) =>
@@ -167,6 +167,10 @@ describe("porting a test file", () => {
     expect(portedTooEarly(early, fixtures, index)).toEqual([
       "tests/NoGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
       "tests/Inverted/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/InvertedOverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/OverworldGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/InvertedMajorGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
+      "tests/MajorGlitches/TowerOfHeraTest.php: app/Region/Standard/TowerOfHera.php is not ported",
     ]);
   });
 

@@ -20,23 +20,33 @@
 // connected, is listed in `unported` with its line, never dropped: the
 // world built from the noted entrances ports it by hand. What only decides
 // where the randomizer may place an item (forbid_item, add_item_rule,
-// set_always_allow) has no part in what Link can reach; its lines are listed
-// in `fill`.
-
+// set_always_allow) has no part in what Link can reach: it is `fill`, data
+// for the key model (src/er-keys.ts), beside the dungeons' keys
+// (Dungeons.py) and the spots filled before them (`dungeons`).
 //
-// The translation itself is rules-core.mjs's; this is its dialect for the
-// entrance randomizer (the world vt hands it, its items and methods) and the
-// import of its Rules.py, Bosses.py, Dungeons.py and ItemList.py.
+// The translation itself is rules-core.mjs's, which the Door Randomizer's
+// port shares (dr-rules.mjs); this is its dialect for the entrance
+// randomizer (the world vt hands it, its items and methods) and the import
+// of its Rules.py, Bosses.py, Dungeons.py and ItemList.py.
 
-import { assigned, body, callExpressions } from "./python.mjs";
+import {
+  assigned,
+  body,
+  callExpressions,
+  expression,
+  functionBody,
+  tokens,
+} from "./python.mjs";
 import {
   all,
   any,
   atLeast,
   atom,
   bossFunction,
+  canBuyUnlimited,
   derive,
   FALSE,
+  itemNamed,
   key,
   method,
   negate,
@@ -45,6 +55,7 @@ import {
   print,
   regionId,
   regionOf,
+  SHOP_RECORDS,
   setting,
   TRUE,
   Untranslatable,
@@ -55,9 +66,11 @@ export { print, regionId };
 
 /**
  * @typedef {import("./python.mjs").Expr} Expr
+ * @typedef {import("./python.mjs").Statement} Statement
  * @typedef {import("./rules-core.mjs").Rule} Rule
  * @typedef {import("./rules-core.mjs").Context} Context
  * @typedef {import("./rules-core.mjs").Dialect} Dialect
+ * @typedef {import("./rules-core.mjs").RetroShops} RetroShops
  */
 
 /**
@@ -263,9 +276,15 @@ export const METHODS = {
         all(atom("bombos"), METHODS.has_sword?.(ctx, []) ?? FALSE),
       ),
     ),
-  // Not the retro world, whose arrows are bought
+  // The retro world's arrows are bought (BaseClasses.py:379-381): its
+  // world.retro is vt's Retro world, whose rupee bow is `rupeeBow`
   can_shoot_arrows: (ctx) =>
-    method(ctx, "can_shoot_arrows", "", () => atom("bow")),
+    method(ctx, "can_shoot_arrows", "", () =>
+      all(
+        atom("bow"),
+        any(negate(setting("rupeeBow")), canBuyUnlimited(ctx, "Single Arrow")),
+      ),
+    ),
   has_Boots: (ctx) => method(ctx, "has_Boots", "", () => atom("pegasusBoots")),
   has_beam_sword: (ctx) =>
     method(ctx, "has_beam_sword", "", () => atom("sword >= 2")),
@@ -377,6 +396,185 @@ const ER = {
 };
 
 /**
+ * A dungeon as the key model reads it (Dungeons.py make_dungeon): its
+ * regions, the code of its keys, how many small keys it holds, whether it
+ * has a big key, and its maps and compasses, which no rule reads.
+ * @typedef {{ code: string, regions: string[], smallKeys: number, bigKey: boolean, items: string[], source: string }} ErDungeon
+ */
+
+/**
+ * The item names an `ItemFactory(…)` argument makes: a name, a list of
+ * names, a list times a count.
+ * @param {Expr | undefined} expr
+ * @returns {string[]}
+ */
+function namesOf(expr) {
+  if (expr?.t === "const" && typeof expr.value === "string")
+    return [expr.value];
+  if (expr?.t === "seq") return expr.items.flatMap(namesOf);
+  if (
+    expr?.t === "op" &&
+    expr.op === "*" &&
+    expr.right.t === "const" &&
+    typeof expr.right.value === "number"
+  )
+    return Array.from({ length: expr.right.value }, () =>
+      namesOf(expr.left),
+    ).flat();
+  throw new Error("Dungeons.py: an item list of no literals");
+}
+
+/**
+ * The items a make_dungeon argument makes: None, `ItemFactory(…)`, or a list
+ * of such calls.
+ * @param {Expr | undefined} expr
+ * @returns {string[]}
+ */
+function factoryItems(expr) {
+  if (expr === undefined || (expr.t === "const" && expr.value === null))
+    return [];
+  if (expr.t === "seq") return expr.items.flatMap(factoryItems);
+  if (
+    expr.t === "call" &&
+    expr.fn.t === "name" &&
+    expr.fn.name === "ItemFactory"
+  )
+    return namesOf(expr.args[0]);
+  throw new Error("Dungeons.py: dungeon items other than ItemFactory");
+}
+
+/**
+ * A dungeon of make_dungeon(name, boss, regions, big_key, small_keys,
+ * dungeon_items).
+ * @param {Extract<Expr, { t: "seq" }>} members
+ * @param {Expr | undefined} bigKey
+ * @param {Expr | undefined} smallKeys
+ * @param {Expr | undefined} items
+ * @param {string} source
+ * @returns {ErDungeon}
+ */
+function dungeonOf(members, bigKey, smallKeys, items, source) {
+  const big = factoryItems(bigKey);
+  const small = factoryItems(smallKeys);
+  const ids = [...big, ...small].map(
+    (name) => itemNamed(DUNGEON_CODES, name).id,
+  );
+  const codes = new Set(ids.map((id) => id?.replace(/^(big)?[kK]ey/, "")));
+  if (ids.includes(undefined) || codes.size > 1)
+    throw new Error(`${source}: keys of no one dungeon`);
+  return {
+    bigKey: big.length > 0,
+    code: [...codes][0] ?? "",
+    items: factoryItems(items),
+    regions: members.items.map((m) => String(m.t === "const" ? m.value : "")),
+    smallKeys: small.length,
+    source,
+  };
+}
+
+/**
+ * The bosses can_place_boss (Bosses.py) refuses at a slot, by running its
+ * statements on their expression trees for each boss: with the swords of
+ * any world (`refuses`), and the more it refuses swordless (`swordless`).
+ * Anything but names, the world's swords, literals, comparisons, `if` and
+ * `return` stops the import.
+ * @param {string} source - Bosses.py
+ * @param {readonly string[]} bosses - boss_table's
+ * @param {string} dungeon
+ * @param {string | null} level
+ */
+function refusals(source, bosses, dungeon, level) {
+  const fn = functionBody(source, "can_place_boss", "Bosses.py");
+  const [world, boss, dungeonName, levelName] = fn.params;
+  /**
+   * @param {Expr} expr
+   * @param {ReadonlyMap<string, unknown>} env
+   * @returns {unknown}
+   */
+  const value = (expr, env) => {
+    switch (expr.t) {
+      case "const":
+        return expr.value;
+      case "name":
+        if (env.has(expr.name)) return env.get(expr.name);
+        break;
+      case "attr":
+        if (
+          expr.of.t === "name" &&
+          expr.of.name === world &&
+          expr.name === "swords"
+        )
+          return env.get("swords");
+        break;
+      case "seq":
+        return expr.items.map((item) => value(item, env));
+      case "not":
+        return !value(expr.of, env);
+      case "and":
+        return expr.args.every((arg) => value(arg, env));
+      case "or":
+        return expr.args.some((arg) => value(arg, env));
+      case "compare": {
+        const left = value(expr.left, env);
+        const right = value(expr.right, env);
+        if (expr.op === "==") return left === right;
+        if (expr.op === "!=") return left !== right;
+        if (Array.isArray(right) && expr.op === "in")
+          return right.includes(left);
+        if (Array.isArray(right) && expr.op === "not in")
+          return !right.includes(left);
+        break;
+      }
+    }
+    throw new Error(`Bosses.py:${fn.line}: can_place_boss reads more`);
+  };
+  /**
+   * @param {readonly Statement[]} statements
+   * @param {ReadonlyMap<string, unknown>} env
+   * @returns {boolean | undefined} What it returns, if it does
+   */
+  const run = (statements, env) => {
+    for (const statement of statements) {
+      const { line, text } = statement;
+      const stream = tokens(text, 0, "Bosses.py", line);
+      if (text.startsWith("return ")) {
+        stream.next();
+        const returned = value(expression(stream), env);
+        if (typeof returned !== "boolean")
+          throw new Error(`Bosses.py:${line}: a return of no boolean`);
+        return returned;
+      }
+      if (!text.startsWith("if ") || !statement.block)
+        throw new Error(`Bosses.py:${line}: can_place_boss does more`);
+      stream.next();
+      if (!value(expression(stream), env)) continue;
+      const returned = run(statement.body, env);
+      if (returned !== undefined) return returned;
+    }
+    return undefined;
+  };
+  /** @param {string} swords */
+  const refused = (swords) =>
+    bosses.filter(
+      (name) =>
+        !run(
+          fn.body,
+          new Map([
+            ["swords", swords],
+            [boss ?? "", name],
+            [dungeonName ?? "", dungeon],
+            [levelName ?? "", level],
+          ]),
+        ),
+    );
+  const refuses = refused("randomized");
+  return {
+    refuses,
+    swordless: refused("swordless").filter((name) => !refuses.includes(name)),
+  };
+}
+
+/**
  * The entrance randomizer's rules on vt's path, translated.
  * @param {(file: string) => string} read - A file of the checkout, by name
  * @param {readonly { name: string, locations: readonly unknown[], exits: readonly unknown[] }[]} regions
@@ -417,14 +615,16 @@ export function importErRules(read, regions) {
   const dungeonOfRegion = new Map();
   /** @type {Map<string, string | null>} */
   const bossOfDungeon = new Map();
-  for (const { call } of callExpressions(
+  /** @type {Map<string, ErDungeon>} */
+  const dungeonItems = new Map();
+  for (const { call, line } of callExpressions(
     dungeonsSource,
     "make_dungeon",
     "Dungeons.py",
     create.start,
     create.end,
   )) {
-    const [name, boss, members] = call.args;
+    const [name, boss, members, bigKey, smallKeys, items] = call.args;
     if (
       name?.t !== "const" ||
       typeof name.value !== "string" ||
@@ -440,6 +640,10 @@ export function importErRules(read, regions) {
     for (const member of members.items)
       if (member.t === "const" && !dungeonOfRegion.has(String(member.value)))
         dungeonOfRegion.set(String(member.value), name.value);
+    dungeonItems.set(
+      name.value,
+      dungeonOf(members, bigKey, smallKeys, items, `Dungeons.py:${line}`),
+    );
   }
   /** @type {Map<string, string>} */
   const towerBosses = new Map();
@@ -452,17 +656,65 @@ export function importErRules(read, regions) {
   const contents = /** @type {Record<string, unknown>} */ (
     assigned(regionsSource, "default_shop_contents", "Regions.py").value
   );
+  /** @param {unknown} stock - A shop's, or the name of a list of it */
+  const itemsSold = (stock) =>
+    /** @type {[string, number][]} */ (
+      stock !== null && typeof stock === "object" && "name" in stock
+        ? assigned(regionsSource, String(stock.name), "Regions.py").value
+        : stock
+    ).map(([item]) => item);
   const potionShops = Object.entries(contents)
-    .filter(([, stock]) => {
-      const list =
-        stock !== null && typeof stock === "object" && "name" in stock
-          ? assigned(regionsSource, String(stock.name), "Regions.py").value
-          : stock;
-      return /** @type {[string, number][]} */ (list).some(([item]) =>
+    .filter(([, stock]) =>
+      itemsSold(stock).some((item) =>
         ["Green Potion", "Blue Potion"].includes(item),
-      );
-    })
+      ),
+    )
     .map(([region]) => region);
+
+  // The retro world's shops (set_up_shops): one shop's stock it extends
+  // with an item, and those it draws among the replaceable shops of
+  // shop_table, each selling the same items. Read as written, or not at all
+  const shops = body(itemListSource, "set_up_shops", "ItemList.py");
+  const shopsText = itemListSource.slice(shops.start, shops.end);
+  const extended =
+    /(\w+) = world\.get_region\('([^']+)', player\)\.shop\n\s+\1\.active = True\n\s+\1\.add_inventory\(\d, '([^']+)', \d+\)/.exec(
+      shopsText,
+    );
+  const drawnShops =
+    /for shop in random\.sample\(\[s for s in world\.shops if s\.replaceable and s\.type == ShopType\.Shop and s\.region\.player == player\], (\d+)\):((?:\n {12}shop\..*)+)/.exec(
+      shopsText,
+    );
+  if (extended === null || drawnShops === null)
+    throw new Error("ItemList.py: set_up_shops reads otherwise");
+  const shopTable = /** @type {Record<string, unknown>} */ (
+    assigned(regionsSource, "shop_table", "Regions.py").value
+  );
+  const drawnItems = [
+    ...(drawnShops[2] ?? "").matchAll(
+      /shop\.add_inventory\(\d, '([^']+)', \d+\)/g,
+    ),
+  ].map((m) => m[1] ?? "");
+  // No shop sells an arrow or a key by default: only what it adds
+  const retroItems = [...drawnItems, extended[3] ?? ""].filter(
+    (item) => item in SHOP_RECORDS,
+  );
+  if (
+    Object.values(contents).some((stock) =>
+      itemsSold(stock).some((item) => retroItems.includes(item)),
+    )
+  )
+    throw new Error("Regions.py: a shop sells a retro item by default");
+  /** @type {RetroShops} */
+  const retroShops = {
+    drawn: {
+      count: Number(drawnShops[1]),
+      items: drawnItems,
+      regions: Object.entries(shopTable)
+        .filter(([, row]) => Array.isArray(row) && row[2] === true)
+        .map(([region]) => region),
+    },
+    fixed: new Map([[extended[3] ?? "", [extended[2] ?? ""]]]),
+  };
 
   // The events: items generate_itempool places at locations it locks
   // (ItemList.py), which no player finds; the pack's own (Agahnim) aside
@@ -486,6 +738,64 @@ export function importErRules(read, regions) {
     [...placed.keys()].map((item) => [item, regionId(item)]),
   );
 
+  // Where the dungeons' items go (the key model, src/er-keys.ts): the spots
+  // filled before them, which take none of them (generate_itempool's locked
+  // items, the prizes fill_prizes draws among), and the key placed first
+  // (fill_dungeons_restrictive's Pinball Room)
+  /** @param {string} text @param {number} index @param {number} first */
+  const lineAt = (text, index, first) =>
+    first + text.slice(0, index).split("\n").length - 1;
+  const prefilled = [
+    ...within.matchAll(
+      /world\.push_item\(world\.get_location\('((?:[^'\\]|\\.)+)', player\)/g,
+    ),
+  ].map((m) => ({
+    location: (m[1] ?? "").replaceAll("\\'", "'"),
+    source: `ItemList.py:${lineAt(within, m.index, offset + 1)}`,
+  }));
+  const prizes = body(itemListSource, "fill_prizes", "ItemList.py");
+  const prizesText = itemListSource.slice(prizes.start, prizes.end);
+  const prizesLine = lineAt(itemListSource, prizes.start, 1);
+  const crystals = /crystal_locations = \[([^\]]+)\]/.exec(prizesText);
+  if (crystals === null)
+    throw new Error("ItemList.py: fill_prizes reads otherwise");
+  const listed = crystals.index + "crystal_locations = [".length;
+  for (const m of (crystals[1] ?? "").matchAll(
+    /world\.get_location\('((?:[^'\\]|\\.)+)', player\)/g,
+  ))
+    prefilled.push({
+      location: (m[1] ?? "").replaceAll("\\'", "'"),
+      source: `ItemList.py:${lineAt(prizesText, listed + m.index, prizesLine)}`,
+    });
+  const restrictive = body(
+    dungeonsSource,
+    "fill_dungeons_restrictive",
+    "Dungeons.py",
+  );
+  const restrictiveText = dungeonsSource.slice(
+    restrictive.start,
+    restrictive.end,
+  );
+  const pinball =
+    /(\w+) = world\.get_location\('([^']+)', player\)\n\s+if world\.retro:\n\s+world\.push_item\(\1, ItemFactory\('Small Key \(Universal\)', player\), False\)\n\s+else:\n\s+(world\.push_item\(\1, ItemFactory\('([^']+)', player\), False\))/.exec(
+      restrictiveText,
+    );
+  if (pinball === null)
+    throw new Error("Dungeons.py: fill_dungeons_restrictive reads otherwise");
+  const restrictiveLine = lineAt(dungeonsSource, restrictive.start, 1);
+  const preplaced = [
+    {
+      ...itemNamed(DUNGEON_CODES, pinball[4] ?? ""),
+      location: pinball[2] ?? "",
+      source: `Dungeons.py:${lineAt(restrictiveText, pinball.index + pinball[0].indexOf(pinball[3] ?? ""), restrictiveLine)}`,
+    },
+  ];
+  // The retro world's dungeons hold no small key: its keys are universal
+  const retroKeys = "[] if world.retro else small_keys";
+  if (!dungeonsSource.includes(retroKeys))
+    throw new Error(`Dungeons.py no longer says ${retroKeys}`);
+  const retroSmallKeys = `Dungeons.py:${lineAt(dungeonsSource, dungeonsSource.indexOf(retroKeys), 1)}`;
+
   /** @param {string} name */
   const methodLine = (name) => {
     const at = baseSource.indexOf(`    def ${name}(`);
@@ -493,9 +803,58 @@ export function importErRules(read, regions) {
     return baseSource.slice(0, at).split("\n").length;
   };
 
+  // The slots boss shuffle fills (Bosses.py place_bosses), the Open and
+  // Standard worlds' list: a rule reads its dungeon's boss through the
+  // slot's helper, which the world defines (er-world.ts), its vanilla boss
+  // without boss shuffle. Agahnim and Agahnim 2 never move.
+  const slotList = assigned(
+    bossesSource,
+    "boss_locations",
+    "Bosses.py",
+    " {8}",
+  );
+  const slotLines = bossesSource.split("\n");
+  const bossNames = Object.keys(
+    /** @type {Record<string, unknown>} */ (
+      assigned(bossesSource, "boss_table", "Bosses.py").value
+    ),
+  );
+  /**
+   * @type {Map<string, { boss: string, place: string, refuses: string[],
+   *   swordless: string[], source: string, vanilla: string }>}
+   */
+  const bossSlots = new Map();
+  for (const [i, entry] of /** @type {unknown[]} */ (
+    slotList.value
+  ).entries()) {
+    const [dungeon, level] = Array.isArray(entry) ? entry : [];
+    if (
+      typeof dungeon !== "string" ||
+      (level !== null && typeof level !== "string") ||
+      dungeon.startsWith("Inverted ")
+    )
+      throw new Error(`Bosses.py: a boss_locations entry of no dungeon`);
+    const boss =
+      level === null ? bossOfDungeon.get(dungeon) : towerBosses.get(level);
+    if (typeof boss !== "string")
+      throw new Error(`Bosses.py: no boss in ${dungeon} ${level ?? ""}`);
+    const line = slotList.line + 1 + i;
+    if (!slotLines[line - 1]?.includes(`'${dungeon}'`))
+      throw new Error(`Bosses.py: boss_locations is not one entry a line`);
+    bossSlots.set(`${dungeon}/${level ?? ""}`, {
+      boss,
+      place: regionId(`${dungeon} ${level ?? ""}`),
+      ...refusals(bossesSource, bossNames, dungeon, level),
+      source: `Bosses.py:${line}`,
+      vanilla: `erDefeat${pascal(boss)}`,
+    });
+  }
+  /** @type {Set<string>} */
+  const slotsRead = new Set();
+
   /** @type {Context} */
   const ctx = {
-    bossOfRegion: (region, level) => {
+    bossHelper: (region, level) => {
       const dungeon = dungeonOfRegion.get(region);
       const boss =
         dungeon === undefined
@@ -503,9 +862,12 @@ export function importErRules(read, regions) {
           : level === undefined
             ? bossOfDungeon.get(dungeon)
             : towerBosses.get(level);
-      if (boss === undefined || boss === null)
+      if (dungeon === undefined || boss === undefined || boss === null)
         throw new Untranslatable(`no boss in ${region}`);
-      return boss;
+      const slot = `${dungeon}/${level ?? ""}`;
+      if (!bossSlots.has(slot)) return `erDefeat${pascal(boss)}`;
+      slotsRead.add(slot);
+      return `erDefeat${pascal(dungeon)}${pascal(level ?? "")}Boss`;
     },
     derived: new Map(),
     dialect: ER,
@@ -525,6 +887,7 @@ export function importErRules(read, regions) {
     reachedLocations: new Set(),
     regionOfEntrance,
     regionOfLocation,
+    retroShops,
   };
 
   // Every boss's rule, a helper of its own
@@ -596,6 +959,15 @@ export function importErRules(read, regions) {
   return {
     allItemsReach,
     bombShop,
+    bossSlots: Object.fromEntries(
+      [...bossSlots.entries()]
+        .filter(([slot]) => slotsRead.has(slot))
+        .map(([slot, rule]) => {
+          const [dungeon = "", level = ""] = slot.split("/");
+          return [`erDefeat${pascal(dungeon)}${pascal(level)}Boss`, rule];
+        })
+        .sort(([a], [b]) => String(a).localeCompare(String(b))),
+    ),
     bunny: {
       accessibleLocations: bunnyList("bunny_accessible_locations"),
       impassableCaves: bunnyList("bunny_impassable_caves"),
@@ -603,6 +975,12 @@ export function importErRules(read, regions) {
     derived: Object.fromEntries(
       [...ctx.derived.entries()].sort(([a], [b]) => a.localeCompare(b)),
     ),
+    dungeons: {
+      byName: Object.fromEntries(dungeonItems),
+      prefilled,
+      preplaced,
+      retroSmallKeys,
+    },
     entrances: final,
     events: Object.fromEntries(
       [...placed.values()]
@@ -612,7 +990,7 @@ export function importErRules(read, regions) {
           { item, location, source: `ItemList.py:${line}` },
         ]),
     ),
-    fill: [...new Set(fill)],
+    fill,
     helpers: Object.fromEntries(
       [...ctx.helpers.entries()].sort(([a], [b]) => a.localeCompare(b)),
     ),

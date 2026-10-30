@@ -14,6 +14,7 @@ import {
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
 import { marginShown, tricksShown } from "@/games/alttpr/logic/solution";
+import { capitalized, useLogicWords } from "@/games/alttpr/logic/words";
 import { useReview } from "@/games/alttpr/review/useReview";
 import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -66,6 +67,7 @@ export const MapPanel = () => {
   const setMapView = useGameStore((state) => state.setMapView);
   const tricksOn = useGameStore(tricksShown);
   const marginOn = useGameStore(marginShown);
+  const words = useLogicWords();
   const baseId = useId();
   const review = useReview();
   const closeReview = useReviewStore((state) => state.close);
@@ -114,7 +116,11 @@ export const MapPanel = () => {
         {view === "map" && (
           <>
             <MapTracker />
-            <MapLegend margin={marginOn} trick={tricksOn} />
+            <MapLegend
+              margin={marginOn}
+              trick={tricksOn}
+              unavailable={capitalized(words.no)}
+            />
           </>
         )}
         {view === "checks" && <ChecksPanel />}

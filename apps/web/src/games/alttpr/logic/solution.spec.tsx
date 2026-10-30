@@ -58,6 +58,8 @@ describe("trackerInput", () => {
   it("reads a fresh run as nothing held, Zelda rescued", () => {
     expect(trackerInput(store())).toEqual({
       beaten: { "hyrule-castle": true },
+      // None of the 20 a fresh board asks for
+      goalPieces: { found: 0, required: 20 },
       items: {},
       keys: Object.fromEntries(KEY_DUNGEONS.map((id) => [id, 0])),
       medallions: { mire: "unknown", turtleRock: "unknown" },
@@ -186,6 +188,32 @@ describe("a run with shuffled entrances", () => {
     expect(solutionOf(store())).toBe(solutionOf(store()));
   });
 
+  it("reads a glitched seed or a No Logic one as NoGlitches, without the boots", async () => {
+    // vt fills any shuffled seed as noglitches, no boots (EntranceRandomizer.php:84-91,
+    // Randomizer.php:122-131): a rock only the boots break stays out of logic
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      store().noteEntrance("bonk-rock-cave", "bonk-rock-cave");
+    });
+    const rocks = "pegasus-rocks";
+    expect(solutionOf(store()).tris[rocks]).toBe("no");
+    const plain = solutionOf(store());
+    for (const glitches of [
+      "overworld_glitches",
+      "major_glitches",
+      "no_logic",
+    ] as const) {
+      act(() => store().updateSettings({ glitches }));
+      expect(solutionOf(store()), glitches).toMatchObject({ modelled: true });
+      expect(solutionOf(store()).tris[rocks], glitches).toBe("no");
+      expect(solutionOf(store()).tris, glitches).toEqual(plain.tris);
+    }
+    act(() => store().setItem("boots", true));
+    expect(solutionOf(store()).tris[rocks]).toBe("yes");
+  });
+
   it("goes by the entrance randomizer's world for the go mode", async () => {
     const { solver } = await import("@/games/alttpr/logic/crossed");
     act(() => {
@@ -206,6 +234,113 @@ describe("a run with shuffled entrances", () => {
     expect(analyzeRun(solutionOf(store()), store().settings).goMode).toEqual({
       kind: "door",
     });
+  });
+
+  it("buys a Retro run's arrows in the shops it found", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      useGameStore.setState({
+        settings: { ...store().settings, mode: "retro" },
+      });
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            id === "shoparrow" || id === "shopkey"
+              ? 0
+              : typeof value === "boolean"
+                ? true
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance("eastern-palace", "eastern-palace-exit");
+    });
+    const boss = "eastern-palace/boss";
+    // No shop found nor reached: the bow shoots nothing
+    expect(solutionOf(store()).tris[boss]).toBe("no");
+    act(() => store().setItem("shoparrow", 1));
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+  });
+
+  it("reads the keys kept in their dungeons by that world's own key model", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      store().updateSettings({ dungeonItems: "standard" });
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            typeof value === "boolean"
+              ? true
+              : // Its big keys are no more marked than its small keys
+                id.startsWith("bigkey")
+                ? 0
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance(
+        "hyrule-castle-entrance-south",
+        "hyrule-castle-exit-south",
+      );
+    });
+    const room = "sewers/secret-room/left";
+    // vt's world holds Eastern Palace's big key surely in hand, its spots
+    // all reached there; behind no door noted, the run's world does not
+    const { crossed, keyed } = solutionOf(store());
+    expect(keyed.state.bigKeyP1).toBe(1);
+    expect(crossed?.state.bigKeyP1 ?? 0).toBe(0);
+    // The castle's key may sit in the sewers' secret room, which the
+    // grave's hole, not noted, may drop the fill's state into without it
+    expect(crossed?.state.keyH2 ?? 0).toBe(0);
+    expect(solutionOf(store()).tris[room]).toBe("maybe");
+    // The hole noted: every spot of the key is the player's as the fill's
+    act(() => store().noteEntrance("sanctuary-grave", "sewer-drop"));
+    expect(solutionOf(store()).crossed?.state.keyH2).toBe(1);
+    expect(solutionOf(store()).tris[room]).toBe("yes");
+  });
+
+  it("reads a shuffled boss as any its slot may hold", async () => {
+    const { solver } = await import("@/games/alttpr/logic/crossed");
+    act(() => {
+      setCrossedSolver(solver);
+      store().applyPreset("crosskeys");
+      useGameStore.setState({
+        items: Object.fromEntries(
+          Object.entries(freshItems).map(([id, value]) => [
+            id,
+            typeof value === "boolean"
+              ? id !== "icerod"
+              : // Every boss left unknown (its cell's top is a boss known)
+                id.startsWith("knownboss")
+                ? 0
+                : itemsMax[id],
+          ]),
+        ) as unknown as ItemState,
+      });
+      store().noteEntrance("eastern-palace", "eastern-palace-exit");
+    });
+    const boss = "eastern-palace/boss";
+    // The Armos Knights need no ice rod
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+    // Trinexx, whom the slot may hold, does
+    act(() => store().updateSettings({ bossShuffle: "full" }));
+    expect(solutionOf(store()).tris[boss]).toBe("maybe");
+    // The boss marked (knownboss0, Eastern Palace's): the Armos Knights
+    // again (1), or Trinexx (10), whom no ice rod beats
+    act(() =>
+      useGameStore.setState((s) => ({ items: { ...s.items, knownboss0: 1 } })),
+    );
+    expect(solutionOf(store()).tris[boss]).toBe("yes");
+    act(() =>
+      useGameStore.setState((s) => ({ items: { ...s.items, knownboss0: 10 } })),
+    );
+    expect(solutionOf(store()).tris[boss]).toBe("no");
   });
 });
 

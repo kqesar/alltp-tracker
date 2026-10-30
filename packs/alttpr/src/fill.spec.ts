@@ -12,6 +12,7 @@ import { locationId } from "./location";
 import { compile } from "./pack";
 import {
   type AlttprSettings,
+  noLogicSettings,
   OPEN,
   STANDARD,
   settingsFromUpstream,
@@ -119,6 +120,26 @@ describe("canFill", () => {
     expect(fill(BASIC)("skull-woods/pinball-room", "KeyD3", basic)).toBe("yes");
     expect(fill(BASIC)("skull-woods/pinball-room", "Hammer", basic)).toBe("no");
     expect(canFill("skull-woods/pinball-room", "Hammer", all)).toBe("yes");
+  });
+
+  it("sets no fill rule nor access under No Logic, keeping the region's", () => {
+    // World.php:93 skips Region::initalize; Location.php:77-81
+    const noLogic = noLogicSettings(STANDARD);
+    const canFillNoLogic = fill(noLogic);
+    const none = held(noLogic, { bookOfMudora: 0, keyD1: 0, magicMirror: 0 });
+    expect(canFillNoLogic("desert-palace/map-chest", "Hammer", none)).toBe(
+      "yes",
+    );
+    // A key behind its own door, which the fill rules would refuse
+    expect(canFillNoLogic("desert-palace/torch", "KeyP2", none)).toBe("yes");
+    // A dungeon's items stay in their dungeon
+    expect(canFillNoLogic("kings-tomb", "KeyD1", none)).toBe("no");
+    // With wild keys, the sewers key leaves the escape (Region.php:238)
+    expect(fill(WILD_KEYS)("kings-tomb", "KeyH2", held(WILD_KEYS))).toBe("no");
+    const wild = noLogicSettings(WILD_KEYS);
+    expect(fill(wild)("kings-tomb", "KeyH2", held(wild))).toBe("yes");
+    // What setItem refuses, it still refuses
+    expect(canFillNoLogic("eastern-palace/prize", "Hammer", none)).toBe("no");
   });
 
   it("reads a location's own item once it is placed there", () => {

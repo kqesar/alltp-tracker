@@ -23,8 +23,8 @@
 // `maybe`, as the pack's rules read vt's (keys.ts). What is real code rather
 // than a rule is listed in `unported` with its line, never dropped. What only
 // decides where the randomizer may place an item (forbid_item,
-// add_item_rule, set_always_allow) has no part in what Link can reach; its
-// lines are listed in `fill`.
+// add_item_rule, set_always_allow) has no part in what Link can reach: it is
+// `fill`, data for a key model (the entrance randomizer's: src/er-keys.ts).
 
 import { expression, functionBody, tokens } from "./python.mjs";
 
@@ -375,17 +375,22 @@ export function numberOf(ctx, expr, otherwise) {
  */
 
 /**
- * Everything a translation reads besides the expression.
+ * Everything a translation reads besides the expression. `bossHelper` names
+ * the helper of the boss a region's dungeon fights (at `level` in Ganon's
+ * Tower): its vanilla boss's, or its boss slot's under boss shuffle.
+ * `retroShops`, the retro world's shops, for can_buy_unlimited (the entrance
+ * randomizer's; DR reads its shops itself).
  * @typedef {{
  *   dialect: Dialect,
  *   regionOfLocation: ReadonlyMap<string, string>,
  *   regionOfEntrance: ReadonlyMap<string, string>,
- *   bossOfRegion: (region: string, level?: string) => string,
+ *   bossHelper: (region: string, level?: string) => string,
  *   events: ReadonlyMap<string, string>,
  *   heldEvents: Set<string>,
  *   itemNames: ReadonlySet<string>,
  *   potionShops: readonly string[],
  *   potionShop?: Rule,
+ *   retroShops?: RetroShops,
  *   methodLine: (name: string) => number,
  *   helpers: Map<string, { req: string, source: string }>,
  *   reachedLocations: Set<string>,
@@ -412,6 +417,63 @@ export function numberOf(ctx, expr, otherwise) {
 export function derive(ctx, name, derived) {
   ctx.derived.set(name, derived);
   return setting(name);
+}
+
+/**
+ * The retro world's shops (ItemList.py set_up_shops): those that sell an
+ * item whatever the seed (`fixed`, by item), and the `count` shops drawn
+ * among `regions` that sell `items`.
+ * @typedef {{
+ *   fixed: ReadonlyMap<string, readonly string[]>,
+ *   drawn: { regions: readonly string[], items: readonly string[], count: number },
+ * }} RetroShops
+ */
+
+/**
+ * What the tracker records of a shop that sells an item without end in the
+ * retro world: the pack's `shopArrow` and `shopKey` (items.ts), which the
+ * player marks on finding such a shop.
+ * @type {Readonly<Record<string, string>>}
+ */
+export const SHOP_RECORDS = {
+  "Single Arrow": "shopArrow",
+  "Small Key (Universal)": "shopKey",
+};
+
+/**
+ * can_buy_unlimited(item) (BaseClasses.py): a shop selling it is reached.
+ * A fixed one by its region; one of the drawn shops is a placement the
+ * tracker does not know, so `maybe` while any of them is reached, unless
+ * the player recorded a shop that sells it: one selling the item itself,
+ * or something that only the drawn shops sell, all of which sell it too.
+ * @param {Context} ctx
+ * @param {string} item
+ * @returns {Rule}
+ */
+export function canBuyUnlimited(ctx, item) {
+  const shops = ctx.retroShops;
+  if (shops === undefined) throw new Untranslatable("no retro shops");
+  return helper(
+    ctx,
+    `${ctx.dialect.prefix}CanBuyUnlimited${pascal(item)}`,
+    () => {
+      const { drawn, fixed } = shops;
+      const reached = (/** @type {readonly string[]} */ regions) =>
+        regions.map((r) => atom(`reach(${idOf(ctx, r)})`));
+      const sold = drawn.items.includes(item);
+      const records = Object.entries(SHOP_RECORDS).filter(
+        ([other]) =>
+          other === item ||
+          (sold && drawn.items.includes(other) && !fixed.has(other)),
+      );
+      return any(
+        ...reached(fixed.get(item) ?? []),
+        ...records.map(([, record]) => atom(record)),
+        sold ? all(MAYBE, any(...reached(drawn.regions))) : FALSE,
+      );
+    },
+    `BaseClasses.py:${ctx.methodLine("can_buy_unlimited")}`,
+  );
 }
 
 /**
@@ -513,7 +575,7 @@ export function regionOf(ctx, spot) {
 
 /**
  * The boss a `….parent_region.dungeon.boss` (or `.bosses['top']`) of a
- * spot fights, as its helper.
+ * spot fights, as its helper: its slot's, if boss shuffle fills it.
  * @param {Context} ctx
  * @param {Expr} expr - What `.can_defeat` is called on
  * @param {Scope} scope
@@ -535,9 +597,7 @@ export function bossRule(ctx, expr, scope) {
   )
     throw new Untranslatable("a boss");
   const region = regionOf(ctx, spotOf(dungeon.of.of, scope));
-  return atom(
-    `@${ctx.dialect.prefix}Defeat${pascal(ctx.bossOfRegion(region, level))}`,
-  );
+  return atom(`@${ctx.bossHelper(region, level)}`);
 }
 
 /**
@@ -702,21 +762,37 @@ function call(ctx, expr, scope) {
   switch (fn.name) {
     case "has":
     case "has_key": {
+      const name = fn.name;
       const item = stringOf(args[0], scope);
       const counted = args[2];
+      // The retro world's has_key buys a key, whatever key or count it is
+      // asked (BaseClasses.py:378-380): vt's Retro world, `genericKeys`
+      /** @param {Rule} held */
+      const keyed = (held) =>
+        name === "has"
+          ? held
+          : any(
+              all(negate(setting("genericKeys")), held),
+              all(
+                setting("genericKeys"),
+                canBuyUnlimited(ctx, "Small Key (Universal)"),
+              ),
+            );
       // A count a local function gives by what a location holds
       if (counted?.t === "call" && counted.fn.t === "name") {
         const fn = localFunction(counted.fn.name, scope);
         if (fn !== undefined)
-          return any(
-            ...placedCounts(fn).map(({ count, placed }) =>
-              all(placed ? MAYBE : TRUE, holding(ctx, item, count)),
+          return keyed(
+            any(
+              ...placedCounts(fn).map(({ count, placed }) =>
+                all(placed ? MAYBE : TRUE, holding(ctx, item, count)),
+              ),
             ),
           );
       }
       const count = numberOf(ctx, counted, 1);
       if (typeof count !== "number") throw new Untranslatable("a count");
-      return holding(ctx, item, count);
+      return keyed(holding(ctx, item, count));
     }
     case "can_reach": {
       const target = stringOf(args[0], scope);
@@ -805,6 +881,88 @@ export function parse(statement, text) {
 }
 
 /**
+ * Where the randomizer may place an item, as data (a key model reads it,
+ * src/er-keys.ts): what forbid_item refuses at a location, what
+ * set_always_allow lets in there whatever reaches it, each under the
+ * settings its branch asks for (`when`), and the add_item_rule lines,
+ * which only Ganon's Triforce and the uncle's weapon set.
+ * @typedef {{
+ *   forbid: { item: string, id?: string, location: string, source: string, when: string }[],
+ *   always: { item: string, id?: string, req: string, location: string, source: string, when: string }[],
+ *   itemRules: { location: string, source: string }[],
+ * }} Fill
+ */
+
+/**
+ * The location a fill rule is set on: `world.get_location('X', player)`,
+ * or one of the loop's names.
+ * @param {Context} ctx
+ * @param {Expr} expr
+ * @param {Scope} scope
+ */
+function fillSpot(ctx, expr, scope) {
+  const spot = spotOf(expr, scope);
+  if (spot.kind !== "location")
+    throw new Untranslatable("a fill rule on an entrance");
+  regionOf(ctx, spot);
+  return spot.name;
+}
+
+/**
+ * An item a fill rule names, and the pack's id of a dungeon's key or big key
+ * (`keyD1`, `bigKeyD1`), the items the key model places.
+ * @param {Readonly<Record<string, string>>} codes - The dialect's dungeon codes
+ * @param {string} name
+ * @returns {{ item: string, id?: string }}
+ */
+export function itemNamed(codes, name) {
+  const key = /^(Small|Big) Key \((.+)\)$/.exec(name);
+  const code = key === null ? undefined : codes[key[2] ?? ""];
+  if (key !== null && code === undefined)
+    throw new Untranslatable(`no dungeon ${key[2]}`);
+  return key === null
+    ? { item: name }
+    : { id: `${key[1] === "Small" ? "key" : "bigKey"}${code}`, item: name };
+}
+
+/**
+ * What a set_always_allow lambda lets in: `lambda state, item: item.name ==
+ * 'X' and item.player == player [and <a rule on the state>]`, the item and
+ * that rule.
+ * @param {Context} ctx
+ * @param {Expr | undefined} fn
+ * @param {Scope} scope
+ * @returns {{ item: string, id?: string, req: string }}
+ */
+function alwaysAllowed(ctx, fn, scope) {
+  if (fn?.t !== "lambda" || fn.params.join(",") !== "state,item")
+    throw new Untranslatable("an always-allow other than a lambda");
+  /** @type {string | undefined} */
+  let item;
+  /** @type {Rule[]} */
+  const rules = [];
+  for (const term of fn.body.t === "and" ? fn.body.args : [fn.body]) {
+    const asked =
+      term.t === "compare" &&
+      term.op === "==" &&
+      term.left.t === "attr" &&
+      term.left.of.t === "name" &&
+      term.left.of.name === "item"
+        ? term.left.name
+        : undefined;
+    if (asked === "name" && term.t === "compare")
+      item = stringOf(term.right, scope);
+    else if (asked !== "player") rules.push(translate(ctx, term, scope));
+  }
+  if (item === undefined)
+    throw new Untranslatable("an always-allow of no one item");
+  return {
+    ...itemNamed(ctx.dialect.dungeonCodes, item),
+    req: print(all(...rules)),
+  };
+}
+
+/**
  * Walks Rules.py's statements from set_rules, on vt's path, into the rules
  * of every spot.
  * @param {string} source - Rules.py
@@ -815,8 +973,8 @@ export function walkRules(source, ctx) {
   const spots = new Map();
   /** @type {{ code: string, line: number, why: string }[]} */
   const unported = [];
-  /** @type {number[]} */
-  const fill = [];
+  /** @type {Fill} */
+  const fill = { always: [], forbid: [], itemRules: [] };
   /**
    * The rule added by where the Big Bomb Shop's door is (set_big_bomb_rules):
    * one case per list of doors, the first that holds the door applies.
@@ -1140,11 +1298,10 @@ export function walkRules(source, ctx) {
       }
       case "set_defeat_dungeon_boss_rule": {
         const spot = spotOf(args[0] ?? found, scope);
-        const boss = ctx.bossOfRegion(regionOf(ctx, spot));
         return apply(
           "set",
           spot,
-          atom(`@${ctx.dialect.prefix}Defeat${pascal(boss)}`),
+          atom(`@${ctx.bossHelper(regionOf(ctx, spot))}`),
           scope.when,
           line,
         );
@@ -1172,10 +1329,32 @@ export function walkRules(source, ctx) {
         };
         return apply("and", spot, atom("lamp"), scope.when, line);
       }
-      case "forbid_item":
+      // Where an item may be placed, not what Link reaches: data of its own
+      case "forbid_item": {
+        const spot = fillSpot(ctx, args[0] ?? found, scope);
+        fill.forbid.push({
+          ...itemNamed(ctx.dialect.dungeonCodes, stringOf(args[1], scope)),
+          location: spot,
+          source: `Rules.py:${line}`,
+          when: print(scope.when),
+        });
+        return;
+      }
+      case "set_always_allow": {
+        const spot = fillSpot(ctx, args[0] ?? found, scope);
+        fill.always.push({
+          ...alwaysAllowed(ctx, args[1], scope),
+          location: spot,
+          source: `Rules.py:${line}`,
+          when: print(scope.when),
+        });
+        return;
+      }
       case "add_item_rule":
-      case "set_always_allow":
-        fill.push(line);
+        fill.itemRules.push({
+          location: fillSpot(ctx, args[0] ?? found, scope),
+          source: `Rules.py:${line}`,
+        });
         return;
       default: {
         const hook = ctx.dialect.statement;

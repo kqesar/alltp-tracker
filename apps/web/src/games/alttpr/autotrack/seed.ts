@@ -36,7 +36,9 @@ import {
   BOSS_SHUFFLE_LABELS,
   bossShuffleOf,
   DUNGEON_ITEM_LABELS,
+  ENEMY_HEALTH_LABELS,
   ENTRANCE_LABELS,
+  enemyHealthOf,
   FUNCTIONALITY_LABELS,
   GLITCHES_LABELS,
   type Glitches,
@@ -47,7 +49,11 @@ import {
   POOL_LABELS,
   presets,
   type RunSettings,
+  SWORDS_LABELS,
+  swordsOf,
   type TunableSetting,
+  type TuningValue,
+  tunedOf,
 } from "@/games/alttpr/data/presets";
 
 /** The run the tracker holds: its run type and settings. */
@@ -75,7 +81,7 @@ export type SeedCheck =
   | {
       readonly kind: "reveals";
       readonly seed: string;
-      readonly change: Partial<Pick<RunSettings, TunableSetting>>;
+      readonly change: SeedChange;
       /** "Mystery (Open, Ganon, 7/7)" */
       readonly seedText: string;
     }
@@ -93,18 +99,17 @@ export type SeedCheck =
 
 /** The tracker's goal for each of upstream's it has. */
 const GOALS: Partial<Record<SeedGoal, RunSettings["goal"]>> = {
+  completionist: "completionist",
   dungeons: "all-dungeons",
   fast_ganon: "fast-ganon",
   ganon: "ganon",
+  ganonhunt: "ganonhunt",
   pedestal: "pedestal",
   "triforce-hunt": "triforce-hunt",
 };
 
-/** Upstream's goals the tracker has no run type for, in words. */
-const OTHER_GOALS: Partial<Record<SeedGoal, string>> = {
-  completionist: "the Completionist goal",
-  ganonhunt: "the Ganonhunt goal",
-};
+/** Upstream's goals the tracker has no run type for, in words: none now. */
+const OTHER_GOALS: Partial<Record<SeedGoal, string>> = {};
 
 /**
  * The run's glitched logic for each of upstream's (RandomizerController.php:
@@ -127,15 +132,34 @@ const withGlitches = (
   logic: SeedSetting<SeedLogic>,
 ): RunSettings => {
   const glitches = logic.known ? GLITCHES[logic.value] : settings.glitches;
-  const { glitches: _, ...rest } = settings;
-  return glitches === undefined ? rest : { ...rest, glitches };
+  const { glitches: _, playGlitches, ...rest } = settings;
+  if (glitches === undefined) return rest;
+  // The glitches a No Logic run is played with stay the player's
+  return glitches === "no_logic" && playGlitches !== undefined
+    ? { ...rest, glitches, playGlitches }
+    : { ...rest, glitches };
 };
+
+/**
+ * The glitches a seed's logic reveals to a Mystery run whose glitches are
+ * hidden: undefined while it is not known, and for Major Glitches, which
+ * the ROM's seed type also writes for Hybrid Major Glitches and No Logic
+ * (World.php:1292-1302): a hidden setting is never set from a guess.
+ */
+const revealedGlitches = (
+  logic: SeedSetting<SeedLogic>,
+): Glitches | "none" | undefined =>
+  !logic.known || logic.value === "MajorGlitches"
+    ? undefined
+    : (GLITCHES[logic.value] ?? "none");
 
 /** Short names for the goals, as a seed's summary says them. */
 const GOAL_NAMES: Readonly<Record<RunSettings["goal"], string>> = {
   "all-dungeons": "All Dungeons",
+  completionist: "Completionist",
   "fast-ganon": "Fast Ganon",
   ganon: "Ganon",
+  ganonhunt: "Ganonhunt",
   pedestal: "Pedestal",
   "triforce-hunt": "Triforce Hunt",
 };
@@ -155,9 +179,14 @@ export const COMPARED = [
   "itemFunctionality",
 ] as const satisfies readonly (keyof RunSettings)[];
 
-/** A tunable setting's value, a boss shuffle left out read as "none". */
-const tunedValue = (settings: RunSettings, key: TunableSetting) =>
-  key === "bossShuffle" ? bossShuffleOf(settings) : settings[key];
+/**
+ * What a seed lays on a Mystery run: its tunable settings; the glitches
+ * only while hidden (`revealedGlitches`), a seed of another logic than the
+ * one set switching the run (`sameLogic`).
+ */
+type SeedChange = {
+  [K in Exclude<TunableSetting, "playGlitches">]?: TuningValue<K>;
+};
 
 /** A setting only the seed's file states: the seed's when known, else `own`. */
 const fromFile = <T>(setting: SeedSetting<T> | undefined, own: T): T =>
@@ -248,7 +277,10 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   }
   const differs = (key: TunableSetting) =>
     shown(key) && settings[key] !== preset.settings[key];
-  if (settings.entranceShuffle !== preset.settings.entranceShuffle) {
+  if (
+    shown("entranceShuffle") &&
+    settings.entranceShuffle !== preset.settings.entranceShuffle
+  ) {
     parts.push(
       settings.entranceShuffle === "none"
         ? "vanilla entrances"
@@ -283,8 +315,15 @@ export const describeRun = (presetId: string, settings: RunSettings) => {
   if (shown("bossShuffle") && bossShuffleOf(settings) !== "none") {
     parts.push(`${BOSS_SHUFFLE_LABELS[bossShuffleOf(settings)]} boss shuffle`);
   }
+  // No preset places the swords or changes the enemies' health
+  if (!settings.swordless && swordsOf(settings) !== "randomized") {
+    parts.push(`${SWORDS_LABELS[swordsOf(settings)]} swords`);
+  }
+  if (enemyHealthOf(settings) !== "default") {
+    parts.push(`${ENEMY_HEALTH_LABELS[enemyHealthOf(settings)]} enemy health`);
+  }
   // No preset is glitched
-  if (settings.glitches !== undefined) {
+  if (shown("glitches") && settings.glitches !== undefined) {
     parts.push(GLITCHES_LABELS[settings.glitches]);
   }
   // A Door Randomizer run's own, where they differ from its run type's
@@ -310,24 +349,47 @@ const mysterySeed = (
   run: Run,
   door: DoorRunSettings | null,
 ): SeedCheck => {
-  // Its file hides every setting but the logic; a Door Randomizer seed's
-  // ROM its generator, from the title
+  // Its file hides every setting but the logic, which the ROM may tell; a
+  // Door Randomizer seed's ROM its generator, from the title
+  const revealed = revealedGlitches(logic);
+  const mystery = getPreset("mystery").settings;
   const settings = withGlitches(
     {
-      ...getPreset("mystery").settings,
+      ...mystery,
+      hidden: mystery.hidden?.filter(
+        (key) => revealed === undefined || key !== "glitches",
+      ),
       mode: run.settings.mode,
       ...(door?.randomizer === undefined
         ? {}
         : { randomizer: door.randomizer }),
     },
-    logic,
+    revealed === undefined ? { known: false, why: "mystery" } : logic,
   );
+  // A Mystery run of another generator (alttpr.com's, the Door
+  // Randomizer's) differs, whatever its glitches
   if (
     run.presetId === "mystery" &&
-    settings.glitches === run.settings.glitches &&
     settings.randomizer === run.settings.randomizer
   ) {
-    return { kind: "unread", why: "mystery" };
+    if (revealed !== undefined && isHidden(run.settings, "glitches")) {
+      return {
+        change: { glitches: revealed },
+        kind: "reveals",
+        seed,
+        seedText: describeRun("mystery", {
+          ...withGlitches(run.settings, logic),
+          hidden: run.settings.hidden?.filter((key) => key !== "glitches"),
+        }),
+      };
+    }
+    if (
+      revealed === undefined ||
+      isHidden(run.settings, "glitches") ||
+      revealed === tunedOf(run.settings, "glitches")
+    ) {
+      return { kind: "unread", why: "mystery" };
+    }
   }
   return {
     kind: "differs",
@@ -413,6 +475,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     return { kind: "unsupported", reasons, seed: seed.seed };
   }
 
+  const glitches = revealedGlitches(seed.logic);
+  const glitchesHidden = isHidden(run.settings, "glitches");
   const settings: RunSettings = withGlitches(
     {
       ...run.settings,
@@ -431,7 +495,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       mode: mode.value,
       swordless: swordless.value,
     },
-    seed.logic,
+    // Hidden glitches stay the run's until the seed tells them for sure
+    glitchesHidden && glitches === undefined
+      ? { known: false, why: "mystery" }
+      : seed.logic,
   );
   // The seed's settings hide nothing: a Mystery run's hidden list is its own
   delete settings.hidden;
@@ -447,17 +514,35 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   const bossShuffle = fromFile(seed.bossShuffle, bossShuffleOf(run.settings));
   if (bossShuffle === "none") delete settings.bossShuffle;
   else settings.bossShuffle = bossShuffle;
+  // Only the file states where the swords are and the enemies' health;
+  // randomized and default are said by their absence, as every preset
+  const swords = seed.weapons?.known
+    ? seed.weapons.value === "assured" || seed.weapons.value === "vanilla"
+      ? seed.weapons.value
+      : undefined
+    : run.settings.swords;
+  if (swords === undefined || settings.swordless) delete settings.swords;
+  else settings.swords = swords;
+  const enemyHealth = seed.enemyHealth?.known
+    ? seed.enemyHealth.value === "default"
+      ? undefined
+      : seed.enemyHealth.value
+    : run.settings.enemyHealth;
+  if (enemyHealth === undefined) delete settings.enemyHealth;
+  else settings.enemyHealth = enemyHealth;
   const sameLogic = settings.glitches === run.settings.glitches;
   // A Mystery run takes what the seed reveals, in place, in its own world
-  // and logic
+  // and logic, and its entrance shuffle and glitches while they are hidden
+  const entrancesHidden = isHidden(run.settings, "entranceShuffle");
   if (
     run.presetId === "mystery" &&
     settings.mode === run.settings.mode &&
-    settings.entranceShuffle === run.settings.entranceShuffle &&
-    sameLogic &&
+    (settings.entranceShuffle === run.settings.entranceShuffle ||
+      (entrancesHidden && seed.entrances?.known === true)) &&
+    (sameLogic || (glitchesHidden && glitches !== undefined)) &&
     sameDoorSettings(settings, run.settings)
   ) {
-    const said: Partial<Pick<RunSettings, TunableSetting>> = {
+    const said: SeedChange = {
       crystalsGanon: settings.crystalsGanon,
       crystalsTower: settings.crystalsTower,
       dungeonItems: settings.dungeonItems,
@@ -475,12 +560,21 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       }),
       ...(seed.itemPool?.known && { itemPool: settings.itemPool }),
       ...(seed.bossShuffle?.known && { bossShuffle }),
+      ...(seed.entrances?.known && {
+        entranceShuffle: settings.entranceShuffle,
+      }),
+      ...(seed.weapons?.known &&
+        !settings.swordless && { swords: swordsOf(settings) }),
+      ...(seed.enemyHealth?.known && {
+        enemyHealth: enemyHealthOf(settings),
+      }),
+      ...(glitchesHidden && glitches !== undefined && { glitches }),
     };
     const change = Object.fromEntries(
-      (Object.keys(said) as TunableSetting[])
+      (Object.keys(said) as (keyof SeedChange)[])
         .filter(
           (key) =>
-            said[key] !== tunedValue(run.settings, key) ||
+            said[key] !== tunedOf(run.settings, key) ||
             isHidden(run.settings, key),
         )
         .map((key) => [key, said[key]]),
@@ -498,6 +592,8 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
     sameLogic &&
     COMPARED.every((key) => settings[key] === run.settings[key]) &&
     bossShuffle === bossShuffleOf(run.settings) &&
+    swordsOf(settings) === swordsOf(run.settings) &&
+    enemyHealthOf(settings) === enemyHealthOf(run.settings) &&
     sameDoorSettings(settings, run.settings)
   ) {
     return {

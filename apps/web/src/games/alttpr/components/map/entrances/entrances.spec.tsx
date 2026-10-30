@@ -166,37 +166,81 @@ describe("the entrance assistant", () => {
     expect(useEntrancePicker.getState().picking).toBe("kakariko-shop");
   });
 
-  it("lists the Full shuffle's own pool, and says plainly when a shuffle has none", () => {
+  it("lists each ported shuffle's own pool, and says plainly when a shuffle is not modelled", () => {
     const open = getPreset("open").settings;
-    act(() =>
-      useGameStore
-        .getState()
-        .applyRun("open", { ...open, entranceShuffle: "full" }),
-    );
-    const { unmount } = render(<EntrancesPanel />);
-    expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
-      "0 of 138 entrances noted",
-    );
-    unmount();
-
-    // Simple, Restricted and Insanity pool their entrances otherwise: no
-    // list is better than the crossed shuffle's
-    for (const [shuffle, name] of [
-      ["simple", "Simple"],
-      ["restricted", "Restricted"],
-      ["insanity", "Insanity"],
+    for (const [shuffle, mode, count] of [
+      ["full", "open", 138],
+      ["restricted", "open", 138],
+      ["simple", "standard", 132],
     ] as const) {
       act(() =>
         useGameStore
           .getState()
-          .applyRun("open", { ...open, entranceShuffle: shuffle }),
+          .applyRun("open", { ...open, entranceShuffle: shuffle, mode }),
       );
       const view = render(<EntrancesPanel />);
-      expect(screen.queryByTestId("entrances-summary")).toBeNull();
-      expect(screen.getByTestId("entrances-panel")).toHaveTextContent(
-        `The tracker has no list of the entrances a ${name} shuffle mixes yet`,
+      expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+        `0 of ${count} entrances noted`,
       );
       view.unmount();
     }
+
+    // Insanity parts a door from its way out, Inverted runs tables of its
+    // own: no list is better than a wrong one
+    for (const [shuffle, mode, words] of [
+      ["insanity", "open", "The Insanity entrance shuffle is not modelled yet"],
+      [
+        "simple",
+        "inverted",
+        "The Simple entrance shuffle in the Inverted world is not modelled yet",
+      ],
+    ] as const) {
+      act(() =>
+        useGameStore
+          .getState()
+          .applyRun("open", { ...open, entranceShuffle: shuffle, mode }),
+      );
+      const view = render(<EntrancesPanel />);
+      expect(screen.queryByTestId("entrances-summary")).toBeNull();
+      expect(screen.getByTestId("entrances-panel")).toHaveTextContent(words);
+      view.unmount();
+    }
+  });
+
+  it("notes a Simple run's dungeon whole from one of its doors, in the list and the picker", async () => {
+    const user = userEvent.setup();
+    act(() => {
+      useGameStore.getState().applyRun("open", {
+        ...getPreset("open").settings,
+        entranceShuffle: "simple",
+      });
+      useEntrancePicker.getState().pick("desert-palace-entrance-south");
+    });
+    render(<EntrancePicker />);
+    // A Desert door leads to that door of a four-door dungeon only
+    expect(
+      screen.queryByTestId("entrance-option-eastern-palace-exit"),
+    ).toBeNull();
+    await user.click(
+      screen.getByTestId("entrance-option-turtle-rock-exit-front"),
+    );
+    expect(useGameStore.getState().entrances).toEqual({
+      "desert-palace-entrance-east": "turtle-rock-isolated-ledge-exit",
+      "desert-palace-entrance-north": "turtle-rock-ledge-exit-east",
+      "desert-palace-entrance-south": "turtle-rock-exit-front",
+      "desert-palace-entrance-west": "turtle-rock-ledge-exit-west",
+    });
+    render(<EntrancesPanel />);
+    expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+      "4 of 138 entrances noted",
+    );
+    expect(
+      screen.getByTestId("entrance-row-desert-palace-entrance-north"),
+    ).toHaveTextContent(
+      "Desert Palace Entrance (North)Turtle Rock (Ledge East)",
+    );
+    // One step: one Undo takes the four back
+    act(() => useGameStore.getState().undo());
+    expect(useGameStore.getState().entrances).toEqual({});
   });
 });

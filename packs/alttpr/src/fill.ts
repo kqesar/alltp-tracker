@@ -170,6 +170,11 @@ export function filler(
       }
       const { location, region } = found;
       if (!holdable(location, item)) return "no";
+      // No Logic sets no rule, the fill rules and access included (World.php:
+      // 93, Location.php:77-81): only the region's own canFill holds
+      if (settings.noLogic) {
+        return regionCanFill(region, item, settings) ? "yes" : "no";
+      }
       const fill = location.fill;
       const options = { regions: solution.regions(), settings };
       const value = (req: string) => evaluate(expr(req), state, rules, options);

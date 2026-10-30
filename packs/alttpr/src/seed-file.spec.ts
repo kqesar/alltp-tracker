@@ -24,6 +24,7 @@ describe("seedFileReading", () => {
       bossShuffle: { known: true, value: "none" },
       crystalsGanon: { known: true, value: 7 },
       crystalsTower: { known: true, value: 7 },
+      enemyHealth: { known: true, value: "default" },
       // vt randomized it itself: its entrances are vanilla
       entrances: { known: true, value: "none" },
       goal: { known: true, value: "ganon" },
@@ -34,11 +35,31 @@ describe("seedFileReading", () => {
       mode: { known: true, value: "open" },
       seed: "9MQ9gO1wMD",
       swordless: { known: true, value: false },
+      weapons: { known: true, value: "randomized" },
       wildBigKeys: { known: true, value: false },
       wildCompasses: { known: true, value: false },
       wildKeys: { known: true, value: false },
       wildMaps: { known: true, value: false },
     });
+  });
+
+  it("reads where the swords are and the enemies' health, which only the file states", () => {
+    for (const value of ["assured", "vanilla", "swordless"]) {
+      expect(seedFileReading(withMeta({ weapons: value }))?.weapons).toEqual({
+        known: true,
+        value,
+      });
+    }
+    for (const value of ["easy", "hard", "expert"]) {
+      expect(
+        seedFileReading(withMeta({ "enemizer.enemy_health": value }))
+          ?.enemyHealth,
+      ).toEqual({ known: true, value });
+    }
+    expect(
+      seedFileReading(withMeta({ "enemizer.enemy_health": "silly" }))
+        ?.enemyHealth,
+    ).toEqual({ known: false, why: "unrecognized" });
   });
 
   it("reads a boss-shuffled seed's boss shuffle, never its bosses", () => {
@@ -155,6 +176,7 @@ describe("seedFileReading", () => {
       bossShuffle: hidden,
       crystalsGanon: hidden,
       crystalsTower: hidden,
+      enemyHealth: hidden,
       entrances: hidden,
       goal: hidden,
       itemFunctionality: hidden,
@@ -164,6 +186,7 @@ describe("seedFileReading", () => {
       mode: hidden,
       seed: "xvJo0drkyJ",
       swordless: hidden,
+      weapons: hidden,
       wildBigKeys: hidden,
       wildCompasses: hidden,
       wildKeys: hidden,

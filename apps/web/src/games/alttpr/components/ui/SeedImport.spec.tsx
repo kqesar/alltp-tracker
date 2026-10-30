@@ -83,16 +83,17 @@ describe("SeedImport", () => {
     expect(onSwitch).not.toHaveBeenCalled();
   });
 
-  it("says why no run type holds a seed", async () => {
-    const { load } = setUp(withMeta({ goal: "ganonhunt" }));
+  it("hands on a Ganonhunt seed, a run type of its own", async () => {
+    const { load, onSwitch } = setUp(withMeta({ goal: "ganonhunt" }));
 
     load("9MQ9gO1wMD");
 
-    expect(
-      await screen.findByText(
-        /^No run type here holds this seed \(the Ganonhunt goal\)/,
-      ),
-    ).toBeInTheDocument();
+    await vi.waitFor(() => expect(onSwitch).toHaveBeenCalledOnce());
+    expect(onSwitch.mock.calls[0]?.[0]).toMatchObject({
+      kind: "differs",
+      presetId: "ganonhunt",
+      seedText: "Ganonhunt (Open, Ganonhunt, 7/7)",
+    });
   });
 
   it("says when alttpr.com gives nothing", async () => {
