@@ -211,7 +211,9 @@ readings instead:
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `no-logic` | the run's **Glitches** or the log's `meta.logic` is No Logic: the seed promises no route, so no place is ever "in logic" and nothing waited for the logic. Solving it with the glitches it was played with would time what was reachable, which is no promise the seed made: the waits would read as the logic's when they are not, so they are refused |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a log whose `meta.logic` is not the run's **Glitches** (vt's names, `RandomizerController.php:110-116`). Overworld Glitches, Hybrid Major Glitches and Major Glitches are the pack's: their waits are solved in their own logic, as the map is (`packSettings`), each held by its real seed's playthrough taken in order (`sweep.spec.ts`: nothing in logic before the log's own playthrough has it, and the NoGlitches logic would not have it) |
-| `door-logic` (after the causes above) | the log is a Door Randomizer's whose run is not solved in DR's own world (`doorLogic`; a guard: every such run, an OWR seed, shuffled bosses or hidden settings, is `not-modelled` above, since alttpr.com's v31 would say "in logic" from rules the seed was not made with), or an item the seed needed lay at one of DR's places (a key drop, a pot, an enemy drop, a shop item), which the run keeps no time for |
+| `doors` | the log is a Door Randomizer's whose doors were shuffled: where each led is not stamped |
+| `overworld` | the log is an Overworld Randomizer's whose whirlpools, flute spots, crossed edges or Mixed flips were shuffled: where each led is not stamped, and the sweep, which holds no note, would read them vanilla |
+| `door-logic` (after the causes above) | the log is a Door Randomizer's or its Overworld fork's whose run is not solved in that randomizer's own world (`doorLogic`; a guard: every such run, an OWR seed the fork's world does not hold, shuffled bosses or hidden settings, is `not-modelled` above, since alttpr.com's v31 would say "in logic" from rules the seed was not made with), or an item the seed needed lay at one of DR's places (a key drop, a pot, an enemy drop, a bonk drop, a shop item), which the run keeps no time for |
 | `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode in an earlier version did not read a dungeon's chests (it does now, v2.0's dungeon-locations) |
 | `by-hand` | fewer than half the needed finds are matched by place otherwise: the times are clicks |
 | `no-times` | nothing needed has a time |
@@ -250,7 +252,7 @@ section, `doorLogic`) is swept through that world: `useSweep.ts` loads its chunk
 `sweepRun`, which solves each instant there with the log's keys counted where it put them, as for vt, but under
 the seed's own key holding, never keysanity's: DR's key rules depend on it (strict logic applies only to wild
 keys, `Rules.py:2349-2351`, and its key analysis reads the shuffles), where vt's do not. Its waits
-are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places;
+are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places (a bonk drop among them), and while its doors (`doors`) or its fork's overworld (`overworld`) were shuffled;
 a static key logic seed is solved in that world too (its port, `door-world/static.ts`). Its key drops, pots, enemy drops and shop
 items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"
 (the timeline never dates them, `isTimelineKey`, which keeps a shared link short), one it did not "never

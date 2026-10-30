@@ -29,7 +29,7 @@ import { useReviewStore } from "@/review/store";
 /**
  * The panel's views, as its tabs: the Entrances list with shuffled ones,
  * the Doors list with shuffled doors, the Overworld's notes with an OWR
- * run's shuffled whirlpools or flute spots.
+ * run's shuffled whirlpools, flute spots, crossed edges or Mixed flips.
  */
 const viewsOf = (
   entrances: boolean,
@@ -62,7 +62,7 @@ const DoorsPanel = lazy(
   () => import("@/games/alttpr/components/map/doors/DoorsPanel"),
 );
 
-/** An OWR run's overworld notes: whirlpools and flute spots. */
+/** An OWR run's overworld notes: whirlpools, flute spots, edges, flips. */
 const OverworldPanel = lazy(
   () => import("@/games/alttpr/components/map/overworld/OverworldPanel"),
 );

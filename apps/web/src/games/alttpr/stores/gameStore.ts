@@ -175,14 +175,15 @@ type GameState = Progress &
      * Note a Door Randomizer run's doors (`DoorNotes`): each entry of the
      * change set, or forgotten (`null`), as one undo step (none when nothing
      * changes). Its pieces come whole from `logic/doorNotes.ts`, which
-     * keeps a coupled door's way back with it.
+     * keeps only what the player noted (a coupled door's way back is
+     * derived, `linkOf`).
      */
     noteDoors: (change: DoorNotesChange) => void;
     /**
      * Note an Overworld Randomizer run's shuffled overworld
      * (`OverworldNotes`): whirlpools set or forgotten, each with its way
-     * back, or the flute's spots, as one undo step (none when nothing
-     * changes; `logic/overworldNotes.ts`).
+     * back, the flute's spots, edge crossings or Mixed flips, as one undo
+     * step (none when nothing changes; `logic/overworldNotes.ts`).
      */
     noteOverworld: (change: OverworldNotesChange) => void;
     /**
