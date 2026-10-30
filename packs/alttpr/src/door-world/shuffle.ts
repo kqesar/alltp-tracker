@@ -80,6 +80,26 @@ export function bunnyWall(
 }
 
 /**
+ * Whether a door of bunny_impassible_if_trapped is a trap as the run knows
+ * it (Rules.py:2191-2194 at DR 1.5.8 reads the seed's `door.trapped`,
+ * which a trap shuffle sets, DoorShuffle.py:2494, :2504): its room's
+ * under no shuffle of its kind, else the noted kind, `maybe` until noted.
+ */
+export function bunnyTrapped(
+  data: DrData,
+  name: string,
+  doors?: DrNotedDoors,
+): "yes" | "no" | "maybe" {
+  const door = data.doorByName.get(name);
+  if (door === undefined) return "no";
+  if (doors === undefined || !kindShuffled(door, doors.settings))
+    return door.trapped === true ? "yes" : "no";
+  const note = kindIn(door, doors);
+  if (note === undefined) return "maybe";
+  return note === "trap" ? "yes" : "no";
+}
+
+/**
  * Whether a trap door shuts as an exit (is_trap_door_blocked,
  * DoorShuffle.py:2533-2534): every trap but trap_door_exceptions
  * (:2511-2530), which a trap mode leaves passable once in.

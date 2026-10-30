@@ -68,6 +68,11 @@ export interface BunnyOptions {
    * (doors_to_check, Rules.py:2196-2201): none by default.
    */
   readonly wallOf?: (exit: string) => BunnyWall;
+  /**
+   * Whether a door of bunny_impassible_if_trapped is a trap in the run
+   * (Rules.py:2191-2194 at DR 1.5.8): by default its vanilla `trapped`.
+   */
+  readonly trappedOf?: (exit: string) => BunnyWall;
 }
 
 /**
@@ -89,7 +94,13 @@ export function addBunnyRules(
     readonly dark: ReadonlySet<string>;
   },
   mode: DrMode,
-  { added = new Map(), moreCaves = [], wallOf = () => "no" }: BunnyOptions = {},
+  {
+    added = new Map(),
+    moreCaves = [],
+    wallOf = () => "no",
+    trappedOf = (name) =>
+      data.doorByName.get(name)?.trapped === true ? "yes" : "no",
+  }: BunnyOptions = {},
 ): Map<string, string> {
   /** The rules found, each a helper read by name, in the order found. */
   const helpers = new Map<string, string>();
@@ -159,21 +170,22 @@ export function addBunnyRules(
   const shopEntrance = into.get(shop)?.[0];
   if (isBunny(shop) && shopEntrance !== undefined)
     add(shopEntrance, ruleToAdd(shop));
-  // The doors a bunny cannot pass (:2175-2178), and those it cannot once
-  // trapped (:2180-2183)
+  // The doors a bunny cannot pass (:2175-2178)
   for (const name of lists.impassableDoors.value) {
     const exit = named.get(name);
     if (exit !== undefined && isBunny(exit.from))
       add(exit, ruleToAdd(exit.from));
   }
+  // Those it cannot pass once trapped (:2180-2183; Rules.py:2191-2194 at
+  // DR 1.5.8, owr:Rules.py:2019-2022): the seed's trap, as the run knows
+  // it, maybe while its kind is not noted
   for (const name of lists.impassableIfTrapped.value) {
     const exit = named.get(name);
-    if (
-      exit !== undefined &&
-      data.doorByName.get(name)?.trapped === true &&
-      isBunny(exit.from)
-    )
-      add(exit, ruleToAdd(exit.from));
+    if (exit === undefined || !isBunny(exit.from)) continue;
+    const trapped = trappedOf(name);
+    if (trapped === "no") continue;
+    const rule = ruleToAdd(exit.from);
+    add(exit, trapped === "yes" ? rule : or(rule, "maybe"));
   }
   // The walls a bunny cannot pass (doors_to_check, Rules.py:2196-2201: its
   // filter `x not in bunny_impassible_doors` sets a door against names, so

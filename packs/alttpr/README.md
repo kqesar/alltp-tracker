@@ -1356,7 +1356,10 @@ shared with the entrance randomizer's world). `bunny.ts` ports
 `set_bunny_rules`, the walls a bunny cannot pass included (`doors_to_check`,
 `Rules.py:2196-2201`: a normal or interior door whose kind in its room is
 dashable, bombable or hidden, `bunnyWall`): the room's kind, or under a door
-shuffle that may change it the noted one, `maybe` until noted. Each rule it
+shuffle that may change it the noted one, `maybe` until noted, and the
+doors it cannot pass once trapped (`bunny_impassible_if_trapped`,
+`Rules.py:2191-2194`, `bunnyTrapped`), read the same way: the seed's trap,
+which a trap shuffle sets, the noted kind where it may. Each rule it
 finds is a helper of the world's own (`@bunny<n>`, compiled once and
 memoized like DR's helpers), as DR's paths share the rules they capture
 (`path + [entrance.access_rule]`): written out as text, a dungeon whose

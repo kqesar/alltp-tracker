@@ -12,7 +12,7 @@ import {
   REMOVED_EXITS,
   vanillaConnections,
 } from "./connections";
-import { type DoorKindNote, doorId } from "./doors";
+import { type DoorKindNote, doorId, kindShuffled } from "./doors";
 import { DR_DATA } from "./dr-data";
 import {
   DR_DEFAULTS,
@@ -23,7 +23,7 @@ import {
   regionProbeId,
 } from "./index";
 import { worldKeys } from "./keys";
-import { bunnyWall } from "./shuffle";
+import { bunnyTrapped, bunnyWall } from "./shuffle";
 import { zeldaPath } from "./standard";
 
 const settings = (mode: "open" | "standard" | "inverted"): Settings => ({
@@ -484,6 +484,64 @@ describe("the Door Randomizer's world (door-world)", () => {
       "no",
     );
     expect(solveFacts(world, all).location(secret)).toBe("yes");
+  });
+
+  it("stops a bunny at a door trapped in the run, by the kind noted", () => {
+    // bunny_impassible_if_trapped (Rules.py:2191-2194 at DR 1.5.8) reads
+    // the seed's door.trapped, which a trap shuffle sets (DoorShuffle.py:
+    // 2494, :2504): a door the shuffle may make a trap asks the noted kind
+    const list = (
+      ruleData as unknown as {
+        bunny: { impassableIfTrapped: { value: readonly string[] } };
+      }
+    ).bunny.impassableIfTrapped.value;
+    const settings = {
+      decoupled: false,
+      intensity: 2,
+      shuffle: "basic",
+      trapMode: "oneway",
+    } as const;
+    const name = list.find((door) => {
+      const found = DR_DATA.doorByName.get(door);
+      return found !== undefined && kindShuffled(found, settings);
+    });
+    if (name === undefined) throw new Error("no trap door the shuffle moves");
+    const noted = (kinds: Record<string, DoorKindNote>): DrNotedDoors => ({
+      notes: { kinds },
+      settings,
+    });
+    expect(bunnyTrapped(DR_DATA, name, noted({}))).toBe("maybe");
+    expect(bunnyTrapped(DR_DATA, name, noted({ [doorId(name)]: "trap" }))).toBe(
+      "yes",
+    );
+    expect(
+      bunnyTrapped(DR_DATA, name, noted({ [doorId(name)]: "normal" })),
+    ).toBe("no");
+    // The bunny's rule on it: the pearl once a trap, maybe while not known
+    const rooms = DR_DATA.regions
+      .filter((r) => r.type === "dungeon")
+      .slice(0, 2)
+      .map((r) => r.name);
+    const exitOf = (trapped: "yes" | "no" | "maybe") => {
+      const exit = {
+        from: rooms[0] as string,
+        name,
+        req: "true",
+        to: rooms[1] as string,
+      };
+      addBunnyRules(
+        DR_DATA,
+        [exit],
+        new Map(),
+        { dark: new Set(rooms), light: new Set() },
+        "open",
+        { trappedOf: () => trapped },
+      );
+      return exit.req;
+    };
+    expect(exitOf("no")).toBe("true");
+    expect(exitOf("yes")).toBe("(moonPearl)");
+    expect(exitOf("maybe")).toBe("((moonPearl) | (maybe))");
   });
 
   it("makes the light world the bunny's in Inverted", () => {
