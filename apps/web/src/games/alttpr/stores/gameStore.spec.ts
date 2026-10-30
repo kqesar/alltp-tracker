@@ -349,6 +349,17 @@ describe("GameStore", () => {
       expect(store().items.bombcapacity).toBe(15);
       store().updateDoorSettings({ bombBag: true });
       expect(store().items.bombcapacity).toBe(0);
+      // A +10 recorded while the bag was not known on: the bag found, kept
+      store().updateDoorSettings({ bombBag: undefined });
+      store().handleItemClick("bombcapacity");
+      store().handleItemClick("bombcapacity");
+      expect(store().items.bombcapacity).toBe(20);
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(10);
+      // The 10 of a run without the bag alone: none
+      store().updateDoorSettings({ bombBag: false });
+      store().updateDoorSettings({ bombBag: true });
+      expect(store().items.bombcapacity).toBe(0);
       // Not known: the cell is left as it is
       store().handleItemClick("bombcapacity");
       store().updateDoorSettings({ bombBag: undefined });

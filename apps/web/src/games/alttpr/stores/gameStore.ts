@@ -460,10 +460,11 @@ const dated = (
 
 /**
  * The bombs a run's capacity becomes when its bomb bag turns known on or
- * stops being so; undefined when it stays. Turned on, they are none
- * (BAG_BOMBS): a run's 10 to start with would say the bag found, which
- * autotracking reads again outside Race Mode. Turned off, none read back as
- * the 10 every other run starts with.
+ * stops being so; undefined when it stays. Turned on, the +10 upgrades
+ * recorded beyond the 10 every other run starts with, each a bag
+ * (BAG_BOMBS: a +5 is none in a bag seed), so none for those 10 alone,
+ * which would say the bag found (autotracking reads it again outside Race
+ * Mode). Turned off, none read back as the 10 every other run starts with.
  */
 const bagBombs = (
   progress: Progress,
@@ -471,8 +472,17 @@ const bagBombs = (
 ): number | undefined => {
   const bag = isBagRun(settings);
   if (bag === isBagRun(progress.settings)) return undefined;
-  if (bag) return BAG_BOMBS.start;
   const start = CAPACITIES.bombcapacity?.start ?? 0;
+  if (bag) {
+    const upgrades = Number(progress.items.bombcapacity ?? 0) - start;
+    return Math.min(
+      BAG_BOMBS.top,
+      Math.max(
+        BAG_BOMBS.start,
+        Math.floor(upgrades / BAG_BOMBS.step) * BAG_BOMBS.step,
+      ),
+    );
+  }
   return Math.max(start, Number(progress.items.bombcapacity ?? 0));
 };
 
