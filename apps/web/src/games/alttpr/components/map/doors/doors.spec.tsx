@@ -157,6 +157,39 @@ describe("the Doors tab", () => {
     expect(store().doors.keys).toBeUndefined();
   });
 
+  it("searches a dungeon's doors, saying how many show, and names its lobbies as the tracker does", async () => {
+    const user = userEvent.setup();
+    run({ doorIntensity: "3", doorShuffle: "crossed" });
+    render(<DoorsPanel />);
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Ganons Tower",
+    ]);
+    expect(
+      screen.getByRole("combobox", {
+        name: "Ganon's Tower entrance: opens on",
+      }),
+    ).toBeInTheDocument();
+    const search = screen.getByRole("searchbox", { name: "Search" });
+    await user.type(search, "lobby");
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(
+      /, \d+ shown$/,
+    );
+    await user.clear(search);
+    await user.type(search, "nothing like it");
+    expect(screen.getByTestId("doors-summary")).toHaveTextContent(", 0 shown");
+    expect(screen.getByTestId("doors-none")).toHaveTextContent(
+      "No door of Ganon's Tower matches “nothing like it”.",
+    );
+    // No heading left over an empty list
+    expect(screen.queryByRole("heading", { name: "Doors" })).toBeNull();
+    // Another dungeon shows whole
+    await user.selectOptions(screen.getByTestId("doors-dungeon"), [
+      "Eastern Palace",
+    ]);
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("heading", { name: "Doors" })).toBeInTheDocument();
+  });
+
   it("asks no lobby below intensity 3, nor keys in basic", async () => {
     run({ doorIntensity: "2", doorShuffle: "basic" });
     render(<DoorsPanel />);

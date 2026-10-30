@@ -225,6 +225,12 @@
   width: 5rem;
 }
 
+/* "?": not known, as legible as the hints */
+.doors__keys-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
 .door-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -238,6 +244,14 @@
 .door-row__name {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* A phone's panel: each control a whole line, so the door noted reads in
+   full without opening its select */
+@media (max-width: 30rem) {
+  .door-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .door-row__link,

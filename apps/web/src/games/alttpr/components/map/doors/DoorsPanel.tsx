@@ -71,7 +71,7 @@ const KindSelect = ({ door, label }: { door: string; label: string }) => {
       }
       value={kind ?? ""}
     >
-      <option value="">? Kind</option>
+      <option value="">? Not known</option>
       {KIND_WORDS.map(([value, words]) => (
         <option key={value} value={value}>
           {words}
@@ -176,10 +176,11 @@ const LobbyRow = ({
   );
   return (
     <li className="door-row door-row--lobby" data-testid={`door-lobby-${id}`}>
-      <span className="door-row__name">{portal} entrance</span>
+      <span className="door-row__name">{dungeonText(portal)} entrance</span>
       <select
-        aria-label={`${portal} entrance: opens on`}
+        aria-label={`${dungeonText(portal)} entrance: opens on`}
         className="checks__input door-row__link"
+        data-testid={`door-lobby-link-${id}`}
         onChange={(event) => {
           const value = event.currentTarget.value;
           noteDoors({ lobbies: { [id]: value === "" ? null : value } });
@@ -287,6 +288,9 @@ const DoorsPanel = () => {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const matches = (door: Door) =>
     words.every((word) => door.name.toLowerCase().includes(word));
+  const shownDoors = relinked.filter(matches);
+  const shownRooms = kindOnly.filter(matches);
+  const shown = shownDoors.length + shownRooms.length;
   const linked = relinked.filter(
     (door) =>
       linkOf(notes.links, doorId(door.name), !settings.decoupled) !== undefined,
@@ -315,7 +319,11 @@ const DoorsPanel = () => {
             className="checks__input"
             data-testid="doors-dungeon"
             id={selectId}
-            onChange={(event) => setDungeon(event.currentTarget.value)}
+            onChange={(event) => {
+              setDungeon(event.currentTarget.value);
+              // A search is a dungeon's: the next one shows whole
+              setQuery("");
+            }}
             value={dungeon}
           >
             {DUNGEONS.map((name) => (
@@ -348,7 +356,13 @@ const DoorsPanel = () => {
         {linked} of {relinked.length} doors of {dungeonText(dungeon)} noted,{" "}
         {unknownKinds.length} {unknownKinds.length === 1 ? "kind" : "kinds"} not
         known
+        {words.length > 0 && `, ${shown} shown`}
       </p>
+      {words.length > 0 && shown === 0 && (
+        <p className="entrances__hint" data-testid="doors-none">
+          No door of {dungeonText(dungeon)} matches “{query.trim()}”.
+        </p>
+      )}
       <p className="entrances__hint">
         Note each door by hand as you go through it: the tracker never reads a
         door, a room or a transition. A door not noted leads nowhere, and a door
@@ -394,28 +408,30 @@ const DoorsPanel = () => {
           </ul>
         </section>
       )}
-      <section
-        aria-labelledby={`${headingId}-doors`}
-        className="entrances__world"
-      >
-        <h3
-          className="entrances__heading page-background"
-          id={`${headingId}-doors`}
+      {shownDoors.length > 0 && (
+        <section
+          aria-labelledby={`${headingId}-doors`}
+          className="entrances__world"
         >
-          Doors
-        </h3>
-        <ul className="entrances__list">
-          {relinked.filter(matches).map((door) => (
-            <DoorRow
-              door={door}
-              key={door.name}
-              settings={settings}
-              targets={targets.get(door.name) ?? []}
-            />
-          ))}
-        </ul>
-      </section>
-      {kindOnly.length > 0 && (
+          <h3
+            className="entrances__heading page-background"
+            id={`${headingId}-doors`}
+          >
+            Doors
+          </h3>
+          <ul className="entrances__list">
+            {shownDoors.map((door) => (
+              <DoorRow
+                door={door}
+                key={door.name}
+                settings={settings}
+                targets={targets.get(door.name) ?? []}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+      {shownRooms.length > 0 && (
         <section
           aria-labelledby={`${headingId}-rooms`}
           className="entrances__world"
@@ -427,7 +443,7 @@ const DoorsPanel = () => {
             Doors inside rooms
           </h3>
           <ul className="entrances__list">
-            {kindOnly.filter(matches).map((door) => (
+            {shownRooms.map((door) => (
               <li
                 className="door-row door-row--kind"
                 data-testid={`door-row-${doorId(door.name)}`}
