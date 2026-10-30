@@ -958,7 +958,9 @@ describe("the settings in a link (link 4)", () => {
   it("carries an Overworld Randomizer run's settings and bonk drops taken", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
+      bombBag: false,
       bonkDrops: true,
+      customGoals: true,
       prizeShuffle: "nearby",
       randomizer: "owr",
       shuffleFollowers: true,

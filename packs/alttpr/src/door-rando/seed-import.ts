@@ -154,6 +154,24 @@ const goalOf = (meta: Meta): SeedGoal | null => {
   ] as const);
 };
 
+/**
+ * Whether OWR's `custom_goals` sets a goal: its four goals (gtentry,
+ * ganongoal, pedgoal, murahgoal) None unless the customizer sets one
+ * (BaseClasses.py:203), per player in a multiworld's meta. Null when meta
+ * does not name them (DR itself, a fork before 0.6.1.0).
+ */
+const goalsSet = (goals: unknown): boolean | null => {
+  if (goals === undefined) return null;
+  if (goals === null) return false;
+  if (typeof goals !== "object") return true;
+  const values = Object.values(goals as Record<string, unknown>);
+  return values.some((value) =>
+    value !== null && typeof value === "object" && !("requirements" in value)
+      ? goalsSet(value) === true
+      : value !== null,
+  );
+};
+
 /** DR's own settings by name, from `meta`; null when one is missing. */
 const exactOf = (meta: Meta): DoorExactSettings | null => {
   const doorShuffle = oneOf(meta.door_shuffle, [
@@ -215,6 +233,7 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   // Only the Overworld fork writes `ow_layout` (OWR 0.8.0.0 BaseClasses.py)
   if (!("ow_layout" in meta)) return exact;
   const followers = flagOf(meta.shuffle_followers);
+  const customGoals = goalsSet(meta.custom_goals);
   return {
     ...exact,
     overworld: {
@@ -226,6 +245,10 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
       // its own (ItemList.py:1740-1745, BaseClasses.py:1751). Where meta
       // does not name one, it is not known, never none
       ...(followers === null ? {} : { followers }),
+      // A customizer goal replaces a goal's rule (OWR 0.8.0.2 Rules.py:71-73,
+      // :93-95, :368-370, :536-538, get_goal_rule :176-290), which the
+      // fork's world does not read
+      ...(customGoals === null ? {} : { customGoals }),
       layout: String(meta.ow_layout),
       mixed: flagOf(meta.ow_mixed) ?? false,
       ...(typeof meta.prizeshuffle === "string"

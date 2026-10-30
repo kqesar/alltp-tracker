@@ -267,6 +267,7 @@ const openBonkRun = async (page: Page) => {
     saved.state.settings = {
       ...saved.state.settings,
       bonkDrops: true,
+      customGoals: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,

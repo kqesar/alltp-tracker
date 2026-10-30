@@ -35,6 +35,7 @@ describe("useDoorLogic", () => {
       useGameStore.getState().applyPreset("door-randomizer");
       useGameStore.getState().updateDoorSettings({
         bombBag: false,
+        customGoals: false,
         prizeShuffle: "none",
         randomizer: "owr",
         shuffleFollowers: false,

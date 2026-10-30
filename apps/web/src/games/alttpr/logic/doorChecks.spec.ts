@@ -138,6 +138,7 @@ describe("a Door Randomizer run's checks", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       bonkDrops: true,
+      customGoals: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,

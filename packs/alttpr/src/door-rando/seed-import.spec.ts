@@ -145,6 +145,39 @@ describe("avianartReading", () => {
       followers: true,
       prizeShuffle: "wild",
     });
+    // Not named: not known, never none
+    const unnamed = { ...meta };
+    delete unnamed.prizeshuffle;
+    delete unnamed.shuffle_followers;
+    const without = avianartReading(
+      { response: { spoiler: { meta: unnamed } } },
+      "4kxBlrWuP",
+    )?.doorExact?.overworld;
+    expect(without).not.toHaveProperty("followers");
+    expect(without).not.toHaveProperty("prizeShuffle");
+  });
+
+  it("reads OWR's custom goals: none while each is None", () => {
+    const json = avianart("4kxBlrWuP") as {
+      response: { spoiler: { meta: Record<string, unknown> } };
+    };
+    const { meta } = json.response.spoiler;
+    const goals = (custom_goals: unknown) =>
+      avianartReading(
+        { response: { spoiler: { meta: { ...meta, custom_goals } } } },
+        "4kxBlrWuP",
+      )?.doorExact?.overworld?.customGoals;
+    // The recorded meta: gtentry, ganongoal, pedgoal, murahgoal all None
+    expect(
+      avianartReading(json, "4kxBlrWuP")?.doorExact?.overworld,
+    ).toMatchObject({ customGoals: false });
+    // A customizer's GT entry (Rules.py:536-538), and a multiworld's map
+    const gt = { requirements: [{ condition: 0x02, target: 5 }] };
+    expect(goals({ ...(meta.custom_goals as object), gtentry: gt })).toBe(true);
+    expect(goals({ 1: { gtentry: null, pedgoal: null } })).toBe(false);
+    expect(goals({ 1: { gtentry: gt, pedgoal: null } })).toBe(true);
+    // Not named (DR itself, an older fork): not known
+    expect(goals(undefined)).toBeUndefined();
   });
 
   it("reads every enemy, lottery pots and shopsanity, crossed entrances", () => {

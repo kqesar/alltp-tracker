@@ -493,6 +493,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   decoupledDoors:false decoupledDoors:true
   prizeShuffle:none prizeShuffle:dungeon prizeShuffle:nearby prizeShuffle:wild
   shuffleFollowers:false shuffleFollowers:true
+  customGoals:false customGoals:true
 `
   .trim()
   .split(/\s+/);
@@ -504,6 +505,7 @@ const SETTINGS_PACKED = 4;
 const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
   "bombBag",
   "bonkDrops",
+  "customGoals",
   "decoupledDoors",
   "owMixed",
   "owWhirlpool",

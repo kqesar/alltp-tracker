@@ -386,6 +386,11 @@ export interface DoorExactSettings {
      */
     readonly prizeShuffle?: string;
     readonly followers?: boolean;
+    /**
+     * Whether a customizer goal is set (`custom_goals`: GT's entry, Ganon,
+     * the pedestal or Murahdahla, any not None), where `meta` names them.
+     */
+    readonly customGoals?: boolean;
   };
 }
 

@@ -20,6 +20,7 @@ import {
   doorValueText,
   doorVersionOf,
   FOLLOWERS_NOT_KNOWN,
+  GOALS_NOT_KNOWN,
   isDoorSettings,
   PRIZES_NOT_KNOWN,
   sameDoorSettings,
@@ -52,6 +53,7 @@ const DR_CROSSKEYS = {
 };
 /** An OWR run whose prize and follower shuffles are set: none of either. */
 const OWR = {
+  customGoals: false,
   prizeShuffle: "none",
   randomizer: "owr",
   shuffleFollowers: false,
@@ -101,7 +103,13 @@ describe("a Door Randomizer run's logic", () => {
     expect(unmodelledReasons(with_(DR, { randomizer: "owr" }))).toEqual([
       PRIZES_NOT_KNOWN,
       FOLLOWERS_NOT_KNOWN,
+      GOALS_NOT_KNOWN,
     ]);
+    // A customizer goal replaces a goal's rule, which the fork's world
+    // does not read (Rules.py:71-73, :368-370, :536-538)
+    expect(unmodelledReasons(with_(DR, { ...OWR, customGoals: true }))).toEqual(
+      ["the customizer's goals"],
+    );
     expect(
       unmodelledReasons(with_(DR, { ...OWR, shuffleFollowers: undefined })),
     ).toEqual([FOLLOWERS_NOT_KNOWN]);

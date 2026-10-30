@@ -141,6 +141,14 @@ export type DoorRunSettings = {
   prizeShuffle?: PrizeShuffle;
   shuffleFollowers?: boolean;
   /**
+   * Whether OWR's customizer sets a goal (`custom_goals`: GT's entry,
+   * Ganon, the pedestal or Murahdahla), whose rule the fork's world does
+   * not read (Rules.py:71-73, :368-370, :536-538). A spoiler's meta names
+   * it; a ROM's goal tables are not read (seed-settings.ts). Unset, it is
+   * not known (`DOOR_UNSET`), a cause of `doorReasons` for an OWR run.
+   */
+  customGoals?: boolean;
+  /**
    * The bomb bag (`--bombbag`: bombs need the +10 upgrade, can_use_bombs,
    * BaseClasses.py:1208-1209): a spoiler's meta names it, the ROM's item
    * substitutions tell it (seed-settings.ts). Unset, it is not known
@@ -183,8 +191,8 @@ export type DoorSetting = keyof DoorRunSettings;
  * The DR settings a run may leave unset, which no default stands for: what
  * a ROM may not state and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
- * move, and the bomb bag and OWR's prize and follower shuffles are causes
- * of `doorReasons`.
+ * move, and the bomb bag and OWR's prize and follower shuffles and custom
+ * goals are causes of `doorReasons`.
  */
 export const DOOR_UNSET = [
   "shuffleLinks",
@@ -193,6 +201,7 @@ export const DOOR_UNSET = [
   "prizeShuffle",
   "shuffleFollowers",
   "bombBag",
+  "customGoals",
 ] as const;
 
 /** A DR setting a run may leave unset. */
@@ -249,6 +258,10 @@ export const DOOR_OPTIONS = {
   bonkDrops: [
     [false, "Off"],
     [true, "Shuffled"],
+  ],
+  customGoals: [
+    [false, "None"],
+    [true, "Set"],
   ],
   decoupledDoors: [
     [false, "Off"],
@@ -384,6 +397,7 @@ export const DOOR_OPTIONS = {
 export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   bombBag: "Bomb bag",
   bonkDrops: "Bonk drops",
+  customGoals: "Custom goals",
   decoupledDoors: "Decoupled doors",
   doorEntrances: "DR entrances",
   doorIntensity: "Door intensity",
@@ -434,6 +448,7 @@ const OWR_ROWS = [
   "bonkDrops",
   "prizeShuffle",
   "shuffleFollowers",
+  "customGoals",
 ] as const satisfies readonly DoorSetting[];
 
 /** The door shuffle's own settings, shown while doors are shuffled. */
@@ -732,6 +747,10 @@ export const doorReasons = (
       reasons.push("shuffled dungeon prizes");
     if (door.shuffleFollowers === undefined) reasons.push(FOLLOWERS_NOT_KNOWN);
     else if (door.shuffleFollowers) reasons.push("shuffled followers");
+    // A customizer goal replaces GT's entry, Ganon's, the pedestal's or
+    // Murahdahla's rule (Rules.py:71-73, :93-95, :368-370, :536-538)
+    if (door.customGoals === undefined) reasons.push(GOALS_NOT_KNOWN);
+    else if (door.customGoals) reasons.push("the customizer's goals");
   }
   return reasons;
 };
@@ -742,6 +761,10 @@ export const BOMB_BAG_NOT_KNOWN = "the bomb bag not known yet (set it in Mode)";
 /** The cause `doorReasons` gives while an OWR run's prize shuffle is unset. */
 export const PRIZES_NOT_KNOWN =
   "the prize shuffle not known yet (set it in Mode)";
+
+/** The cause `doorReasons` gives while an OWR run's custom goals are unset. */
+export const GOALS_NOT_KNOWN =
+  "the custom goals not known yet (set them in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's followers are unset. */
 export const FOLLOWERS_NOT_KNOWN =
@@ -1071,6 +1094,7 @@ export const doorFromSeed = (
         ? {}
         : {
             bonkDrops: ow.bonkDrops,
+            customGoals: ow.customGoals ?? own.customGoals,
             owCrossed: option("owCrossed", ow.crossed),
             owFluteShuffle: option("owFluteShuffle", ow.fluteShuffle),
             owLayout: option("owLayout", ow.layout),
