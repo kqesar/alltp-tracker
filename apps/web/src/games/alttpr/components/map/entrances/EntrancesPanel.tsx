@@ -2,25 +2,44 @@ import type { OverworldEntrance } from "@alltp/pack-alttpr";
 import { memo, useId, useState } from "react";
 import { doorEntranceText } from "@/games/alttpr/data/doorRando";
 import { ENTRANCE_LABELS } from "@/games/alttpr/data/presets";
-import { poolOf, targetById, targetText } from "@/games/alttpr/logic/entrances";
+import {
+  entranceById,
+  entranceText,
+  poolOf,
+  shownNotes,
+  swapText,
+  targetById,
+  targetText,
+} from "@/games/alttpr/logic/entrances";
 import { useEntrancePicker } from "@/games/alttpr/stores/entrancePickerStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
-/** One entrance: its name, opening the picker, and where it leads. */
+/**
+ * One entrance: its name, opening the picker, and where it leads, noted or
+ * told by another's note (Swapped's partner), which it then says.
+ */
 const EntranceRow = memo(({ entrance }: { entrance: OverworldEntrance }) => {
   const target = useGameStore((state) => {
-    const id = state.entrances[entrance.id];
+    const pool = poolOf(state.settings);
+    const id =
+      pool === null
+        ? undefined
+        : shownNotes(pool, state.entrances).notes[entrance.id];
     return id === undefined ? undefined : targetById(id);
+  });
+  const from = useGameStore((state) => {
+    const pool = poolOf(state.settings);
+    const id =
+      pool === null
+        ? undefined
+        : shownNotes(pool, state.entrances).derived.get(entrance.id);
+    return id === undefined ? undefined : entranceById(id);
   });
   const pick = useEntrancePicker((state) => state.pick);
   return (
     <li className="entrance-row" data-testid={`entrance-row-${entrance.id}`}>
       <button
-        aria-label={`${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}: ${
-          target === undefined
-            ? "not known yet"
-            : `leads to ${targetText(target)}`
-        }. Note where it leads`}
+        aria-label={`${entranceText(entrance, target, from)}. Note where it leads`}
         className="entrance-row__name"
         onClick={() => pick(entrance.id)}
         type="button"
@@ -35,6 +54,14 @@ const EntranceRow = memo(({ entrance }: { entrance: OverworldEntrance }) => {
         className={`entrance-row__target${target === undefined ? " entrance-row__target--unknown" : ""}`}
       >
         {target === undefined ? "?" : targetText(target)}
+        {from !== undefined && (
+          <span
+            className="entrance-row__from"
+            data-testid={`entrance-told-${entrance.id}`}
+          >
+            {swapText(from)}
+          </span>
+        )}
       </span>
     </li>
   );
@@ -53,6 +80,11 @@ const WORLDS = [
 const EntrancesPanel = () => {
   const pool = useGameStore((state) => poolOf(state.settings));
   const noted = useGameStore((state) => Object.keys(state.entrances).length);
+  // Swapped's partners, which the notes tell
+  const told = useGameStore((state) => {
+    const run = poolOf(state.settings);
+    return run === null ? 0 : shownNotes(run, state.entrances).derived.size;
+  });
   const shuffle = useGameStore((state) => state.settings.entranceShuffle);
   const mode = useGameStore((state) => state.settings.mode);
   // An OWR run's shuffle the fork builds its own way, in DR's words
@@ -106,10 +138,13 @@ const EntrancesPanel = () => {
         role="status"
       >
         {noted} of {pool.entrances.length} entrances noted
+        {told > 0 && `, ${told} more told by their swaps`}
         {words.length > 0 && `, ${shown.length} shown`}
       </p>
       <p className="entrances__hint">
         Autotracking notes each door you go through, outside Race Mode.
+        {pool.derived !== undefined &&
+          " Swapped doors trade places two by two: noting one door tells where its partner leads."}
       </p>
       {WORLDS.map((world) => {
         const list = shown.filter((entrance) => entrance.world === world.id);

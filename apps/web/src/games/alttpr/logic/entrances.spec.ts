@@ -9,6 +9,7 @@ import {
   notesFor,
   placeMarkers,
   poolOf,
+  shownNotes,
   targetById,
   targetsFor,
   targetText,
@@ -268,6 +269,51 @@ describe("the entrance assistant's model", () => {
     }
   });
 
+  it("shows what an OWR Swapped run's notes tell of their partners, District's nothing", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      customGoals: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    } as const;
+    const swapped = poolOf({ ...owr, doorEntrances: "swapped" });
+    const district = poolOf({ ...owr, doorEntrances: "district" });
+    if (!swapped || !district) throw new Error("no pool");
+    // The hideout's hole into the well: the well's hole into the hideout
+    const noted = { "lost-woods-hideout-drop": "kakariko-well-top" };
+    const shown = shownNotes(swapped, noted);
+    expect(shown.notes).toEqual({
+      "kakariko-well-drop": "lost-woods-hideout-top",
+      "lost-woods-hideout-drop": "kakariko-well-top",
+    });
+    expect([...shown.derived]).toEqual([
+      ["kakariko-well-drop", "lost-woods-hideout-drop"],
+    ]);
+    // The same object for the same notes, and nothing told in District
+    expect(shownNotes(swapped, noted)).toBe(shown);
+    expect(shownNotes(district, noted).notes).toBe(noted);
+    expect(shownNotes(district, noted).derived.size).toBe(0);
+    // Inverted trades the towers' exits, which a Mixed run does not know
+    const gt = { "ganons-tower": "bat-cave-exit" };
+    const inverted = poolOf({
+      ...owr,
+      doorEntrances: "swapped",
+      mode: "inverted",
+    });
+    const mixed = poolOf({ ...owr, doorEntrances: "swapped", owMixed: true });
+    if (!inverted || !mixed) throw new Error("no pool");
+    expect(shownNotes(swapped, gt).notes["bat-cave-cave"]).toBe(
+      "ganons-tower-exit",
+    );
+    expect(shownNotes(inverted, gt).notes["bat-cave-cave"]).toBe(
+      "agahnims-tower-exit",
+    );
+    expect(shownNotes(mixed, gt).derived.size).toBe(0);
+  });
+
   it("says an entrance and where it leads", () => {
     const door = entranceById("blinds-hideout");
     const target = targetById("elder-house-exit-east");
@@ -278,6 +324,11 @@ describe("the entrance assistant's model", () => {
     );
     expect(entranceText(door, undefined)).toBe(
       "Blind's Hideout: not known yet",
+    );
+    const hole = entranceById("kakariko-well-drop");
+    if (hole === undefined) throw new Error("missing");
+    expect(entranceText(door, target, hole)).toBe(
+      "Blind's Hideout: leads to Elder House (East), swapped with Kakariko Well Drop (hole)",
     );
   });
 });

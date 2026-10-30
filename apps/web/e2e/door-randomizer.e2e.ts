@@ -469,19 +469,23 @@ for (const width of WIDTHS) {
 }
 
 /**
- * An OWR run of the fork's own District entrance shuffle (Link's House
- * kept, the Tavern's back shuffled), its overworld vanilla.
+ * An OWR run of one of the fork's own entrance shuffles, District by
+ * default (Link's House kept, the Tavern's back shuffled), its overworld
+ * vanilla.
  */
-const openOwrEntranceRun = async (page: Page) => {
+const openOwrEntranceRun = async (
+  page: Page,
+  shuffle: "district" | "swapped" = "district",
+) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
-  await page.evaluate(() => {
+  await page.evaluate((shuffle) => {
     const key = "alltp-tracker-state";
     const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
     saved.state.settings = {
       ...saved.state.settings,
       customGoals: false,
-      doorEntrances: "district",
+      doorEntrances: shuffle,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
@@ -489,7 +493,7 @@ const openOwrEntranceRun = async (page: Page) => {
       shuffleTavern: true,
     };
     localStorage.setItem(key, JSON.stringify(saved));
-  });
+  }, shuffle);
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
 };
@@ -546,21 +550,75 @@ test("an OWR District run notes its entrances in the fork's pool and logic, from
   );
 });
 
+test("an OWR Swapped run's note tells its partner, from the keyboard, undone in one step", async ({
+  page,
+}) => {
+  await openOwrEntranceRun(page, "swapped");
+  await page.getByRole("tab", { name: "Entrances" }).click();
+  await expect(page.getByTestId("entrances-panel")).toContainText(
+    "Swapped doors trade places two by two",
+  );
+  const row = page.getByRole("button", {
+    name: /^Lost Woods Hideout Drop \(hole\): not known/,
+  });
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("well");
+  await page.getByTestId("entrance-option-kakariko-well-top").focus();
+  await page.keyboard.press("Enter");
+  // The well's hole is told, not noted: it says by which
+  await expect(page.getByTestId("entrances-summary")).toHaveText(
+    "1 of 139 entrances noted, 1 more told by their swaps",
+  );
+  await expect(page.getByTestId("entrance-told-kakariko-well-drop")).toHaveText(
+    "swapped with Lost Woods Hideout Drop (hole)",
+  );
+  await auditPage(page);
+  // On the map: the hideout reached through the well's hole, in logic
+  await page.getByRole("tab", { name: "Map" }).click();
+  await expect(
+    page.getByTestId("entrance-kakariko-well-drop"),
+  ).toHaveAccessibleName(
+    "Kakariko Well Drop (hole): leads to Lost Woods Hideout (top), swapped with Lost Woods Hideout Drop (hole)",
+  );
+  await expect(
+    page.getByTestId("marker-lost-woods-hideout"),
+  ).toHaveAccessibleName(/: available$/);
+  // One undo forgets the note and what it told
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(
+    page.getByTestId("entrance-kakariko-well-drop"),
+  ).toHaveAccessibleName("Kakariko Well Drop (hole): not known yet");
+});
+
 for (const width of WIDTHS) {
-  test(`an OWR District run's Entrances tab fits at ${width}px`, async ({
+  test(`an OWR Swapped run's Entrances tab fits at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOwrEntranceRun(page);
+    await openOwrEntranceRun(page, "swapped");
     await page.getByTestId("entrance-kakariko-shop").click();
     await page.keyboard.type("blind");
     await page.getByTestId("entrance-option-blinds-hideout").click();
+    await page.getByTestId("entrance-lost-woods-hideout-drop").click();
+    await page.keyboard.type("well");
+    await page.getByTestId("entrance-option-kakariko-well-top").click();
+    // The told partner's picker, open in a shot
+    await page.getByTestId("entrance-kakariko-well-drop").click();
+    await expect(page.getByTestId("entrance-told")).toBeVisible();
+    await auditPage(page);
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/swapped-picker-${width}.png`,
+      });
+    await page.getByRole("button", { name: "Cancel" }).click();
     // Map pins: WCAG 2.5.8's exception, as in a Crosskeys run
     await auditPage(page, ".mapspan");
     if (process.env.DOOR_SHOTS !== undefined)
       await page.screenshot({
         fullPage: false,
-        path: `${process.env.DOOR_SHOTS}/owr-entrances-map-${width}.png`,
+        path: `${process.env.DOOR_SHOTS}/swapped-map-${width}.png`,
       });
     await page.getByRole("tab", { name: "Entrances" }).click();
     await expect(page.getByTestId("entrances-panel")).toBeVisible();
@@ -568,10 +626,10 @@ for (const width of WIDTHS) {
     if (process.env.DOOR_SHOTS !== undefined) {
       await page.screenshot({
         fullPage: false,
-        path: `${process.env.DOOR_SHOTS}/owr-entrances-${width}.png`,
+        path: `${process.env.DOOR_SHOTS}/swapped-entrances-${width}.png`,
       });
       await page.getByTestId("entrances-panel").screenshot({
-        path: `${process.env.DOOR_SHOTS}/owr-entrances-panel-${width}.png`,
+        path: `${process.env.DOOR_SHOTS}/swapped-entrances-panel-${width}.png`,
       });
     }
   });

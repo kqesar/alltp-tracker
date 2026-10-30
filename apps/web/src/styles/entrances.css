@@ -56,6 +56,12 @@
   --glyph: "▼";
 }
 
+/* Told by another door's note (Swapped's partner), not noted: its ring
+   dotted, so a note you made and one you did not read apart */
+.entrance-marker--told {
+  border-style: dotted;
+}
+
 /* Every entrance into the place the one pointed at leads to: a cave's
    other sides, ringed in the accent colour */
 .entrance-marker--linked {
@@ -205,6 +211,25 @@
 
 .entrance-row__hole,
 .entrance-row__target--unknown {
+  color: var(--color-text-secondary);
+}
+
+/* A destination told by another door's note: whose, under it */
+.entrance-row__target {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.entrance-row__from {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.entrance-picker__told {
+  margin: 0;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 

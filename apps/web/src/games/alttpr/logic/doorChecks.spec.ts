@@ -359,6 +359,35 @@ describe("a Door Randomizer run with shuffled entrances", () => {
     expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
   });
 
+  it("reads an OWR Swapped run's partner from one note, and forgets it with one undo", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      doorEntrances: "swapped",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+    // The hideout's hole drops into the well: Swapped trades them two by
+    // two (connect_swap), so the well's hole drops into the hideout
+    useGameStore
+      .getState()
+      .noteEntrance("lost-woods-hideout-drop", "kakariko-well-top");
+    expect(useGameStore.getState().entrances).toEqual({
+      "lost-woods-hideout-drop": "kakariko-well-top",
+    });
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("available");
+    useGameStore.getState().undo();
+    expect(useGameStore.getState().entrances).toEqual({});
+    expect(checkStates(state())["lost-woods-hideout"]).toBe("unavailable");
+  });
+
   it("reads DR's world on the doors noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,

@@ -50,21 +50,22 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   if (door !== undefined) {
     const read = doorPoolSettingsOf(settings);
     // The fork's start house is the Big Bomb Shop where its screen flips
-    // (is_bombshop_start): Inverted's, not known once Mixed may flip it
-    const bombShopStart =
+    // (is_bombshop_start), and the towers trade exits where both of theirs
+    // do (is_atgt_swapped, which Swapped's pairs read): Inverted's, not
+    // known once Mixed may flip them
+    const inverted =
       settings.owMixed === true ? undefined : read.mode === "inverted";
-    const key = JSON.stringify([
-      door,
-      read,
-      settings.randomizer,
-      bombShopStart,
-    ]);
+    const key = JSON.stringify([door, read, settings.randomizer, inverted]);
     let found = doorPools.get(key);
     if (found === undefined) {
       found =
         door === "district" ||
         (door === "swapped" && settings.randomizer === "owr")
-          ? owrEntrancePool(door, { ...read, bombShopStart })
+          ? owrEntrancePool(door, {
+              ...read,
+              bombShopStart: inverted,
+              towersTraded: inverted,
+            })
           : drEntrancePool(door, read);
       doorPools.set(key, found);
     }
@@ -107,6 +108,52 @@ export const targetsFor = (
   pool: EntrancePool,
   entrance: OverworldEntrance,
 ): readonly EntranceTarget[] => pool.targetsOf.get(entrance.id) ?? [];
+
+/** The notes a run shows: those made, and those they tell. */
+export interface ShownNotes {
+  /** Each entrance's target known: noted, or told by a note. */
+  readonly notes: Readonly<Record<string, string>>;
+  /** Each entrance a note tells (`derived`), by the noted one telling it. */
+  readonly derived: ReadonlyMap<string, string>;
+}
+
+const NOTHING_DERIVED: ReadonlyMap<string, string> = new Map();
+const shown = new WeakMap<
+  Readonly<Record<string, string>>,
+  { readonly pool: EntrancePool; readonly value: ShownNotes }
+>();
+
+/**
+ * The entrances a run knows: those noted, and those the pool says their
+ * notes tell (the pack's `derived`: the Overworld Randomizer's Swapped,
+ * whose doors trade targets two by two, so a door noted to another's
+ * target tells where that other door leads). Only the notes made are
+ * kept: forgetting or undoing one forgets what it told, and the world
+ * reads the same pairs from them (the pack's `owrSwapPartners`). The same
+ * object for the same notes, so a selector reading it re-renders nothing.
+ */
+export const shownNotes = (
+  pool: EntrancePool,
+  noted: Readonly<Record<string, string>>,
+): ShownNotes => {
+  const found = shown.get(noted);
+  if (found?.pool === pool) return found.value;
+  const derived = pool.derived?.(noted);
+  const value: ShownNotes =
+    derived === undefined || derived.size === 0
+      ? { derived: NOTHING_DERIVED, notes: noted }
+      : {
+          derived: new Map([...derived].map(([id, d]) => [id, d.from])),
+          notes: {
+            ...noted,
+            ...Object.fromEntries(
+              [...derived].map(([id, d]) => [id, d.target]),
+            ),
+          },
+        };
+  shown.set(noted, { pool, value });
+  return value;
+};
 
 /**
  * What noting `target` at `entrance` notes: it, and what the shuffle
@@ -304,12 +351,20 @@ export const KIND_HEADINGS: Readonly<Record<EntranceTarget["kind"], string>> = {
 
 /**
  * An entrance's marker in words, for its accessible name and its tooltip:
- * "Kakariko Shop: leads to Elder House (East)", "…: not known yet".
+ * "Kakariko Shop: leads to Elder House (East)", "…: not known yet", and
+ * for a note told by another (`from`), "…, swapped with Library".
  */
 export const entranceText = (
   entrance: OverworldEntrance,
   target: EntranceTarget | undefined,
+  from?: OverworldEntrance,
 ): string =>
   `${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}: ${
-    target === undefined ? "not known yet" : `leads to ${targetText(target)}`
+    target === undefined
+      ? "not known yet"
+      : `leads to ${targetText(target)}${from === undefined ? "" : `, ${swapText(from)}`}`
   }`;
+
+/** A told note's origin in words: "swapped with Kakariko Shop". */
+export const swapText = (from: OverworldEntrance): string =>
+  `swapped with ${from.label}${from.kind === "hole" ? " (hole)" : ""}`;
