@@ -17,6 +17,7 @@ import {
   drLocationId,
   drWorld,
   markWorlds,
+  regionProbeId,
 } from "./index";
 import { worldKeys } from "./keys";
 import { zeldaPath } from "./standard";
@@ -395,6 +396,44 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(at({ sword: 1 }, "Zelda Drop Off")).toBe("maybe");
     expect(at({ keyH2: 4, sword: 1 }, "Zelda Drop Off")).toBe("yes");
     expect(at({ keyH2: 4, sword: 1 }, "Kakariko Tavern")).toBe("yes");
+  });
+
+  it("keeps Link on the castle's grounds until Zelda is delivered", () => {
+    // standard_rules (Rules.py:1509-1517, :1580-1581): the castle's
+    // grounds, the save points and the flute (can_flute, BaseClasses.py:
+    // 1270-1272) wait for her delivery. Every item but the keys and the
+    // pack's event items (Agahnim's defeats are DR's events, which only
+    // the castle's way out gives): nothing past the grounds, as DR's own
+    // keyless probe found (4222a44)
+    const outside = [
+      "Hyrule Castle Area",
+      "Links House Area",
+      "Sanctuary Area",
+      "Kakariko Village",
+      "Pyramid Area",
+    ];
+    const world = drWorld(
+      { ...settings("standard"), wildBigKeys: true, wildKeys: true },
+      { regions: ["Hyrule Castle Courtyard", ...outside] },
+    );
+    const state = Object.fromEntries(
+      Object.entries(everything(settingsFromUpstream("standard"))).filter(
+        ([item]) => !/^(big)?[kK]ey|^defeatAgahnim|^rescueZelda$/.test(item),
+      ),
+    );
+    const solution = solveFacts(world, state);
+    expect(solution.location(regionProbeId("Hyrule Castle Courtyard"))).toBe(
+      "yes",
+    );
+    for (const region of outside)
+      expect(solution.location(regionProbeId(region)), region).toBe("no");
+    // Agahnim beaten opens the castle gate (Rules.py:1017-1018), which no
+    // play reaches before her delivery
+    expect(
+      solveFacts(world, { ...state, defeatAgahnim: 1 }).location(
+        regionProbeId("Hyrule Castle Area"),
+      ),
+    ).toBe("yes");
   });
 
   it("reads the rules of the first way back from Zelda's cell", () => {

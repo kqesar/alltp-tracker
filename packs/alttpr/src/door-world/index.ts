@@ -671,10 +671,14 @@ const TR_ACCESS = new Map<string, TurtleRockAccess>();
  * but the dungeon's small keys (set_turtle_rock_rules, StaticKeyLogic.py:
  * 211-223): every other key door open and every big key held from 1.5.7
  * (4222a44, get_all_state(keys=True)), none before (keys=False). Its own
- * world, of partial key logic, answers once per mode and release. Before
- * 1.5.7, in Standard, it is upstream's own account: "every TR entrance
- * probe returned False" without the sewers' key, the dungeon keeping the
- * table's numbers (4222a44's message), the strictest of the cases.
+ * world, of partial key logic, answers once per mode and release.
+ * get_all_state collects the item pool, then sweeps the events
+ * (BaseClasses.py:350-413): Agahnim's defeats and Zelda's rescue are no
+ * items of DR's but events, which the pack's state holds as items. With
+ * the keys the sweep reaches both towers' Agahnim; without them it does
+ * not (their key doors shut), so the probe holds them only then. Without
+ * them Standard's probe finds no way out of the castle, as upstream says
+ * (4222a44's message: "every TR entrance probe returned False").
  */
 export function turtleRockAccess(
   mode: DrMode,
@@ -684,11 +688,6 @@ export function turtleRockAccess(
   const known = TR_ACCESS.get(id);
   if (known !== undefined) return known;
   const keys = version >= 157;
-  if (!keys && mode === "standard") {
-    const none = { back: false, bigChest: false, front: false, middle: false };
-    TR_ACCESS.set(id, none);
-    return none;
-  }
   const world = drWorld(
     {
       ...DR_DEFAULTS,
@@ -707,7 +706,9 @@ export function turtleRockAccess(
   const state = keys
     ? all
     : Object.fromEntries(
-        Object.entries(all).filter(([item]) => !/^(big)?[kK]ey/.test(item)),
+        Object.entries(all).filter(
+          ([item]) => !/^(big)?[kK]ey|^defeatAgahnim|^rescueZelda$/.test(item),
+        ),
       );
   const solution = solveFacts(world, state);
   const reached = (region: string) =>
