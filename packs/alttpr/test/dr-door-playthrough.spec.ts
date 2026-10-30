@@ -217,17 +217,6 @@ const REVIEWED: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   },
 };
 
-/**
- * A location of a later sphere the world says yes to, by log, each
- * reviewed: a flood switch DR's playthrough leaves out of a sphere while
- * the key its trench would drown is unchecked (not_flooding_a_key, Main.py:
- * 697, BaseClasses.py:1092-1100), not out of reach. Its key is collected
- * in the sphere before.
- */
-const REVIEWED_EARLY: Readonly<Record<string, readonly string[]>> = {
-  "avianart-1d6rBFvOW.json": ["3:Trench 1 Switch as of 2"],
-};
-
 /** Every key and big key DR's items name, thirty of each small key. */
 const EVERY_KEY = Object.values(KEY_NAMES).flatMap((word) => [
   ...Array.from({ length: 30 }, () => `Small Key (${word})`),
@@ -353,6 +342,6 @@ describe("DR's world on shuffled doors against real seeds", () => {
         doors: notesOf(json, log),
         sweepEvents: false,
       });
-      expect(early(log, world)).toEqual(REVIEWED_EARLY[name] ?? []);
+      expect(early(log, world)).toEqual([]);
     });
 });

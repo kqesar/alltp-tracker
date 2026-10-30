@@ -1366,8 +1366,15 @@ alternative for granted, is found unsound. `test/dr-suite.spec.ts` holds
 DR's key logic seeds (`test/suite/*key_logic*.yaml`): a location their
 fill may not place an item at is never `yes` but where only
 `bk_restricted` forbids the big key. A
-flood switch is swept only once its trench's pot key is reached
-(`_do_not_flood_the_keys`). Held: `test/vanilla` and `test/dungeons`, whose
+flood switch waits on its trench's pot: flooding drowns the pot and closes
+the dry paths to it, so DR never floods over a pot that holds a key or a
+progress item before it is checked (`not_flooding_a_key`,
+`BaseClasses.py:1086-1093`). That is logic, not an order of play: every
+reach DR asks reads it (`can_beat_game`, the fill's spheres, the
+playthrough), and each trench's far side is reached only flooded. The
+switch asks the vanilla key's fact, or, with the pots shuffled, the pot
+reached (a fact of its own) and `maybe` before, its item possibly neither,
+which DR floods over. Held: `test/vanilla` and `test/dungeons`, whose
 181 cases upstream fails itself are listed in `test/dr-stale.ts` with why
 (the bunny, the swamp's mirror, the events `TestDungeon` never sweeps, the
 drop keys DR's own key rules count, which it never sweeps either, the
@@ -2835,6 +2842,6 @@ picker offers, each lobby and kind one the model allows, each room in the
 dungeon the log puts its locations in (` @ Dungeon`), and the playthrough
 both ways. Not `yes` where DR says reachable: only key doors read
 strict-safe, listed and each proved `yes` once every key is held; `yes` too
-early: only a flood switch DR's playthrough holds back while its trench's
-key is unchecked (`not_flooding_a_key`, `Main.py:697`). The walks hold no
-item for a forced drop's key, which the world reads as a fact.
+early: none (a flood switch waits on its pot's key as DR's spheres do, above).
+The walks hold no item for a forced drop's key, which the world reads as a
+fact.

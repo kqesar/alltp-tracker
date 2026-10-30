@@ -187,6 +187,24 @@ describe("DR's world on noted doors", () => {
     expect(answers(counted, all).get(location)).toBe("yes");
   });
 
+  it("floods a trench only once its pot is reached, maybe while its item is unknown", () => {
+    // not_flooding_a_key (BaseClasses.py:1086-1093): the switch waits on
+    // the trench's pot while it holds a key or a progress item. Trench 2's
+    // far side (its Departure) and its switch reached, no door noted: the
+    // pots past the water ask the flood, which the pot past them holds back
+    const s = shuffle({ intensity: 1 });
+    const start = ["Swamp Trench 2 Departure", "Swamp Crystal Switch Inner"];
+    const all = keyed(everything(settingsFromUpstream("open")));
+    const pot = drLocationId("Swamp Palace - Trench 2 Pot Key");
+    for (const potKeys of [false, true]) {
+      const world = drWorld(settings("open", { potKeys }), {
+        doors: { notes: {}, settings: s },
+        start,
+      });
+      expect(answers(world, all).get(pot), `pot keys ${potKeys}`).toBe("maybe");
+    }
+  });
+
   it("opens a portal on its noted lobby alone from intensity 3", () => {
     const s = shuffle({ intensity: 3 });
     const notes = vanillaNotes(s);

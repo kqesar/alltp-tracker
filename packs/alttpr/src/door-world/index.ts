@@ -71,6 +71,7 @@ import { portalsKnown } from "./key-analysis/dungeon";
 import {
   addKeyRules,
   DR_KEY_CODES,
+  dropKeyFact,
   KEY_DROPS,
   KEY_ITEMS,
   type KeyHolding,
@@ -526,7 +527,6 @@ function graph(
   mode: DrMode,
   options: DrWorldOptions,
   reached: ReadonlySet<string>,
-  extra: ReadonlyMap<string, readonly Location[]>,
   added: ReadonlyMap<string, readonly string[]>,
   helperBodies: readonly string[] = [],
 ): {
@@ -587,7 +587,6 @@ function graph(
     if (options.regions?.includes(r.name) === true)
       located.push({ id: regionProbeId(r.name) });
     if (reached.has(r.id)) located.push({ id: factOf(r.id) });
-    located.push(...(extra.get(r.name) ?? []));
     const states = nodes.statesOf(r);
     const split = nodes.isSplit(r);
     for (const s of states.length === 0 ? [undefined] : states) {
@@ -640,9 +639,16 @@ function graph(
 const REGION_BY_ID = new Map(DR_REGIONS.map((r) => [r.id, r]));
 
 /**
- * The flood switches DR does not sweep while their trench's pot key is
- * unchecked (_do_not_flood_the_keys, BaseClasses.py:1074-1084,
- * flooded_keys :3023-3026): the event asks the key's location reached too.
+ * The flood switches DR holds back while their trench's pot is unchecked:
+ * flooding drowns the pot (location_can_be_flooded, BaseClasses.py:1107-
+ * 1109) and closes the dry paths to it (Rules.py:417-419, 433). A logic
+ * rule, not an order of play: every reach DR asks reads it (can_beat_game
+ * :525, the fill's spheres Fill.py:760, :941, the playthrough Main.py:697,
+ * :762), and the far sides of the trenches are reached only flooded
+ * (Rules.py:423-428, 434-435). not_flooding_a_key (:1086-1093) passes the
+ * switch once the pot is checked or holds no key or progress item;
+ * _do_not_flood_the_keys (:1074-1084) holds its event back while the pot
+ * holds anything unchecked (flooded_keys :3023-3026).
  */
 const FLOODED_KEYS: Readonly<Record<string, string>> = {
   "Trench 1 Switch": "Swamp Palace - Trench 1 Pot Key",
@@ -1048,40 +1054,26 @@ export function drWorld(
   const bunny = addBunnyRules(exits, locations, marked, mode, added);
   const bunnyBodies = [...bunny.values()];
 
-  // The events: each a fact once its location is reached, a flood switch
-  // once its trench's key is too
+  // The events: each a fact once its location is reached. A flood switch
+  // waits on its trench's pot: on the vanilla key's fact, or on the pot
+  // reached (a fact of its own), maybe before, as the item it holds may be
+  // neither a key nor progress, which DR floods over
   const sweep = options.sweepEvents ?? true;
-  const regionOf = new Map(
-    DR_REGIONS.flatMap((r) => r.locations.map((l) => [l, r] as const)),
-  );
-  const extra = new Map<string, Location[]>();
-  const eventLocation = new Map<string, string>();
-  for (const [item, { location }] of Object.entries(DR_RULES.events)) {
-    const key = FLOODED_KEYS[location];
-    const region = regionOf.get(location);
-    const keyRegion = key === undefined ? undefined : regionOf.get(key);
-    if (
-      key === undefined ||
-      region === undefined ||
-      keyRegion === undefined ||
-      !keys.forcedDrops.some((d) => d.location === key)
-    )
-      continue;
-    const id = `event:${item}`;
-    eventLocation.set(item, id);
-    extra.set(region.name, [
-      ...(extra.get(region.name) ?? []),
-      {
-        id,
-        req: unknownCountRequirement(
-          and(
-            locations.get(location) ?? "true",
-            `reach(${keyRegion.id})`,
-            locations.get(key) ?? "true",
-          ),
-        ),
-      },
-    ]);
+  const potFacts: { item: string; location: string }[] = [];
+  for (const { location } of Object.values(DR_RULES.events)) {
+    const pot = FLOODED_KEYS[location];
+    if (pot === undefined || !locations.has(location)) continue;
+    const drop = keys.forcedDrops.find((d) => d.location === pot);
+    const fact = drop?.fact ?? `potReached_${dropKeyFact(pot)}`;
+    if (drop === undefined)
+      potFacts.push({ item: fact, location: drLocationId(pot) });
+    locations.set(
+      location,
+      and(
+        locations.get(location) ?? "true",
+        drop === undefined ? or(readFact(fact), "maybe") : readFact(fact),
+      ),
+    );
   }
 
   // The regions a rule reads the reach of where only a fact can stand
@@ -1100,13 +1092,12 @@ export function drWorld(
     mode,
     options,
     reached,
-    extra,
     added,
     bunnyBodies,
   );
   const events = Object.entries(DR_RULES.events).flatMap(
     ([item, { location }]) => {
-      const id = eventLocation.get(item) ?? locationIds.get(location);
+      const id = locationIds.get(location);
       return sweep && id !== undefined ? [{ item, location: id }] : [];
     },
   );
@@ -1119,6 +1110,7 @@ export function drWorld(
   const facts = [
     ...events,
     ...drops,
+    ...(sweep ? potFacts : []),
     ...crystalFacts,
     ...[...reached].map((id) => ({ item: factOf(id), location: factOf(id) })),
   ].map((fact) => ({ ...fact, maybe: maybeOf(fact.item) }));
@@ -1153,6 +1145,7 @@ export function drWorld(
           ...KEY_DROPS.map((d) => d.fact),
           ...crystalItems,
           ...facts.map((f) => f.item),
+          ...potFacts.map((f) => f.item),
         ].flatMap((fact) => [fact, maybeOf(fact)]),
       ]),
     ],
