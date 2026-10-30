@@ -1813,7 +1813,14 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   pruning meant to drop only paths no easier than one kept; the port keeps
   them, so where the atoms judge exactly the rule is the same, and the
   vanilla and Inverted suites hold. The walls a bunny cannot pass
-  (`Rules.py:2024-2029`) are read as for DR.
+  (`Rules.py:2024-2029`) are read as for DR. The fork's `add_bunny_rule`
+  and `is_not_bunny` are not DR's: they ask the pearl wherever a region
+  lies in the dark world (`can_cause_bunny`, `BaseClasses.py:1443-1444`,
+  `:1703-1707`), a cave entered from both worlds too, where DR asks it only
+  off the light world; so the world reads the fork's `notBunny_*` as off
+  the dark world (the light one in Inverted), and while a shuffled run's
+  doors are not all noted, each target no note names may be entered from
+  either world (`unplaced`), so its cave asks the pearl until it is placed.
 
 `test/owr-contract.spec.ts` holds the ported files in the fork's harness
 (drVersion 157, `overrideBombCheck` as the fixture records it); a case it

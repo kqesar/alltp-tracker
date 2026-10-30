@@ -388,6 +388,12 @@ export interface DrNotedConnections {
   readonly complete: boolean;
   /** Its exits lead back elsewhere than their doors (insanity). */
   readonly decoupled: boolean;
+  /**
+   * The regions a door not noted yet may lead into: the targets the
+   * shuffle moves that no note names (an OWR run's, whose bunny reads a
+   * cave dark once any way in is, owrSideReads).
+   */
+  readonly unplaced?: readonly string[];
 }
 
 /**
@@ -456,10 +462,21 @@ export function notedConnections(
   }
   linkDoors(data, c, doors);
   removeExits(c, doors);
+  // The targets no note names yet: where a door not noted may lead
+  const named = new Set(
+    Object.values(entrances.noted).flatMap((id) => drTargetName(id) ?? []),
+  );
+  const maps = vanillaEntrances(false);
+  const unplaced = [...moved].flatMap((entrance) => {
+    const target = maps.twoWay.get(entrance) ?? maps.oneWay.get(entrance);
+    if (target === undefined || named.has(target)) return [];
+    return [exits.has(target) ? data.parentOf(target) : target];
+  });
   return {
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,
     decoupled,
+    unplaced,
   };
 }
 
@@ -566,10 +583,21 @@ function owrNotedConnections(
   }
   linkDoors(data, c, doors);
   removeExits(c, doors);
+  // The targets no note names yet: where a door not noted may lead
+  const named = new Set(
+    Object.values(entrances.noted).flatMap((id) => drTargetName(id) ?? []),
+  );
+  const maps = vanillaEntrances(false);
+  const unplaced = [...moved].flatMap((entrance) => {
+    const target = maps.twoWay.get(entrance) ?? maps.oneWay.get(entrance);
+    if (target === undefined || named.has(target)) return [];
+    return [exits.has(target) ? data.parentOf(target) : target];
+  });
   return {
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,
     decoupled,
+    unplaced,
   };
 }
 

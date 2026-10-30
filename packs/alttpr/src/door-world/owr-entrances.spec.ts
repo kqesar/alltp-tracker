@@ -9,10 +9,12 @@ import {
   owrShuffled,
   vanillaEntrances,
 } from "../door-rando/entrances";
+import { solveFacts } from "../facts";
+import { settingsFromUpstream } from "../settings";
 import { notedConnections, vanillaConnections } from "./connections";
 import { DR_DATA } from "./dr-data";
-import type { DrNotedEntrances } from "./index";
-import { type OwrPossibleLinks, owrScreensOf } from "./overworld";
+import { DR_DEFAULTS, type DrNotedEntrances, drWorld } from "./index";
+import { OWR_DEFAULTS, type OwrPossibleLinks, owrScreensOf } from "./overworld";
 import { OWR_DATA } from "./owr-data";
 
 type Mode = "open" | "inverted";
@@ -491,6 +493,60 @@ describe("the Overworld Randomizer's world on its noted entrances", () => {
     expect(found.connections.get("Links House Exit")).toBe(
       OWR_DATA.parentOf("Kakariko Shop"),
     );
+  });
+
+  it("asks the pearl in a cave entered from both worlds, or that a door not noted may lead into", () => {
+    // The fork's add_bunny_rule asks the pearl wherever a region lies in
+    // the dark world (can_cause_bunny, owr:BaseClasses.py:1703-1707, Rules.py:
+    // 291-293), a cave of both worlds too, where DR's asks it only off the
+    // light world. Paradox Cave from Sahasrahla's Hut (light) and Skull
+    // Woods' back door (dark): its lower chests (Rules.py:1018-1021) ask the
+    // pearl, as avianart mGEeueUjZ's playthrough holds them after it
+    const owr = {
+      ...DR_DEFAULTS,
+      ...settingsFromUpstream("open"),
+      ...OWR_DEFAULTS,
+      drVersion: 157,
+      shuffle_crossed: true,
+    };
+    const paradox = {
+      [drEntranceOf("Sahasrahlas Hut").id]: drTargetOf(
+        "Paradox Cave Exit (Top)",
+      ).id,
+      [drEntranceOf("Blinds Hideout").id]: drTargetOf(
+        "Paradox Cave Exit (Bottom)",
+      ).id,
+    };
+    const lower = (notes: Record<string, string>, pearl: boolean) => {
+      const world = drWorld(owr, {
+        data: OWR_DATA,
+        entrances: noted("crossed", notes, { shuffleLinks: false }),
+      });
+      return solveFacts(world, {
+        caneOfSomaria: 1,
+        heartContainer: 3,
+        ...(pearl ? { moonPearl: 1 } : {}),
+      }).location(world.locationIds.get("Paradox Cave Lower - Left") ?? "");
+    };
+    const both = {
+      ...paradox,
+      [drEntranceOf("Skull Woods Final Section").id]: drTargetOf(
+        "Paradox Cave Exit (Middle)",
+      ).id,
+    };
+    expect(lower(both, true)).toBe("yes");
+    expect(lower(both, false)).not.toBe("yes");
+    // Its middle exit not noted: any door may lead in, a dark one too
+    expect(lower(paradox, false)).not.toBe("yes");
+    expect(lower(paradox, true)).toBe("yes");
+    // Every exit from the light world: no pearl
+    const light = {
+      ...paradox,
+      [drEntranceOf("Chicken House").id]: drTargetOf(
+        "Paradox Cave Exit (Middle)",
+      ).id,
+    };
+    expect(lower(light, false)).toBe("yes");
   });
 
   it("reads District with DR's data never, and no mode the fork does not name", () => {
