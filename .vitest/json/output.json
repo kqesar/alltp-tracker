@@ -1,0 +1,150 @@
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 5,
+  "numPassedTests": 10,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 5,
+  "numTotalTests": 10,
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1793362310855,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["phaseOf"],
+          "benchmarks": [],
+          "duration": 1.4581180000000131,
+          "failureMessages": [],
+          "fullName": "phaseOf is off while nothing runs, whatever the last status",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "is off while nothing runs, whatever the last status"
+        },
+        {
+          "ancestorTitles": ["phaseOf"],
+          "benchmarks": [],
+          "duration": 0.6097730000000183,
+          "failureMessages": [],
+          "fullName": "phaseOf gives every status of a running session its dot",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "gives every status of a running session its dot"
+        },
+        {
+          "ancestorTitles": ["phaseOf"],
+          "benchmarks": [],
+          "duration": 0.23464099999989685,
+          "failureMessages": [],
+          "fullName": "phaseOf is off, with its own words, while another tab holds the session",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "is off, with its own words, while another tab holds the session"
+        },
+        {
+          "ancestorTitles": ["shownStatus"],
+          "benchmarks": [],
+          "duration": 0.18177099999991242,
+          "failureMessages": [],
+          "fullName": "shownStatus keeps a failure on screen while the session retries it",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "keeps a failure on screen while the session retries it"
+        },
+        {
+          "ancestorTitles": ["shownStatus"],
+          "benchmarks": [],
+          "duration": 0.16573000000005322,
+          "failureMessages": [],
+          "fullName": "shownStatus shows a first attempt, and a retry that follows no failure",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "shows a first attempt, and a retry that follows no failure"
+        },
+        {
+          "ancestorTitles": ["headlineOf"],
+          "benchmarks": [],
+          "duration": 0.13103000000000975,
+          "failureMessages": [],
+          "fullName": "headlineOf says Off while nothing runs",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "says Off while nothing runs"
+        },
+        {
+          "ancestorTitles": ["headlineOf"],
+          "benchmarks": [],
+          "duration": 0.2532620000000634,
+          "failureMessages": [],
+          "fullName": "headlineOf names each status in the player's terms",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "names each status in the player's terms"
+        },
+        {
+          "ancestorTitles": ["headlineOf"],
+          "benchmarks": [],
+          "duration": 0.22612100000003466,
+          "failureMessages": [],
+          "fullName": "headlineOf tells the cases a code covers apart",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "tells the cases a code covers apart"
+        },
+        {
+          "ancestorTitles": ["detailOf"],
+          "benchmarks": [],
+          "duration": 0.2582310000000234,
+          "failureMessages": [],
+          "fullName": "detailOf names a Lua bridge's kind, not an emulator, and drops its protocol version",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "names a Lua bridge's kind, not an emulator, and drops its protocol version"
+        },
+        {
+          "ancestorTitles": ["detailOf"],
+          "benchmarks": [],
+          "duration": 0.2215009999999893,
+          "failureMessages": [],
+          "fullName": "detailOf still gives RetroArch its version",
+          "meta": {},
+          "status": "passed",
+          "tags": [],
+          "title": "still gives RetroArch its version"
+        }
+      ],
+      "endTime": 1793362311440.2214,
+      "message": "",
+      "name": "/home/kqesar/wd/alltp-tracker/.claude/worktrees/agent-a557702ca169c3094/apps/web/src/autotrack/status.spec.ts",
+      "startTime": 1793362311436,
+      "status": "passed"
+    }
+  ]
+}
