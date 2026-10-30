@@ -71,9 +71,9 @@ export function withDoorNotes(
  * `null`) changes. A door leads into one door, which comes out of it alone:
  * a door noted elsewhere before is forgotten there. In a coupled shuffle
  * the way back is noted with it (`target` leads into `door`), and the way
- * back of a link forgotten is forgotten too. A door noted gets its kind and
- * its target's as plain doors where none is noted: the player went through
- * both, and sets either kind beside it.
+ * back of a link forgotten is forgotten too. No kind is noted with it: a
+ * kind the player has not noted stays unknown, so what lies behind the door
+ * reads maybe until they note it.
  */
 export function linkChange(
   notes: DoorNotes,
@@ -100,12 +100,5 @@ export function linkChange(
       change[target] = door;
     }
   }
-  const kinds: Record<string, DoorKindNote> = {};
-  if (target !== null)
-    for (const id of [door, target])
-      if (notes.kinds?.[id] === undefined) kinds[id] = "normal";
-  return {
-    links: change,
-    ...(Object.keys(kinds).length === 0 ? {} : { kinds }),
-  };
+  return { links: change };
 }

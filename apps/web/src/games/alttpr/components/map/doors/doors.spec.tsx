@@ -60,9 +60,10 @@ describe("the Doors tab", () => {
     expect(screen.getByTestId("doors-summary")).toHaveTextContent(
       /^2 of \d+ doors of Eastern Palace noted/,
     );
-    // A door whose kind the shuffle may change: noted plain with its link
+    // A door whose kind the shuffle may change: not known with its link
     const kind = screen.getByTestId("door-kind-eastern-cannonball-s");
-    expect(kind).toHaveValue("normal");
+    expect(kind).toHaveValue("");
+    expect(store().doors.kinds).toBeUndefined();
     await user.selectOptions(kind, ["small"]);
     expect(store().doors.kinds?.["eastern-cannonball-s"]).toBe("small");
     // Not known again forgets both ways, as one undo step each
@@ -74,23 +75,30 @@ describe("the Doors tab", () => {
     );
   });
 
-  it("notes the other doors of a dungeon plain at once", async () => {
+  it("notes the kinds of the doors linked plain at once, by keyboard", async () => {
     const user = userEvent.setup();
-    run({ doorIntensity: "1", doorShuffle: "basic" });
+    run({ doorIntensity: "2", doorShuffle: "basic" });
     render(<DoorsPanel />);
     await user.selectOptions(screen.getByTestId("doors-dungeon"), [
-      "Tower of Hera",
+      "Eastern Palace",
     ]);
-    const plain = screen.getByTestId("doors-plain");
-    expect(plain).toHaveTextContent(
-      /^Note the \d+ other doors? of Tower of Hera plain$/,
-    );
-    await user.click(plain);
+    // Nothing linked: nothing to note plain
     expect(screen.queryByTestId("doors-plain")).toBeNull();
-    expect(
-      Object.values(store().doors.kinds ?? {}).every((k) => k === "normal"),
-    ).toBe(true);
-    expect(Object.keys(store().doors.kinds ?? {}).length).toBeGreaterThan(0);
+    await user.selectOptions(
+      screen.getByTestId("door-link-eastern-lobby-bridge-n"),
+      ["eastern-cannonball-s"],
+    );
+    const plain = screen.getByTestId("doors-plain");
+    expect(plain).toHaveAccessibleName(
+      "Note the 1 linked door of Eastern Palace plain",
+    );
+    plain.focus();
+    await user.keyboard("{Enter}");
+    // The linked door whose kind may change, and no other
+    expect(store().doors.kinds).toEqual({ "eastern-cannonball-s": "normal" });
+    expect(screen.queryByTestId("doors-plain")).toBeNull();
+    act(() => store().undo());
+    expect(store().doors.kinds).toBeUndefined();
   });
 
   it("asks each lobby from intensity 3 and a pool's keys", async () => {

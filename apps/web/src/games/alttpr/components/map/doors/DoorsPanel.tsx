@@ -264,6 +264,15 @@ const DoorsPanel = () => {
       kindShuffled(door, settings) &&
       notes.kinds?.[doorId(door.name)] === undefined,
   );
+  // The doors the player went through (a link noted from or into them)
+  // whose kind is not noted: the quick control notes them plain
+  const through = new Set([
+    ...Object.keys(notes.links ?? {}),
+    ...Object.values(notes.links ?? {}),
+  ]);
+  const unknownLinked = unknownKinds.filter((door) =>
+    through.has(doorId(door.name)),
+  );
   const portals = settings.intensity >= 3 ? portalsOf(dungeon) : [];
   return (
     <div className="doors" data-testid="doors-panel">
@@ -309,8 +318,26 @@ const DoorsPanel = () => {
       <p className="entrances__hint">
         Note each door by hand as you go through it: the tracker never reads a
         door, a room or a transition. A door not noted leads nowhere, and a door
-        whose kind is not known is maybe to pass.
+        whose kind is not noted is maybe to pass, linked or not.
       </p>
+      {unknownLinked.length > 0 && (
+        <button
+          className="doors__plain"
+          data-testid="doors-plain"
+          onClick={() =>
+            noteDoors({
+              kinds: Object.fromEntries(
+                unknownLinked.map((door) => [doorId(door.name), "normal"]),
+              ),
+            })
+          }
+          type="button"
+        >
+          Note the {unknownLinked.length} linked{" "}
+          {unknownLinked.length === 1 ? "door" : "doors"} of{" "}
+          {dungeonText(dungeon)} plain
+        </button>
+      )}
       {settings.shuffle !== "basic" && <KeysField dungeon={dungeon} />}
       {portals.length > 0 && (
         <section
@@ -375,24 +402,6 @@ const DoorsPanel = () => {
             ))}
           </ul>
         </section>
-      )}
-      {unknownKinds.length > 0 && (
-        <button
-          className="doors__plain"
-          data-testid="doors-plain"
-          onClick={() =>
-            noteDoors({
-              kinds: Object.fromEntries(
-                unknownKinds.map((door) => [doorId(door.name), "normal"]),
-              ),
-            })
-          }
-          type="button"
-        >
-          Note the {unknownKinds.length} other{" "}
-          {unknownKinds.length === 1 ? "door" : "doors"} of{" "}
-          {dungeonText(dungeon)} plain
-        </button>
       )}
     </div>
   );

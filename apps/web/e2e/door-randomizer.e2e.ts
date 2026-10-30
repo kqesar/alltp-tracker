@@ -89,6 +89,17 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   await expect(page.getByTestId("doors-summary")).toContainText(
     "2 of 31 doors of Eastern Palace noted",
   );
+  // A link notes no kind: the linked door's stays unknown until noted, by
+  // the quick control, from the keyboard
+  const kind = page.getByTestId("door-kind-eastern-cannonball-s");
+  await expect(kind).toHaveValue("");
+  const plain = page.getByRole("button", {
+    name: /^Note the \d+ linked doors? of Eastern Palace plain$/,
+  });
+  await plain.focus();
+  await page.keyboard.press("Enter");
+  await expect(kind).toHaveValue("normal");
+  await expect(plain).toHaveCount(0);
   await page
     .getByRole("spinbutton", { name: "Small keys in Eastern Palace, in all" })
     .fill("2");
@@ -116,6 +127,9 @@ for (const width of WIDTHS) {
     await page
       .getByTestId("door-link-gt-lobby-left-down-stairs")
       .selectOption({ index: 1 });
+    // A door with a kind linked: the quick plain control shows
+    await page.getByTestId("door-link-gt-lobby-s").selectOption({ index: 1 });
+    await expect(page.getByTestId("doors-plain")).toBeVisible();
     await auditPage(page);
     if (process.env.DOOR_SHOTS !== undefined)
       await page.screenshot({

@@ -22,10 +22,8 @@ describe("door notes", () => {
 
   it("notes a coupled door's way back, and forgets the links it replaces", () => {
     const first = withDoorNotes({}, linkChange({}, "a", "b", true));
-    expect(first).toEqual({
-      kinds: { a: "normal", b: "normal" },
-      links: { a: "b", b: "a" },
-    });
+    // No kind with it: a kind not noted stays unknown
+    expect(first).toEqual({ links: { a: "b", b: "a" } });
     // a now leads into c: b's way back is forgotten
     const moved = withDoorNotes(first, linkChange(first, "a", "c", true));
     expect(moved.links).toEqual({ a: "c", c: "a" });
@@ -36,10 +34,13 @@ describe("door notes", () => {
     expect(
       withDoorNotes(taken, linkChange(taken, "d", null, true)).links,
     ).toBeUndefined();
-    // A kind noted stays
-    expect(linkChange({ kinds: { a: "small" } }, "a", "b", true).kinds).toEqual(
-      { b: "normal" },
-    );
+    // A kind noted stays as it is
+    expect(
+      withDoorNotes(
+        { kinds: { a: "small" } },
+        linkChange({ kinds: { a: "small" } }, "a", "b", true),
+      ).kinds,
+    ).toEqual({ a: "small" });
   });
 
   it("notes a decoupled door one way", () => {

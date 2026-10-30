@@ -8,6 +8,7 @@ import {
 } from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { checkStates, runZones } from "@/games/alttpr/logic/checks";
+import { linkChange } from "@/games/alttpr/logic/doorNotes";
 import { setDoorSolver, solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -156,14 +157,19 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       .getState()
       .noteDoors({ lobbies: { eastern: "eastern-lobby-s" } });
     expect(checkStates(state())[cannonball]).toBe("unavailable");
-    // The lobby's bridge into the cannonball room, a plain door both ways
-    useGameStore.getState().noteDoors({
-      kinds: { "eastern-lobby-bridge-n": "normal" },
-      links: {
-        "eastern-cannonball-s": "eastern-lobby-bridge-n",
-        "eastern-lobby-bridge-n": "eastern-cannonball-s",
-      },
-    });
+    // The lobby's bridge into the cannonball room, noted with no kind: the
+    // bridge's kind never moves, so it is in logic
+    useGameStore
+      .getState()
+      .noteDoors(
+        linkChange(
+          state().doors,
+          "eastern-lobby-bridge-n",
+          "eastern-cannonball-s",
+          true,
+        ),
+      );
+    expect(state().doors.kinds).toBeUndefined();
     expect(checkStates(state())[cannonball]).toBe("available");
     // Forgotten again: nowhere
     useGameStore.getState().noteDoors({
