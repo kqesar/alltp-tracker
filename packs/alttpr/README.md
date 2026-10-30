@@ -1668,7 +1668,14 @@ fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
   (`ow_connections`), the whirlpools, every edge with its vanilla partner,
   the flute spots in slot order (`fluteSpots`, `FluteShuffle.py:36-50,
   655-657`). Inverted flips every screen, any other mode none
-  (`isTileSwapped`): Mixed's flips are not read yet.
+  (`isTileSwapped`): Mixed's flips are not read yet. A seed's shuffled
+  whirlpools and moved flute spots are linked as the player notes them
+  (`options.overworld`, `OwrNotes`): each noted whirlpool into its
+  partner's region (connect_whirlpool, `OverworldShuffle.py:359-367`), the
+  noted screens' spots in slot order (`FluteShuffle.py:178-182`), and a
+  whirlpool or spot not noted leads nowhere, which never opens a way too
+  early. `owrNotesFromSpoiler` reads them from a seed's JSON spoiler
+  (`Whirlpools`, `Maps`' flute entry and its `data`, `FluteShuffle.py:652`).
 - `link_entrances_new`'s vanilla path (`EntranceShuffle2.py:48-200`), which
   has no Inverted swap table: Agahnim's and Ganon's towers trade doors once
   both screens flip, the pyramid's door and hole stand on the castle's
@@ -1725,14 +1732,17 @@ holds the links, the flute spots, the screens and the rules above.
 no OWR race keeps its spoiler (avianart's race permalinks keep their meta
 alone), so four avianart.games seeds of OWR 0.8.0.2 (on DR 1.5.7),
 generated for the fixtures from the site's customizer (branch OWR,
-noglitches, the Ganon goal, keys in their dungeons), the overworld, doors
-and entrances vanilla: Open and Inverted, bonk drops shuffled and not.
+noglitches, the Ganon goal, keys in their dungeons), doors and entrances
+vanilla: Open and Inverted, bonk drops shuffled and not, and two whose
+whirlpools are shuffled and flute spots moved (random in Open, balanced in
+Inverted), noted from the log as a player notes them (with vanilla links
+instead, the Open one fails both walks).
 Each JSON keeps the contract's keys and the fork's `Overworld`,
 `Whirlpools` and `Maps` (empty in these). `test/owr-playthrough.spec.ts`
 walks each in the world the app solves an OWR run in (`OWR_DATA`, the bonk
 drops added as locations, the fork's events and farms held by name): each
 sphere `yes` with the spheres before it, and no location of a later sphere
-`yes` too early. All four hold with no exception. The app's side
+`yes` too early. All six hold with no exception. The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

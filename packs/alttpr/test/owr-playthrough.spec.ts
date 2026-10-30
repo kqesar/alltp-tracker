@@ -13,7 +13,11 @@
 import { describe, expect, it } from "vitest";
 import { BONK_DROPS } from "../src/door-rando/bonk";
 import rules from "../src/door-rando/owr/rules.json" with { type: "json" };
-import { drWorld } from "../src/door-world/index";
+import {
+  drWorld,
+  type OwrNotes,
+  owrNotesFromSpoiler,
+} from "../src/door-world/index";
 import { factOf } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
 import {
@@ -53,14 +57,20 @@ const REVIEWED: Readonly<
   Record<string, { readonly why: string; readonly at: Record<string, string> }>
 > = {};
 
-/** A log, its settings those the fork's world holds. */
-function logOf(name: string): { json: Json; log: Log } {
+/** A log, its settings those the fork's world holds, and its notes. */
+function logOf(name: string): { log: Log; notes: OwrNotes } {
   const json = JSON.parse(read(name)) as Json;
   const { Maps: maps, Overworld: edges, Whirlpools: pools, ...rest } = json;
-  // The overworld left as it is: no edge, whirlpool or flute spot moved
-  expect([edges, pools, maps]).toEqual([[], [], []]);
   const log = jsonLog(rest);
   const { meta } = log;
+  // No edge moved; whirlpools and flute spots only where meta shuffles them
+  expect(edges).toEqual([]);
+  expect((pools as readonly unknown[]).length > 0).toBe(
+    flag(meta.ow_whirlpool),
+  );
+  expect((maps as readonly unknown[]).length > 0).toBe(
+    meta.ow_fluteshuffle !== "vanilla",
+  );
   expect([
     meta.door_shuffle,
     meta.shuffle,
@@ -68,8 +78,6 @@ function logOf(name: string): { json: Json; log: Log } {
     meta.ow_layout,
     meta.ow_crossed,
     flag(meta.ow_mixed),
-    flag(meta.ow_whirlpool),
-    meta.ow_fluteshuffle,
     meta.prizeshuffle,
     flag(meta.shuffle_followers),
     flag(meta.bombbag),
@@ -80,8 +88,6 @@ function logOf(name: string): { json: Json; log: Log } {
     "vanilla",
     "none",
     false,
-    false,
-    "vanilla",
     "none",
     false,
     false,
@@ -93,11 +99,22 @@ function logOf(name: string): { json: Json; log: Log } {
     null,
   ]);
   expect((meta.versions as Record<string, string>).Overworld).toBe("0.8.0.2-u");
-  return { json, log };
+  return {
+    log,
+    notes: owrNotesFromSpoiler(
+      json as Parameters<typeof owrNotesFromSpoiler>[0],
+    ),
+  };
 }
 
-/** A log's world: the fork's, its mode and its bonk drops as it says. */
-const worldOf = (log: Log, options: { readonly sweepEvents?: boolean }) => {
+/**
+ * A log's world: the fork's, its mode and its bonk drops as it says, its
+ * whirlpools and flute spots as noted.
+ */
+const worldOf = (
+  { log, notes }: { log: Log; notes: OwrNotes },
+  options: { readonly sweepEvents?: boolean },
+) => {
   const { meta } = log;
   const bonks = flag(meta.bonk_drops);
   return drWorld(
@@ -108,6 +125,7 @@ const worldOf = (log: Log, options: { readonly sweepEvents?: boolean }) => {
     },
     {
       data: OWR_DATA,
+      overworld: notes,
       ...(bonks
         ? {
             dropsAndPots: BONK_DROPS.map(({ name, region }) => ({
@@ -124,32 +142,46 @@ const worldOf = (log: Log, options: { readonly sweepEvents?: boolean }) => {
 describe("the Overworld Randomizer's world against its own seeds' playthroughs", () => {
   const logs = Object.keys(INDEX.logs);
 
-  it("reads Open and Inverted seeds, bonk drops shuffled and not", () => {
+  it("reads Open and Inverted seeds, bonk drops, whirlpools and flute spots shuffled and not", () => {
     const seen = logs.map((name) => {
       const { meta } = logOf(name).log;
-      return `${meta.mode} ${flag(meta.bonk_drops)}`;
+      return `${meta.mode} ${flag(meta.bonk_drops)} ${flag(meta.ow_whirlpool)} ${meta.ow_fluteshuffle}`;
     });
     expect(seen.sort()).toEqual([
-      "inverted false",
-      "inverted true",
-      "open false",
-      "open true",
+      "inverted false false vanilla",
+      "inverted false true balanced",
+      "inverted true false vanilla",
+      "open false false vanilla",
+      "open false true random",
+      "open true false vanilla",
     ]);
+  });
+
+  it("notes every whirlpool and the eight flute spots of a shuffled seed", () => {
+    for (const name of logs) {
+      const { log, notes } = logOf(name);
+      if (flag(log.meta.ow_whirlpool))
+        expect(Object.keys(notes.whirlpools ?? {})).toHaveLength(8);
+      else expect(notes.whirlpools).toBeUndefined();
+      if (log.meta.ow_fluteshuffle === "vanilla")
+        expect(notes.flute).toBeUndefined();
+      else expect(notes.flute).toHaveLength(8);
+    }
   });
 
   for (const name of logs)
     it(`reaches each sphere with the spheres before it (${name})`, () => {
-      const { log } = logOf(name);
-      const { checked, notYes } = walk(log, worldOf(log, {}), EVENTS);
+      const read = logOf(name);
+      const { checked, notYes } = walk(read.log, worldOf(read, {}), EVENTS);
       expect(checked).toBeGreaterThan(20);
       expect(notYes).toEqual(REVIEWED[name]?.at ?? {});
     });
 
   for (const name of logs)
     it(`says yes to no location of a later sphere (${name})`, () => {
-      const { log } = logOf(name);
-      expect(early(log, worldOf(log, { sweepEvents: false }), EVENTS)).toEqual(
-        [],
-      );
+      const read = logOf(name);
+      expect(
+        early(read.log, worldOf(read, { sweepEvents: false }), EVENTS),
+      ).toEqual([]);
     });
 });

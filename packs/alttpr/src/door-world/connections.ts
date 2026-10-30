@@ -23,7 +23,7 @@ import {
   isShuffledDoor,
   portalId,
 } from "./doors";
-import { linkOwrEntrances, linkOwrOverworld } from "./overworld";
+import { linkOwrEntrances, linkOwrOverworld, type OwrNotes } from "./overworld";
 
 /** Where each exit leads, by DR's names: an exit to a region. */
 export type DrConnections = ReadonlyMap<string, string>;
@@ -335,10 +335,11 @@ export function vanillaConnections(
   mode: DrMode,
   version = 156,
   doors?: DrNotedDoors,
+  overworld?: OwrNotes,
 ): DrConnections {
   const c = new Map<string, string>();
   if (data.flavor === "owr") {
-    linkOwrOverworld(data, c, mode);
+    linkOwrOverworld(data, c, mode, overworld);
     linkOwrEntrances(data, c, mode);
   } else {
     linkOverworld(data, c, mode);

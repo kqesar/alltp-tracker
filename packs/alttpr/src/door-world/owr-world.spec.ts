@@ -12,7 +12,9 @@ import {
   OWR_DEFAULTS,
   owrDynamicEvents,
   owrMovedExits,
+  owrNotesFromSpoiler,
   owrSettings,
+  whirlpoolsOf,
 } from "./overworld";
 import { OWR_DATA } from "./owr-data";
 import { bunnyWall } from "./shuffle";
@@ -63,6 +65,57 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
     expect(vanillaConnections(OWR_DATA, "open").get("Flute Spot 6")).toBe(
       "Desert Teleporter Ledge",
     );
+  });
+
+  it("links shuffled whirlpools and flute spots as noted, the rest nowhere", () => {
+    // Shuffled whirlpools: a noted pair both ways, an unnoted one nowhere
+    const pools = vanillaConnections(OWR_DATA, "open", 157, undefined, {
+      whirlpools: {
+        "C Whirlpool": "Zora Whirlpool",
+        "Zora Whirlpool": "C Whirlpool",
+      },
+    });
+    const where = whirlpoolsOf(OWR_DATA);
+    expect(pools.get("C Whirlpool")).toBe(where.get("Zora Whirlpool")?.region);
+    expect(pools.get("Zora Whirlpool")).toBe(where.get("C Whirlpool")?.region);
+    expect(pools.has("Lake Hylia Whirlpool")).toBe(false);
+    // Vanilla, every whirlpool is linked
+    expect(
+      vanillaConnections(OWR_DATA, "open").has("Lake Hylia Whirlpool"),
+    ).toBe(true);
+    expect(() =>
+      vanillaConnections(OWR_DATA, "open", 157, undefined, {
+        whirlpools: { "C Whirlpool": "Nowhere" },
+      }),
+    ).toThrow('No whirlpool "Nowhere"');
+    // Moved flute spots: the noted screens in slot order, the rest nowhere
+    const flute = vanillaConnections(OWR_DATA, "open", 157, undefined, {
+      flute: [0x30, 0x05],
+    });
+    expect(flute.get("Flute Spot 1")).toBe("East Death Mountain (Bottom)");
+    expect(flute.get("Flute Spot 2")).toBe(overworld?.flute["48"]?.regions[0]);
+    expect(flute.has("Flute Spot 3")).toBe(false);
+  });
+
+  it("reads a seed's whirlpools and flute spots from its spoiler, for its shuffles alone", () => {
+    const json = {
+      Maps: [{ data: [5, 16], type: "flute" }],
+      meta: { ow_fluteshuffle: "random", ow_whirlpool: true },
+      Whirlpools: [{ entrance: "C Whirlpool", exit: "Zora Whirlpool" }],
+    };
+    expect(owrNotesFromSpoiler(json)).toEqual({
+      flute: [5, 16],
+      whirlpools: {
+        "C Whirlpool": "Zora Whirlpool",
+        "Zora Whirlpool": "C Whirlpool",
+      },
+    });
+    expect(
+      owrNotesFromSpoiler({
+        ...json,
+        meta: { ow_fluteshuffle: "vanilla", ow_whirlpool: false },
+      }),
+    ).toEqual({});
   });
 
   it("flips every screen in Inverted and none otherwise", () => {

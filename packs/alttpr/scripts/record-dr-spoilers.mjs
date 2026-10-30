@@ -169,8 +169,9 @@ export const DOOR_SEEDS = [
  * seeds of OWR 0.8.0.2 (on DR 1.5.7) generated for these fixtures on
  * 2026-10-30, not races, from the customizer (`?action=generate`, branch
  * OWR, `spoiler: full`, every other setting the site's default: noglitches,
- * the Ganon goal, keys in their dungeons), the overworld, doors and
- * entrances vanilla: the release the pack's OWR world reads.
+ * the Ganon goal, keys in their dungeons), doors and entrances vanilla, the
+ * overworld vanilla or with the shuffles a player notes (whirlpools, flute
+ * spots): the release the pack's OWR world reads.
  */
 export const OWR_SEEDS = [
   // Open, bonk drops shuffled
@@ -181,6 +182,10 @@ export const OWR_SEEDS = [
   "rcEzGOnFN",
   // Inverted
   "nir3EmS5u",
+  // Open, flute spots random, whirlpools shuffled
+  "qmequASj4",
+  // Inverted, flute spots balanced, whirlpools shuffled
+  "n3VjztEKb",
 ];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */

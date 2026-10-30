@@ -10,9 +10,10 @@
 // (is_tile_swapped, BaseClasses.py:331-332), Agahnim's and Ganon's towers
 // trading doors once both their screens are (:69-71).
 //
-// Not modelled yet: Mixed's flips (each screen flipped as noted), crossed
-// or shuffled edges, shuffled whirlpools and flute spots; an Inverted run
-// flips every screen, any other none.
+// Shuffled whirlpools and flute spots are linked as the player notes them
+// (`OwrNotes`): a whirlpool or a spot not noted leads nowhere. Not modelled
+// yet: Mixed's flips (each screen flipped as noted), crossed or shuffled
+// edges; an Inverted run flips every screen, any other none.
 import type { Settings } from "@alltp/engine";
 import type { DrData, DrMode, OwrOverworld } from "./data";
 import { and } from "./text";
@@ -62,18 +63,59 @@ export function overworldOf(data: DrData): OwrOverworld {
 }
 
 /**
- * The vanilla flute spots by number (shuffle_flute_spots' vanilla branch,
- * FluteShuffle.py:44-50): default_flute_connections sorted by slot
- * (sort_flute_spots, :655-657; Death Mountain's slot is 0x04 once its
- * screen flips), each spot's region as its screen stands or flipped.
+ * What a player notes of an OWR seed's shuffled overworld, each a shuffle's
+ * own: absent while that shuffle is off (its vanilla links), and while on,
+ * only what is noted is linked.
  */
-export function fluteSpots(data: DrData, mode: DrMode): readonly string[] {
+export interface OwrNotes {
+  /**
+   * Shuffled whirlpools (`ow_whirlpool`, OverworldShuffle.py:359-413): each
+   * noted whirlpool by name, the whirlpool it leads into (connect_whirlpool
+   * links a pair both ways, so a note holds both).
+   */
+  readonly whirlpools?: Readonly<Record<string, string>>;
+  /**
+   * Moved flute spots (`ow_fluteshuffle` balanced or random, FluteShuffle.
+   * py:52-185): the screens (flute_data's light world ids) a spot is noted
+   * on, at most eight.
+   */
+  readonly flute?: readonly number[];
+}
+
+/** The whirlpools by name: their screen and the region they stand in. */
+export const whirlpoolsOf = (
+  data: DrData,
+): ReadonlyMap<string, { readonly screen: number; readonly region: string }> =>
+  new Map(
+    (
+      data.tableOf<unknown>(
+        "OverworldShuffle.py",
+        "default_whirlpool_connections",
+      ) as unknown as readonly (readonly [Whirlpool, Whirlpool])[]
+    ).flatMap((pair) =>
+      pair.map(([screen, name, region]) => [name, { region, screen }] as const),
+    ),
+  );
+
+/**
+ * The flute spots by number (shuffle_flute_spots, FluteShuffle.py:36-50,
+ * :178-182): the spots' screens sorted by slot (sort_flute_spots,
+ * :655-657; Death Mountain's slot is 0x04 once its screen flips), each
+ * spot's region as its screen stands or flipped. The spots are
+ * default_flute_connections unless the player's noted ones are given.
+ */
+export function fluteSpots(
+  data: DrData,
+  mode: DrMode,
+  noted?: readonly number[],
+): readonly string[] {
   const { flute } = overworldOf(data);
   const spots = [
-    ...(data.tableOf<number>(
-      "FluteShuffle",
-      "default_flute_connections",
-    ) as unknown as readonly number[]),
+    ...(noted ??
+      (data.tableOf<number>(
+        "FluteShuffle",
+        "default_flute_connections",
+      ) as unknown as readonly number[])),
   ];
   const slot = (screen: number) =>
     screen === 0x03 && isTileSwapped(mode, 0x03)
@@ -103,6 +145,7 @@ export function linkOwrOverworld(
   data: DrData,
   c: Map<string, string>,
   mode: DrMode,
+  notes: OwrNotes = {},
 ): void {
   for (const [exit, region] of data.pairsOf(
     "OverworldShuffle.py",
@@ -130,13 +173,25 @@ export function linkOwrOverworld(
       ? flipped
       : stands)
       c.set(exit, region);
-  const whirlpools = data.tableOf<unknown>(
-    "OverworldShuffle.py",
-    "default_whirlpool_connections",
-  ) as unknown as readonly (readonly [Whirlpool, Whirlpool])[];
-  for (const [[, from, fromRegion], [, to, toRegion]] of whirlpools) {
-    c.set(from, toRegion);
-    c.set(to, fromRegion);
+  if (notes.whirlpools === undefined) {
+    const whirlpools = data.tableOf<unknown>(
+      "OverworldShuffle.py",
+      "default_whirlpool_connections",
+    ) as unknown as readonly (readonly [Whirlpool, Whirlpool])[];
+    for (const [[, from, fromRegion], [, to, toRegion]] of whirlpools) {
+      c.set(from, toRegion);
+      c.set(to, fromRegion);
+    }
+  } else {
+    // Shuffled: a noted whirlpool into its partner's region (connect_
+    // whirlpool, OverworldShuffle.py:359-367), one not noted nowhere
+    const known = whirlpoolsOf(data);
+    for (const [from, to] of Object.entries(notes.whirlpools)) {
+      const target = known.get(to);
+      if (!known.has(from) || target === undefined)
+        throw new RangeError(`No whirlpool "${known.has(from) ? to : from}"`);
+      c.set(from, target.region);
+    }
   }
   for (const [a, b] of data.pairsOf(
     "OverworldShuffle.py",
@@ -145,7 +200,7 @@ export function linkOwrOverworld(
     c.set(a, data.parentOf(b));
     c.set(b, data.parentOf(a));
   }
-  fluteSpots(data, mode).forEach((region, i) => {
+  fluteSpots(data, mode, notes.flute).forEach((region, i) => {
     c.set(`Flute Spot ${i + 1}`, region);
   });
 }
@@ -347,4 +402,34 @@ export function owrTerrainRules(
     )
       exit.req = and(exit.req, "moonPearl");
   }
+}
+
+/**
+ * What a seed's JSON spoiler tells of its shuffled overworld, as a player
+ * who walked it notes it: its whirlpools (`Whirlpools`, set_whirlpool's
+ * pairs, OverworldShuffle.py:368) both ways and its flute spots (`Maps`'
+ * flute entry, whose `data` is the sorted spots, FluteShuffle.py:652), for
+ * the shuffles its meta names alone.
+ */
+export function owrNotesFromSpoiler(json: {
+  readonly meta: Readonly<Record<string, unknown>>;
+  readonly Whirlpools?: readonly {
+    readonly entrance: string;
+    readonly exit: string;
+  }[];
+  readonly Maps?: readonly { readonly type: string; readonly data?: unknown }[];
+}): OwrNotes {
+  const { meta } = json;
+  const whirlpools: Record<string, string> = {};
+  for (const { entrance, exit } of json.Whirlpools ?? []) {
+    whirlpools[entrance] = exit;
+    whirlpools[exit] = entrance;
+  }
+  const flute = json.Maps?.find((map) => map.type === "flute")?.data;
+  return {
+    ...(meta.ow_whirlpool === true ? { whirlpools } : {}),
+    ...(meta.ow_fluteshuffle !== undefined && meta.ow_fluteshuffle !== "vanilla"
+      ? { flute: (flute ?? []) as readonly number[] }
+      : {}),
+  };
 }

@@ -72,6 +72,7 @@ import {
 import {
   isTileSwapped,
   OWR_DEFAULTS,
+  type OwrNotes,
   owrDynamicEvents,
   owrDynamicFacts,
   owrMovedExits,
@@ -107,6 +108,11 @@ export { notedConnections, vanillaConnections } from "./connections";
 export type { DrData, DrMode } from "./data";
 export * from "./doors";
 export { KEY_ITEMS } from "./keys";
+export {
+  type OwrNotes,
+  owrNotesFromSpoiler,
+  whirlpoolsOf,
+} from "./overworld";
 
 /** How a world is built beside its settings. */
 export interface DrWorldOptions {
@@ -134,6 +140,11 @@ export interface DrWorldOptions {
    * it false and hold the events as items.
    */
   readonly sweepEvents?: boolean;
+  /**
+   * The Overworld Randomizer's shuffled overworld as noted (whirlpools,
+   * flute spots: overworld.ts `OwrNotes`), for its data alone.
+   */
+  readonly overworld?: OwrNotes;
   /**
    * Where each exit leads: the vanilla world's for the mode by default
    * (vanillaConnections).
@@ -954,7 +965,7 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const connections =
     noted?.connections ??
     options.connections ??
-    vanillaConnections(data, mode, version, doors);
+    vanillaConnections(data, mode, version, doors, options.overworld);
   const lobbies = lobbiesOf(data, doors);
   const lobbyDoors = new Set(lobbies.values());
   const exits = exitsOf(data, connections, mode, options, lobbyDoors);
