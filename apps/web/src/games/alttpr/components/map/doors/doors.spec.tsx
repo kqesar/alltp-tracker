@@ -69,6 +69,8 @@ describe("the Doors tab", () => {
     // A door whose kind the shuffle may change: not known with its link
     const kind = screen.getByTestId("door-kind-eastern-cannonball-s");
     expect(kind).toHaveValue("");
+    // Its own words, told apart from the link's "? Not known" beside it
+    expect(kind).toHaveDisplayValue("? Kind not known");
     expect(store().doors.kinds).toBeUndefined();
     await user.selectOptions(kind, ["small"]);
     expect(store().doors.kinds?.["eastern-cannonball-s"]).toBe("small");

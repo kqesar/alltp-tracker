@@ -71,7 +71,7 @@ const KindSelect = ({ door, label }: { door: string; label: string }) => {
       }
       value={kind ?? ""}
     >
-      <option value="">? Not known</option>
+      <option value="">? Kind not known</option>
       {KIND_WORDS.map(([value, words]) => (
         <option key={value} value={value}>
           {words}
