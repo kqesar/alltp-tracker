@@ -14,6 +14,7 @@ import {
   drShuffled,
   drTargetName,
   type OwrShuffle,
+  owrDecoupled,
   owrShuffled,
   owrSwapPartners,
   vanillaEntrances,
@@ -389,6 +390,12 @@ export interface DrNotedConnections {
   readonly complete: boolean;
   /** Its exits lead back elsewhere than their doors (insanity). */
   readonly decoupled: boolean;
+  /**
+   * The regions a door not noted yet may lead into: the targets the
+   * shuffle moves that no note names (an OWR run's, whose bunny reads a
+   * cave dark once any way in is, owrSideReads).
+   */
+  readonly unplaced?: readonly string[];
 }
 
 /**
@@ -457,10 +464,21 @@ export function notedConnections(
   }
   linkDoors(data, c, doors);
   removeExits(c, doors);
+  // The targets no note names yet: where a door not noted may lead
+  const named = new Set(
+    Object.values(entrances.noted).flatMap((id) => drTargetName(id) ?? []),
+  );
+  const maps = vanillaEntrances(false);
+  const unplaced = [...moved].flatMap((entrance) => {
+    const target = maps.twoWay.get(entrance) ?? maps.oneWay.get(entrance);
+    if (target === undefined || named.has(target)) return [];
+    return [exits.has(target) ? data.parentOf(target) : target];
+  });
   return {
     complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,
     decoupled,
+    unplaced,
   };
 }
 
@@ -470,16 +488,18 @@ export function notedConnections(
  * (linkOwrOverworld), what its shuffle keeps as it stands (owrShuffled,
  * linkOwrEntrances), each noted entrance as connect_two_way,
  * connect_entrance and connect_exit do (:2083-2155): a cave's or dungeon's
- * door both ways, a hole or a single cave's door one way. The pyramid's
+ * door both ways, a hole or a single cave's door one way. In a decoupled
+ * shuffle (insanity) a noted door leads one way only, its exit's way back
+ * unnoted, but for the start house's door, which do_links_house connects
+ * both ways whatever the coupling (:717-719). The pyramid's
  * doors, which stand on the castle's ledge once its screen flips, lead
  * from either place while that is not known (`possible`). Where Link
  * starts at the Big Bomb Shop or the Dark Chapel (is_bombshop_start,
  * is_dark_chapel_start), the door noted into it is where its way out
  * leads (:2105-2110), and Chris Houlihan's room leads back to the start
- * house's door (:164-167). Only District and Swapped, the modes whose
- * `undefined` places every entrance (error, swap: `modes`, :2566-2743),
- * are read; in Swapped, a note also links the entrance it tells
- * (owrSwapPartners: connect_swap).
+ * house's door (:164-167). Every mode of the fork's `modes` is read
+ * (:2158-2768); one it does not name throws. In Swapped, a note also links
+ * the entrance it tells (owrSwapPartners: connect_swap).
  */
 function owrNotedConnections(
   data: DrData,
@@ -495,16 +515,13 @@ function owrNotedConnections(
     "EntranceShuffle2",
     "modes",
   );
-  const placed = modes[shuffle]?.undefined;
-  if (
-    (shuffle !== "district" && shuffle !== "swapped") ||
-    (placed !== "error" && placed !== "swap")
-  )
+  if (modes[shuffle] === undefined)
     throw new RangeError(`No noted ${shuffle} entrances of the fork`);
+  const decoupled = owrDecoupled(shuffle);
   const c = new Map<string, string>();
   linkOwrOverworld(data, c, mode, overworld, screens, possible);
   const bombShopStart = screens.swapped(0x2c);
-  const moved = owrShuffled({ ...entrances.pool, bombShopStart });
+  const moved = owrShuffled(shuffle, { ...entrances.pool, bombShopStart });
   linkOwrEntrances(data, c, mode, screens, possible, (e) => !moved.has(e));
   const { twoWay: twoWays } = vanillaEntrances(false);
   const exits = new Set(twoWays.values());
@@ -550,7 +567,12 @@ function owrNotedConnections(
     if (owrEntranceRegion(data, screens, entrance) === undefined)
       possible.push([entrance, to], [entrance, to, "Hyrule Castle Ledge"]);
     else c.set(entrance, to);
-    if (exits.has(target)) backTo(target, entrance);
+    // The start house's door both ways whatever the coupling (:717-719)
+    if (
+      exits.has(target) &&
+      (!decoupled || (target === "Links House Exit" && bombShopStart === false))
+    )
+      backTo(target, entrance);
     // connect_entrance (:2105-2110): the start's way out
     if (target === "Big Bomb Shop") {
       if (bombShopStart === true) backTo("Big Bomb Shop Exit", entrance);
@@ -573,10 +595,20 @@ function owrNotedConnections(
   }
   linkDoors(data, c, doors);
   removeExits(c, doors);
+  // The targets no note names yet (nor a Swapped note tells): where a door
+  // not noted may lead
+  const named = new Set(notes.flatMap(([, id]) => drTargetName(id) ?? []));
+  const maps = vanillaEntrances(false);
+  const unplaced = [...moved].flatMap((entrance) => {
+    const target = maps.twoWay.get(entrance) ?? maps.oneWay.get(entrance);
+    if (target === undefined || named.has(target)) return [];
+    return [exits.has(target) ? data.parentOf(target) : target];
+  });
   return {
-    complete: [...moved].every((e) => noted.has(e)),
+    complete: !decoupled && [...moved].every((e) => noted.has(e)),
     connections: c,
-    decoupled: false,
+    decoupled,
+    unplaced,
   };
 }
 

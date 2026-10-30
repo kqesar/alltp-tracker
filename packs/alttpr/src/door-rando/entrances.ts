@@ -24,6 +24,7 @@ import {
 } from "../entrances";
 import { locationId } from "../location";
 import districtData from "./owr/districts.json" with { type: "json" };
+import owrEntranceData from "./owr/entrances.json" with { type: "json" };
 import entranceData from "./world/entrances.json" with { type: "json" };
 
 /**
@@ -56,20 +57,35 @@ export interface DrPoolSettings {
   /** dropshuffle: none, keys, underworld (args.json). */
   readonly dropShuffle: string;
   readonly enemyShuffle: boolean;
+  /**
+   * The Overworld fork's shuffle_bonk_drops, which its lite's and lean's
+   * Good Bee Cave reads (`bonk`, owr:EntranceShuffle2.py:1620-1622);
+   * absent, it may be shuffled.
+   */
+  readonly bonkDrops?: boolean;
+  /**
+   * The fork's take_any (none, random, fixed), which its lite's and lean's
+   * fairy caves read (`takeany`, owr:EntranceShuffle2.py:1617-1619);
+   * absent, it may be fixed.
+   */
+  readonly takeAny?: string;
 }
 
 type Table = { readonly line: number; readonly value: unknown };
-const TABLES = (
-  entranceData as unknown as Readonly<
-    Record<string, Readonly<Record<string, Table>>>
-  >
-)["source/overworld/EntranceShuffle2.py"] as Readonly<Record<string, Table>>;
 
-const value = <T>(name: string): T => {
-  const table = TABLES[name];
-  if (table === undefined) throw new RangeError(`No table ${name}`);
-  return table.value as T;
+/** A release's EntranceShuffle2 table reader, from its entrances.json. */
+const tablesOf = (data: unknown) => {
+  const tables = (
+    data as Readonly<Record<string, Readonly<Record<string, Table>>>>
+  )["source/overworld/EntranceShuffle2.py"] as Readonly<Record<string, Table>>;
+  return <T>(name: string): T => {
+    const table = tables[name];
+    if (table === undefined) throw new RangeError(`No table ${name}`);
+    return table.value as T;
+  };
 };
+
+const value = tablesOf(entranceData);
 
 const DROP_MAP = value<Readonly<Record<string, string>>>("drop_map");
 const ENTRANCE_MAP = value<Readonly<Record<string, string>>>("entrance_map");
@@ -91,9 +107,12 @@ interface ModePool {
   readonly entrance?: string;
 }
 
-/** A mode of `modes` (EntranceShuffle2.py:1518-1940). */
+/**
+ * A mode of `modes` (EntranceShuffle2.py:1518-1940; the fork's :2158-2768,
+ * where District's `undefined` is `error`).
+ */
 interface Mode {
-  readonly undefined: "vanilla" | "shuffle" | "swap";
+  readonly undefined: "vanilla" | "shuffle" | "swap" | "error";
   readonly decoupled?: string;
   readonly pools?: Readonly<Record<string, ModePool>>;
 }
@@ -336,8 +355,8 @@ export const drDecoupled = (shuffle: DrShuffle): boolean =>
  * the single- and multi-entrance dungeons (simple, restricted,
  * dungeonssimple), or the dungeon pool and its connectors (dungeonsfull).
  */
-function dungeonEntrances(shuffle: DrShuffle): ReadonlySet<string> {
-  const pools = MODES[shuffle].pools ?? {};
+function dungeonEntrances(mode: Mode): ReadonlySet<string> {
+  const pools = mode.pools ?? {};
   const found = new Set<string>();
   for (const name of [
     "single_entrance_dungeon",
@@ -374,7 +393,7 @@ export function drEntrancePool(
     shuffle,
     settings.mode === "inverted",
     drShuffled(shuffle, settings),
-    dungeonEntrances(shuffle),
+    dungeonEntrances(MODES[shuffle]),
     drDecoupled(shuffle),
   );
 }
@@ -440,23 +459,25 @@ function poolOf(
 }
 
 /**
- * The Overworld Randomizer's own entrance shuffles the pack holds
- * (EntranceShuffle2.py `modes` at owr 0.8.0.2): District (:2566-2726: each
- * entrance among its district's, by the world its region stands in, every
- * one placed, `undefined: error`) and Swapped (:2727-2743: entrances
- * trading targets two by two, cross world, `undefined: swap`). The fork's
- * entrance tables are DR's of the Open world, name for name (no Inverted
- * names: its Inverted world flips screens, not names), which
- * entrances.spec.ts holds.
+ * The Overworld Randomizer's entrance shuffles (EntranceShuffle2.py `modes`
+ * at owr 0.8.0.2, :2158-2768): DR's, by the same names, and its own
+ * District (:2566-2726: each entrance among its district's, by the world
+ * its region stands in, every one placed, `undefined: error`). The fork's
+ * pools are its own (`OWR_MODES`): lite's and lean's kept caves add the
+ * take-any and bonk conditions (:2259-2301), simple has no Inverted pools,
+ * District is new. Its entrance tables are DR's of the Open world, name for
+ * name (no Inverted names: its Inverted world flips screens, not names),
+ * which entrances.spec.ts holds.
  */
-export type OwrShuffle = "district" | "swapped";
+export type OwrShuffle = DrShuffle | "district";
+
+const owrValue = tablesOf(owrEntranceData);
+
+/** The fork's `modes` (EntranceShuffle2.py:2158-2768 at owr 0.8.0.2). */
+const OWR_MODES = owrValue<Readonly<Record<OwrShuffle, Mode>>>("modes");
 
 /** What of an OWR run decides which entrances its shuffle may move. */
-export interface OwrPoolSettings {
-  /** shufflelinks: Link's start house among the shuffled doors (:655-660). */
-  readonly shuffleLinks: boolean;
-  /** shuffletavern: the Tavern's back door shuffled (:230-236). */
-  readonly shuffleTavern: boolean;
+export interface OwrPoolSettings extends DrPoolSettings {
   /**
    * is_bombshop_start (BaseClasses.py:350-351, the Big Bomb Shop's screen 0x2c
    * swapped): Link starts at the Big Bomb Shop, whose door is then the one
@@ -479,46 +500,99 @@ export interface OwrPoolSettings {
 }
 
 /**
- * The entrances an OWR District or Swapped shuffle may move, by the fork's
- * names: link_entrances_new's whole pool (:60-61), as neither mode leaves
- * any entrance to vanilla connections (`undefined` error and swap,
- * :152-159), less what do_main_shuffle surely connects as it stands: the
- * Tavern's back without shuffletavern (:230-236) and, without
+ * Whether the fork's do_vanilla_connect keeps a pool's entrances vanilla
+ * (:1610-1646): DR's conditions, and its own: `takeany` (the fairy caves
+ * move where take_any is fixed), `bonk` (the Good Bee Cave moves where bonk
+ * drops are shuffled) and `skullwoods` (Skull Woods' doors, which a run
+ * does not record: they may move).
+ */
+function owrKeptVanilla(pool: ModePool, settings: OwrPoolSettings): boolean {
+  const condition = pool.condition ?? "";
+  const has = (name: string) =>
+    typeof condition === "string"
+      ? condition.includes(name)
+      : condition.some((c) => c === name);
+  if (has("takeany") && (settings.takeAny ?? "fixed") === "fixed") return false;
+  if (has("bonk") && settings.bonkDrops !== false) return false;
+  if (has("skullwoods")) return false;
+  return keptVanilla(pool, settings);
+}
+
+/**
+ * The entrances an OWR shuffle may move, by the fork's names:
+ * link_entrances_new's pool (:60-61) less what it surely connects as it
+ * stands. In a mode that leaves the rest vanilla (`undefined`: the dungeon
+ * shuffles), every entrance no pool names (do_vanilla_connections, :152-
+ * 153); the caves a kept pool connects (do_vanilla_connect, `owrKeptVanilla`),
+ * but Skull Woods', which an earlier pool may have moved (skullwoods); in
+ * Standard, Link's House and the escape's drop (do_standard_connections,
+ * :479-494: the castle's front door and the drop's stairs only trade exits
+ * where linked_drops parts them, which a run does not record, so they count
+ * as moved); the Tavern's back without shuffletavern (:230-236); without
  * shufflelinks, the start house's door (do_links_house, :655-660: Links
  * House, or the Big Bomb Shop where Link starts there; both moved while
  * that is not known). Ganon's Tower and the pyramid stand only without
  * shuffle_ganon (:213-228, :525-531), which a run does not record: moved.
  */
-export function owrShuffled(settings: OwrPoolSettings): ReadonlySet<string> {
-  // Both modes place every entrance (entrances.spec.ts holds `modes`)
-  const moved = new Set(vanillaEntrances(false).pool);
+export function owrShuffled(
+  shuffle: OwrShuffle,
+  settings: OwrPoolSettings,
+): ReadonlySet<string> {
+  const mode = OWR_MODES[shuffle];
+  const pools = Object.values(mode.pools ?? {});
+  const all = vanillaEntrances(false).pool;
+  const named = new Set(
+    pools.filter((p) => p.special !== "vanilla").flatMap(entrancesOf),
+  );
+  const moved = new Set(
+    mode.undefined === "vanilla" ? all.filter((name) => named.has(name)) : all,
+  );
+  for (const pool of pools)
+    if (pool.special === "vanilla" && owrKeptVanilla(pool, settings))
+      for (const name of entrancesOf(pool))
+        if (!SKULL.test(name)) moved.delete(name);
+  if (settings.mode === "standard")
+    for (const name of ["Links House", "Hyrule Castle Secret Entrance Drop"])
+      moved.delete(name);
   if (!settings.shuffleTavern) moved.delete("Tavern North");
   if (!settings.shuffleLinks && settings.bombShopStart !== undefined)
     moved.delete(settings.bombShopStart ? "Big Bomb Shop" : "Links House");
   return moved;
 }
 
+/** Whether an OWR shuffle parts a door from its way back (insanity). */
+export const owrDecoupled = (shuffle: OwrShuffle): boolean =>
+  OWR_MODES[shuffle].decoupled === "on";
+
 /**
- * What an OWR District or Swapped shuffle may move, for a run: its
- * entrances (`owrShuffled`), a hole to any hole's drop (do_holes_and_
- * linked_drops, :502-616) and any other door to any door's target, as
- * both are cross-district or cross-world somewhere. No note settles
+ * What an OWR shuffle may move, for a run: its entrances (`owrShuffled`),
+ * a hole to any hole's drop (do_holes_and_linked_drops, :502-616), where a
+ * mode places dungeons among dungeons (simple, restricted and the dungeon
+ * shuffles' pools) a dungeon's door to a dungeon's exit and any other door
+ * to the others, elsewhere any door to any door's target. No note settles
  * another; Swapped's notes tell each one's partner (`derived`,
- * owrSwapPartners).
+ * owrSwapPartners), and District's entrances take their own district's
+ * targets alone where its worlds are known (`districtTargets`).
  */
 export function owrEntrancePool(
   shuffle: OwrShuffle,
   settings: OwrPoolSettings,
 ): DrEntrancePool {
-  const moved = owrShuffled(settings);
-  const pool = poolOf(shuffle, false, moved, new Set());
+  const moved = owrShuffled(shuffle, settings);
+  const pool = poolOf(
+    shuffle,
+    false,
+    moved,
+    dungeonEntrances(OWR_MODES[shuffle]),
+    owrDecoupled(shuffle),
+  );
   if (shuffle === "swapped")
     return {
       ...pool,
       derived: (noted) => owrSwapPartners(noted, moved, settings.towersTraded),
     };
   const swapped = settings.tilesSwapped;
-  return swapped === undefined
+  return shuffle !== "district" || swapped === undefined
     ? pool
     : { ...pool, targetsOf: districtTargets(moved, swapped) };
 }

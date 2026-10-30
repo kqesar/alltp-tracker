@@ -586,6 +586,36 @@ function writeOwrDistricts(world, read, head) {
 }
 
 /**
+ * A world's connection tables, those its entrance pools read or the rest
+ * (src/door-rando/entrances.ts reads the first): the entrance assistant
+ * loads them without the rest of the world. The fork's have no
+ * inverted_sub_table (its Inverted world flips screens, not names).
+ * @param {Record<string, Record<string, unknown>>} connections
+ * @param {boolean} pool
+ */
+function poolTablesOf(connections, pool) {
+  const ENTRANCE_FILE = "source/overworld/EntranceShuffle2.py";
+  const POOL_TABLES = new Set([
+    "drop_map",
+    "entrance_map",
+    "single_entrance_map",
+    "inverted_sub_table",
+    "modes",
+  ]);
+  return Object.fromEntries(
+    Object.entries(connections).flatMap(([file, tables]) => {
+      const kept = Object.fromEntries(
+        Object.entries(tables).filter(
+          ([name]) =>
+            (file === ENTRANCE_FILE && POOL_TABLES.has(name)) === pool,
+        ),
+      );
+      return Object.keys(kept).length === 0 ? [] : [[file, kept]];
+    }),
+  );
+}
+
+/**
  * The Overworld fork (`--owr`): its world beside DR's, in
  * src/door-rando/owr/. Its pots, enemy drops and shops are DR's own (the
  * fork merged DR's PotShuffle.py and EnemyList.py data): the import stops if
@@ -630,7 +660,12 @@ function mainOwr(checkout) {
   writeLines(
     join(OWR_WORLD, "connections.json"),
     { generated, upstream },
-    world.connections,
+    poolTablesOf(world.connections, false),
+  );
+  writeLines(
+    join(OWR_WORLD, "entrances.json"),
+    { generated, upstream },
+    poolTablesOf(world.connections, true),
   );
   writeOwrDistricts(world, read, { generated, upstream });
   // Stage B: its rules, in DR's translation under the fork's dialect
@@ -787,38 +822,15 @@ function main(args) {
     { generated, upstream },
     { doors: world.doors, portals: world.portals },
   );
-  // The tables DR's entrance pools read apart (src/door-rando/entrances.ts):
-  // the entrance assistant loads them without the rest of DR's world
-  const ENTRANCE_FILE = "source/overworld/EntranceShuffle2.py";
-  const POOL_TABLES = new Set([
-    "drop_map",
-    "entrance_map",
-    "single_entrance_map",
-    "inverted_sub_table",
-    "modes",
-  ]);
-  /** @param {boolean} pool */
-  const tablesOf = (pool) =>
-    Object.fromEntries(
-      Object.entries(world.connections).flatMap(([file, tables]) => {
-        const kept = Object.fromEntries(
-          Object.entries(tables).filter(
-            ([name]) =>
-              (file === ENTRANCE_FILE && POOL_TABLES.has(name)) === pool,
-          ),
-        );
-        return Object.keys(kept).length === 0 ? [] : [[file, kept]];
-      }),
-    );
   writeLines(
     join(WORLD, "connections.json"),
     { generated, upstream },
-    tablesOf(false),
+    poolTablesOf(world.connections, false),
   );
   writeLines(
     join(WORLD, "entrances.json"),
     { generated, upstream },
-    tablesOf(true),
+    poolTablesOf(world.connections, true),
   );
   process.stdout.write(
     `${WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${world.portals.length} portals\n`,

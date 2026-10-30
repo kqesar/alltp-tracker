@@ -7,3 +7,6 @@ import { type DoorSolver, doorSolverOf } from "@/games/alttpr/logic/doorWorld";
 
 /** The solver of Overworld Randomizer runs, in the fork's own world. */
 export const solver: DoorSolver = doorSolverOf(OWR_DATA);
+
+/** The world data the solver builds on, which the Doors tab reads too. */
+export const data = OWR_DATA;

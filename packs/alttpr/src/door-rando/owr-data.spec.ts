@@ -3,6 +3,7 @@ import manifest from "../../upstream.json" with { type: "json" };
 import bonkData from "./owr/bonk.json" with { type: "json" };
 import connections from "./owr/connections.json" with { type: "json" };
 import doorData from "./owr/doors.json" with { type: "json" };
+import pools from "./owr/entrances.json" with { type: "json" };
 import overworld from "./owr/overworld.json" with { type: "json" };
 import regionData from "./owr/regions.json" with { type: "json" };
 import drRegionData from "./world/regions.json" with { type: "json" };
@@ -18,9 +19,14 @@ const exitsOf = new Map(
 );
 
 const table = (file: string, name: string): Table => {
-  const found = (
-    connections as unknown as Record<string, Record<string, Table>>
-  )[file]?.[name];
+  const found = [connections, pools]
+    .map(
+      (tables) =>
+        (tables as unknown as Record<string, Record<string, Table>>)[file]?.[
+          name
+        ],
+    )
+    .find((t) => t !== undefined);
   if (found === undefined) throw new Error(`no ${file} ${name}`);
   return found;
 };

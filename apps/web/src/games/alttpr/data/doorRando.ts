@@ -646,20 +646,16 @@ const DR_SHUFFLES: readonly string[] = [
 /**
  * A DR run's entrance shuffle as the pack's pools name it: DR's own
  * (`doorEntrances`) or alttpr.com's of the same name, read by DR's pools;
- * for an OWR run, the fork's own District and Swapped (`doorEntrances`,
- * the pack's `owrEntrancePool`). Undefined for vanilla entrances, an
- * alttpr.com run and an OWR run's other shuffles, whose pools the fork
- * builds its own way.
+ * for an OWR run, any of the fork's, District too, read by its own pools
+ * (the pack's `owrEntrancePool`). Undefined for vanilla entrances and an
+ * alttpr.com run.
  */
 export const doorShuffleOf = (
   settings: DoorRunSettings & { entranceShuffle?: string },
 ): DrShuffle | OwrShuffle | undefined => {
   if (settings.randomizer === undefined) return undefined;
-  if (settings.randomizer === "owr")
-    return settings.doorEntrances === "district" ||
-      settings.doorEntrances === "swapped"
-      ? settings.doorEntrances
-      : undefined;
+  if (settings.randomizer === "owr" && settings.doorEntrances !== undefined)
+    return settings.doorEntrances;
   if (settings.doorEntrances !== undefined)
     return settings.doorEntrances === "district"
       ? undefined
@@ -673,7 +669,8 @@ export const doorShuffleOf = (
 /**
  * What of a DR run its entrance pool reads (the pack's `drShuffled`): the
  * world, Link's House and the Tavern's back, and the settings lite's and
- * lean's kept caves read.
+ * lean's kept caves read, the Overworld fork's bonk drops and take-any
+ * caves among them (its `owrShuffled`).
  */
 export const doorPoolSettingsOf = (
   settings: DoorRunSettings & { mode?: string },
@@ -693,6 +690,18 @@ export const doorPoolSettingsOf = (
     // Unset: the shuffle may have moved them, so each waits for a note
     shuffleLinks: door.shuffleLinks ?? true,
     shuffleTavern: door.shuffleTavern ?? true,
+    // The fork's kept caves read its bonk drops and take-any caves as the
+    // run states them: unstated, either may move a cave (owrShuffled)
+    ...(settings.randomizer === "owr"
+      ? {
+          ...(settings.bonkDrops === undefined
+            ? {}
+            : { bonkDrops: settings.bonkDrops }),
+          ...(settings.takeAny === undefined
+            ? {}
+            : { takeAny: settings.takeAny }),
+        }
+      : {}),
   };
 };
 
@@ -825,8 +834,9 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
       ? []
       : [
           // DR's own key analysis runs on a layout the notes tell whole at
-          // intensity 1 or 2, coupled, entrances vanilla (the pack's
-          // key-analysis/noted.ts); elsewhere strict-safe
+          // intensity 1 or 2, coupled, entrances vanilla, on DR's data (the
+          // pack's key-analysis/noted.ts); elsewhere strict-safe
+          door.randomizer !== "owr" &&
           (door.doorIntensity ?? "3") !== "3" &&
           !door.decoupledDoors &&
           doorShuffleOf(settings) === undefined
@@ -1500,9 +1510,8 @@ export const overworldShufflesOf = (
 /**
  * The groups of screens an OWR run's Mixed flips together (the pack's
  * `owrFlipGroups`, define_tile_groups): those that may flip, by the run's
- * world, crossed overworld, whirlpools and entrance shuffle (vanilla, or
- * District and Swapped, the ones the fork's world holds). Empty outside a
- * Mixed OWR run.
+ * world, crossed overworld, whirlpools and entrance shuffle. Empty outside
+ * a Mixed OWR run.
  */
 export const flipGroupsOf = (
   settings: DoorRunSettings & { mode?: string },

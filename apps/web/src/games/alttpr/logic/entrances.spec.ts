@@ -237,6 +237,62 @@ describe("the entrance assistant's model", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("has the fork's own pool for an OWR run's every other shuffle", () => {
+    const owr = {
+      ...getPreset("door-randomizer").settings,
+      customGoals: false,
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+      shuffleLinks: false,
+      shuffleTavern: false,
+    } as const;
+    const ids = (settings: Record<string, unknown>) =>
+      poolOf({ ...owr, ...settings })?.entrances.map((e) => e.id) ?? [];
+    // Crossed: every door but the start house's and the Tavern's back
+    const crossed = poolOf({ ...owr, entranceShuffle: "crossed" });
+    expect(crossed?.shuffle).toBe("crossed");
+    expect(ids({ entranceShuffle: "crossed" })).toEqual(
+      ids({ doorEntrances: "district" }),
+    );
+    // Lite keeps its fixed caves (owr:EntranceShuffle2.py:2244-2301): the
+    // take-any caves by the run's take_any, the Good Bee Cave by its bonk
+    // drops, the shops by its shopsanity
+    expect(ids({ doorEntrances: "lite" })).not.toContain("archery-game");
+    // Unstated, either may move its caves: they wait for a note
+    expect(ids({ doorEntrances: "lite" })).toContain("desert-fairy");
+    expect(ids({ doorEntrances: "lite", takeAny: "none" })).not.toContain(
+      "desert-fairy",
+    );
+    expect(ids({ doorEntrances: "lite", takeAny: "fixed" })).toContain(
+      "desert-fairy",
+    );
+    expect(ids({ doorEntrances: "lite" })).toContain("good-bee-cave");
+    expect(ids({ bonkDrops: false, doorEntrances: "lite" })).not.toContain(
+      "good-bee-cave",
+    );
+    expect(ids({ bonkDrops: true, doorEntrances: "lite" })).toContain(
+      "good-bee-cave",
+    );
+    expect(ids({ doorEntrances: "lite", shopsanity: true })).toContain(
+      "kakariko-shop",
+    );
+    // The dungeon shuffles move their dungeons' doors alone
+    expect(ids({ doorEntrances: "dungeonssimple" })).toContain(
+      "eastern-palace",
+    );
+    expect(ids({ doorEntrances: "dungeonssimple" })).not.toContain(
+      "kakariko-shop",
+    );
+    // Insanity parts a door from its way back: the game's doors tell nothing
+    const insanity = poolOf({ ...owr, entranceShuffle: "insanity" });
+    expect(insanity?.decoupled).toBe(true);
+    if (insanity === null || insanity === undefined) throw new Error("no pool");
+    expect(
+      gameNotes(insanity, {}, [{ entrance: 53, kind: "door", slot: 52 }]),
+    ).toEqual({});
+  });
+
   it("moves the checks inside a place above the door noted to lead there", () => {
     const blinds = MARKERS.find((m) => m.id === "blinds-hideout");
     const tomb = MARKERS.find((m) => m.id === "kings-tomb");

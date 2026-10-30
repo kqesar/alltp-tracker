@@ -207,30 +207,40 @@ describe("the entrance assistant", () => {
     }
   });
 
-  it("names an OWR run's shuffle it does not model by the fork's own words", () => {
+  it("lists an OWR run's every shuffle from the fork's pool, and asks for one not known yet", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       randomizer: "owr" as const,
     };
-    for (const [change, words] of [
-      [
-        { doorEntrances: "lite" as const },
-        "The Overworld Randomizer's Lite entrance shuffle is not modelled yet: the tracker lists its District and Swapped entrances",
-      ],
-      [
-        { entranceShuffle: "crossed" as const },
-        "The Overworld Randomizer's Crossed entrance shuffle is not modelled yet",
-      ],
-    ] as const) {
+    for (const change of [
+      { doorEntrances: "lite" as const },
+      { entranceShuffle: "crossed" as const },
+      { doorEntrances: "dungeonssimple" as const },
+    ]) {
       act(() =>
         useGameStore
           .getState()
           .applyRun("door-randomizer", { ...owr, ...change }),
       );
       const view = render(<EntrancesPanel />);
-      expect(screen.getByTestId("entrances-panel")).toHaveTextContent(words);
+      expect(screen.getByTestId("entrances-summary")).toHaveTextContent(
+        /^0 of \d+ entrances noted$/,
+      );
       view.unmount();
     }
+    // A Mystery's shuffle not known yet: no pool, set it in Mode
+    act(() =>
+      useGameStore.getState().applyRun("door-randomizer", {
+        ...owr,
+        entranceShuffle: "crossed",
+        hidden: ["entranceShuffle"],
+      }),
+    );
+    render(<EntrancesPanel />);
+    expect(screen.queryByTestId("entrances-summary")).toBeNull();
+    expect(screen.getByTestId("entrances-panel")).toHaveTextContent(
+      "The entrance shuffle is not known yet: set it in Mode to list its entrances.",
+    );
   });
 
   it("shows an OWR Swapped note's partner as told by it, undone with it in one step", async () => {

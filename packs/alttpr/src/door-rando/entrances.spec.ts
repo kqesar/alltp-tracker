@@ -13,6 +13,7 @@ import {
   vanillaEntrances,
 } from "./entrances";
 import owr from "./owr/connections.json" with { type: "json" };
+import owrPools from "./owr/entrances.json" with { type: "json" };
 import connections from "./world/connections.json" with { type: "json" };
 
 const SHUFFLES: readonly DrShuffle[] = [
@@ -238,7 +239,10 @@ describe("the Door Randomizer's entrance pools", () => {
     // exit_ids) too, so autotracking reads an OWR seed's doors alike
     const tables = (from: unknown, file: string) =>
       (from as Record<string, Record<string, { value: unknown }>>)[file] ?? {};
-    const fork = tables(owr, "source/overworld/EntranceShuffle2.py");
+    const fork = {
+      ...tables(owr, "source/overworld/EntranceShuffle2.py"),
+      ...tables(owrPools, "source/overworld/EntranceShuffle2.py"),
+    };
     const dr = tables(connections, "source/overworld/EntranceShuffle2.py");
     const open = vanillaEntrances(false);
     const drops = (fork.drop_map?.value ?? {}) as Record<string, string>;

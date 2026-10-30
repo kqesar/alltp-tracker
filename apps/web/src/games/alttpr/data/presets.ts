@@ -369,44 +369,18 @@ export const crossedLogic = (settings: RunSettings): boolean =>
   !isDoorRun(settings);
 
 /**
- * Why an Overworld Randomizer run is not held by the fork's own world (the
- * pack's DR world on OWR_DATA, held to the fork's own tests in the Open and
- * Inverted worlds with vanilla doors and entrances, and to its seeds of
- * District and Swapped): its other entrance shuffles (the fork's
- * EntranceShuffle2 builds their pools its own way, not ported), a door
- * shuffle on the fork's data and its Standard world, which no test of the
- * fork holds.
- */
-const owrUnheld = (settings: RunSettings): string[] => {
-  if (settings.randomizer !== "owr") return [];
-  const reasons: string[] = [];
-  if (settings.mode === "standard")
-    reasons.push("the Overworld Randomizer's Standard world");
-  if (
-    (settings.entranceShuffle !== "none" ||
-      settings.doorEntrances !== undefined) &&
-    doorShuffleOf(settings) === undefined
-  )
-    reasons.push("the Overworld Randomizer's entrance shuffles");
-  if ((settings.doorShuffle ?? "vanilla") !== "vanilla")
-    reasons.push("a door shuffle in an Overworld Randomizer seed");
-  return reasons;
-};
-
-/**
  * Whether a run takes the Door Randomizer's own world (the pack's
  * door-world, loaded on demand by `useDoorLogic`): a seed of DR itself, its
  * doors vanilla or noted, its entrances vanilla or of a shuffle DR's pools
  * hold (`doorShuffleOf`), or of its Overworld fork, in the fork's own
- * world (OWR_DATA), its doors vanilla, its entrances vanilla or of the
- * fork's District or Swapped, outside Standard (`owrUnheld`); nothing the port
+ * world (OWR_DATA), its doors and entrances as the fork shuffles them;
+ * nothing the port
  * leaves out (`doorReasons`), no glitched logic, its bosses in place (DR's
  * world reads each dungeon's own) and every setting known (a Mystery run's
  * are not).
  */
 export const doorLogic = (settings: RunSettings): boolean =>
   isDoorRun(settings) &&
-  owrUnheld(settings).length === 0 &&
   !isHidden(settings, "entranceShuffle") &&
   ((settings.entranceShuffle === "none" &&
     settings.doorEntrances === undefined) ||
@@ -463,8 +437,7 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
   const { entranceShuffle: shuffle, mode } = settings;
   // Not known yet: any shuffle, or none (`LogicNote` says to set it)
   if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
-  // DR's own pools hold its every shuffle, the fork's its District and
-  // Swapped (the rest named by `owrUnheld`)
+  // DR's own pools hold its every shuffle, the fork's its own every one
   if (shuffle === "none" || isDoorRun(settings)) {
     if (reasons.length === 0) reasons.push(...doorBorrowed(settings));
     return reasons;
@@ -483,15 +456,14 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
  * modelled: alttpr.com's v31 is no stand-in, its
  * rules differing from DR's where DR asks more (an enemy room's kills,
  * Ganons Tower's Tile Room's powder, DR's key analysis over DR's own fill:
- * Rules.py:909-, the pack's README). Its Overworld fork where the fork's
- * own world does not hold it (`owrUnheld`); a boss shuffle, whose slots DR's world reads as their own
+ * Rules.py:909-, the pack's README). A boss shuffle, whose slots DR's world reads as their own
  * bosses; a Mystery run while any of its settings is hidden, which DR's
  * world needs all of (the owner's decision of 2026-10-30: v31 is no
  * longer read for it, between two logics or otherwise).
  */
 const doorBorrowed = (settings: RunSettings): string[] => {
   if (!isDoorRun(settings) || doorLogic(settings)) return [];
-  const reasons: string[] = owrUnheld(settings);
+  const reasons: string[] = [];
   if (!isHidden(settings, "bossShuffle") && bossShuffleOf(settings) !== "none")
     reasons.push("shuffled bosses in a Door Randomizer seed");
   if ((settings.hidden ?? []).length > 0) reasons.push(HIDDEN_DOOR_SETTINGS);

@@ -7,6 +7,7 @@
 import {
   DOOR_TARGETS,
   type DrEntrancePool,
+  type DrShuffle,
   drEntrancePool,
   ENTRANCES,
   type EntranceLink,
@@ -42,7 +43,7 @@ const doorPools = new Map<string, DrEntrancePool>();
  * (Open's with its take-any caves) or Standard world. Insanity parts a door
  * from its way out, and Inverted runs tables of its own: not modelled yet.
  * A Door Randomizer run's is DR's own (the pack's `drEntrancePool`), in
- * any world.
+ * any world; an Overworld Randomizer run's, the fork's (`owrEntrancePool`).
  */
 export const poolOf = (settings: RunSettings): EntrancePool | null => {
   if (!entrancesKnown(settings)) return null;
@@ -60,15 +61,14 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
     let found = doorPools.get(key);
     if (found === undefined) {
       found =
-        door === "district" ||
-        (door === "swapped" && settings.randomizer === "owr")
+        settings.randomizer === "owr"
           ? owrEntrancePool(door, {
               ...read,
               bombShopStart: inverted,
               tilesSwapped: inverted,
               towersTraded: inverted,
             })
-          : drEntrancePool(door, read);
+          : drEntrancePool(door as DrShuffle, read);
       doorPools.set(key, found);
     }
     return found;

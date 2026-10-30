@@ -543,9 +543,15 @@ function derivedSettings(
   const derived: Record<string, boolean> = {};
   for (const [name, { kind, region }] of Object.entries(data.rules.derived)) {
     const of = region ?? "";
+    // DR's is_not_bunny: the region lies on Link's side (BaseClasses.py:
+    // 1284-1288); the fork's: it lies on no side that may make him a bunny
+    // (can_cause_bunny, owr:BaseClasses.py:1443-1444, :1703-1707), so a
+    // cave of both worlds asks the pearl in the fork, not in DR
     if (name.startsWith("notBunny_"))
       derived[name] =
-        mode === "inverted" ? marked.dark.has(of) : marked.light.has(of);
+        data.flavor === "owr"
+          ? !(mode === "inverted" ? marked.light : marked.dark).has(of)
+          : (mode === "inverted" ? marked.dark : marked.light).has(of);
     else if (kind === "lightWorld") derived[name] = marked.light.has(of);
     else if (kind === "darkWorld") derived[name] = marked.dark.has(of);
     else if (kind === "swampPatch") {
@@ -1171,10 +1177,12 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   const added = new Map<string, string[]>();
   if (all.triforceHuntGoal === true || all.trinityGoal === true) {
     added.set("Hyrule Castle Courtyard", [MURAHDAHLA]);
-    // Rules.py:72
+    // Rules.py:72; the fork's Standard waits for Zelda's delivery
+    // (owr:Rules.py:1770-1774)
+    const hunt = "count(triforcePiece, powerStar) >= setting(treasureHunt)";
     locations.set(
       MURAHDAHLA,
-      "count(triforcePiece, powerStar) >= setting(treasureHunt)",
+      owr && mode === "standard" ? and(hunt, "zeldaDelivered") : hunt,
     );
   }
   // OWR's farms and the flute's activation (create_farm_locations,
@@ -1206,16 +1214,23 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
   // screen's flip is not known: a link it may have, a region whose type
   // flips with it
   const typeOf = regionTypeOf(data, screens);
+  // An OWR run's doors not all noted: each target no note names may be
+  // entered from either world, which its bunny reads (can_cause_bunny)
+  const unplaced = owr && noted !== undefined ? (noted.unplaced ?? []) : [];
+  const starts = (["lw", "dw"] as const).flatMap(
+    (side) => data.regions.find((r) => typeOf(r) === side)?.name ?? [],
+  );
   const bounds = sideBounds(
     data,
     exits,
-    possible.length === 0
+    possible.length === 0 && unplaced.length === 0
       ? []
       : [
           ...possible.map(([name, to, from]) => ({
             from: from ?? data.parentOf(name),
             to,
           })),
+          ...unplaced.flatMap((to) => starts.map((from) => ({ from, to }))),
           ...(["lw", "dw"] as const).flatMap((side) =>
             dynamicExits(data, mode, (r) => typeOf(r) ?? side),
           ),
@@ -1349,6 +1364,15 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
     );
   if (all.potShuffle === true) addSpikesPotRule(data, locations);
   if (mode === "standard") {
+    // The rails (standard_rules, Rules.py:1511-1516, owr:1700-1704): with
+    // entrances shuffled, the castle's east and west lobbies let Link out
+    // only once Zelda is delivered, wherever their exits were placed
+    if (options.entrances !== undefined)
+      for (const portal of ["Hyrule Castle East", "Hyrule Castle West"]) {
+        const door = lobbies.get(portal);
+        const exit = exits.find((e) => e.name === door);
+        if (exit !== undefined) exit.req = "zeldaDelivered";
+      }
     const blank = { ...all, ...derived };
     const path = zeldaPath(
       data,

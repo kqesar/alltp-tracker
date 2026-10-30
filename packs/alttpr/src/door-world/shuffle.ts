@@ -160,9 +160,12 @@ export function isShut(
 /**
  * Each dungeon room's dungeon in a run: basic keeps its own; partitioned
  * and crossed give it the dungeon of the portal whose lobby its layout
- * holds: the rooms the noted links join to the lobby's, whichever way
- * they are crossed (a layout is a set of sectors DR joins by their doors,
- * a trap's included), its own while no portal's layout holds it.
+ * holds, or of the drop it lands from (dungeon_drops, DungeonGenerator.py:
+ * 4239-4242 at DR 1.5.8, owr :4245-4248: the castle's rat path, Skull Woods'
+ * four holes), which DR builds its dungeon from as from a lobby: the rooms
+ * the noted links join to it, whichever way they are crossed (a layout is
+ * a set of sectors DR joins by their doors, a trap's included), its own
+ * while no portal's or drop's layout holds it.
  * @param exits - The world's connected exits, the shut ones among them
  * @param lobbies - Each portal's lobby door, by portal name
  */
@@ -189,9 +192,19 @@ export function roomDungeons(
       join(exit.to, exit.from);
     }
   const seen = new Set<string>();
-  for (const [portal, door] of lobbies) {
-    const dungeon = portalDungeonOf(data).get(portal);
-    const start = data.parent.get(door);
+  const starts: [string | undefined, string | undefined][] = [
+    ...[...lobbies].map(
+      ([portal, door]) =>
+        [portalDungeonOf(data).get(portal), data.parent.get(door)] as [
+          string | undefined,
+          string | undefined,
+        ],
+    ),
+    ...Object.entries(DUNGEON_DROPS).flatMap(([dungeon, regions]) =>
+      regions.map((region) => [dungeon, region] as [string, string]),
+    ),
+  ];
+  for (const [dungeon, start] of starts) {
     if (dungeon === undefined || start === undefined || seen.has(start))
       continue;
     const queue = [start];
@@ -207,6 +220,17 @@ export function roomDungeons(
   }
   return found;
 }
+
+/** The drops DR builds a dungeon from (dungeon_drops), by dungeon. */
+const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
+  "Hyrule Castle": ["Sewers Rat Path"],
+  "Skull Woods": [
+    "Skull Pot Circle",
+    "Skull Pinball",
+    "Skull Left Drop",
+    "Skull Back Drop",
+  ],
+};
 
 /** The rule a door of a kind asks beside its keys (Rules.py:895-906). */
 const KIND_RULES: Partial<Record<DoorKindNote, string>> = {

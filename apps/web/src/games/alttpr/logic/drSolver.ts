@@ -7,3 +7,6 @@ import { type DoorSolver, doorSolverOf } from "@/games/alttpr/logic/doorWorld";
 
 /** The solver of Door Randomizer runs, in DR's own world. */
 export const solver: DoorSolver = doorSolverOf(DR_DATA);
+
+/** The world data the solver builds on, which the Doors tab reads too. */
+export const data = DR_DATA;

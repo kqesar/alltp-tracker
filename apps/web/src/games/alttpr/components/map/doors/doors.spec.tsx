@@ -1,7 +1,9 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
-import DoorsPanel from "@/games/alttpr/components/map/doors/DoorsPanel";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import DoorsPanel, {
+  dataOf,
+} from "@/games/alttpr/components/map/doors/DoorsPanel";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -14,6 +16,12 @@ const run = (change: Partial<RunSettings>) =>
 const store = () => useGameStore.getState();
 
 describe("the Doors tab", () => {
+  // Each release's world data loads on demand (some 1.2 MB each): loaded
+  // once before the tests, so none waits on it under a slow run
+  beforeAll(async () => {
+    await Promise.all([dataOf("dr"), dataOf("owr")]);
+  }, 60_000);
+
   beforeEach(() => {
     act(() => useGameStore.setState(useGameStore.getInitialState(), true));
   });
@@ -35,6 +43,32 @@ describe("the Doors tab", () => {
       "true",
     );
     unmount();
+  });
+
+  it("reads an OWR run's doors from the fork's own data, never DR's", async () => {
+    // The fork's world has its own doors (the bosses' Spoils rooms):
+    // its runs read OWR_DATA, through its solver's module
+    run({
+      customGoals: false,
+      doorShuffle: "crossed",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    // The fork's world loads on demand (its 1.2 MB of data)
+    await act(async () => {
+      render(<DoorsPanel />);
+      await dataOf("owr");
+    });
+    expect(await screen.findByTestId("doors-panel")).toBeInTheDocument();
+    expect((await dataOf("owr")).flavor).toBe("owr");
+    expect((await dataOf("owr")).doorByName.has("Eastern Palace Boss")).toBe(
+      true,
+    );
+    expect((await dataOf("dr")).flavor).toBe("dr");
+    expect((await dataOf("dr")).doorByName.has("Eastern Palace Boss")).toBe(
+      false,
+    );
   });
 
   it("notes where a door leads, both ways, and its kind", async () => {
