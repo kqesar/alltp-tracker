@@ -15,6 +15,7 @@ import {
   drTargetName,
   type OwrShuffle,
   owrShuffled,
+  owrSwapPartners,
   vanillaEntrances,
 } from "../door-rando/entrances";
 import { type DrData, type DrMode, type DrRegion, dependentsOf } from "./data";
@@ -33,6 +34,7 @@ import {
   type OwrScreens,
   owrEntranceRegion,
   owrScreensOf,
+  towersTradedOf,
 } from "./overworld";
 
 /** Where each exit leads, by DR's names: an exit to a region. */
@@ -476,7 +478,8 @@ export function notedConnections(
  * leads (:2105-2110), and Chris Houlihan's room leads back to the start
  * house's door (:164-167). Only District and Swapped, the modes whose
  * `undefined` places every entrance (error, swap: `modes`, :2566-2743),
- * are read.
+ * are read; in Swapped, a note also links the entrance it tells
+ * (owrSwapPartners: connect_swap).
  */
 function owrNotedConnections(
   data: DrData,
@@ -525,7 +528,16 @@ function owrNotedConnections(
         [exit, "Hyrule Castle Ledge"],
       );
   };
-  for (const [id, targetId] of Object.entries(entrances.noted)) {
+  // Swapped: each note tells its partner (connect_swap), as the tab shows
+  const swaps =
+    shuffle === "swapped"
+      ? owrSwapPartners(entrances.noted, moved, towersTradedOf(screens))
+      : new Map();
+  const notes = [
+    ...Object.entries(entrances.noted),
+    ...[...swaps].map(([id, derived]) => [id, derived.target] as const),
+  ];
+  for (const [id, targetId] of notes) {
     const entrance = drEntranceName(id);
     const target = drTargetName(targetId);
     if (entrance === undefined || target === undefined || !moved.has(entrance))

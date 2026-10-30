@@ -1731,9 +1731,20 @@ fork links or rules otherwise (`overworld.ts`), its layout vanilla:
   them where Link starts there (`:2105-2110`), and Chris Houlihan's room
   back to the start house's door (`:164-167`). The key analysis reads the
   noted overworld and entrances together: a dungeon whose ways in they all
-  tell is analysed, any other keeps the strict-safe rule. Swapped's pairs
-  (`connect_swap`, `:1986-1995`) are not linked from one note: the player
-  notes each door.
+  tell is analysed, any other keeps the strict-safe rule. In Swapped a
+  note tells its partner (`owrSwapPartners`): every Swapped connection
+  goes through `connect_swap` (`:1986-1995`) or `connect_swapped`
+  (`:1958-1983`), which trade targets two by two over the fork's
+  `combine_map` (`owrCombineMap`, `:62-73`: `entrance_map`, the towers'
+  exits traded once `is_atgt_swapped`, then `drop_map` and
+  `single_entrance_map`, no target twice), so a door noted to another's
+  target tells that other door leads to the first one's. `notedConnections`
+  links it as a note, the pool hands it to the app (`derived`), and
+  nothing is told of a door noted, one the shuffle keeps, a target noted
+  elsewhere, a tower's while its screens are not known, or notes that
+  clash. `test/owr-playthrough.spec.ts` holds both Swapped seeds to it:
+  each log trades two by two, and half of its notes tell the rest and
+  build the same world.
 - Mixed's flips (`ow_mixed`, `OverworldShuffle.py:156-179`), as noted
   (`OwrNotes.flips`: a screen by its light world id, 0x80 and 0x81 the
   pedestal's and Zora's). `owrScreensOf` reads them into the run's screens

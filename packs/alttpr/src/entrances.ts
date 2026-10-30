@@ -388,6 +388,22 @@ export interface EntrancePool {
     entrance: string,
     target: string,
   ): readonly (readonly [entrance: string, target: string])[];
+  /**
+   * The entrances the notes made tell beside themselves, each with its
+   * target and the noted entrance that tells it (`DerivedNote`): the
+   * Overworld Randomizer's Swapped, whose doors trade targets two by two.
+   * Read from the notes, never noted: forgetting the note forgets them.
+   * Absent where no note tells an entrance not noted.
+   */
+  derived?(
+    noted: Readonly<Record<string, string>>,
+  ): ReadonlyMap<string, DerivedNote>;
+}
+
+/** An entrance's target a note tells, by the noted entrance (`from`). */
+export interface DerivedNote {
+  readonly target: string;
+  readonly from: string;
 }
 
 /** A table's names, its caves' exits one by one. */

@@ -669,6 +669,20 @@ export function linkOwrOverworld(
 }
 
 /**
+ * is_atgt_swapped (BaseClasses.py:347-348): both towers' screens swapped,
+ * so their doors trade exits (EntranceShuffle2.py:69-71); unknown while
+ * either screen is, unless the other stands.
+ */
+export function towersTradedOf(screens: OwrScreens): boolean | undefined {
+  const deathMountain = screens.swapped(0x03);
+  const pyramid = screens.swapped(0x1b);
+  if (deathMountain === false || pyramid === false) return false;
+  return deathMountain === undefined || pyramid === undefined
+    ? undefined
+    : true;
+}
+
+/**
  * link_entrances_new with `shuffle` vanilla (EntranceShuffle2.py:48-185):
  * the mandatory connections, then do_vanilla_connections (:188-200) over
  * the pool (every entrance not named Inverted): a cave's or dungeon's door
@@ -701,17 +715,8 @@ export function linkOwrEntrances(
   const drops = map("drop_map");
   const twoWays: Record<string, string> = { ...map("entrance_map") };
   const singles = map("single_entrance_map");
-  const [deathMountain, pyramid] = [
-    screens.swapped(0x03),
-    screens.swapped(0x1b),
-  ];
-  // is_atgt_swapped: unknown while either screen is, unless one stands
-  const traded =
-    deathMountain === false || pyramid === false
-      ? false
-      : deathMountain === undefined || pyramid === undefined
-        ? undefined
-        : true;
+  const pyramid = screens.swapped(0x1b);
+  const traded = towersTradedOf(screens);
   if (traded === true) {
     twoWays["Ganons Tower"] = "Agahnims Tower Exit";
     twoWays["Agahnims Tower"] = "Ganons Tower Exit";

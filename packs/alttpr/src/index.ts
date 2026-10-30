@@ -179,7 +179,9 @@ export {
   drEntrancePool,
   type OwrPoolSettings,
   type OwrShuffle,
+  owrCombineMap,
   owrEntrancePool,
+  owrSwapPartners,
 } from "./door-rando/entrances";
 export {
   BONK_DROP_IDS,
@@ -225,6 +227,7 @@ export {
 } from "./dungeons";
 export {
   crossedPool,
+  type DerivedNote,
   ENTRANCES,
   type EntrancePool,
   type EntranceTarget,

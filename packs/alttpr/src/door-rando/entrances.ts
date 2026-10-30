@@ -14,6 +14,7 @@
 // entrance may take is over-approximated the same way: the noter's choice,
 // never the logic's, which reads only the notes.
 import {
+  type DerivedNote,
   ENTRANCES,
   type EntrancePool,
   type EntranceTarget,
@@ -461,6 +462,12 @@ export interface OwrPoolSettings {
    * shufflelinks keeps; undefined while not known (Mixed's flip not noted).
    */
   readonly bombShopStart: boolean | undefined;
+  /**
+   * is_atgt_swapped (BaseClasses.py:347-348): the towers' doors trade
+   * exits (EntranceShuffle2.py:69-71), which Swapped's pairs read;
+   * undefined (or absent) while not known.
+   */
+  readonly towersTraded?: boolean | undefined;
 }
 
 /**
@@ -487,15 +494,104 @@ export function owrShuffled(settings: OwrPoolSettings): ReadonlySet<string> {
  * What an OWR District or Swapped shuffle may move, for a run: its
  * entrances (`owrShuffled`), a hole to any hole's drop (do_holes_and_
  * linked_drops, :502-616) and any other door to any door's target, as
- * both are cross-district or cross-world somewhere; no note settles
- * another (Swapped's pairs, connect_swap :1986-1995, are left to the
- * player).
+ * both are cross-district or cross-world somewhere. No note settles
+ * another; Swapped's notes tell each one's partner (`derived`,
+ * owrSwapPartners).
  */
 export function owrEntrancePool(
   shuffle: OwrShuffle,
   settings: OwrPoolSettings,
 ): DrEntrancePool {
-  return poolOf(shuffle, false, owrShuffled(settings), new Set());
+  const moved = owrShuffled(settings);
+  const pool = poolOf(shuffle, false, moved, new Set());
+  if (shuffle !== "swapped") return pool;
+  return {
+    ...pool,
+    derived: (noted) => owrSwapPartners(noted, moved, settings.towersTraded),
+  };
+}
+
+/** The towers' doors, which trade exits once both screens swap. */
+const TOWERS: readonly (readonly [door: string, exit: string])[] = [
+  ["Ganons Tower", "Ganons Tower Exit"],
+  ["Agahnims Tower", "Agahnims Tower Exit"],
+];
+
+/**
+ * Where each entrance leads before the fork's shuffle moves it, by DR's
+ * names: its combine_map (EntranceShuffle2.py:62-73), entrance_map with
+ * the towers' exits traded once is_atgt_swapped, then drop_map and
+ * single_entrance_map; neither tower while that is not known. The fork's
+ * maps are DR's Open ones without the Inverted names (entrances.spec.ts).
+ */
+export function owrCombineMap(
+  towersTraded: boolean | undefined,
+): ReadonlyMap<string, string> {
+  const open = vanillaEntrances(false);
+  const map = new Map<string, string>();
+  for (const name of open.pool) {
+    // {**default_map, **one_way_map}: the one way's wins a name in both
+    const target = open.oneWay.get(name) ?? open.twoWay.get(name);
+    if (target !== undefined) map.set(name, target);
+  }
+  for (const [door, exit] of TOWERS) {
+    if (towersTraded === undefined) map.delete(door);
+    else if (towersTraded) {
+      const [, other] = TOWERS.find(([d]) => d !== door) ?? [];
+      if (other !== undefined) map.set(door, other);
+    } else map.set(door, exit);
+  }
+  return map;
+}
+
+/**
+ * What a Swapped run's notes tell of the entrances not noted: connect_swap
+ * (EntranceShuffle2.py:1986-1995) connects the entrance whose combine_map
+ * target is the one a door took (`swap_entrance`) to that door's own
+ * (`swap_exit`), and every Swapped connection goes through it or through
+ * connect_swapped (:1958-1983), which trades targets two by two: holes
+ * (:504-505, :536, :614, handle_skull_woods_drops :1356-1357), Skull Woods'
+ * doors (:1407-1408), the start's caves (:319, :645, :728), the Old Man
+ * Cave's way out (:428), the blacksmith (:471), the must-exit caves
+ * (connect_cave_swap :1695-1705, :1770, :1782, :1811, :1846) and the rest
+ * (:1340-1341, :389). So A noted to B's target tells B leads to A's. Each
+ * as a note by ids, with the entrance noted that tells it. None for an
+ * entrance noted, one the shuffle keeps, a target noted elsewhere, a
+ * tower's while is_atgt_swapped is not known, or two notes telling the
+ * same entrance (notes that contradict the shuffle tell nothing).
+ * @param moved - The entrances the shuffle moves (`owrShuffled`), by name
+ */
+export function owrSwapPartners(
+  noted: Readonly<Record<string, string>>,
+  moved: ReadonlySet<string>,
+  towersTraded: boolean | undefined,
+): ReadonlyMap<string, DerivedNote> {
+  const combine = owrCombineMap(towersTraded);
+  // Each target's entrance: the first by name, as next() takes it, none
+  // when two share it (the spec holds none do)
+  const entranceOf = new Map<string, string | null>();
+  for (const [entrance, target] of combine)
+    entranceOf.set(target, entranceOf.has(target) ? null : entrance);
+  const taken = new Set(Object.values(noted));
+  const found = new Map<string, DerivedNote>();
+  const twice = new Set<string>();
+  for (const [id, targetId] of Object.entries(noted)) {
+    const entrance = drEntranceName(id);
+    const target = drTargetName(targetId);
+    if (entrance === undefined || target === undefined) continue;
+    const own = combine.get(entrance);
+    if (!moved.has(entrance) || own === undefined || own === target) continue;
+    const partner = entranceOf.get(target);
+    if (partner === undefined || partner === null || !moved.has(partner))
+      continue;
+    const partnerId = drEntranceOf(partner).id;
+    const ownId = drTargetOf(own).id;
+    if (noted[partnerId] !== undefined || taken.has(ownId)) continue;
+    if (found.has(partnerId)) twice.add(partnerId);
+    found.set(partnerId, { from: id, target: ownId });
+  }
+  for (const id of twice) found.delete(id);
+  return found;
 }
 
 /** Each entrance the pools may name, by the entrance randomizer's id. */

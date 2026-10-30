@@ -5,8 +5,10 @@ import {
   drTargetOf,
   type OwrPoolSettings,
   type OwrShuffle,
+  owrCombineMap,
   owrEntrancePool,
   owrShuffled,
+  owrSwapPartners,
   vanillaEntrances,
 } from "../door-rando/entrances";
 import { notedConnections, vanillaConnections } from "./connections";
@@ -261,5 +263,166 @@ describe("the Overworld Randomizer's world on its noted entrances", () => {
         shuffle: "crossed",
       }),
     ).toThrow(RangeError);
+  });
+});
+
+describe("the Overworld Randomizer's Swapped pairs (connect_swap)", () => {
+  const id = (name: string) => drEntranceOf(name).id;
+  const to = (name: string) => drTargetOf(name).id;
+  const moved = owrShuffled({
+    bombShopStart: false,
+    shuffleLinks: false,
+    shuffleTavern: true,
+  });
+  // The towers' trade as given: an explicit undefined is "not known"
+  const partners = (
+    notes: Record<string, string>,
+    ...traded: [boolean | undefined] | []
+  ) => owrSwapPartners(notes, moved, traded.length === 0 ? false : traded[0]);
+
+  it("reads the fork's combine_map, each target once", () => {
+    // EntranceShuffle2.py:62-73: {**default_map, **one_way_map}
+    const table = (name: string) =>
+      OWR_DATA.tableOf<Record<string, string>>("EntranceShuffle2", name);
+    const fork = {
+      ...table("entrance_map"),
+      ...table("drop_map"),
+      ...table("single_entrance_map"),
+    };
+    expect(owrCombineMap(false)).toEqual(new Map(Object.entries(fork)));
+    // is_atgt_swapped trades the towers' exits (:69-71)
+    const traded = owrCombineMap(true);
+    expect(traded.get("Ganons Tower")).toBe("Agahnims Tower Exit");
+    expect(traded.get("Agahnims Tower")).toBe("Ganons Tower Exit");
+    const unknown = owrCombineMap(undefined);
+    expect(unknown.has("Ganons Tower")).toBe(false);
+    expect(unknown.has("Agahnims Tower")).toBe(false);
+    expect(unknown.size).toBe(traded.size - 2);
+    // connect_swap's next() finds one entrance for each target
+    for (const map of [owrCombineMap(false), traded])
+      expect(new Set(map.values()).size).toBe(map.size);
+  });
+
+  it("tells the partner of a door, a hole or a shop noted to another's target", () => {
+    expect(
+      partners({ [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)") }),
+    ).toEqual(
+      new Map([
+        [
+          id("Bumper Cave (Bottom)"),
+          { from: id("Bat Cave Cave"), target: to("Bat Cave Exit") },
+        ],
+      ]),
+    );
+    expect(
+      partners({ [id("Bat Cave Drop")]: to("Kakariko Well (top)") }),
+    ).toEqual(
+      new Map([
+        [
+          id("Kakariko Well Drop"),
+          { from: id("Bat Cave Drop"), target: to("Bat Cave (right)") },
+        ],
+      ]),
+    );
+    expect(partners({ [id("20 Rupee Cave")]: to("50 Rupee Cave") })).toEqual(
+      new Map([
+        [
+          id("50 Rupee Cave"),
+          { from: id("20 Rupee Cave"), target: to("20 Rupee Cave") },
+        ],
+      ]),
+    );
+  });
+
+  it("tells nothing of a door left where it stands, a partner noted or kept, or notes that clash", () => {
+    // Its own target: swapped with itself
+    expect(partners({ [id("Bat Cave Cave")]: to("Bat Cave Exit") }).size).toBe(
+      0,
+    );
+    // The partner noted: the note wins
+    expect(
+      partners({
+        [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)"),
+        [id("Bumper Cave (Bottom)")]: to("Library"),
+      }).size,
+    ).toBe(0);
+    // Link's House stands without shufflelinks: no door trades with it
+    expect(
+      partners({ [id("Bat Cave Cave")]: to("Links House Exit") }).size,
+    ).toBe(0);
+    // Two doors noted to one target, or the target it would give taken
+    expect(
+      partners({
+        [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)"),
+        [id("Kakariko Shop")]: to("Bumper Cave Exit (Bottom)"),
+      }).size,
+    ).toBe(0);
+    expect(
+      partners({
+        [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)"),
+        [id("Kakariko Shop")]: to("Bat Cave Exit"),
+      }).has(id("Bumper Cave (Bottom)")),
+    ).toBe(false);
+  });
+
+  it("pairs the towers as is_atgt_swapped trades them, neither while not known", () => {
+    const gt = { [id("Ganons Tower")]: to("Bat Cave Exit") };
+    expect(partners(gt, false).get(id("Bat Cave Cave"))?.target).toBe(
+      to("Ganons Tower Exit"),
+    );
+    expect(partners(gt, true).get(id("Bat Cave Cave"))?.target).toBe(
+      to("Agahnims Tower Exit"),
+    );
+    expect(partners(gt, undefined).size).toBe(0);
+    const into = { [id("Bat Cave Cave")]: to("Ganons Tower Exit") };
+    expect([...partners(into, true).keys()]).toEqual([id("Agahnims Tower")]);
+    expect([...partners(into, false).keys()]).toEqual([id("Ganons Tower")]);
+    expect(partners(into, undefined).size).toBe(0);
+  });
+
+  it("links a Swapped note's partner in the world, the towers by the screens, District's never", () => {
+    const notes = { [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)") };
+    const swapped = notedConnections(
+      OWR_DATA,
+      "open",
+      noted("swapped", notes, { shuffleTavern: true }),
+    ).connections;
+    expect(swapped.get("Bumper Cave (Bottom)")).toBe(
+      OWR_DATA.parentOf("Bat Cave Exit"),
+    );
+    expect(swapped.get("Bat Cave Exit")).toBe(
+      OWR_DATA.parentOf("Bumper Cave (Bottom)"),
+    );
+    const district = notedConnections(
+      OWR_DATA,
+      "open",
+      noted("district", notes, { shuffleTavern: true }),
+    ).connections;
+    expect(district.has("Bumper Cave (Bottom)")).toBe(false);
+    // Inverted trades the towers: Ganon's Tower's door into the Bat Cave
+    // tells the Bat Cave's door leads to the castle tower's exit
+    const gt = noted("swapped", { [id("Ganons Tower")]: to("Bat Cave Exit") });
+    expect(
+      notedConnections(OWR_DATA, "inverted", gt).connections.get(
+        "Bat Cave Cave",
+      ),
+    ).toBe(OWR_DATA.parentOf("Agahnims Tower Exit"));
+    expect(
+      notedConnections(OWR_DATA, "open", gt).connections.get("Bat Cave Cave"),
+    ).toBe(OWR_DATA.parentOf("Ganons Tower Exit"));
+  });
+
+  it("hands Swapped's partners to the pool, District's none", () => {
+    const settings = {
+      bombShopStart: false,
+      shuffleLinks: false,
+      shuffleTavern: true,
+      towersTraded: false,
+    };
+    const notes = { [id("Bat Cave Cave")]: to("Bumper Cave Exit (Bottom)") };
+    expect(owrEntrancePool("swapped", settings).derived?.(notes)).toEqual(
+      partners(notes),
+    );
+    expect(owrEntrancePool("district", settings).derived).toBeUndefined();
   });
 });

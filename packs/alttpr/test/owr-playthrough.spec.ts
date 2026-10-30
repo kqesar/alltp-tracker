@@ -24,10 +24,14 @@ import {
   drEntranceOf,
   drTargetOf,
   type OwrShuffle,
+  owrCombineMap,
   owrEntrancePool,
+  owrShuffled,
+  owrSwapPartners,
   vanillaEntrances,
 } from "../src/door-rando/entrances";
 import rules from "../src/door-rando/owr/rules.json" with { type: "json" };
+import { notedConnections } from "../src/door-world/connections";
 import {
   type DrNotedEntrances,
   drWorld,
@@ -39,6 +43,7 @@ import {
   edgePartnersOf,
   factOf,
   owrScreensOf,
+  towersTradedOf,
 } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
 import {
@@ -414,6 +419,71 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
               maps.oneWay.get(link.entrance)) !== link.exit,
         ).length,
       ).toBeGreaterThan(50);
+    }
+  });
+
+  it("tells each Swapped seed's other half from half its notes, as connect_swap pairs them", () => {
+    const swapped = logs.filter(
+      (name) =>
+        setOf(name).entrances && logOf(name).log.meta.shuffle === "swapped",
+    );
+    expect(swapped).toHaveLength(2);
+    for (const name of swapped) {
+      const { log, notes, entrances } = logOf(name);
+      if (entrances === undefined) throw new Error(`${name}: no entrances`);
+      const mode = log.meta.mode === "inverted" ? "inverted" : "open";
+      const screens = owrScreensOf(OWR_DATA, mode, notes);
+      const moved = owrShuffled({
+        ...entrances.pool,
+        bombShopStart: screens.swapped(0x2c),
+      });
+      const traded = towersTradedOf(screens);
+      const combine = owrCombineMap(traded);
+      const entranceOf = new Map([...combine].map(([e, t]) => [t, e]));
+      // The log trades targets two by two (connect_swap, connect_swapped):
+      // A at B's target, B at A's; keep one of each pair
+      const full = entrances.noted;
+      const half: Record<string, string> = {};
+      const partnered = new Set<string>();
+      let pairs = 0;
+      for (const [id, targetId] of Object.entries(full).sort()) {
+        if (partnered.has(id)) continue;
+        half[id] = targetId;
+        const entrance = drEntranceName(id) ?? "";
+        const own = combine.get(entrance) ?? "";
+        const target = [...combine.values()].find(
+          (t) => drTargetOf(t).id === targetId,
+        );
+        if (target === undefined || target === own) continue;
+        const partner = entranceOf.get(target) ?? "";
+        expect(full[drEntranceOf(partner).id], `${name}: ${entrance}`).toBe(
+          drTargetOf(own).id,
+        );
+        partnered.add(drEntranceOf(partner).id);
+        pairs++;
+      }
+      expect(pairs, name).toBeGreaterThan(50);
+      // Half the notes tell the rest
+      const derived = owrSwapPartners(half, moved, traded);
+      expect(derived.size, name).toBe(pairs);
+      expect({
+        ...half,
+        ...Object.fromEntries(
+          [...derived].map(([id, note]) => [id, note.target]),
+        ),
+      }).toEqual(full);
+      const world = (noted: Readonly<Record<string, string>>) =>
+        notedConnections(
+          OWR_DATA,
+          mode,
+          { ...entrances, noted },
+          undefined,
+          undefined,
+          notes,
+        );
+      const fromHalf = world(half);
+      expect(fromHalf.complete, name).toBe(true);
+      expect(fromHalf.connections).toEqual(world(full).connections);
     }
   });
 
