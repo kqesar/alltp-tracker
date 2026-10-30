@@ -132,8 +132,13 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   );
 });
 
-/** A dungeon picked in a crossed shuffle's Doors tab: its first paint. */
-const DOORS_FIRST_PAINT_MS = 200;
+/**
+ * A dungeon picked in a crossed shuffle's Doors tab: its first paint, and
+ * the options it holds then, which time on a loaded machine cannot blur
+ * (about 6,800 when every select showed its targets at once).
+ */
+const DOORS_FIRST_PAINT_MS = 300;
+const DOORS_FIRST_OPTIONS = 1_500;
 
 test("the Doors tab shows a crossed shuffle's biggest dungeon at once", async ({
   page,
@@ -158,13 +163,17 @@ test("the Doors tab shows a crossed shuffle's biggest dungeon at once", async ({
       requestAnimationFrame(() => setTimeout(done, 0)),
     );
     const first = performance.now() - start;
+    const options = document.querySelectorAll(
+      '[data-testid="doors-panel"] option',
+    ).length;
     await new Promise((done) => setTimeout(done, 1000));
     observer.disconnect();
-    return { first, longest: Math.max(0, ...long) };
+    return { first, longest: Math.max(0, ...long), options };
   });
   console.info(
     `Doors tab, Ganon's Tower: first paint ${timing.first.toFixed(0)} ms, longest task ${timing.longest.toFixed(0)} ms`,
   );
+  expect(timing.options).toBeLessThan(DOORS_FIRST_OPTIONS);
   expect(timing.first).toBeLessThan(DOORS_FIRST_PAINT_MS);
   expect(timing.longest).toBeLessThan(DOORS_FIRST_PAINT_MS);
   // Every target offered once the deferred render is in
