@@ -40,6 +40,12 @@ export type Randomizer = "dr" | "owr";
 export type DoorShuffle = "vanilla" | "basic" | "partitioned" | "crossed";
 
 /**
+ * A door shuffle's intensity (`--intensity`, args.json): 1 its doors and
+ * stairs, 2 its open edges too, 3 its lobbies too.
+ */
+export type DoorIntensity = "1" | "2" | "3";
+
+/**
  * DR's key logic (`--key_logic_algorithm`, args.json:209-216 at 1.5.8):
  * dangerous, partial, strict, and the `static` 1.5.7 added, which some
  * race seeds of 2026 ran on (from DR's unstable 1.5.6 builds).
@@ -134,6 +140,14 @@ export type DoorRunSettings = {
    */
   shuffleLinks?: boolean;
   shuffleTavern?: boolean;
+  /**
+   * A door shuffle's intensity (`--intensity`) and its decoupled doors
+   * (`--decoupledoors`): a spoiler's meta names them, no ROM table read
+   * does. The intensity unset reads as 3, everything shuffled
+   * (`DOOR_UNSET`): a portal's lobby then waits for the player's note.
+   */
+  doorIntensity?: DoorIntensity;
+  decoupledDoors?: boolean;
 };
 
 /** A DR setting's key. */
@@ -144,7 +158,11 @@ export type DoorSetting = keyof DoorRunSettings;
  * no ROM table states and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`).
  */
-export const DOOR_UNSET = ["shuffleLinks", "shuffleTavern"] as const;
+export const DOOR_UNSET = [
+  "shuffleLinks",
+  "shuffleTavern",
+  "doorIntensity",
+] as const;
 
 /** A DR setting a run may leave unset. */
 export type DoorUnsetSetting = (typeof DOOR_UNSET)[number];
@@ -159,6 +177,7 @@ export type DoorSettings = Required<
 export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   bombBag: false,
   bonkDrops: false,
+  decoupledDoors: false,
   doorShuffle: "vanilla",
   doorVersion: "1.5.6",
   dropShuffle: "none",
@@ -201,6 +220,10 @@ export const DOOR_OPTIONS = {
     [false, "Off"],
     [true, "Shuffled"],
   ],
+  decoupledDoors: [
+    [false, "Off"],
+    [true, "On"],
+  ],
   doorEntrances: [
     ["lite", "Lite"],
     ["lean", "Lean"],
@@ -208,6 +231,11 @@ export const DOOR_OPTIONS = {
     ["district", "District"],
     ["dungeonssimple", "Dungeons + Simple"],
     ["dungeonsfull", "Dungeons + Full"],
+  ],
+  doorIntensity: [
+    ["1", "1: doors and stairs"],
+    ["2", "2: open edges too"],
+    ["3", "3: lobbies too"],
   ],
   doorShuffle: [
     ["vanilla", "Vanilla"],
@@ -316,7 +344,9 @@ export const DOOR_OPTIONS = {
 export const DOOR_SETTING_LABELS: Readonly<Record<DoorSetting, string>> = {
   bombBag: "Bomb bag",
   bonkDrops: "Bonk drops",
+  decoupledDoors: "Decoupled doors",
   doorEntrances: "DR entrances",
+  doorIntensity: "Door intensity",
   doorShuffle: "Door shuffle",
   doorVersion: "DR version",
   dropShuffle: "Enemy drops",
@@ -362,6 +392,12 @@ const OWR_ROWS = [
   "bonkDrops",
 ] as const satisfies readonly DoorSetting[];
 
+/** The door shuffle's own settings, shown while doors are shuffled. */
+const DOOR_SHUFFLE_ROWS = [
+  "doorIntensity",
+  "decoupledDoors",
+] as const satisfies readonly DoorSetting[];
+
 /** The entrance shuffle's own settings, shown while entrances are shuffled. */
 const ENTRANCE_ROWS = [
   "shuffleLinks",
@@ -379,9 +415,42 @@ export const doorRows = (
       settings.entranceShuffle !== "none")
       ? ENTRANCE_ROWS
       : [];
-  return settings.randomizer === "owr"
-    ? [...DR_ROWS, ...entrances, ...OWR_ROWS]
-    : [...DR_ROWS, ...entrances];
+  const doors =
+    (settings.doorShuffle ?? "vanilla") === "vanilla" ? [] : DOOR_SHUFFLE_ROWS;
+  const rows = [
+    ...DR_ROWS.slice(0, 2),
+    ...doors,
+    ...DR_ROWS.slice(2),
+    ...entrances,
+  ];
+  return settings.randomizer === "owr" ? [...rows, ...OWR_ROWS] : rows;
+};
+
+/**
+ * A DR run's door shuffle as the pack's DR world takes it (its
+ * `DoorShuffleSettings`); undefined with vanilla doors or outside DR. The
+ * intensity unset reads as 3 (everything shuffled), the trap mode as the
+ * widest (a boss's trap door may open), so the world never assumes a door
+ * vanilla that the seed may have moved.
+ */
+export const doorShuffleSettingsOf = (
+  settings: DoorRunSettings,
+):
+  | {
+      readonly shuffle: "basic" | "partitioned" | "crossed";
+      readonly intensity: 1 | 2 | 3;
+      readonly decoupled: boolean;
+      readonly trapMode: "oneway";
+    }
+  | undefined => {
+  const door = doorOf(settings);
+  if (door === null || door.doorShuffle === "vanilla") return undefined;
+  return {
+    decoupled: door.decoupledDoors,
+    intensity: Number(door.doorIntensity ?? "3") as 1 | 2 | 3,
+    shuffle: door.doorShuffle,
+    trapMode: "oneway",
+  };
 };
 
 /**
@@ -863,6 +932,14 @@ export const doorFromSeed = (
       ...(exact.shuffleTavern === undefined
         ? {}
         : { shuffleTavern: exact.shuffleTavern }),
+      ...(exact.doorIntensity === undefined
+        ? {}
+        : {
+            doorIntensity: option("doorIntensity", String(exact.doorIntensity)),
+          }),
+      ...(exact.decoupledDoors === undefined
+        ? {}
+        : { decoupledDoors: exact.decoupledDoors }),
       ...(ow === undefined
         ? {}
         : {

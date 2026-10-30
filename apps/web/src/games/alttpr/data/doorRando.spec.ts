@@ -14,6 +14,7 @@ import {
   doorReasons,
   doorRows,
   doorShuffleOf,
+  doorShuffleSettingsOf,
   doorTablesOf,
   doorValueText,
   doorVersionOf,
@@ -196,6 +197,58 @@ describe("a Door Randomizer run's logic", () => {
       "shuffleTavern",
     );
     expect(doorRows(DR)).not.toContain("shuffleLinks");
+  });
+
+  it("reads a door shuffle's intensity and coupling", () => {
+    const basic = with_(DR, { doorShuffle: "basic" });
+    // Shown while doors are shuffled, after the shuffle itself
+    expect(doorRows(DR)).not.toContain("doorIntensity");
+    expect(doorRows(basic).slice(0, 4)).toEqual([
+      "doorVersion",
+      "doorShuffle",
+      "doorIntensity",
+      "decoupledDoors",
+    ]);
+    // Unset, the intensity reads as 3: every portal's lobby may move
+    expect(doorShuffleSettingsOf(basic)).toEqual({
+      decoupled: false,
+      intensity: 3,
+      shuffle: "basic",
+      trapMode: "oneway",
+    });
+    expect(doorValueText("doorIntensity", undefined)).toBe("Not known");
+    expect(
+      doorShuffleSettingsOf(
+        with_(DR, {
+          decoupledDoors: true,
+          doorIntensity: "1",
+          doorShuffle: "crossed",
+        }),
+      ),
+    ).toMatchObject({ decoupled: true, intensity: 1, shuffle: "crossed" });
+    expect(doorShuffleSettingsOf(DR)).toBeUndefined();
+    expect(isDoorSettings({ doorIntensity: "4", randomizer: "dr" })).toBe(
+      false,
+    );
+    // A spoiler's meta names them
+    const seed = {
+      doorExact: {
+        decoupledDoors: true,
+        doorIntensity: 2,
+        doorShuffle: "partitioned",
+        dropShuffle: "none",
+        enemyShuffle: "none",
+        pottery: "none",
+        shopsanity: false,
+        takeAny: "none",
+      },
+      randomizer: { kind: "dr", overworld: false, version: "1.5.8" },
+    } as unknown as SeedSettingsReading;
+    expect(doorFromSeed(seed, DR)).toMatchObject({
+      decoupledDoors: true,
+      doorIntensity: "2",
+      doorShuffle: "partitioned",
+    });
   });
 
   it("reads strict, dangerous and static key logic", () => {

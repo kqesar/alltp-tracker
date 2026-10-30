@@ -348,6 +348,13 @@ export interface DoorExactSettings {
    */
   readonly shuffleLinks?: boolean;
   readonly shuffleTavern?: boolean;
+  /**
+   * Its door shuffle's intensity (`intensity`, 1 to 3: doors and stairs,
+   * open edges too, lobbies too) and whether its doors are decoupled
+   * (`decoupledoors`), where `meta` names them and doors are shuffled.
+   */
+  readonly doorIntensity?: number;
+  readonly decoupledDoors?: boolean;
   readonly overworld?: {
     readonly layout: string;
     readonly crossed: string;

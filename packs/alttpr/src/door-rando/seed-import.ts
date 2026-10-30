@@ -186,6 +186,12 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
   const moves = shuffle !== "vanilla";
   const shuffleLinks = moves ? flagOf(meta.shufflelinks) : null;
   const shuffleTavern = moves ? flagOf(meta.shuffletavern) : null;
+  // A door shuffle's intensity and coupling: no effect with vanilla doors
+  const doorsMove = doorShuffle !== "vanilla";
+  const intensity = Number(meta.intensity);
+  const doorIntensity =
+    doorsMove && [1, 2, 3].includes(intensity) ? intensity : null;
+  const decoupledDoors = doorsMove ? flagOf(meta.decoupledoors) : null;
   const exact: DoorExactSettings = {
     doorShuffle,
     dropShuffle,
@@ -203,6 +209,8 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
     ...(pyramid === null ? {} : { openPyramid: pyramid }),
     ...(shuffleLinks === null ? {} : { shuffleLinks }),
     ...(shuffleTavern === null ? {} : { shuffleTavern }),
+    ...(doorIntensity === null ? {} : { doorIntensity }),
+    ...(decoupledDoors === null ? {} : { decoupledDoors }),
   };
   // Only the Overworld fork writes `ow_layout` (OWR 0.8.0.0 BaseClasses.py)
   if (!("ow_layout" in meta)) return exact;

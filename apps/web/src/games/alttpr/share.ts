@@ -489,6 +489,8 @@ export const SHARE_SETTINGS: readonly string[] = `
   openPyramid:auto openPyramid:yes openPyramid:no
   doorVersion:1.5.6 doorVersion:1.5.7 doorVersion:1.5.8
   shuffleLinks:false shuffleLinks:true shuffleTavern:false shuffleTavern:true
+  doorIntensity:1 doorIntensity:2 doorIntensity:3
+  decoupledDoors:false decoupledDoors:true
 `
   .trim()
   .split(/\s+/);
@@ -500,6 +502,7 @@ const SETTINGS_PACKED = 4;
 const BOOLEAN_SETTINGS: ReadonlySet<string> = new Set([
   "bombBag",
   "bonkDrops",
+  "decoupledDoors",
   "owMixed",
   "owWhirlpool",
   "potShuffle",

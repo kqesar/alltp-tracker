@@ -175,6 +175,17 @@ describe("avianartReading", () => {
     // With vanilla entrances they move nothing: not named (the race seed's
     // meta says its tavern is shuffled)
     expect(read({ shufflelinks: true })).not.toHaveProperty("shuffleLinks");
+    // A door shuffle's intensity and coupling, named only with doors shuffled
+    expect(
+      read({ decoupledoors: 1, door_shuffle: "crossed", intensity: 3 }),
+    ).toMatchObject({ decoupledDoors: true, doorIntensity: 3 });
+    expect(read({ door_shuffle: "basic", intensity: "2" })).toMatchObject({
+      doorIntensity: 2,
+    });
+    expect(read({ intensity: 3 })).not.toHaveProperty("doorIntensity");
+    expect(
+      read({ door_shuffle: "basic", intensity: "random" }),
+    ).not.toHaveProperty("doorIntensity");
     expect(without).not.toHaveProperty("bombBag");
     expect(without).not.toHaveProperty("openPyramid");
     expect(without).not.toHaveProperty("potShuffle");
