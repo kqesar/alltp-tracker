@@ -1314,6 +1314,15 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
     );
   if (all.potShuffle === true) addSpikesPotRule(data, locations);
   if (mode === "standard") {
+    // The rails (standard_rules, Rules.py:1511-1516, owr:1700-1704): with
+    // entrances shuffled, the castle's east and west lobbies let Link out
+    // only once Zelda is delivered, wherever their exits were placed
+    if (options.entrances !== undefined)
+      for (const portal of ["Hyrule Castle East", "Hyrule Castle West"]) {
+        const door = lobbies.get(portal);
+        const exit = exits.find((e) => e.name === door);
+        if (exit !== undefined) exit.req = "zeldaDelivered";
+      }
     const blank = { ...all, ...derived };
     const path = zeldaPath(
       data,

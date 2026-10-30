@@ -1,5 +1,6 @@
 import type { Settings, State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import { drEntranceOf, drTargetOf } from "../door-rando/entrances";
 import ruleData from "../door-rando/world/rules.json" with { type: "json" };
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
@@ -573,6 +574,58 @@ describe("the Door Randomizer's world (door-world)", () => {
     expect(
       solveFacts(world, { ...state, defeatAgahnim: 1 }).location(
         regionProbeId("Hyrule Castle Area"),
+      ),
+    ).toBe("yes");
+  });
+
+  it("keeps the castle's side lobbies shut until Zelda is delivered, its entrances shuffled", () => {
+    // standard_rules' rails (Rules.py:1511-1516): with entrances shuffled,
+    // the east and west lobbies' doors out wait for her delivery wherever
+    // their exits were placed. Kakariko's shop leads into the west lobby:
+    // without keys (no delivery), Kakariko is out of reach that way
+    const world = (noted: Record<string, string>) =>
+      drWorld(
+        { ...settings("standard"), wildBigKeys: true, wildKeys: true },
+        {
+          data: DR_DATA,
+          entrances: {
+            noted,
+            pool: {
+              dropShuffle: "none",
+              enemyShuffle: false,
+              mode: "standard",
+              pottery: "none",
+              shopsanity: false,
+              shuffleLinks: false,
+              shuffleTavern: false,
+            },
+            shuffle: "crossed",
+          },
+          regions: ["Hyrule Castle West Lobby", "Kakariko Village"],
+        },
+      );
+    const state = Object.fromEntries(
+      Object.entries(everything(settingsFromUpstream("standard"))).filter(
+        ([item]) => !/^(big)?[kK]ey|^defeatAgahnim|^rescueZelda$/.test(item),
+      ),
+    );
+    const built = world({
+      [drEntranceOf("Kakariko Shop").id]: drTargetOf(
+        "Hyrule Castle Exit (West)",
+      ).id,
+    });
+    const solution = solveFacts(built, state);
+    expect(solution.location(regionProbeId("Hyrule Castle West Lobby"))).toBe(
+      "yes",
+    );
+    // Never yes: DR's own says false (her delivery asks the keys)
+    expect(solution.location(regionProbeId("Kakariko Village"))).not.toBe(
+      "yes",
+    );
+    // Delivered (the escape's keys held), the lobby lets Link out
+    expect(
+      solveFacts(built, everything(settingsFromUpstream("standard"))).location(
+        regionProbeId("Kakariko Village"),
       ),
     ).toBe("yes");
   });

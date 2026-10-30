@@ -1451,7 +1451,9 @@ in code: the save-and-quit to Uncle, and Zelda's way back from her cell
 (`find_rules_for_zelda_delivery`: the rules of the first path to the throne
 room that a blank state does not pass, read from the world's rules so far,
 a stricter reading where DR added one later), set on the tapestry and her
-drop-off. The rest of `unported` but the key logic and the shuffles' code
+drop-off; and with entrances shuffled, the rails that keep the castle's east
+and west lobbies shut until she is delivered, wherever their exits were
+placed (`Rules.py:1511-1516`, the portals' lobby doors). The rest of `unported` but the key logic and the shuffles' code
 is ported in `index.ts`: Murahdahla in a triforce hunt, a boss's items
 behind its map and compass (`restrictBossItems`; `maybe` without them
 while the maps and compasses stay in their dungeons, which the player does
