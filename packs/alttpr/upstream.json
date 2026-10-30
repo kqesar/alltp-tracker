@@ -11,9 +11,14 @@
     "importer": "scripts/import-dr.mjs",
     "license": "MIT, Copyright (c) 2019 aerinon",
     "overworld": {
-      "commit": "2297be2f45c6b9710a7dfdbdc11cf166baa6de70",
+      "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+      "data": "src/door-rando/owr",
+      "door": "1.5.7",
+      "importer": "scripts/import-dr.mjs --owr",
+      "license": "MIT, Copyright (c) 2017 LLCoolDave",
       "repo": "codemann8/ALttPDoorRandomizer",
-      "version": "0.8.0.0"
+      "version": "0.8.0.2",
+      "why": "the latest release (2026-10-08) and the one players race: avianart.games rolls it (its swapkeys seeds' meta: Overworld 0.8.0.2-u on Door 1.5.7-u)"
     },
     "repo": "aerinon/ALttPDoorRandomizer",
     "spoilerItems": "src/spoiler/dr-items.json",

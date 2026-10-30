@@ -38,10 +38,19 @@ export interface Manifest {
     readonly data: string;
     readonly importer: string;
     readonly license: string;
+    /**
+     * The Overworld fork (OWR), its world imported apart (import-dr.mjs
+     * --owr) at the release players race, and the DR release it merged.
+     */
     readonly overworld: {
       readonly commit: string;
+      readonly data: string;
+      readonly door: string;
+      readonly importer: string;
+      readonly license: string;
       readonly repo: string;
       readonly version: string;
+      readonly why: string;
     };
     readonly repo: string;
     /** Its item names joined to vt's classes (scripts/import-item-names.mjs). */

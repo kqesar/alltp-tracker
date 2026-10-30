@@ -36,6 +36,7 @@
       "!packs/*/test/upstream",
       "!packs/alttpr/src/door-rando/locations.json",
       "!packs/alttpr/src/door-rando/world",
+      "!packs/alttpr/src/door-rando/owr",
       "!packs/alttpr/test/dr-seeds",
       "!packs/alttpr/test/dr-door-spoilers",
       "!packs/sm/test/spoilers",

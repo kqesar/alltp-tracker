@@ -27,7 +27,15 @@
 //   links them as link_overworld, link_entrances_new and link_doors_prep do.
 
 import { regionId } from "./er-rules.mjs";
-import { assigned, body, callExpressions, functionBody } from "./python.mjs";
+import {
+  assigned,
+  body,
+  callExpressions,
+  functionBody,
+  literal,
+  pythonExpression,
+  tokens,
+} from "./python.mjs";
 
 /**
  * @typedef {import("./python.mjs").Expr} Expr
@@ -99,6 +107,40 @@ export const TABLES = {
     "mirror_connections",
   ],
 };
+
+/**
+ * The tables the Overworld fork's world is wired with (OWR's own
+ * OverworldShuffle.py and EntranceShuffle2.py: Inverted is a flip of every
+ * tile there, `ow_connections` each tile's links as it stands or flipped,
+ * no `open_`/`inverted_` lists), by file.
+ */
+export const OWR_TABLES = {
+  [DOOR_SHUFFLE]: TABLES[DOOR_SHUFFLE],
+  [ENTRANCES]: [
+    "mandatory_connections",
+    "drop_map",
+    "linked_drop_map",
+    "sw_linked_drop_map",
+    "entrance_map",
+    "single_entrance_map",
+    "default_connections",
+    "open_default_connections",
+    "inverted_default_connections",
+    "modes",
+    "exit_ids",
+  ],
+  [ENTRANCE_DATA]: ["door_addresses"],
+  [OVERWORLD]: [
+    "mandatory_connections",
+    "default_connections",
+    "ow_connections",
+    "mirror_connections",
+    "default_whirlpool_connections",
+  ],
+  "source/overworld/FluteShuffle.py": ["default_flute_connections"],
+};
+
+/** @typedef {"dr" | "owr"} Flavor */
 
 /**
  * A DR region's engine id: regionId of each part around " - ", joined by
@@ -241,17 +283,23 @@ function readDungeons(source) {
   const tableLine = source.slice(0, table.index).split("\n").length;
   const rows = source.slice(table.index).split("\n");
   for (let i = 1; i < rows.length && rows[i] !== "}"; i++) {
-    const row = /^ {4}'([^']+)': DungeonInfo\((.*)\),$/.exec(rows[i] ?? "");
+    const row = /^ {4}'([^']+)': (DungeonInfo\(.*\)),$/.exec(rows[i] ?? "");
     if (row === null) fail(`${DUNGEONS}:${tableLine + i}: a dungeon_table row`);
-    const args = (row[2] ?? "").split(/, (?=(?:[^"']|"[^"]*"|'[^']*')*$)/);
-    const prize = args[7]?.trim() ?? "";
+    const info = pythonExpression(row[2] ?? "");
+    const prize = info.t === "call" ? info.args[7] : undefined;
     const dungeon = dungeons.find((d) => d.name === row[1]);
     if (dungeon === undefined) fail(`${DUNGEONS}: no dungeon ${row[1]}`);
+    // DR names the prize's location; the Overworld fork lists the ROM's
+    // addresses of a prize instead, its location being the dungeon's
+    // `- Prize` (owr:Rules.py:978-981, Thieves' Town spelled so)
     dungeon.prize =
-      prize === "None"
+      prize?.t === "const" && prize.value === null
         ? null
-        : (/^(['"])(.*)\1$/.exec(prize)?.[2] ??
-          fail(`${DUNGEONS}:${tableLine + i}: a prize`));
+        : prize?.t === "const" && typeof prize.value === "string"
+          ? prize.value
+          : prize?.t === "seq"
+            ? `${row[1]?.startsWith("Thieves") ? "Thieves' Town" : row[1]} - Prize`
+            : fail(`${DUNGEONS}:${tableLine + i}: a prize`);
   }
   return { dungeonOf, dungeons };
 }
@@ -529,20 +577,45 @@ function readDoors(source) {
   /** @type {Map<string, string>} */
   const locals = new Map();
   /**
+   * A name a branch binds to a string (the Overworld fork's
+   * `zelda_location = 'Zelda Pickup'`): each value, with its branch's
+   * condition.
+   * @type {Map<string, { value: string, when: string | undefined }[]>}
+   */
+  const strings = new Map();
+  /** Both conditions, as one. @param {string | undefined} outer @param {string} inner */
+  const both = (outer, inner) =>
+    outer === undefined ? inner : `(${outer}) and (${inner})`;
+  /**
    * @param {Statement[]} statements
    * @param {string | undefined} when
    */
   const walk = (statements, when) => {
+    /** The condition of the `if` an `else` follows. @type {string | undefined} */
+    let previous;
     for (const statement of statements) {
       const { line, text } = statement;
       const where = `${DOORS}:${line}`;
       if (text.startsWith("if ")) {
-        if (when !== undefined) fail(`${where}: an if within an if`);
-        walk(statement.body, text.slice(3).replace(/:$/, ""));
+        previous = text.slice(3).replace(/:$/, "");
+        walk(statement.body, both(when, previous));
         continue;
       }
+      if (text === "else" && previous !== undefined) {
+        walk(statement.body, both(when, `not (${previous})`));
+        previous = undefined;
+        continue;
+      }
+      previous = undefined;
       if (/^(elif |else)/.test(text) || statement.block)
         fail(`${where}: a block`);
+      const bound = /^(\w+) = '((?:[^'\\]|\\.)*)'$/.exec(text);
+      if (bound !== null) {
+        const list = strings.get(bound[1] ?? "") ?? [];
+        list.push({ value: (bound[2] ?? "").replace(/\\'/g, "'"), when });
+        strings.set(bound[1] ?? "", list);
+        continue;
+      }
       // name = world.get_door('X', player)
       const local =
         /^(\w+) = world\.get_door\('((?:[^'\\]|\\.)*)', player\)$/.exec(text);
@@ -604,15 +677,29 @@ function readDoors(source) {
           case "c_switch":
             set(name, "crystal", "either", when, where);
             break;
-          case "event":
-            set(
-              name,
-              "event",
-              /^'(.*)'$/.exec(args ?? "")?.[1] ?? fail(`${where}: an event`),
-              when,
-              where,
-            );
+          case "event": {
+            const literal = /^'(.*)'$/.exec(args ?? "")?.[1];
+            // An event a branch named: once per value, under its branch
+            const values =
+              literal !== undefined
+                ? [{ value: literal, when }]
+                : (strings.get(args ?? "") ?? fail(`${where}: an event`));
+            for (const { value, when: named } of values)
+              set(
+                name,
+                "event",
+                value,
+                // A binding under this statement's own branch holds it
+                named === undefined ||
+                  when === undefined ||
+                  named === when ||
+                  named.startsWith(`(${when}) and `)
+                  ? (named ?? when)
+                  : both(when, named),
+                where,
+              );
             break;
+          }
           case "kill":
             set(name, "dead", true, when, where);
             break;
@@ -818,11 +905,12 @@ const LEAN = {
 /**
  * The connection tables, each with its line.
  * @param {(file: string) => string} read
+ * @param {Readonly<Record<string, readonly string[]>>} [wanted]
  */
-function readTables(read) {
+function readTables(read, wanted = TABLES) {
   /** @type {Record<string, Record<string, { line: number, value: unknown }>>} */
   const tables = {};
-  for (const [file, list] of Object.entries(TABLES)) {
+  for (const [file, list] of Object.entries(wanted)) {
     const source = read(file);
     tables[file] = Object.fromEntries(
       list.map((name) => {
@@ -848,11 +936,155 @@ function readTables(read) {
   return tables;
 }
 
+const OW_EDGES = "OWEdges.py";
+const FLUTE = "source/overworld/FluteShuffle.py";
+
 /**
- * Stage A: DR's regions, doors and connection tables.
- * @param {(file: string) => string} read - A file of the checkout
+ * A dict a module wraps in bidict (`OWTileRegions = bidict({…})`), and its
+ * line.
+ * @param {string} source
+ * @param {string} name
+ * @param {string} file
  */
-export function importDrWorld(read) {
+function bidictOf(source, name, file) {
+  const match = new RegExp(`^${name} = bidict\\(`, "m").exec(source);
+  if (match === null) fail(`${file}: no ${name} = bidict(…)`);
+  const stream = tokens(source, match.index + match[0].length, file);
+  const line = stream.peek().line;
+  const value = literal(stream);
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    fail(`${file}:${line}: ${name} is no dict`);
+  return { line, value: /** @type {Record<string, unknown>} */ (value) };
+}
+
+/** create_owedge's shortcuts (OWEdges.py:17-23). */
+const EDGE_NAMES = {
+  Ea: "east",
+  Ld: "land",
+  No: "north",
+  So: "south",
+  We: "west",
+  Wr: "water",
+};
+
+/**
+ * What the Overworld fork adds to the world, as data (owr: files):
+ * - `tiles`: each overworld region's screen (OWEdges.py OWTileRegions),
+ *   which `is_tile_swapped` reads (BaseClasses.py:331-332: a screen is
+ *   flipped in Inverted, or in Mixed when its tile swaps);
+ * - `edges`: each screen edge create_owedges makes (name, screen,
+ *   direction, terrain; layout bytes left out) and its parallel in the
+ *   other world (parallel_links);
+ * - `flute`: each flute spot's screen and its region as the screen stands
+ *   or flipped (FluteShuffle.py flute_data: the rest of a row is layout);
+ * - `bonk`: the bonk drops (Regions.py bonk_prize_table): the region, the
+ *   overworld flag (screen, mask: MultiClient.py:978-987 reads
+ *   SAVEDATA_START + 0x280 + screen) and whether Agahnim must fall first.
+ * @param {(file: string) => string} read
+ */
+function readOverworld(read) {
+  const edgesSource = read(OW_EDGES);
+  const tiles = bidictOf(edgesSource, "OWTileRegions", OW_EDGES);
+  const parallel = bidictOf(edgesSource, "parallel_links", OW_EDGES);
+  const fn = body(edgesSource, "create_owedges", OW_EDGES);
+  /** @param {Expr | undefined} e @param {string} where */
+  const short = (e, where) =>
+    e?.t === "name" && e.name in EDGE_NAMES
+      ? EDGE_NAMES[/** @type {keyof typeof EDGE_NAMES} */ (e.name)]
+      : fail(`${where}: an edge's direction or terrain`);
+  const edges = callExpressions(
+    edgesSource,
+    "create_owedge",
+    OW_EDGES,
+    fn.start,
+    fn.end,
+  ).map(({ call: chain, line }) => {
+    const where = `${OW_EDGES}:${line}`;
+    // The chain's root: create_owedge(...).coordInfo(...)… (layout bytes)
+    /** @type {Expr} */
+    let call = chain;
+    while (call.t === "call" && call.fn.t === "attr") call = call.fn.of;
+    if (call.t !== "call") fail(`${where}: an edge`);
+    const [, name, screen, direction, terrain] = call.args;
+    if (name?.t !== "const" || typeof name.value !== "string")
+      fail(`${where}: an edge of no name`);
+    if (screen?.t !== "const" || typeof screen.value !== "number")
+      fail(`${where}: an edge of no screen`);
+    const other = parallel.value[name.value];
+    return {
+      direction: short(direction, where),
+      name: name.value,
+      ...(typeof other === "string" ? { parallel: other } : {}),
+      screen: screen.value,
+      source: where,
+      terrain: short(terrain, where),
+    };
+  });
+  const named = new Set(edges.map((edge) => edge.name));
+  if (named.size !== edges.length) fail(`${OW_EDGES}: an edge twice`);
+  for (const [a, b] of Object.entries(parallel.value))
+    if (!named.has(a) || !named.has(String(b)))
+      fail(`${OW_EDGES}:${parallel.line}: parallel_links' ${a}`);
+  const fluteSource = read(FLUTE);
+  const flute = assigned(fluteSource, "flute_data", FLUTE);
+  const regionsSource = read(REGIONS);
+  const bonk = assigned(regionsSource, "bonk_prize_table", REGIONS);
+  const bonkStart = regionsSource.indexOf("\nbonk_prize_table = {");
+  return {
+    bonk: Object.entries(
+      /** @type {Record<string, unknown[]>} */ (bonk.value),
+    ).map(([name, row]) => {
+      const at = regionsSource.indexOf(`'${name}'`, bonkStart);
+      const where = `${REGIONS}:${regionsSource.slice(0, at).split("\n").length}`;
+      const [, mask, aga, , region] = row;
+      const screen = tiles.value[String(region)];
+      if (
+        typeof mask !== "number" ||
+        typeof aga !== "boolean" ||
+        typeof region !== "string"
+      )
+        fail(`${where}: a bonk drop's row`);
+      return {
+        aga,
+        // MultiClient.py:980-985: only a drop of a screen's region is read
+        ...(typeof screen === "number" ? { flag: { mask, screen } } : {}),
+        name,
+        region,
+        source: where,
+      };
+    }),
+    edges,
+    flute: Object.fromEntries(
+      Object.entries(
+        /** @type {Record<string, unknown[]>} */ (flute.value),
+      ).map(([screen, row]) => {
+        const [regions] = row;
+        if (
+          !Array.isArray(regions) ||
+          regions.length !== 2 ||
+          regions.some((r) => typeof r !== "string")
+        )
+          fail(`${FLUTE}:${flute.line}: flute_data's ${screen}`);
+        return [screen, regions];
+      }),
+    ),
+    source: {
+      bonk: `${REGIONS}:${bonk.line}`,
+      flute: `${FLUTE}:${flute.line}`,
+      parallel: `${OW_EDGES}:${parallel.line}`,
+      tiles: `${OW_EDGES}:${tiles.line}`,
+    },
+    tiles: tiles.value,
+  };
+}
+
+/**
+ * Stage A: DR's regions, doors and connection tables; the Overworld fork's
+ * own (`flavor` "owr") with what it adds to the overworld.
+ * @param {(file: string) => string} read - A file of the checkout
+ * @param {Flavor} [flavor]
+ */
+export function importDrWorld(read, flavor = "dr") {
   const { dungeonOf, dungeons } = readDungeons(read(DUNGEONS));
   const regions = readRegions(read(REGIONS), dungeonOf);
   const ids = new Set(regions.map((region) => region.id));
@@ -869,9 +1101,10 @@ export function importDrWorld(read) {
       fail(`${DUNGEONS}: no region ${name}`);
   const { doors, portals } = readDoors(read(DOORS));
   return {
-    connections: readTables(read),
+    connections: readTables(read, flavor === "owr" ? OWR_TABLES : TABLES),
     doors: withKinds(doors, readRooms(read(ROOMS))),
     dungeons,
+    ...(flavor === "owr" ? { overworld: readOverworld(read) } : {}),
     portals,
     regions,
   };

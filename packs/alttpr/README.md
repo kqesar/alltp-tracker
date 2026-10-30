@@ -1014,9 +1014,11 @@ ran DR's unstable builds, 1.5.7-u for ten of them, 1.5.8-u and 1.5.6-u for
 one each, `test/dr-spoilers/index.json`), its base patch
 `aerinon/z3randomizer` `d0f46511` (DRUnstable, the same change as DR's
 `data/base2current.bps`, which 1.5.6 to 1.5.8 ship unchanged), and OWR
-0.8.0.0 (`2297be2f`, the last release on DR 1.5.6; OWR 0.8.0.1 and 0.8.0.2
-merge DR 1.5.7 and change none of the ROM's bytes the tracker reads, and
-no OWR release is on 1.5.8 yet). From 1.5.6 to 1.5.8 the locations' files
+0.8.0.2 (`1ada5b54`, `doorRandomizer.overworld`: the latest release, on DR
+1.5.7, and the one avianart.games rolls, whose seeds' meta reads
+`Overworld 0.8.0.2-u` on `Door 1.5.7-u`; "The Overworld Randomizer" below).
+Autotracking still cites OWR 0.8.0.0's `Rom.py` (`src/autotrack/memory.ts`):
+0.8.0.1 and 0.8.0.2 change none of the ROM's bytes the tracker reads. From 1.5.6 to 1.5.8 the locations' files
 (`Regions.py`, `PotShuffle.py`, `source/dungeon/EnemyList.py`,
 `Dungeons.py`, `ItemList.py`) do not change, so the data is every one of
 these versions' (`DOOR_RANDOMIZER_SAME_LOCATIONS`); the logic does, below
@@ -1524,6 +1526,38 @@ the seed's placements too, so the app asks neither in Race Mode. Their
 fixtures (`test/dr-seeds/`) are written by `pnpm --filter
 @alltp/pack-alttpr record-dr-seeds`: the permalink cut to `meta`, the patch
 re-encoded with the decoder's bytes alone.
+
+### The Overworld Randomizer
+
+codemann8's Overworld Randomizer (OWR) is a fork of DR whose seeds run its
+own rules, even on a vanilla overworld: its `Rules.py` is rewritten in an
+inspectable rule language (`source/logic/AccessRule.py`: `Has`,
+`Primitive`, `Reach`, `and_rule`, `or_rule`), each boss's spoils sit in a
+region of their own past the fight (`Eastern Boss Spoils`, …), Inverted is
+every overworld screen flipped (`is_tile_swapped`, `BaseClasses.py:331-332`),
+and it adds the bonk drops, flute spots, whirlpools, tile flips and crossed
+screen edges a seed may move. The pin is `doorRandomizer.overworld` (0.8.0.2
+on DR 1.5.7, above).
+
+**Its world, as data** (`src/door-rando/owr/`, written by `pnpm --filter
+@alltp/pack-alttpr import-dr --owr <owr-checkout>`, read as data and never
+run): `regions.json` and `doors.json` as DR's, `connections.json` with the
+fork's own tables (`OverworldShuffle.py`'s `mandatory_connections`, each
+screen's `ow_connections` as it stands and flipped, the edges'
+`default_connections`, the mirror's, `default_whirlpool_connections`;
+`EntranceShuffle2.py`'s vanilla maps; `FluteShuffle.py`'s eight vanilla
+spots), and `overworld.json`: each overworld region's screen
+(`OWTileRegions`), each screen edge with its direction, terrain and parallel
+in the other world (`create_owedges`, `parallel_links`), each flute spot's
+region as its screen stands or flipped (`flute_data`, the layout bytes left
+out) and the 42 bonk drops (`bonk_prize_table`: region, whether Agahnim must
+fall first, and the overworld flag the game sets, the screen's byte at
+`$7EF280` and the mask, as `MultiClient.py:978-987` reads it; the Good Bee
+Cave's statue has no screen, so no flag). Its pots, enemy drops and shops
+are DR 1.5.8's exactly, so `locations.json` serves both (the import stops if
+they part). `src/door-rando/owr-data.spec.ts` holds the data: every region
+and door, every table's names, every exit linked but those the fork links in
+code (save points, flute spots, Houlihan's room, the dark world starts).
 
 ## The entrance randomizer's tables
 

@@ -3,6 +3,7 @@
 // Imports the Door Randomizer's extra locations as JSON.
 //
 //   node scripts/import-dr.mjs <dr-checkout>
+//   node scripts/import-dr.mjs --owr <owr-checkout>
 //
 // aerinon/ALttPDoorRandomizer (MIT, (c) 2019 aerinon), at the release
 // upstream.json pins (doorRandomizer), adds locations alttpr.com never had:
@@ -19,7 +20,13 @@
 // patch that says it was collected (src/door-rando/locations.ts reads it);
 // src/door-rando/world/, DR's regions, doors and connection tables
 // (dr-world-data.mjs) and its rules in the engine's language (dr-rules.mjs);
-// test/dr-upstream/, its own tests and customizer seeds (dr-tests.mjs). Never edit those files by hand: run this script again.
+// test/dr-upstream/, its own tests and customizer seeds (dr-tests.mjs).
+// With --owr, codemann8's Overworld Randomizer (the fork of DR whose seeds
+// run its own rules even on a vanilla overworld), at the release
+// upstream.json pins (doorRandomizer.overworld): src/door-rando/owr/, its
+// regions, doors and tables, and what it adds to the overworld (screens,
+// edges, flute spots, bonk drops). Never edit those files by hand: run
+// this script again.
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -34,10 +41,15 @@ import { assigned, expression, literal, tokens } from "./python.mjs";
 
 export const DR_REPO = "aerinon/ALttPDoorRandomizer";
 export const DR_VERSION = "1.5.8";
+/** The Overworld fork, its release, and the DR release it merged. */
+export const OWR_REPO = "codemann8/ALttPDoorRandomizer";
+export const OWR_VERSION = "0.8.0.2";
+export const OWR_DR_VERSION = "1.5.7";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "../src/door-rando/locations.json");
 const WORLD = resolve(HERE, "../src/door-rando/world");
+const OWR_WORLD = resolve(HERE, "../src/door-rando/owr");
 
 /**
  * A value as JSON, its object keys sorted: the files come out the same for
@@ -188,8 +200,12 @@ function dungeonOfRegion(source) {
   return of;
 }
 
-/** @param {string} checkout */
-export function importDr(checkout) {
+/**
+ * @param {string} checkout
+ * @param {string} [version] - The DR release the checkout must be (the
+ *   Overworld fork's: the DR release it merged)
+ */
+export function importDr(checkout, version = DR_VERSION) {
   const read = (/** @type {string} */ file) =>
     readFileSync(join(checkout, file), "utf8");
   const POTS = "PotShuffle.py";
@@ -200,9 +216,8 @@ export function importDr(checkout) {
   const regions = read(REGIONS);
   const kinds = regionKinds(regions);
   const dungeons = dungeonOfRegion(read("Dungeons.py"));
-  const version = /^version_number = '([^']+)'/m.exec(read("Main.py"))?.[1];
-  if (version !== DR_VERSION)
-    fail(`Main.py: version ${version}, not ${DR_VERSION}`);
+  const found = /^version_number = '([^']+)'/m.exec(read("Main.py"))?.[1];
+  if (found !== version) fail(`Main.py: version ${found}, not ${version}`);
 
   /** @type {Map<string, { cave: boolean, dungeon: string | null }>} */
   const regionsOut = new Map();
@@ -481,10 +496,81 @@ export function importDr(checkout) {
   };
 }
 
+/**
+ * The Overworld fork (`--owr`): its world beside DR's, in
+ * src/door-rando/owr/. Its pots, enemy drops and shops are DR's own (the
+ * fork merged DR's PotShuffle.py and EnemyList.py data): the import stops if
+ * they differ from locations.json, which then serves both.
+ * @param {string} checkout
+ */
+function mainOwr(checkout) {
+  const read = (/** @type {string} */ file) =>
+    readFileSync(join(checkout, file), "utf8");
+  const owr = /^version_number = '([^']+)'/m.exec(
+    read("OverworldShuffle.py"),
+  )?.[1];
+  if (owr !== OWR_VERSION)
+    fail(`OverworldShuffle.py: version ${owr}, not ${OWR_VERSION}`);
+  const { locations } = importDr(checkout, OWR_DR_VERSION);
+  const ours = JSON.parse(readFileSync(OUT, "utf8")).locations;
+  const lean = (/** @type {{ source?: string }[]} */ list) =>
+    JSON.stringify(list.map(({ source: _, ...entry }) => entry));
+  if (lean(locations) !== lean(ours))
+    fail("the fork's pots, drops and shops are not DR's: import them apart");
+  const upstream = {
+    commit: readCommit(checkout),
+    door: OWR_DR_VERSION,
+    license: "MIT, Copyright (c) 2017 LLCoolDave",
+    repo: OWR_REPO,
+    version: OWR_VERSION,
+  };
+  const world = importDrWorld(read, "owr");
+  const generated =
+    "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.";
+  mkdirSync(OWR_WORLD, { recursive: true });
+  writeLines(
+    join(OWR_WORLD, "regions.json"),
+    { generated, upstream },
+    { dungeons: world.dungeons, regions: world.regions },
+  );
+  writeLines(
+    join(OWR_WORLD, "doors.json"),
+    { generated, upstream },
+    { doors: world.doors, portals: world.portals },
+  );
+  writeLines(
+    join(OWR_WORLD, "connections.json"),
+    { generated, upstream },
+    world.connections,
+  );
+  const overworld =
+    world.overworld ?? fail("the fork's overworld was not read");
+  writeLines(
+    join(OWR_WORLD, "overworld.json"),
+    { generated, source: overworld.source, upstream },
+    {
+      bonk: overworld.bonk,
+      edges: overworld.edges,
+      flute: overworld.flute,
+      tiles: overworld.tiles,
+    },
+  );
+  process.stdout.write(
+    `${OWR_WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${overworld.edges.length} edges, ${overworld.bonk.length} bonk drops\n`,
+  );
+}
+
 /** @param {string[]} args */
 function main(args) {
+  if (args[0] === "--owr") {
+    const [, checkout] = args;
+    if (checkout === undefined)
+      fail("usage: import-dr.mjs --owr <owr-checkout>");
+    return mainOwr(checkout);
+  }
   const [checkout] = args;
-  if (checkout === undefined) fail("usage: import-dr.mjs <dr-checkout>");
+  if (checkout === undefined)
+    fail("usage: import-dr.mjs [--owr] <dr-checkout>");
   const { locations, regions } = importDr(checkout);
   const upstream = {
     commit: readCommit(checkout),
