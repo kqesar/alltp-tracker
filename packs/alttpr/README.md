@@ -1845,7 +1845,12 @@ flowchart LR
   path counts only from a region the doors noted mark light that no door
   not noted may make dark: in a crossed seed where the Pyramid's door
   leads into Sanctuary, Link starts there a bunny, which a map read off
-  the doors noted would not have known.
+  the doors noted would not have known. Each path rule found is a helper
+  of the world's own (`@bunny<n>`), as the randomizer's paths share the
+  rules they capture: written out as text, a crossed seed's rules copied
+  those of the caves before them (10,298 characters in one rule of a
+  recorded seed, 171 now; `er-seeds.spec.ts`), the pattern that ran the
+  Door Randomizer's world out of memory.
 - **Facts.** The engine reads `reach()` in locations only. A rule of an
   exit or of a helper that asks for a region reads the fact
   `reached_<region>` instead, given by a location of its own in that

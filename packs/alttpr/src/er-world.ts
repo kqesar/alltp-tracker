@@ -16,7 +16,9 @@ import {
   type Exit,
   type Location,
   loadRules,
+  parse,
   type Region,
+  type Rules,
   type Settings,
   type Tri,
   type UnknownSetting,
@@ -476,6 +478,16 @@ const GANON = "Ganon";
  * or stricter, so noting a door never takes a `yes` away. The world where
  * the doors not noted lead anywhere (er-keys.ts) holds the pearl
  * throughout.
+ *
+ * Each rule found is a helper of the world's own (`@bunny<n>`), its text
+ * what the rule is when found: the randomizer's paths capture each
+ * entrance's rule as a function (`path + [entrance.access_rule]`), so a
+ * rule grown by an earlier bunny rule is shared, not copied. Written out
+ * as text it would be copied at each step, the way the Door Randomizer's
+ * world ran out of memory on a dungeon both worlds reach (door-world/
+ * bunny.ts).
+ * @returns The helpers the rules call, by name (`bunny<n>`), each a rule
+ *   that reads only those before it
  */
 function addBunnyRules(
   connections: ErConnections,
@@ -486,7 +498,9 @@ function addBunnyRules(
   },
   exits: Map<string, string>,
   locations: Map<string, string>,
-): void {
+): Map<string, string> {
+  /** The rules found, each a helper read by name, in the order found. */
+  const helpers = new Map<string, string>();
   const into = new Map<string, string[]>();
   for (const [exit, to] of connections)
     into.set(to, [...(into.get(to) ?? []), exit]);
@@ -514,7 +528,12 @@ function addBunnyRules(
         else options.push(and(`reach(${region(from).id})`, rule, ...newPath));
       }
     }
-    const rule = or(...options);
+    let rule = pearl;
+    if (options.length > 1) {
+      const helper = `bunny${helpers.size}`;
+      helpers.set(helper, or(...options));
+      rule = `@${helper}`;
+    }
     return marked.dark.has(name) ? rule : or(rule, "maybe");
   };
 
@@ -539,6 +558,7 @@ function addBunnyRules(
       and(locations.get(location) ?? "true", ruleToAdd(name)),
     );
   }
+  return helpers;
 }
 
 /** A boss of boss_table (Bosses.py) by the pack's id: `Armos Knights`. */
@@ -603,6 +623,20 @@ const RULES_SOURCE = {
 };
 const LOADED_RULES = loadRules(RULES_SOURCE);
 
+/** The pack's rules and a world's own helpers (the bunny's), reach() as facts. */
+const withHelpers = (helpers: ReadonlyMap<string, string>): Rules =>
+  helpers.size === 0
+    ? LOADED_RULES
+    : {
+        groups: LOADED_RULES.groups,
+        helpers: new Map([
+          ...LOADED_RULES.helpers,
+          ...[...helpers].map(
+            ([name, req]) => [name, parse(withFacts(req))] as const,
+          ),
+        ]),
+      };
+
 /** The regions a helper reaches, by id: an exit may call it. */
 const HELPERS_REACH = Object.values(RULE_TABLES.helpers).flatMap(({ req }) =>
   [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
@@ -618,12 +652,15 @@ const OLD_MAN = "Old Man";
 const reachedBy = (
   exits: ReadonlyMap<string, string>,
   locations: ReadonlyMap<string, string>,
+  helpers: ReadonlyMap<string, string> = new Map(),
 ): string[] => [
   ...new Set([
     ...HELPERS_REACH,
-    ...[...exits.values(), locations.get(OLD_MAN) ?? ""].flatMap((req) =>
-      [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
-    ),
+    ...[
+      ...exits.values(),
+      ...helpers.values(),
+      locations.get(OLD_MAN) ?? "",
+    ].flatMap((req) => [...req.matchAll(REACH)].map((m) => m[1] ?? "")),
   ]),
 ];
 
@@ -930,14 +967,16 @@ export function erWorld(
     undefined,
     options.anywhere,
   );
-  if (options.marked !== false)
-    addBunnyRules(
-      connections,
-      { ...marked, mayBeDark: markWorlds(connections, true).dark },
-      exits,
-      locations,
-    );
-  const reached = reachedBy(exits, locations);
+  const bunny =
+    options.marked === false
+      ? new Map<string, string>()
+      : addBunnyRules(
+          connections,
+          { ...marked, mayBeDark: markWorlds(connections, true).dark },
+          exits,
+          locations,
+        );
+  const reached = reachedBy(exits, locations, bunny);
   const compiledSettings: Settings = {
     ...settings,
     ...derivedSettings(settings, connections, marked, options),
@@ -952,7 +991,7 @@ export function erWorld(
       reached,
       options,
     ),
-    LOADED_RULES,
+    withHelpers(bunny),
     { items: itemsOf(events, reached), settings: compiledSettings },
   );
   return {
