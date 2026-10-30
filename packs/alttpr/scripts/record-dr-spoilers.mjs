@@ -4,7 +4,7 @@
 // (test/dr-spoilers/): DR's own text log of real seeds, cut to what the
 // parser reads.
 //
-//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr]
+//   pnpm --filter @alltp/pack-alttpr record-dr-spoilers [vanilla|entrances|doors|owr|owr-crossed|owr-mixed]
 //
 // With no argument it records both sets; with one, that set alone.
 //
@@ -79,6 +79,14 @@ const OUT_DOORS = join(
 const OUT_OWR = join(
   dirname(fileURLToPath(import.meta.url)),
   "../test/owr-spoilers",
+);
+const OUT_OWR_CROSSED = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-crossed-spoilers",
+);
+const OUT_OWR_MIXED = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../test/owr-mixed-spoilers",
 );
 const AGENT = "RandoAtlas fixtures (KqesaR/alltp-tracker)";
 
@@ -187,6 +195,26 @@ export const OWR_SEEDS = [
   // Inverted, flute spots balanced, whirlpools shuffled
   "n3VjztEKb",
 ];
+
+/**
+ * The crossed overworld set (test/owr-crossed-spoilers/): avianart.games
+ * seeds of OWR 0.8.0.2 as OWR_SEEDS', Open, the layout vanilla, its edges
+ * crossed: grouped (generated 2026-10-30 from the customizer, `ow_crossed:
+ * grouped`) and unrestricted (2026-10-30, `[{"args":{"branch":"OWR",
+ * "worldstate":"open","ow_crossed":"unrestricted","spoiler":"full"}}]`).
+ * Polar crosses nothing without Mixed (OverworldShuffle.py:248, :272), so
+ * no seed of it: Mixed's own set holds it.
+ */
+export const OWR_CROSSED_SEEDS = ["o4mamwuKZ", "0DsyCwK23"];
+
+/**
+ * The Mixed overworld set (test/owr-mixed-spoilers/): an avianart.games
+ * seed of OWR 0.8.0.2 as OWR_SEEDS', Open, its screens flipped by Mixed
+ * (generated 2026-10-30 from the customizer, `ow_mixed: true`), its
+ * `Maps` swaps' `data` the flipped screens: what the world will read once
+ * it models Mixed's flips.
+ */
+export const OWR_MIXED_SEEDS = ["mPEeiQvu1"];
 
 /** The keys of DR's JSON spoiler the contract reads (to_json). */
 export const KEPT_KEYS = [
@@ -392,6 +420,18 @@ async function main() {
       OUT_OWR,
       await recordAvianart(OWR_SEEDS, OUT_OWR, OWR_KEYS),
       "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr): avianart.games seeds' JSON spoilers of the Overworld Randomizer. Record again, never edit.",
+    );
+  if (only === undefined || only === "owr-crossed")
+    writeIndex(
+      OUT_OWR_CROSSED,
+      await recordAvianart(OWR_CROSSED_SEEDS, OUT_OWR_CROSSED, OWR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-crossed): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its edges crossed. Record again, never edit.",
+    );
+  if (only === undefined || only === "owr-mixed")
+    writeIndex(
+      OUT_OWR_MIXED,
+      await recordAvianart(OWR_MIXED_SEEDS, OUT_OWR_MIXED, OWR_KEYS),
+      "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-mixed): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its screens flipped by Mixed. Record again, never edit.",
     );
   if (only === undefined || only === "doors")
     writeIndex(

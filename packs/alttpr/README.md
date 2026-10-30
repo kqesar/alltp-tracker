@@ -1663,13 +1663,15 @@ app solves an OWR run there with its overworld, doors and entrances
 vanilla, in the Open or Inverted world, its bonk drops among the world's
 locations while shuffled): `drWorld(settings,
 { data: OWR_DATA })` is DR's builder over the fork's bundle, with what the
-fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
+fork links or rules otherwise (`overworld.ts`), its layout vanilla, no
+screen flipped by Mixed:
 
 - `link_overworld` (`OverworldShuffle.py:21-584`): the mandatory
   connections, the save-and-quit points by the screens they stand on
   (Link's House or the Bomb Shop, Sanctuary or the Dark Chapel, the pyramid
   or the castle's ledge), each screen's links as it stands or flipped
-  (`ow_connections`), the whirlpools, every edge with its vanilla partner,
+  (`ow_connections`), the whirlpools, every edge with its partner
+  (`edgePartnersOf`: the vanilla one, or a crossed overworld's as noted),
   the flute spots in slot order (`fluteSpots`, `FluteShuffle.py:36-50,
   655-657`). Inverted flips every screen, any other mode none
   (`isTileSwapped`): Mixed's flips are not read yet. A seed's shuffled
@@ -1678,8 +1680,14 @@ fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
   partner's region (connect_whirlpool, `OverworldShuffle.py:359-367`), the
   noted screens' spots in slot order (`FluteShuffle.py:178-182`), and a
   whirlpool or spot not noted leads nowhere, which never opens a way too
-  early. `owrNotesFromSpoiler` reads them from a seed's JSON spoiler
-  (`Whirlpools`, `Maps`' flute entry and its `data`, `FluteShuffle.py:652`).
+  early. A crossed overworld's edges (`ow_crossed` grouped or unrestricted,
+  `OverworldShuffle.py:246-345`; Polar crosses nothing without Mixed) are
+  linked the same way: each noted edge into its partner's region, both ways
+  (connect_two_way, `:702-725`), an edge not noted nowhere; the terrain
+  rules read the noted partner's water. `owrNotesFromSpoiler` reads them
+  from a seed's JSON spoiler (`Whirlpools`, `Maps`' flute entry and its
+  `data`, `FluteShuffle.py:652`, and a crossed seed's `Overworld`, every
+  pair connect_two_way linked, `:721-722`).
 - `link_entrances_new`'s vanilla path (`EntranceShuffle2.py:48-200`), which
   has no Inverted swap table: Agahnim's and Ganon's towers trade doors once
   both screens flip, the pyramid's door and hole stand on the castle's
@@ -1742,11 +1750,23 @@ whirlpools are shuffled and flute spots moved (random in Open, balanced in
 Inverted), noted from the log as a player notes them (with vanilla links
 instead, the Open one fails both walks).
 Each JSON keeps the contract's keys and the fork's `Overworld`,
-`Whirlpools` and `Maps` (empty in these). `test/owr-playthrough.spec.ts`
+`Whirlpools` and `Maps` (empty in these). The crossed set
+(`test/owr-crossed-spoilers/`, `record-dr-spoilers owr-crossed`) adds two
+Open seeds whose edges are crossed, grouped (`o4mamwuKZ`) and unrestricted
+(`0DsyCwK23`), every edge noted from the log's `Overworld` (with vanilla
+edges instead, the grouped one fails its walk). `test/owr-playthrough.spec.ts`
 walks each in the world the app solves an OWR run in (`OWR_DATA`, the bonk
 drops added as locations, the fork's events and farms held by name): each
 sphere `yes` with the spheres before it, and no location of a later sphere
-`yes` too early. All six hold with no exception. The app's side
+`yes` too early. All eight hold with no exception but the farms a seed's
+random prize packs make (tree pulls and crabs, `ItemList.py:742-760`), which
+no tracker knows and the world never holds: the walks take them out, their
+items never held (`FARMS`: `o4mamwuKZ`'s crab, whose rupees nothing later
+waited for). The Mixed set (`test/owr-mixed-spoilers/`, `record-dr-spoilers
+owr-mixed`: `mPEeiQvu1`, Open, screens flipped) is recorded for the world's
+Mixed flips, not modelled yet: `test/owr-mixed.spec.ts` holds its flipped
+screens as `Maps`' swaps `data` (a light screen with its dark twin), never
+its text map. The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

@@ -7,6 +7,7 @@ import { vanillaConnections } from "./connections";
 import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, drLocationId, drWorld, regionProbeId } from "./index";
 import {
+  edgePartnersOf,
   fluteSpots,
   isTileSwapped,
   OWR_DEFAULTS,
@@ -14,6 +15,7 @@ import {
   owrMovedExits,
   owrNotesFromSpoiler,
   owrSettings,
+  owrTerrainRules,
   whirlpoolsOf,
 } from "./overworld";
 import { OWR_DATA } from "./owr-data";
@@ -95,6 +97,67 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
     expect(flute.get("Flute Spot 1")).toBe("East Death Mountain (Bottom)");
     expect(flute.get("Flute Spot 2")).toBe(overworld?.flute["48"]?.regions[0]);
     expect(flute.has("Flute Spot 3")).toBe(false);
+  });
+
+  it("links a crossed overworld's edges as noted, the rest nowhere", () => {
+    // o4mamwuKZ (grouped): Central Bonk Rocks' north edge into the Pyramid's
+    const edges = {
+      "Central Bonk Rocks NW": "Pyramid SW",
+      "Pyramid SW": "Central Bonk Rocks NW",
+    };
+    const c = vanillaConnections(OWR_DATA, "open", 157, undefined, { edges });
+    expect(c.get("Central Bonk Rocks NW")).toBe(
+      OWR_DATA.parentOf("Pyramid SW"),
+    );
+    expect(c.get("Pyramid SW")).toBe(
+      OWR_DATA.parentOf("Central Bonk Rocks NW"),
+    );
+    expect(c.has("Lost Woods SW")).toBe(false);
+    expect(edgePartnersOf(OWR_DATA, { edges }).size).toBe(2);
+    // Not noted at all: every vanilla pair, both ways
+    expect(edgePartnersOf(OWR_DATA).get("Lost Woods Pass NW")).toBe(
+      "Lost Woods SW",
+    );
+    expect(() =>
+      vanillaConnections(OWR_DATA, "open", 157, undefined, {
+        edges: { "Lost Woods SW": "Nowhere" },
+      }),
+    ).toThrow('No edge "Nowhere"');
+  });
+
+  it("asks the flippers of an edge into the water its noted partner opens on", () => {
+    const exit = () => ({
+      from: "Lost Woods Area",
+      name: "Lost Woods SW",
+      req: "true",
+      to: "Lost Woods Pass West Area",
+    });
+    const marked = { dark: new Set<string>(), light: new Set<string>() };
+    const vanilla = [exit()];
+    owrTerrainRules(OWR_DATA, vanilla, marked, "open");
+    expect(vanilla[0]?.req).toBe("true");
+    // Noted into River Bend's south water edge (OWEdges.py:79)
+    const crossed = [exit()];
+    owrTerrainRules(OWR_DATA, crossed, marked, "open", {
+      edges: { "Lost Woods SW": "River Bend SC" },
+    });
+    expect(crossed[0]?.req).toBe("flippers");
+  });
+
+  it("reads a crossed seed's edges from its spoiler, both ways", () => {
+    const json = {
+      meta: { ow_crossed: "grouped" },
+      Overworld: [{ entrance: "Central Bonk Rocks NW", exit: "Pyramid SW" }],
+    };
+    expect(owrNotesFromSpoiler(json)).toEqual({
+      edges: {
+        "Central Bonk Rocks NW": "Pyramid SW",
+        "Pyramid SW": "Central Bonk Rocks NW",
+      },
+    });
+    expect(
+      owrNotesFromSpoiler({ ...json, meta: { ow_crossed: "none" } }),
+    ).toEqual({});
   });
 
   it("reads a seed's whirlpools and flute spots from its spoiler, for its shuffles alone", () => {

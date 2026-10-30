@@ -10,10 +10,11 @@
 // (is_tile_swapped, BaseClasses.py:331-332), Agahnim's and Ganon's towers
 // trading doors once both their screens are (:69-71).
 //
-// Shuffled whirlpools and flute spots are linked as the player notes them
-// (`OwrNotes`): a whirlpool or a spot not noted leads nowhere. Not modelled
-// yet: Mixed's flips (each screen flipped as noted), crossed or shuffled
-// edges; an Inverted run flips every screen, any other none.
+// Shuffled whirlpools and flute spots, and a crossed overworld's edges, are
+// linked as the player notes them (`OwrNotes`): a whirlpool, a spot or an
+// edge not noted leads nowhere. Not modelled yet: Mixed's flips (each
+// screen flipped as noted) and a shuffled layout; an Inverted run flips
+// every screen, any other none.
 import type { Settings } from "@alltp/engine";
 import type { DrData, DrMode, OwrOverworld } from "./data";
 import { and } from "./text";
@@ -80,6 +81,34 @@ export interface OwrNotes {
    * on, at most eight.
    */
   readonly flute?: readonly number[];
+  /**
+   * A crossed overworld's edges (`ow_crossed` grouped or unrestricted,
+   * OverworldShuffle.py:248-345): each noted edge by name, the edge it
+   * leads into (connect_two_way links a pair both ways, :702-725, so a
+   * note holds both). Absent, every edge meets its vanilla partner.
+   */
+  readonly edges?: Readonly<Record<string, string>>;
+}
+
+/**
+ * The edge each edge leads into: as noted, or, with no edges noted, its
+ * vanilla partner both ways (default_connections, OverworldShuffle.py:
+ * 419-431). An edge not noted has none.
+ */
+export function edgePartnersOf(
+  data: DrData,
+  notes: OwrNotes = {},
+): ReadonlyMap<string, string> {
+  if (notes.edges !== undefined) return new Map(Object.entries(notes.edges));
+  const partner = new Map<string, string>();
+  for (const [a, b] of data.pairsOf(
+    "OverworldShuffle.py",
+    "default_connections",
+  )) {
+    partner.set(a, b);
+    partner.set(b, a);
+  }
+  return partner;
 }
 
 /** The whirlpools by name: their screen and the region they stand in. */
@@ -138,8 +167,9 @@ type Whirlpool = readonly [number, string, string];
  * or the Bomb Shop by screen 0x2c, Sanctuary or the Dark Chapel, the
  * pyramid or the castle's ledge by screen 0x1b), each screen's own links
  * as it stands or flipped (:198-205), the whirlpools (:355-358), every
- * edge with its vanilla partner both ways (:419-431, connect_two_way
- * :702-725), the flute spots (FluteShuffle.py:36-50).
+ * edge with its partner (`edgePartnersOf`: vanilla, or as noted in a
+ * crossed overworld; connect_two_way :702-725), the flute spots
+ * (FluteShuffle.py:36-50).
  */
 export function linkOwrOverworld(
   data: DrData,
@@ -193,12 +223,11 @@ export function linkOwrOverworld(
       c.set(from, target.region);
     }
   }
-  for (const [a, b] of data.pairsOf(
-    "OverworldShuffle.py",
-    "default_connections",
-  )) {
+  const edges = new Set(overworldOf(data).edges.map((e) => e.name));
+  for (const [a, b] of edgePartnersOf(data, notes)) {
+    if (!edges.has(a) || !edges.has(b))
+      throw new RangeError(`No edge "${edges.has(a) ? b : a}"`);
     c.set(a, data.parentOf(b));
-    c.set(b, data.parentOf(a));
   }
   fluteSpots(data, mode, notes.flute).forEach((region, i) => {
     c.set(`Flute Spot ${i + 1}`, region);
@@ -358,7 +387,7 @@ interface TerrainExit {
  * ow_terrain_rules (Rules.py:1417-1429): an edge into water asks the
  * flippers from land (set, its rule replaced) and the pearl into the
  * other world, as a whirlpool from Link's world into the other does. An
- * edge's partner is its vanilla one (default_connections).
+ * edge's partner is the one it leads into (`edgePartnersOf`).
  */
 export function owrTerrainRules(
   data: DrData,
@@ -368,16 +397,10 @@ export function owrTerrainRules(
     readonly dark: ReadonlySet<string>;
   },
   mode: DrMode,
+  notes: OwrNotes = {},
 ): void {
   const edges = new Map(overworldOf(data).edges.map((e) => [e.name, e]));
-  const partner = new Map<string, string>();
-  for (const [a, b] of data.pairsOf(
-    "OverworldShuffle.py",
-    "default_connections",
-  )) {
-    partner.set(a, b);
-    partner.set(b, a);
-  }
+  const partner = edgePartnersOf(data, notes);
   const whirlpools = new Set(
     (
       data.tableOf<unknown>(
@@ -407,13 +430,19 @@ export function owrTerrainRules(
 /**
  * What a seed's JSON spoiler tells of its shuffled overworld, as a player
  * who walked it notes it: its whirlpools (`Whirlpools`, set_whirlpool's
- * pairs, OverworldShuffle.py:368) both ways and its flute spots (`Maps`'
- * flute entry, whose `data` is the sorted spots, FluteShuffle.py:652), for
- * the shuffles its meta names alone.
+ * pairs, OverworldShuffle.py:368) both ways, its flute spots (`Maps`'
+ * flute entry, whose `data` is the sorted spots, FluteShuffle.py:652) and
+ * a crossed overworld's edges (`Overworld`, every pair connect_two_way
+ * linked once the layout, Mixed or crossed moved any, :721-722) both ways,
+ * for the shuffles its meta names alone.
  */
 export function owrNotesFromSpoiler(json: {
   readonly meta: Readonly<Record<string, unknown>>;
   readonly Whirlpools?: readonly {
+    readonly entrance: string;
+    readonly exit: string;
+  }[];
+  readonly Overworld?: readonly {
     readonly entrance: string;
     readonly exit: string;
   }[];
@@ -426,7 +455,14 @@ export function owrNotesFromSpoiler(json: {
     whirlpools[exit] = entrance;
   }
   const flute = json.Maps?.find((map) => map.type === "flute")?.data;
+  const edges: Record<string, string> = {};
+  for (const { entrance, exit } of json.Overworld ?? []) {
+    edges[entrance] = exit;
+    edges[exit] = entrance;
+  }
+  const crossed = meta.ow_crossed !== undefined && meta.ow_crossed !== "none";
   return {
+    ...(crossed ? { edges } : {}),
     ...(meta.ow_whirlpool === true ? { whirlpools } : {}),
     ...(meta.ow_fluteshuffle !== undefined && meta.ow_fluteshuffle !== "vanilla"
       ? { flute: (flute ?? []) as readonly number[] }

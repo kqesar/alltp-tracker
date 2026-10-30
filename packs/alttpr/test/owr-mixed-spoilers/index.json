@@ -1,0 +1,39 @@
+{
+  "generated": "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-mixed): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its screens flipped by Mixed. Record again, never edit.",
+  "logs": {
+    "avianart-mPEeiQvu1.json": {
+      "address": "https://avianart.games/perm/mPEeiQvu1",
+      "kept": [
+        "meta",
+        "Entrances",
+        "Light World",
+        "Dark World",
+        "Caves",
+        "Hyrule Castle",
+        "Eastern Palace",
+        "Desert Palace",
+        "Tower of Hera",
+        "Agahnims Tower",
+        "Palace of Darkness",
+        "Thieves Town",
+        "Skull Woods",
+        "Swamp Palace",
+        "Ice Palace",
+        "Misery Mire",
+        "Turtle Rock",
+        "Ganons Tower",
+        "Starting Inventory",
+        "Special",
+        "Shops",
+        "Bosses",
+        "playthrough",
+        "Overworld",
+        "Whirlpools",
+        "Maps"
+      ],
+      "recorded": "2026-10-30",
+      "sha256": "636f7da1a4a941d6a5c8b9b6c283197aef01018b590a9a9fdbc1b9d224a76432",
+      "version": "1.5.7-u"
+    }
+  }
+}

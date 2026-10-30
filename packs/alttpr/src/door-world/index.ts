@@ -142,7 +142,8 @@ export interface DrWorldOptions {
   readonly sweepEvents?: boolean;
   /**
    * The Overworld Randomizer's shuffled overworld as noted (whirlpools,
-   * flute spots: overworld.ts `OwrNotes`), for its data alone.
+   * flute spots, a crossed overworld's edges: overworld.ts `OwrNotes`),
+   * for its data alone.
    */
   readonly overworld?: OwrNotes;
   /**
@@ -1028,7 +1029,7 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
       locations.set(name, req.replace(item, rule));
   }
   const marked = markWorlds(data, exits);
-  if (owr) owrTerrainRules(data, exits, marked, mode);
+  if (owr) owrTerrainRules(data, exits, marked, mode, options.overworld);
   const derived = {
     ...derivedSettings(data, connections, marked, mode),
     ...(doors === undefined || dungeonOfRoom === undefined
