@@ -12,6 +12,8 @@ import {
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { drSettingsOf } from "@/games/alttpr/logic/settings";
+import unrestricted from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-0DsyCwK23.json?raw";
+import grouped from "../../../../../../packs/alttpr/test/owr-crossed-spoilers/avianart-o4mamwuKZ.json?raw";
 import open from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-2cWVkb9pK.json?raw";
 import openBonks from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-n7Bg53tbm.json?raw";
 import inverted from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-nir3EmS5u.json?raw";
@@ -22,6 +24,8 @@ const SEEDS = [
   ["2cWVkb9pK", open, false, false],
   ["rcEzGOnFN", invertedBonks, true, true],
   ["nir3EmS5u", inverted, true, false],
+  ["o4mamwuKZ", grouped, false, false],
+  ["0DsyCwK23", unrestricted, false, false],
 ] as const;
 
 describe("an Overworld Randomizer seed started from its permalink", () => {

@@ -1,7 +1,8 @@
-import { whirlpoolsOf } from "@alltp/pack-alttpr/door-world";
+import { crossablePairsOf, whirlpoolsOf } from "@alltp/pack-alttpr/door-world";
 import { OWR_DATA } from "@alltp/pack-alttpr/door-world/owr";
 import { describe, expect, it } from "vitest";
 import {
+  OWR_CROSSINGS,
   OWR_DARK_WHIRLPOOLS,
   OWR_FLUTE_SCREENS,
   OWR_WHIRLPOOLS,
@@ -50,6 +51,33 @@ describe("an OWR run's overworld notes", () => {
     expect(withOverworldNotes(notes, { flute: [] })).toEqual({});
   });
 
+  it("notes a crossed overworld's edge pairs one at a time, forgotten by null", () => {
+    const notes = withOverworldNotes(
+      {},
+      { crossings: { "Lost Woods SC": false, "Lost Woods SW": true } },
+    );
+    expect(notes).toEqual({
+      crossings: { "Lost Woods SC": false, "Lost Woods SW": true },
+    });
+    expect(
+      withOverworldNotes(notes, { crossings: { "Lost Woods SW": true } }),
+    ).toBe(notes);
+    expect(
+      withOverworldNotes(notes, {
+        crossings: { "Lost Woods SC": null, "Lost Woods SW": null },
+      }),
+    ).toEqual({});
+    expect(isOverworldNotes(notes)).toBe(true);
+    expect(isOverworldNotes({ crossings: { "Lost Woods SW": 1 } })).toBe(false);
+    // A pair's second edge, or its dark world twin, is no crossing's name
+    expect(
+      isOverworldNotes({ crossings: { "Lost Woods Pass NW": true } }),
+    ).toBe(false);
+    expect(isOverworldNotes({ crossings: { "Skull Woods SW": true } })).toBe(
+      false,
+    );
+  });
+
   it("validates a save's notes by the fork's whirlpools and flute screens", () => {
     expect(
       isOverworldNotes({
@@ -69,6 +97,7 @@ describe("an OWR run's overworld notes", () => {
     expect([...OWR_WHIRLPOOLS].sort()).toEqual(
       [...whirlpoolsOf(OWR_DATA).keys()].sort(),
     );
+    expect(OWR_CROSSINGS).toEqual(crossablePairsOf(OWR_DATA));
     expect(OWR_FLUTE_SCREENS).toEqual(
       Object.keys(OWR_DATA.overworld?.flute ?? {})
         .map(Number)

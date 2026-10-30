@@ -21,6 +21,7 @@ import {
   FOLLOWERS_NOT_KNOWN,
   GOALS_NOT_KNOWN,
   isDoorSettings,
+  overworldShufflesOf,
   owrNotesOf,
   PRIZES_NOT_KNOWN,
   sameDoorSettings,
@@ -443,6 +444,31 @@ describe("a Door Randomizer run's logic", () => {
     expect(
       unmodelledReasons(with_(DR, { owWhirlpool: true, randomizer: "dr" })),
     ).toContain("shuffled whirlpools");
+  });
+
+  it("models an OWR run's crossed edges on the crossings noted, Polar's as none", () => {
+    for (const owCrossed of ["grouped", "unrestricted"] as const) {
+      const run = with_(DR, { ...OWR, owCrossed });
+      expect(unmodelledReasons(run), owCrossed).toEqual([]);
+      expect(doorLogic(run)).toBe(true);
+      expect(owrNotesOf(run, {})).toEqual({ crossings: {} });
+      expect(overworldShufflesOf(run)).toEqual({
+        crossings: true,
+        flute: false,
+        whirlpools: false,
+      });
+      const noted = { crossings: { "Lost Woods SW": true } };
+      expect(owrNotesOf(run, noted)).toEqual(noted);
+    }
+    // Polar crosses nothing without Mixed: linked as vanilla
+    const polar = with_(DR, { ...OWR, owCrossed: "polar" });
+    expect(unmodelledReasons(polar)).toEqual([]);
+    expect(owrNotesOf(polar, {})).toEqual({});
+    expect(overworldShufflesOf(polar)).toBeUndefined();
+    // DR itself has no crossed overworld
+    expect(
+      unmodelledReasons(with_(DR, { owCrossed: "grouped", randomizer: "dr" })),
+    ).toContain("a crossed overworld");
   });
 
   it("names every cause it cannot model, and models none of them", () => {

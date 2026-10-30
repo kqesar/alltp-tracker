@@ -1,6 +1,10 @@
 import { DR_LOCATIONS, markersOf } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
-import { doorLocationsOf, setBonkDrops } from "@/games/alttpr/data/doorRando";
+import {
+  doorLocationsOf,
+  OWR_CROSSINGS,
+  setBonkDrops,
+} from "@/games/alttpr/data/doorRando";
 import {
   items as freshItems,
   type ItemState,
@@ -188,6 +192,33 @@ describe("a Door Randomizer run's checks", () => {
     // Undone, the flight is gone again
     useGameStore.getState().undo();
     expect(checkStates(state())["mire-shed/left"]).toBe("unavailable");
+  });
+
+  it("walk a crossed OWR run's edges only once their crossings are noted", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bombBag: false,
+      customGoals: false,
+      owCrossed: "grouped",
+      prizeShuffle: "none",
+      randomizer: "owr",
+      shuffleFollowers: false,
+    });
+    const { solver } = await import("@/games/alttpr/logic/owrWorld");
+    setDoorSolver(solver, "owr");
+    expect(solutionOf(state()).modelled).toBe(true);
+    // Kakariko's well, a few screens west of Link's House: no crossing
+    // noted, no edge pair between them leads anywhere
+    const WELL = "kakariko-well/left";
+    expect(checkStates(state())[WELL]).toBe("unavailable");
+    useGameStore.getState().noteOverworld({
+      crossings: Object.fromEntries(
+        OWR_CROSSINGS.map(([edge]) => [edge, false]),
+      ),
+    });
+    expect(checkStates(state())[WELL]).toBe("available");
+    useGameStore.getState().undo();
+    expect(checkStates(state())[WELL]).toBe("unavailable");
   });
 
   it("draw an OWR run's bonk drops clear of every other marker", async () => {

@@ -158,6 +158,31 @@ describe("the Overworld tab", () => {
     );
   });
 
+  it("notes whether each edge pair of a crossed overworld crosses, by keyboard too", async () => {
+    const user = userEvent.setup();
+    run({ owCrossed: "grouped" });
+    render(<OverworldPanel />);
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "0 of 67 edge pairs noted",
+    );
+    expect(screen.queryByTestId("flute-screen-18")).toBeNull();
+    const pair = screen.getByRole("combobox", {
+      name: "Lost Woods SW to Lost Woods Pass NW: world",
+    });
+    pair.focus();
+    await user.selectOptions(pair, ["crosses"]);
+    expect(store().overworld.crossings).toEqual({ "Lost Woods SW": true });
+    await user.selectOptions(pair, ["stays"]);
+    expect(store().overworld.crossings).toEqual({ "Lost Woods SW": false });
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "1 of 67 edge pairs noted",
+    );
+    await user.selectOptions(pair, [""]);
+    expect(store().overworld).toEqual({});
+    act(() => store().undo());
+    expect(pair).toHaveValue("stays");
+  });
+
   it("names the flute screens as the tracker names places", () => {
     run({ owFluteShuffle: "random" });
     render(<OverworldPanel />);

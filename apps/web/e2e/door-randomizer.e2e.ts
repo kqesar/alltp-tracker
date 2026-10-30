@@ -331,16 +331,20 @@ for (const width of WIDTHS) {
   });
 }
 
-/** An OWR run whose whirlpools are shuffled and flute spots moved. */
-const openOverworldRun = async (page: Page) => {
+/**
+ * An OWR run whose whirlpools are shuffled and flute spots moved, and with
+ * `crossed`, its edges crossed.
+ */
+const openOverworldRun = async (page: Page, crossed = false) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
-  await page.evaluate(() => {
+  await page.evaluate((crossed) => {
     const key = "alltp-tracker-state";
     const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
     saved.state.settings = {
       ...saved.state.settings,
       customGoals: false,
+      ...(crossed ? { owCrossed: "grouped" } : {}),
       owFluteShuffle: "random",
       owWhirlpool: true,
       prizeShuffle: "none",
@@ -348,7 +352,7 @@ const openOverworldRun = async (page: Page) => {
       shuffleFollowers: false,
     };
     localStorage.setItem(key, JSON.stringify(saved));
-  });
+  }, crossed);
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
   await page.getByRole("tab", { name: "Overworld" }).click();
@@ -382,10 +386,36 @@ test("an OWR run's whirlpools and flute spots are noted by hand, from the keyboa
   ).toHaveValue("C Whirlpool");
 });
 
+test("a crossed OWR run's edge pairs are noted by hand, from the keyboard", async ({
+  page,
+}) => {
+  await openOverworldRun(page, true);
+  const pair = page.getByRole("combobox", {
+    name: "Lost Woods SW to Lost Woods Pass NW: world",
+  });
+  await pair.focus();
+  await pair.selectOption("crosses");
+  await expect(page.getByTestId("overworld-summary")).toContainText(
+    "1 of 67 edge pairs noted",
+  );
+  await auditPage(page);
+  await page.reload();
+  await expect(
+    page.getByRole("combobox", {
+      name: "Lost Woods SW to Lost Woods Pass NW: world",
+    }),
+  ).toHaveValue("crosses");
+});
+
 for (const width of WIDTHS) {
   test(`the Overworld tab fits at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOverworldRun(page);
+    await openOverworldRun(page, true);
+    await page
+      .getByRole("combobox", {
+        name: "Lost Woods SC to Lost Woods Pass NE: world",
+      })
+      .selectOption("stays");
     await page
       .getByRole("combobox", { name: "Lake Hylia Whirlpool: leads to" })
       .selectOption("Octoballoon Whirlpool");

@@ -9,6 +9,7 @@ import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
 import {
   DOOR_LOCATION_IDS,
   isDoorSettings,
+  OWR_CROSSINGS,
   OWR_FLUTE_SCREENS,
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
@@ -669,7 +670,7 @@ export const validateProgress = (
     if (isOverworldNotes(saved.overworld)) value.overworld = saved.overworld;
     else
       errors.push(
-        "overworld must pair the fork's whirlpools and list its flute screens",
+        "overworld must pair the fork's whirlpools, list its flute screens and say its edges' crossings",
       );
   }
 
@@ -752,18 +753,34 @@ const isIdMap = (value: unknown): boolean =>
 /**
  * An Overworld Randomizer run's shuffled overworld as noted (the pack's
  * `OwrNotes`): each noted whirlpool, by the fork's name, the whirlpool it
- * leads into (`whirlpools`, both ways), and the screens a flute spot is
- * noted on (`flute`, at most eight). Each absent when nothing is noted.
+ * leads into (`whirlpools`, both ways), the screens a flute spot is
+ * noted on (`flute`, at most eight) and each crossable edge pair of a
+ * crossed overworld, by its first edge (`OWR_CROSSINGS`), whether it
+ * crosses (`crossings`). Each absent when nothing is noted.
  */
 export type OverworldNotes = {
   readonly whirlpools?: Readonly<Record<string, string>>;
   readonly flute?: readonly number[];
+  readonly crossings?: Readonly<Record<string, boolean>>;
 };
+
+/** The crossable pairs' first edges: a crossing note's keys. */
+const CROSSING_EDGES: ReadonlySet<string> = new Set(
+  OWR_CROSSINGS.map(([edge]) => edge),
+);
 
 /** Whether a saved value is overworld notes of the shape they hold. */
 export const isOverworldNotes = (value: unknown): value is OverworldNotes =>
   isRecord(value) &&
-  Object.keys(value).every((key) => ["whirlpools", "flute"].includes(key)) &&
+  Object.keys(value).every((key) =>
+    ["whirlpools", "flute", "crossings"].includes(key),
+  ) &&
+  (value.crossings === undefined ||
+    (isRecord(value.crossings) &&
+      Object.entries(value.crossings).every(
+        ([edge, crosses]) =>
+          CROSSING_EDGES.has(edge) && typeof crosses === "boolean",
+      ))) &&
   (value.whirlpools === undefined ||
     (isRecord(value.whirlpools) &&
       Object.entries(value.whirlpools).every(

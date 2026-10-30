@@ -742,7 +742,10 @@ export const doorReasons = (
       `the ${doorValueText("owLayout", door.owLayout)} overworld layout`,
     );
   }
-  if (door.owCrossed !== "none") reasons.push("a crossed overworld");
+  // An OWR run's crossed edges are linked as noted (`owrNotesOf`), Polar's
+  // none without Mixed; DR itself crosses none
+  if (door.owCrossed !== "none" && door.randomizer !== "owr")
+    reasons.push("a crossed overworld");
   if (door.owMixed) reasons.push("a mixed overworld");
   // Shuffled whirlpools and moved flute spots: an OWR run's world links
   // them as noted (`owrNotesOf`); DR itself has neither
@@ -1270,18 +1273,112 @@ export const OWR_FLUTE_SCREENS: readonly number[] = [
 ];
 
 /**
+ * The edge pairs a crossed overworld may cross (the pack's
+ * `crossablePairsOf`: each vanilla pair of light world edges with dark
+ * world twins), by the fork's edge names: what a crossing note names, by
+ * its first edge. Its spec holds the list to the pack's data.
+ */
+export const OWR_CROSSINGS: readonly (readonly [string, string])[] = [
+  ["Lost Woods SW", "Lost Woods Pass NW"],
+  ["Lost Woods SC", "Lost Woods Pass NE"],
+  ["Lost Woods SE", "Kakariko Fortune NE"],
+  ["Lost Woods EN", "Lumberjack WN"],
+  ["Lumberjack SW", "Mountain Pass NW"],
+  ["Mountain Pass SE", "Kakariko Pond NE"],
+  ["Lost Woods Pass SW", "Kakariko NW"],
+  ["Lost Woods Pass SE", "Kakariko NC"],
+  ["Kakariko Fortune SC", "Kakariko NE"],
+  ["Kakariko Fortune EN", "Kakariko Pond WN"],
+  ["Kakariko Fortune ES", "Kakariko Pond WS"],
+  ["Kakariko Pond SW", "Forgotten Forest NW"],
+  ["Kakariko Pond SE", "Forgotten Forest NE"],
+  ["Kakariko Pond EN", "Sanctuary WN"],
+  ["Kakariko Pond ES", "Sanctuary WS"],
+  ["Sanctuary EC", "Graveyard WC"],
+  ["Graveyard EC", "River Bend WC"],
+  ["River Bend SW", "Wooden Bridge NW"],
+  ["River Bend SC", "Wooden Bridge NC"],
+  ["River Bend SE", "Wooden Bridge NE"],
+  ["River Bend EN", "Potion Shop WN"],
+  ["River Bend EC", "Potion Shop WC"],
+  ["River Bend ES", "Potion Shop WS"],
+  ["Potion Shop EN", "Zora Approach WN"],
+  ["Potion Shop EC", "Zora Approach WC"],
+  ["Zora Approach NE", "Zora Waterfall SE"],
+  ["Kakariko SE", "Kakariko Suburb NE"],
+  ["Kakariko ES", "Blacksmith WS"],
+  ["Hyrule Castle SW", "Central Bonk Rocks NW"],
+  ["Hyrule Castle SE", "Links House NE"],
+  ["Hyrule Castle ES", "Sand Dunes WN"],
+  ["Wooden Bridge SW", "Sand Dunes NW"],
+  ["Sand Dunes SC", "Stone Bridge NC"],
+  ["Eastern Palace SW", "Tree Line NW"],
+  ["Eastern Palace SE", "Eastern Nook NE"],
+  ["Maze Race ES", "Kakariko Suburb WS"],
+  ["Kakariko Suburb ES", "Flute Boy WS"],
+  ["Flute Boy SW", "Flute Boy Approach NW"],
+  ["Flute Boy SC", "Flute Boy Approach NC"],
+  ["Flute Boy Approach EC", "C Whirlpool WC"],
+  ["C Whirlpool NW", "Central Bonk Rocks SW"],
+  ["C Whirlpool SC", "Dam NC"],
+  ["C Whirlpool EN", "Statues WN"],
+  ["C Whirlpool EC", "Statues WC"],
+  ["C Whirlpool ES", "Statues WS"],
+  ["Central Bonk Rocks EN", "Links House WN"],
+  ["Central Bonk Rocks EC", "Links House WC"],
+  ["Central Bonk Rocks ES", "Links House WS"],
+  ["Links House SC", "Statues NC"],
+  ["Links House ES", "Stone Bridge WS"],
+  ["Stone Bridge SC", "Lake Hylia NW"],
+  ["Stone Bridge EN", "Tree Line WN"],
+  ["Stone Bridge EC", "Tree Line WC"],
+  ["Tree Line SC", "Lake Hylia NC"],
+  ["Tree Line SE", "Lake Hylia NE"],
+  ["Desert Pass EC", "Dam WC"],
+  ["Desert Pass ES", "Dam WS"],
+  ["Dam EC", "South Pass WC"],
+  ["Statues SC", "South Pass NC"],
+  ["South Pass ES", "Lake Hylia WS"],
+  ["Lake Hylia EC", "Octoballoon WC"],
+  ["Lake Hylia ES", "Octoballoon WS"],
+  ["Octoballoon NW", "Ice Cave SW"],
+  ["Octoballoon NE", "Ice Cave SE"],
+  ["West Death Mountain EN", "East Death Mountain WN"],
+  ["West Death Mountain ES", "East Death Mountain WS"],
+  ["East Death Mountain EN", "Death Mountain TR Pegs WN"],
+];
+
+/**
+ * Whether an OWR run's overworld crosses edges between the worlds the
+ * player notes: grouped or unrestricted (OverworldShuffle.py:246-345).
+ * Polar crosses nothing without Mixed (:246-278, only Mixed's own swaps),
+ * so it reads as none.
+ */
+const crossesEdges = (door: DoorSettings): boolean =>
+  door.owCrossed === "grouped" || door.owCrossed === "unrestricted";
+
+/**
  * Which of an OWR run's overworld shuffles the player notes (its whirlpools
- * shuffled, its flute spots moved), or undefined when it has none or is no
- * OWR run: what the Overworld tab offers.
+ * shuffled, its flute spots moved, its edges crossed), or undefined when it
+ * has none or is no OWR run: what the Overworld tab offers.
  */
 export const overworldShufflesOf = (
   settings: DoorRunSettings,
-): { readonly whirlpools: boolean; readonly flute: boolean } | undefined => {
+):
+  | {
+      readonly whirlpools: boolean;
+      readonly flute: boolean;
+      readonly crossings: boolean;
+    }
+  | undefined => {
   const door = doorOf(settings);
   if (door?.randomizer !== "owr") return undefined;
   const whirlpools = door.owWhirlpool;
   const flute = door.owFluteShuffle !== "vanilla";
-  return whirlpools || flute ? { flute, whirlpools } : undefined;
+  const crossings = crossesEdges(door);
+  return whirlpools || flute || crossings
+    ? { crossings, flute, whirlpools }
+    : undefined;
 };
 
 /** Each notes object's reading per shuffle, so a world is built once. */
@@ -1302,7 +1399,8 @@ export const owrNotesOf = (
   if (door?.randomizer !== "owr") return undefined;
   const whirlpools = door.owWhirlpool;
   const flute = door.owFluteShuffle !== "vanilla";
-  const key = `${whirlpools}/${flute}`;
+  const crossings = crossesEdges(door);
+  const key = `${whirlpools}/${flute}/${crossings}`;
   let byKey = owrNotes.get(notes);
   if (byKey === undefined) {
     byKey = new Map();
@@ -1313,6 +1411,7 @@ export const owrNotesOf = (
     found = {
       ...(whirlpools ? { whirlpools: notes.whirlpools ?? {} } : {}),
       ...(flute ? { flute: notes.flute ?? [] } : {}),
+      ...(crossings ? { crossings: notes.crossings ?? {} } : {}),
     };
     byKey.set(key, found);
   }

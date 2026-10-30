@@ -1,5 +1,6 @@
 import { memo, useId } from "react";
 import {
+  OWR_CROSSINGS,
   OWR_WHIRLPOOLS,
   overworldShufflesOf,
   whirlpoolTargetsOf,
@@ -44,11 +45,50 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
   );
 });
 
+/** A crossing's select value: not known, stays, crosses. */
+const CROSSING_VALUE = { false: "stays", true: "crosses" } as const;
+
+/**
+ * A crossable edge pair of a crossed overworld: whether walking across it
+ * leads into the other world (its twins' pair crossing with it).
+ */
+const CrossingRow = memo(
+  ({ edge, partner }: { edge: string; partner: string }) => {
+    const crosses = useGameStore((state) => state.overworld.crossings?.[edge]);
+    const noteOverworld = useGameStore((state) => state.noteOverworld);
+    return (
+      <li className="door-row" data-testid={`crossing-row-${edge}`}>
+        <span className="door-row__name">
+          {edge} – {partner}
+        </span>
+        <select
+          aria-label={`${edge} to ${partner}: world`}
+          className="checks__input door-row__link"
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            noteOverworld({
+              crossings: {
+                [edge]: value === "" ? null : value === CROSSING_VALUE.true,
+              },
+            });
+          }}
+          value={crosses === undefined ? "" : CROSSING_VALUE[`${crosses}`]}
+        >
+          <option value="">? Not known</option>
+          <option value={CROSSING_VALUE.false}>Stays in its world</option>
+          <option value={CROSSING_VALUE.true}>Crosses worlds</option>
+        </select>
+      </li>
+    );
+  },
+);
+
 /**
  * An Overworld Randomizer run's shuffled overworld, noted by hand: where
- * each whirlpool leads (a note pairs both ways, as the fork links them) and
- * the screens its eight flute spots stand on. Nothing here is read from the
- * game. Loaded on demand.
+ * each whirlpool leads (a note pairs both ways, as the fork links them),
+ * the screens its eight flute spots stand on and, overworld crossed,
+ * whether each edge pair crosses into the other world. Nothing here is
+ * read from the game. Loaded on demand.
  */
 const OverworldPanel = () => {
   const run = useGameStore((state) => state.settings);
@@ -61,12 +101,16 @@ const OverworldPanel = () => {
   const flipped = run.mode === "inverted";
   const flute = notes.flute ?? [];
   const pools = Object.keys(notes.whirlpools ?? {}).length;
+  const crossings = Object.keys(notes.crossings ?? {}).length;
   const said = [
     ...(shuffles.whirlpools
       ? [`${pools} of ${OWR_WHIRLPOOLS.length} whirlpools noted`]
       : []),
     ...(shuffles.flute
       ? [`${flute.length} of ${FLUTE_SPOTS} flute spots noted`]
+      : []),
+    ...(shuffles.crossings
+      ? [`${crossings} of ${OWR_CROSSINGS.length} edge pairs noted`]
       : []),
   ];
   const toggle = (screen: number, on: boolean) =>
@@ -84,8 +128,8 @@ const OverworldPanel = () => {
       </p>
       <p className="entrances__hint">
         Note each by hand as you find it: the tracker never reads where a
-        whirlpool or the flute takes you. A whirlpool or flute spot not noted
-        leads nowhere.
+        whirlpool, the flute or a screen's edge takes you. One not noted leads
+        nowhere.
       </p>
       {shuffles.whirlpools && (
         <section
@@ -142,6 +186,29 @@ const OverworldPanel = () => {
                 </li>
               );
             })}
+          </ul>
+        </section>
+      )}
+      {shuffles.crossings && (
+        <section
+          aria-labelledby={`${headingId}-crossings`}
+          className="entrances__world"
+        >
+          <h3
+            className="entrances__heading page-background"
+            id={`${headingId}-crossings`}
+          >
+            Edges
+          </h3>
+          <p className="entrances__hint">
+            For each pair of light world screens, whether walking from one to
+            the other takes you into the other world; the same pair in the dark
+            world crosses with it.
+          </p>
+          <ul className="entrances__list">
+            {OWR_CROSSINGS.map(([edge, partner]) => (
+              <CrossingRow edge={edge} key={edge} partner={partner} />
+            ))}
           </ul>
         </section>
       )}

@@ -2,7 +2,8 @@
 // (the store's `overworld`, `OverworldNotes`): a change laid on the notes,
 // one undo step. Whirlpools pair both ways, as the fork links them
 // (connect_whirlpool, OverworldShuffle.py:359-367): noting one notes its
-// partner's way back and forgets what either led to before.
+// partner's way back and forgets what either led to before. A crossed
+// overworld's edge pairs are noted one at a time, crossing or staying.
 import type { OverworldNotes } from "@/games/alttpr/stores/persistence";
 
 /** A change of the notes: whirlpools set or forgotten, the flute's spots. */
@@ -11,6 +12,12 @@ export type OverworldNotesChange = {
   readonly whirlpools?: Readonly<Record<string, string | null>>;
   /** The screens a flute spot stands on, all of them (the list replaced). */
   readonly flute?: readonly number[];
+  /**
+   * Each crossable edge pair (`OWR_CROSSINGS`, by its first edge): true
+   * where it crosses into the other world, false where it stays, `null`
+   * forgotten.
+   */
+  readonly crossings?: Readonly<Record<string, boolean | null>>;
 };
 
 /**
@@ -37,6 +44,13 @@ export const withOverworldNotes = (
   }
   const flute =
     change.flute === undefined ? notes.flute : [...new Set(change.flute)];
+  const crossings: Record<string, boolean> = { ...notes.crossings };
+  for (const [edge, crosses] of Object.entries(change.crossings ?? {}))
+    if (crosses === null) delete crossings[edge];
+    else crossings[edge] = crosses;
+  const sortedCrossings = Object.fromEntries(
+    Object.entries(crossings).sort(([a], [b]) => a.localeCompare(b)),
+  );
   // The whirlpools in name order, so the same pairs are the same notes
   const sorted = Object.fromEntries(
     Object.entries(pools).sort(([a], [b]) => a.localeCompare(b)),
@@ -44,6 +58,9 @@ export const withOverworldNotes = (
   const next: OverworldNotes = {
     ...(Object.keys(sorted).length === 0 ? {} : { whirlpools: sorted }),
     ...(flute === undefined || flute.length === 0 ? {} : { flute }),
+    ...(Object.keys(sortedCrossings).length === 0
+      ? {}
+      : { crossings: sortedCrossings }),
   };
   const before: OverworldNotes = {
     ...(notes.whirlpools === undefined
@@ -56,6 +73,15 @@ export const withOverworldNotes = (
           ),
         }),
     ...(notes.flute === undefined ? {} : { flute: notes.flute }),
+    ...(notes.crossings === undefined
+      ? {}
+      : {
+          crossings: Object.fromEntries(
+            Object.entries(notes.crossings).sort(([a], [b]) =>
+              a.localeCompare(b),
+            ),
+          ),
+        }),
   };
   return JSON.stringify(next) === JSON.stringify(before) ? notes : next;
 };

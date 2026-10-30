@@ -1002,11 +1002,13 @@ describe("the settings in a link (link 4)", () => {
   it("carries an OWR run's overworld notes as they are", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
+      owCrossed: "grouped",
       owFluteShuffle: "random",
       owWhirlpool: true,
       randomizer: "owr",
     };
     const overworld = {
+      crossings: { "Lost Woods SC": false, "Lost Woods SW": true },
       flute: [0x30, 0x18],
       whirlpools: {
         "C Whirlpool": "Zora Whirlpool",

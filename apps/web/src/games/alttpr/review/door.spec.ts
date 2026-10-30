@@ -197,6 +197,7 @@ describe("comparing a Door Randomizer run", () => {
     for (const change of [
       { owWhirlpool: true },
       { owFluteShuffle: "random" },
+      { owCrossed: "grouped" },
     ] as const) {
       useGameStore.setState({
         settings: {
