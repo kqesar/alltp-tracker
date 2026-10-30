@@ -109,6 +109,8 @@ export type { DrData, DrMode } from "./data";
 export * from "./doors";
 export { KEY_ITEMS } from "./keys";
 export {
+  crossablePairsOf,
+  crossingsOf,
   type OwrNotes,
   owrNotesFromSpoiler,
   whirlpoolsOf,

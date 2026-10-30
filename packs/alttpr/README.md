@@ -1684,7 +1684,15 @@ screen flipped by Mixed:
   `OverworldShuffle.py:246-345`; Polar crosses nothing without Mixed) are
   linked the same way: each noted edge into its partner's region, both ways
   (connect_two_way, `:702-725`), an edge not noted nowhere; the terrain
-  rules read the noted partner's water. `owrNotesFromSpoiler` reads them
+  rules read the noted partner's water. A player notes them as crossings
+  (`OwrNotes.crossings`): each of the 67 crossable pairs
+  (`crossablePairsOf`: a vanilla pair of light world edges with dark world
+  twins, `parallel_links`) crosses into its partner's twin, its twins'
+  pair with it, or stays; an edge with no twin never crosses on a vanilla
+  layout without Mixed (performSwap moves such a pair's two ends together,
+  `:75-87`, `:109`; unrestricted crosses only twinned edges and forces
+  their twins, `:278`, `:343-347`). `crossingsOf` turns a seed's edges into
+  crossings: both crossed seeds' edges come back whole from them. `owrNotesFromSpoiler` reads them
   from a seed's JSON spoiler (`Whirlpools`, `Maps`' flute entry and its
   `data`, `FluteShuffle.py:652`, and a crossed seed's `Overworld`, every
   pair connect_two_way linked, `:721-722`).

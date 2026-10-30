@@ -7,6 +7,7 @@ import { vanillaConnections } from "./connections";
 import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, drLocationId, drWorld, regionProbeId } from "./index";
 import {
+  crossablePairsOf,
   edgePartnersOf,
   fluteSpots,
   isTileSwapped,
@@ -123,6 +124,38 @@ describe("the Overworld Randomizer's world (door-world on OWR_DATA)", () => {
         edges: { "Lost Woods SW": "Nowhere" },
       }),
     ).toThrow('No edge "Nowhere"');
+  });
+
+  it("links a crossable pair as its crossing is noted, its twins with it", () => {
+    const pairs = crossablePairsOf(OWR_DATA);
+    expect(pairs).toHaveLength(67);
+    expect(pairs).toContainEqual(["Lost Woods SW", "Lost Woods Pass NW"]);
+    const crossed = edgePartnersOf(OWR_DATA, {
+      crossings: { "Lost Woods SW": true },
+    });
+    // Into the twin of its partner, the twins' pair with it (OWEdges.py:
+    // parallel_links: Skull Woods SW, Skull Woods Pass NW)
+    expect(crossed.get("Lost Woods SW")).toBe("Skull Woods Pass NW");
+    expect(crossed.get("Skull Woods Pass NW")).toBe("Lost Woods SW");
+    expect(crossed.get("Skull Woods SW")).toBe("Lost Woods Pass NW");
+    // Another crossable pair not noted: nowhere; an edge with no twin:
+    // vanilla
+    expect(crossed.has("Lost Woods SC")).toBe(false);
+    const stays = edgePartnersOf(OWR_DATA, {
+      crossings: { "Lost Woods SW": false },
+    });
+    expect(stays.get("Lost Woods SW")).toBe("Lost Woods Pass NW");
+    expect(stays.get("Skull Woods SW")).toBe("Skull Woods Pass NW");
+    const lone = OWR_DATA.overworld?.edges.find(
+      (e) =>
+        e.parallel === undefined &&
+        e.screen < 0x40 &&
+        !pairs.flat().includes(e.name),
+    );
+    expect(lone).toBeDefined();
+    expect(crossed.get(lone?.name ?? "")).toBe(
+      edgePartnersOf(OWR_DATA).get(lone?.name ?? ""),
+    );
   });
 
   it("asks the flippers of an edge into the water its noted partner opens on", () => {

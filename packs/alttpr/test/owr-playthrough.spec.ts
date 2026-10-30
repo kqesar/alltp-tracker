@@ -20,7 +20,11 @@ import {
   type OwrNotes,
   owrNotesFromSpoiler,
 } from "../src/door-world/index";
-import { edgePartnersOf, factOf } from "../src/door-world/overworld";
+import {
+  crossingsOf,
+  edgePartnersOf,
+  factOf,
+} from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
 import {
   early,
@@ -239,6 +243,12 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
         ([a, b]) => edgePartnersOf(OWR_DATA).get(a) !== b,
       );
       expect(moved.length, name).toBeGreaterThan(0);
+      // As a player notes them, a crossing per pair: the same links
+      const crossings = crossingsOf(OWR_DATA, edges);
+      expect(Object.keys(crossings)).toHaveLength(67);
+      expect(
+        Object.fromEntries(edgePartnersOf(OWR_DATA, { crossings })),
+      ).toEqual(edges);
     }
   });
 

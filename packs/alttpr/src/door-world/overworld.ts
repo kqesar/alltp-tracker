@@ -88,12 +88,75 @@ export interface OwrNotes {
    * note holds both). Absent, every edge meets its vanilla partner.
    */
   readonly edges?: Readonly<Record<string, string>>;
+  /**
+   * A crossed overworld's edges as a player notes them, when `edges` is
+   * absent: each crossable pair (`crossablePairsOf`) by its light world
+   * edge, true where it crosses into the other world, false where it
+   * stays; a pair not noted leads nowhere, every other edge to its
+   * vanilla partner.
+   */
+  readonly crossings?: Readonly<Record<string, boolean>>;
+}
+
+/**
+ * The pairs of edges a crossed overworld may cross, on a vanilla layout
+ * without Mixed: each vanilla pair of light world edges (default_
+ * connections) whose edges have a dark world twin (parallel_links,
+ * OWEdges.py:1323). Crossing one links each edge into its partner's twin,
+ * both ways, the twins' pair with it (performSwap moves an edge with its
+ * parallel, OverworldShuffle.py:31-58; unrestricted crosses only edges
+ * with a twin, :278, and forces their twins, :343-347); an edge with no
+ * twin always meets its partner (performSwap moves both ends of such a
+ * pair to the other world together, :75-87, and refuses one end alone,
+ * :109).
+ */
+export function crossablePairsOf(
+  data: DrData,
+): readonly (readonly [string, string])[] {
+  const twins = new Set(
+    overworldOf(data).edges.flatMap((e) =>
+      e.parallel === undefined ? [] : [e.name],
+    ),
+  );
+  return data
+    .pairsOf("OverworldShuffle.py", "default_connections")
+    .filter(([a, b]) => twins.has(a) && twins.has(b));
+}
+
+/** Each edge's twin in the other world, both ways (parallel_links). */
+const twinsOf = (data: DrData): ReadonlyMap<string, string> =>
+  new Map(
+    overworldOf(data).edges.flatMap((e) =>
+      e.parallel === undefined
+        ? []
+        : [
+            [e.name, e.parallel],
+            [e.parallel, e.name],
+          ],
+    ),
+  );
+
+/**
+ * A crossed seed's edges as crossings (`OwrNotes.crossings`): each
+ * crossable pair, whether its light world edge leads into its partner's
+ * twin.
+ */
+export function crossingsOf(
+  data: DrData,
+  edges: Readonly<Record<string, string>>,
+): Readonly<Record<string, boolean>> {
+  const twins = twinsOf(data);
+  return Object.fromEntries(
+    crossablePairsOf(data).map(([a, b]) => [a, edges[a] === twins.get(b)]),
+  );
 }
 
 /**
  * The edge each edge leads into: as noted, or, with no edges noted, its
  * vanilla partner both ways (default_connections, OverworldShuffle.py:
- * 419-431). An edge not noted has none.
+ * 419-431), each crossable pair as its crossing says (`crossings`: into
+ * the partner's twin, the twins' pair with it, or nowhere while not
+ * noted). An edge not noted has none.
  */
 export function edgePartnersOf(
   data: DrData,
@@ -101,12 +164,29 @@ export function edgePartnersOf(
 ): ReadonlyMap<string, string> {
   if (notes.edges !== undefined) return new Map(Object.entries(notes.edges));
   const partner = new Map<string, string>();
+  const link = (a: string, b: string) => {
+    partner.set(a, b);
+    partner.set(b, a);
+  };
   for (const [a, b] of data.pairsOf(
     "OverworldShuffle.py",
     "default_connections",
-  )) {
-    partner.set(a, b);
-    partner.set(b, a);
+  ))
+    link(a, b);
+  const { crossings } = notes;
+  if (crossings === undefined) return partner;
+  const twins = twinsOf(data);
+  for (const [a, b] of crossablePairsOf(data)) {
+    const [twinA, twinB] = [twins.get(a) ?? "", twins.get(b) ?? ""];
+    for (const edge of [a, b, twinA, twinB]) partner.delete(edge);
+    const crossed = crossings[a];
+    if (crossed === true) {
+      link(a, twinB);
+      link(twinA, b);
+    } else if (crossed === false) {
+      link(a, b);
+      link(twinA, twinB);
+    }
   }
   return partner;
 }
