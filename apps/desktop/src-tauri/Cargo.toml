@@ -39,7 +39,7 @@ tauri-plugin-opener = "2.7.2"
 tauri-plugin-process = "2.4.0"
 # `alltp-tracker --step ...` reaches the running app instead of opening a second one
 tauri-plugin-single-instance = "2.5.4"
-tauri-plugin-updater = "2.14.0"
+tauri-plugin-updater = "2.14.1"
 # RetroArch's network commands: UDP, with a timeout (Tauri runs on tokio already)
 tokio = { version = "1.54.0", features = ["macros", "net", "rt", "sync", "time"] }
 
