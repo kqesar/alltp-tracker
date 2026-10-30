@@ -13,7 +13,7 @@ import {
   shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
 import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
-import { memo, useId, useMemo, useState } from "react";
+import { memo, useId, useMemo, useRef, useState } from "react";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { linkChange, linkOf } from "@/games/alttpr/logic/doorNotes";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
@@ -233,6 +233,7 @@ const DoorsPanel = () => {
   const selectId = useId();
   const searchId = useId();
   const headingId = useId();
+  const summary = useRef<HTMLParagraphElement>(null);
   const relinked = useMemo(
     () =>
       settings === undefined
@@ -321,7 +322,9 @@ const DoorsPanel = () => {
       <p
         className="entrances__summary"
         data-testid="doors-summary"
+        ref={summary}
         role="status"
+        tabIndex={-1}
       >
         {linked} of {relinked.length} doors of {dungeonText(dungeon)} noted,{" "}
         {unknownKinds.length} {unknownKinds.length === 1 ? "kind" : "kinds"} not
@@ -336,13 +339,16 @@ const DoorsPanel = () => {
         <button
           className="doors__plain"
           data-testid="doors-plain"
-          onClick={() =>
+          onClick={() => {
             noteDoors({
               kinds: Object.fromEntries(
                 unknownLinked.map((door) => [doorId(door.name), "normal"]),
               ),
-            })
-          }
+            });
+            // The button goes with the kinds it noted: focus moves to the
+            // summary they change, never to the page's start (WCAG 2.4.3)
+            summary.current?.focus();
+          }}
           type="button"
         >
           Note the {unknownLinked.length} linked{" "}

@@ -116,6 +116,8 @@ describe("the Doors tab", () => {
     // The linked door whose kind may change, and no other
     expect(store().doors.kinds).toEqual({ "eastern-cannonball-s": "normal" });
     expect(screen.queryByTestId("doors-plain")).toBeNull();
+    // Focus moves to the summary, not to the page's start
+    expect(screen.getByTestId("doors-summary")).toHaveFocus();
     act(() => store().undo());
     expect(store().doors.kinds).toBeUndefined();
   });

@@ -111,6 +111,8 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
   await page.keyboard.press("Enter");
   await expect(kind).toHaveValue("normal");
   await expect(plain).toHaveCount(0);
+  // Focus moves to the summary the button changed, not to the page's start
+  await expect(page.getByTestId("doors-summary")).toBeFocused();
   await page
     .getByRole("spinbutton", { name: "Small keys in Eastern Palace, in all" })
     .fill("2");
