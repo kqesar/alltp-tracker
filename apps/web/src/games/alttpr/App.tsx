@@ -8,6 +8,7 @@ import { Tooltip } from "@/games/alttpr/components/ui/Tooltip";
 import { TrackerControls } from "@/games/alttpr/components/ui/TrackerControls";
 import { itemGridFor } from "@/games/alttpr/data/items";
 import { useAutotrack } from "@/games/alttpr/hooks/useAutotrack";
+import { useBonkDrops } from "@/games/alttpr/hooks/useBonkDrops";
 import { useCrossedLogic } from "@/games/alttpr/hooks/useCrossedLogic";
 import { useDoorLogic } from "@/games/alttpr/hooks/useDoorLogic";
 import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
@@ -31,6 +32,7 @@ function App() {
   useCloseReview();
   useCrossedLogic();
   useDoorLogic();
+  useBonkDrops();
   const bigKeysVisible = useGameStore((state) => state.bigKeysVisible);
   const grid = useGameStore((state) => itemGridFor(state.settings));
   // The grid's height in rows sizes --cell (layout.css): the key cells'

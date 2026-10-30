@@ -33,6 +33,7 @@ import {
   type SeedSettingsReading,
   type Unsettled,
 } from "@alltp/pack-alttpr";
+import { readableBonkDrops } from "@/games/alttpr/data/doorRando";
 
 export type AutotrackReading = {
   /** When memory was read, in ms since the epoch. */
@@ -120,7 +121,7 @@ export const readMemory = (
   // The Door Randomizer's tables are read only while the run's settings
   // shuffle what they record (the runtime's switches): only the locations
   // of a table read are decoded, so an alttpr.com run decodes none
-  const read = DR_LOCATIONS.filter((location) =>
+  const read = [...DR_LOCATIONS, ...readableBonkDrops()].filter((location) =>
     memory.has(DOOR_FLAG_RANGES[location.flag.memory].range),
   );
   const door = decodeDoorChecks(memory, read, options);

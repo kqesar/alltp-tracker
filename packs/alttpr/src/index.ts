@@ -101,6 +101,7 @@ export {
   MEMORY_RANGES,
   MEMORY_SOURCES,
   type MemoryRangeId,
+  OWR_BONKS_SWITCH,
 } from "./autotrack/memory";
 export { ALTTPR_AUTOTRACK } from "./autotrack/pack";
 export {
@@ -178,6 +179,7 @@ export {
   drEntrancePool,
 } from "./door-rando/entrances";
 export {
+  BONK_DROP_IDS,
   DR_LOCATIONS,
   DR_UPSTREAM,
   type DrLocation,
@@ -188,6 +190,7 @@ export {
   type DrPartial,
   drKeysAdded,
   drLocationsOf,
+  NO_SCREEN,
   type PotteryMode,
   type TakeAny,
 } from "./door-rando/locations";

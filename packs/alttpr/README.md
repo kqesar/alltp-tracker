@@ -1522,7 +1522,10 @@ object, a shop item, or an enemy drop" as a location "only ... in modes
 where they are shuffled", so a table is read, in Race Mode too, only while
 the run's settings shuffle what it records, and only the run's own
 locations are laid on the board. The Overworld fork's bonk drops
-(`BONK_DROPS`, kind `bonk`, a run's while `bonkDrops`) are a bit of their
+(`BONK_DROPS`, kind `bonk`, the pack's `./bonk` entry, which only a run
+that shuffles them loads and hands to `drLocationsOf` while `bonkDrops`;
+the index keeps their ids alone, `BONK_DROP_IDS`, which saves and links
+read) are a bit of their
 screen's byte of the save's overworld data (`OVERWORLD_FLAGS + screen`, the
 mask its table gives, as the fork's own client reads it), read through a
 range of their own (`owr-bonks`) behind their switch, of a category the race
@@ -1573,7 +1576,9 @@ spots), and `overworld.json`: each overworld region's screen
 in the other world (`create_owedges`, `parallel_links`), each flute spot's
 region as its screen stands or flipped and its slot, which orders the
 spots (`flute_data`, the layout bytes left out); and `bonk.json`, apart
-so the pack's index can list them without the fork's world: the 42 bonk
+so a run loads them without the fork's world, and only a run that
+shuffles them (`src/door-rando/bonk.ts`, the `./bonk` entry; their names
+alone in `bonk-names.json`, for the index): the 42 bonk
 drops (`bonk_prize_table`: region, whether Agahnim must fall first, the
 overworld flag the game sets, the screen's byte at `$7EF280` and the mask,
 as `MultiClient.py:978-987` reads it, and where the fork's own world map

@@ -8,6 +8,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./bonk": "./src/door-rando/bonk.ts",
     "./door-world": "./src/door-world/index.ts",
     "./spoiler": "./src/spoiler/parse.ts"
   },

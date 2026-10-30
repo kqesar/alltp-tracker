@@ -160,6 +160,10 @@ describe("validateProgress", () => {
     expect(
       validateProgress({ checked: { "kings-tomb": true, nowhere: true } }),
     ).toEqual({ errors: [], value: { checked: { "kings-tomb": true } } });
+    // An Overworld Randomizer bonk drop is one it knows, its data not loaded
+    expect(
+      validateProgress({ checked: { "pyramid-tree": true } }).value,
+    ).toEqual({ checked: { "pyramid-tree": true } });
     expect(validateProgress({ checked: [] }).errors).toEqual([
       "checked must be an object",
     ]);

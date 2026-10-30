@@ -275,16 +275,22 @@ useAutotrackStore.subscribe((state, before) => {
 syncAcrossTabs(useAutotrackStore);
 
 /**
- * A Door Randomizer run's tables follow its settings while a session runs:
- * read while they shuffle what each records, never otherwise (v2.0's
- * locations "only ... in modes where they are shuffled").
+ * A Door Randomizer run's tables follow its locations while a session runs:
+ * read while its settings shuffle what each records, never otherwise
+ * (v2.0's locations "only ... in modes where they are shuffled"), and the
+ * bonk drops' once their data is loaded (doorTablesOf is the same set until
+ * the run's list moves).
  */
-const followDoorTables = () =>
-  useGameStore.subscribe((state, before) => {
-    if (state.settings !== before.settings) {
-      runtime?.setDoorTables(doorTablesOf(state.settings));
+const followDoorTables = () => {
+  let tables = doorTablesOf(useGameStore.getState().settings);
+  return useGameStore.subscribe((state) => {
+    const now = doorTablesOf(state.settings);
+    if (now !== tables) {
+      tables = now;
+      runtime?.setDoorTables(now);
     }
   });
+};
 let stopDoorTables: (() => void) | null = null;
 
 /** The board's side of the session: what it read, laid on the run. */

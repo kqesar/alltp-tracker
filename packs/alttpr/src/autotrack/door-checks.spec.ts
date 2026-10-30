@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BONK_DROPS } from "../door-rando/bonk";
 import {
   DR_LOCATIONS,
   DR_TABLES,
@@ -46,16 +47,19 @@ const KEYDROP = drLocationsOf({
 }).locations;
 
 /** An Overworld Randomizer seed with its bonk drops shuffled. */
-const BONKS = drLocationsOf({
-  bonkDrops: true,
-  bossShuffle: false,
-  dropShuffle: "none",
-  enemyShuffle: false,
-  potShuffle: false,
-  pottery: "none",
-  shopsanity: false,
-  takeAny: "none",
-});
+const BONKS = drLocationsOf(
+  {
+    bonkDrops: true,
+    bossShuffle: false,
+    dropShuffle: "none",
+    enemyShuffle: false,
+    potShuffle: false,
+    pottery: "none",
+    shopsanity: false,
+    takeAny: "none",
+  },
+  BONK_DROPS,
+);
 
 describe("decodeDoorChecks", () => {
   it("checks a bonk drop by its screen's bit, outside races only", () => {

@@ -638,12 +638,18 @@ function mainOwr(checkout) {
       tiles: overworld.tiles,
     },
   );
-  // The bonk drops apart, a file small enough for the pack's index: a run
-  // lists them (locations.ts) without loading the fork's world
+  // The bonk drops apart, loaded on demand by an OWR run that shuffles
+  // them (door-rando/bonk.ts), and their names alone, which every save and
+  // link must know (locations.ts: BONK_DROP_IDS)
   writeLines(
     join(OWR_WORLD, "bonk.json"),
     { generated, source: { bonk: bonkSource, map: mapSource }, upstream },
     { drops: overworld.bonk },
+  );
+  writeLines(
+    join(OWR_WORLD, "bonk-names.json"),
+    { generated, source: { bonk: bonkSource }, upstream },
+    { names: overworld.bonk.map((drop) => drop.name) },
   );
   process.stdout.write(
     `${OWR_WORLD}: ${world.regions.length} regions, ${world.doors.length} doors, ${overworld.edges.length} edges, ${overworld.bonk.length} bonk drops\n`,

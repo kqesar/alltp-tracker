@@ -6,8 +6,6 @@
 import {
   DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
-  DR_LOCATIONS,
-  type DrLocation,
   dungeon,
   dungeonOf,
   type ItemId,
@@ -28,6 +26,7 @@ import {
 } from "@alltp/pack-alttpr";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
 import { boardItems } from "@/games/alttpr/autotrack/table";
+import { doorLocationById } from "@/games/alttpr/data/doorRando";
 import {
   BOTTLE_CONTENT_NAMES,
   BOTTLE_CONTENTS,
@@ -42,11 +41,6 @@ import {
   POOL_LABELS,
 } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
-
-/** The Door Randomizer's locations, by id. */
-const DOOR_LOCATION: ReadonlyMap<string, DrLocation> = new Map(
-  DR_LOCATIONS.map((location) => [location.id, location]),
-);
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -693,7 +687,7 @@ export const describeReading = (
   const checked = new Map<string, string[]>();
   let checkedCount = 0;
   for (const id of reading.checked) {
-    const door = DOOR_LOCATION.get(id);
+    const door = doorLocationById(id);
     if (door !== undefined) {
       // A Door Randomizer table's bit: told only for a location of the run's
       if (!doorLocations.has(id)) continue;

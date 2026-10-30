@@ -26,10 +26,19 @@ import {
   DOOR_POTS_SWITCH,
   DOOR_SHOPS_SWITCH,
   decodeDarkRoom,
+  OWR_BONKS_SWITCH,
 } from "@alltp/pack-alttpr";
 
-/** The Door Randomizer's table switches, which the run's settings set. */
-const DOOR_SWITCHES = [DOOR_POTS_SWITCH, DOOR_DROPS_SWITCH, DOOR_SHOPS_SWITCH];
+/**
+ * The Door Randomizer's table switches, which the run's settings set, and
+ * the Overworld Randomizer's bonk drops' (a range Race Mode never reads).
+ */
+const DOOR_SWITCHES = [
+  DOOR_POTS_SWITCH,
+  DOOR_DROPS_SWITCH,
+  DOOR_SHOPS_SWITCH,
+  OWR_BONKS_SWITCH,
+];
 
 import {
   type AutotrackReading,

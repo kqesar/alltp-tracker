@@ -16,8 +16,10 @@
  */
 
 import {
+  BONK_DROP_IDS,
   DOOR_RANDOMIZER_VERSION,
   DR_LOCATIONS,
+  type DrLocation,
   type DrLocationSet,
   type DrModes,
   type DropShuffle,
@@ -27,6 +29,7 @@ import {
   doorSwitches,
   drKeysAdded,
   drLocationsOf,
+  NO_SCREEN,
   type PotteryMode,
   type SeedSetting,
   type SeedSettingsReading,
@@ -711,6 +714,12 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
   ];
 };
 
+/** Whether a run shuffles the Overworld Randomizer's bonk drops. */
+export const bonkDropsOf = (settings: DoorRunSettings): boolean => {
+  const door = doorOf(settings);
+  return door?.randomizer === "owr" && door.bonkDrops;
+};
+
 /** What decides a DR run's locations, as the pack takes it. */
 export const doorModesOf = (
   settings: DoorRunSettings & { bossShuffle?: string },
@@ -718,6 +727,7 @@ export const doorModesOf = (
   const door = doorOf(settings);
   if (door === null) return null;
   return {
+    ...(bonkDropsOf(settings) ? { bonkDrops: true } : {}),
     bossShuffle:
       settings.bossShuffle !== undefined && settings.bossShuffle !== "none",
     dropShuffle: door.dropShuffle,
@@ -738,6 +748,35 @@ const NONE: DrLocationSet = {
 const sets = new Map<string, DrLocationSet>();
 
 /**
+ * The Overworld Randomizer's bonk drops, once loaded (the pack's `./bonk`
+ * entry, hooks/useBonkDrops.ts): only a run that shuffles them downloads
+ * their data. Until then such a run lists none of them.
+ */
+let bonkDrops: readonly DrLocation[] | undefined;
+
+/** Whether the bonk drops are loaded. */
+export const bonkDropsLoaded = (): boolean => bonkDrops !== undefined;
+
+/**
+ * Takes up the bonk drops (useBonkDrops): every run's DR locations are
+ * listed again, a bonk-shuffling one's with them.
+ */
+export const setBonkDrops = (drops: readonly DrLocation[]): void => {
+  bonkDrops = drops;
+  sets.clear();
+};
+
+/**
+ * The bonk drops autotracking may read, once loaded: each but the cave's
+ * statue, which no screen's byte flags.
+ */
+export const readableBonkDrops = (): readonly DrLocation[] =>
+  (bonkDrops ?? []).filter(
+    (drop) =>
+      drop.flag.memory !== "overworld" || drop.flag.screen !== NO_SCREEN,
+  );
+
+/**
  * A run's DR locations (the pack's `drLocationsOf`), memoized per modes:
  * none for an alttpr.com run.
  */
@@ -749,16 +788,28 @@ export const doorLocationsOf = (
   const key = JSON.stringify(modes);
   let found = sets.get(key);
   if (found === undefined) {
-    found = drLocationsOf(modes);
+    found = drLocationsOf(modes, bonkDrops);
     sets.set(key, found);
   }
   return found;
 };
 
-/** Every DR location's id: the checks a save or a link may hold. */
-export const DOOR_LOCATION_IDS: ReadonlySet<string> = new Set(
-  DR_LOCATIONS.map((location) => location.id),
+/**
+ * Every DR location's id: the checks a save or a link may hold. The bonk
+ * drops' come last, so a link made before them still reads.
+ */
+export const DOOR_LOCATION_IDS: ReadonlySet<string> = new Set([
+  ...DR_LOCATIONS.map((location) => location.id),
+  ...BONK_DROP_IDS,
+]);
+
+const DOOR_LOCATION: ReadonlyMap<string, DrLocation> = new Map(
+  DR_LOCATIONS.map((location) => [location.id, location]),
 );
+
+/** A DR location by its id: a bonk drop's once they are loaded. */
+export const doorLocationById = (id: string): DrLocation | undefined =>
+  DOOR_LOCATION.get(id) ?? bonkDrops?.find((drop) => drop.id === id);
 
 /**
  * What a dungeon's counter adds in a DR run: its DR locations, less the
@@ -811,13 +862,24 @@ export const doorKeysExtra = (
   settings: DoorRunSettings & { bossShuffle?: string },
 ): number => drKeysAdded(doorLocationsOf(settings).locations, dungeon).small;
 
+/** Each list's tables, so a run's stay the same set until its list moves. */
+const tables = new WeakMap<readonly DrLocation[], ReadonlySet<string>>();
+
 /**
  * The Door Randomizer tables autotracking reads for a run: those its
  * locations lie in (the pack's `doorSwitches`), none outside DR.
  */
 export const doorTablesOf = (
   settings: DoorRunSettings & { bossShuffle?: string },
-): ReadonlySet<string> => doorSwitches(doorLocationsOf(settings).locations);
+): ReadonlySet<string> => {
+  const { locations } = doorLocationsOf(settings);
+  let found = tables.get(locations);
+  if (found === undefined) {
+    found = doorSwitches(locations);
+    tables.set(locations, found);
+  }
+  return found;
+};
 
 /** A setting the seed states, or what the run holds. */
 const stated = <T>(setting: SeedSetting<T> | undefined, own: T): T =>

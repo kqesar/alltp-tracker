@@ -19,6 +19,8 @@ import {
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { setBonkDrops } from "@/games/alttpr/data/doorRando";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import {
   connectAutotrack,
@@ -94,6 +96,31 @@ describe("autotracking and the board", () => {
     expect(board().items.moonpearl).toBe(true);
     // Not a step of the player's history
     expect(board().past).toEqual([]);
+  });
+
+  it("reads an OWR run's bonk drops once their data is loaded", async () => {
+    const h = harness();
+    act(() =>
+      useGameStore.getState().applyRun("door-randomizer", {
+        ...getPreset("door-randomizer").settings,
+        bonkDrops: true,
+        randomizer: "owr",
+      }),
+    );
+    await act(() => connectAutotrack());
+    // The pyramid's tree: screen $5B, bit $10 (owr:MultiClient.py:978-987)
+    h.memory[SAVE(0x280 + 0x5b)] = 0x10;
+    await h.advance(1000);
+    expect(board().settings).toMatchObject({ bonkDrops: true });
+    expect(board().checked["pyramid-tree"]).toBeUndefined();
+    // Loaded: the session reads their screens' bytes at once
+    const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
+    act(() => {
+      setBonkDrops(BONK_DROPS);
+      useGameStore.setState({});
+    });
+    await h.advance(1000);
+    expect(board().checked["pyramid-tree"]).toBe(true);
   });
 
   it("syncs the board to the game on the player's word", async () => {

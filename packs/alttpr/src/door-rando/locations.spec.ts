@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import { locationId } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { DUNGEON_IDS } from "../dungeons";
+import { BONK_DROPS } from "./bonk";
 import {
-  BONK_DROPS,
+  BONK_DROP_IDS,
   DR_LOCATIONS,
   DR_TABLES,
   DR_UPSTREAM,
@@ -55,14 +56,18 @@ const NONE: DrModes = {
 
 describe("the Overworld Randomizer's bonk drops", () => {
   it("are a run's locations while it shuffles them, each its own id", () => {
-    expect(drLocationsOf(NONE).locations).toEqual([]);
-    const { locations, unflagged } = drLocationsOf({
-      ...NONE,
-      bonkDrops: true,
-    });
+    expect(drLocationsOf(NONE, BONK_DROPS).locations).toEqual([]);
+    // Not loaded yet (the pack's ./bonk entry): none listed
+    expect(drLocationsOf({ ...NONE, bonkDrops: true }).locations).toEqual([]);
+    const { locations, unflagged } = drLocationsOf(
+      { ...NONE, bonkDrops: true },
+      BONK_DROPS,
+    );
     expect(locations).toHaveLength(42);
     expect(locations.every((l) => l.kind === "bonk")).toBe(true);
     expect(locations.map((l) => l.id)).toEqual(BONK_DROPS.map((l) => l.id));
+    // The index's ids, which saves and links read, are the drops' own
+    expect(BONK_DROP_IDS).toEqual(BONK_DROPS.map((l) => l.id));
     // No id another location of the pack has
     const ids = new Set([...DR_LOCATIONS.map((l) => l.id)]);
     for (const { id, name } of BONK_DROPS) {

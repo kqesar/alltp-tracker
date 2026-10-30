@@ -1,4 +1,4 @@
-import { MAP_LOCATIONS } from "@alltp/pack-alttpr";
+import { BONK_DROP_IDS, MAP_LOCATIONS } from "@alltp/pack-alttpr";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DOOR_LOCATION_IDS, DOOR_OPTIONS } from "@/games/alttpr/data/doorRando";
 import { items as freshItems } from "@/games/alttpr/data/items";
@@ -605,7 +605,12 @@ describe("an ALttPR run in a packed link", () => {
   it("refuses, as another version's, a link the unreleased Door Randomizer branch made", () => {
     // Its settings followed v2.66.0's where v2.67.0's own now stand: the
     // digest tells them apart, so it is never misread
-    expect(doorBranchLink.link.sizes).toEqual([LINK_LOCATIONS, 125, 116]);
+    // (made before the bonk drops' ids were appended to the locations)
+    expect(doorBranchLink.link.sizes).toEqual([
+      LINK_LOCATIONS - BONK_DROP_IDS.length,
+      125,
+      116,
+    ]);
     expect(unpackLink(JSON.stringify(doorBranchLink.link))).toEqual({
       ok: false,
       reason: OTHER_VERSION,
@@ -947,6 +952,24 @@ describe("the settings in a link (link 4)", () => {
       "eastern-palace/dark-square-pot-key",
       "kakariko-shop/left",
       "links-house",
+    ]);
+  });
+
+  it("carries an Overworld Randomizer run's bonk drops taken", () => {
+    const settings = {
+      ...getPreset("door-randomizer").settings,
+      bonkDrops: true,
+      randomizer: "owr",
+    };
+    const save = withProgress(runWith(settings, "door-randomizer"), {
+      checked: { "links-house": true, "pyramid-tree": true },
+    });
+    const unpacked = unpackLink(packLink(save));
+    if (!unpacked.ok) throw new Error(unpacked.reason);
+    const back = JSON.parse(unpacked.save).progress;
+    expect(Object.keys(back.checked).sort()).toEqual([
+      "links-house",
+      "pyramid-tree",
     ]);
   });
 

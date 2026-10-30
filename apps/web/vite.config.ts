@@ -22,16 +22,22 @@ const SITE_ONLY = ["models", "social", "robots.txt", "sitemap.xml"];
  * players who never need them never download them: voice commands' engine,
  * the SMZ3 board's map of Zebes, reading a spoiler log (its worker and each
  * game's parser, `review-*`), and code only some runs load (`ondemand-*`:
- * the Door Randomizer's world, which the lazy guard holds there).
+ * the Door Randomizer's world and the Overworld Randomizer's bonk drops,
+ * which the lazy guard holds there).
  */
 const ON_DEMAND = /^assets\/(vosk[.-]|smz3\/|review-|ondemand-)/;
 
-/** Whether a chunk holds the Door Randomizer's world (logic/doorWorld.ts). */
+/**
+ * Whether a chunk holds code only some runs load: the Door Randomizer's
+ * world (logic/doorWorld.ts) or the Overworld Randomizer's bonk drops (the
+ * pack's `./bonk` entry, hooks/useBonkDrops.ts).
+ */
 const doorWorldChunk = (chunk: {
   facadeModuleId: string | null;
   moduleIds: readonly string[];
 }) =>
   chunk.facadeModuleId?.endsWith("/logic/doorWorld.ts") === true ||
+  chunk.facadeModuleId?.endsWith("/door-rando/bonk.ts") === true ||
   chunk.moduleIds.some((id) => id.includes("/door-world/"));
 
 const withoutSiteOnlyFiles = (): Plugin => ({
@@ -66,7 +72,8 @@ export default defineConfig(({ mode }) => {
           // when a player reviews a run, in the review worker or, where there
           // is none, in place: its chunk takes the worker's `review-` name so
           // the service worker keeps it out of every install; so does DR's
-          // world, which only a DR run loads, under `ondemand-`
+          // world, which only a DR run loads, and the bonk drops, which only an OWR
+          // run that shuffles them loads, under `ondemand-`
           chunkFileNames: (chunk: {
             facadeModuleId: string | null;
             moduleIds: readonly string[];
@@ -89,6 +96,11 @@ export default defineConfig(({ mode }) => {
             // A region of DR's world alone (packs/alttpr/src/door-world/)
             marker: "Swamp Trench 1 Approach Dry",
             what: "The Door Randomizer's world",
+          },
+          {
+            // A bonk drop's place on the fork's map (owr/bonk.json alone)
+            marker: "OverworldShuffle.py:2441",
+            what: "The Overworld Randomizer's bonk drops",
           },
         ],
         // The desktop app has no worker

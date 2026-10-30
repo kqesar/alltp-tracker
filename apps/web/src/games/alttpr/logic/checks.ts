@@ -5,8 +5,6 @@
 // stands for: its key drops, pots, enemies and shop items.
 import {
   type AlttprSettings,
-  DR_LOCATIONS,
-  type DrLocation,
   DUNGEONS,
   type DungeonId,
   dungeonLocations,
@@ -14,17 +12,13 @@ import {
   regionModules,
   rupeeCostOf,
 } from "@alltp/pack-alttpr";
+import { doorLocationById } from "@/games/alttpr/data/doorRando";
 import {
   type DoorZoneChecks,
   doorStateOf,
   doorZonesOf,
 } from "@/games/alttpr/logic/doorChecks";
 import { worldOf } from "@/games/alttpr/logic/settings";
-
-/** The Door Randomizer's locations, by id. */
-const DOOR_LOCATION: ReadonlyMap<string, DrLocation> = new Map(
-  DR_LOCATIONS.map((location) => [location.id, location]),
-);
 
 import {
   clearedStateOf,
@@ -177,7 +171,7 @@ export const checkStates = (
     const { dungeon } = zone;
     const cleared = isCleared(zone, state);
     for (const check of zone.checks) {
-      const door = check.door ? DOOR_LOCATION.get(check.id) : undefined;
+      const door = check.door ? doorLocationById(check.id) : undefined;
       states[check.id] =
         cleared && dungeon !== undefined
           ? clearedStateOf(dungeon, check.id, state)

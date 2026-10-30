@@ -1,6 +1,6 @@
 import { DR_LOCATIONS } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
-import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
+import { doorLocationsOf, setBonkDrops } from "@/games/alttpr/data/doorRando";
 import {
   items as freshItems,
   type ItemState,
@@ -104,6 +104,28 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())[takeAny]).toBe("possible");
     useGameStore.getState().setItem("hookshot", true);
     expect(checkStates(state())[hookshotPot]).toBe("available");
+  });
+
+  it("list an OWR run's bonk drops by their region once loaded, maybe", async () => {
+    useGameStore.getState().applyRun("door-randomizer", {
+      ...getPreset("door-randomizer").settings,
+      bonkDrops: true,
+      randomizer: "owr",
+    });
+    const bonks = () =>
+      runZones(state()).flatMap((zone) =>
+        zone.checks
+          .filter((check) => check.id === "pyramid-tree")
+          .map(() => zone.name),
+      );
+    expect(bonks()).toEqual([]);
+    const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
+    setBonkDrops(BONK_DROPS);
+    expect(bonks()).toEqual(["Pyramid Area"]);
+    // The fork's own rules are not modelled: maybe, done once checked
+    expect(checkStates(state())["pyramid-tree"]).toBe("possible");
+    useGameStore.getState().toggleChecks(["pyramid-tree"]);
+    expect(checkStates(state())["pyramid-tree"]).toBe("opened");
   });
 
   it("are none in an alttpr.com run", () => {

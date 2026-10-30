@@ -3,7 +3,8 @@
 // underworld drop shuffle, and the shops' items of shopsanity and take-any,
 // each with the bit DR's base patch sets once it is collected; and the
 // Overworld Randomizer's bonk drops (owr/bonk.json, written by import-dr
-// --owr), with the bit of their screen's byte.
+// --owr), with the bit of their screen's byte, which a run that shuffles
+// them loads on demand (./bonk.ts): only their names are here.
 //
 // locations.json is written by scripts/import-dr.mjs from DR at the release
 // upstream.json pins (`doorRandomizer`), never by hand. This module says
@@ -16,7 +17,7 @@
 import { locationId } from "@alltp/engine";
 import type { DungeonId } from "../dungeons";
 import data from "./locations.json" with { type: "json" };
-import bonkData from "./owr/bonk.json" with { type: "json" };
+import bonkNames from "./owr/bonk-names.json" with { type: "json" };
 
 /** Where DR's location table was read: its repo, release and commit. */
 export const DR_UPSTREAM: {
@@ -118,37 +119,13 @@ const REGIONS: Readonly<
 export const NO_SCREEN = -1;
 
 /**
- * The Overworld Randomizer's bonk drops (owr:Regions.py bonk_prize_table,
- * owr/bonk.json): a run's locations while it shuffles them (`bonkDrops`).
- * A drop's flag is the bit of its screen's byte the fork's own client reads
- * (owr:MultiClient.py:978-987); the Cold Fairy's statue, in a cave, has
- * none, so it is never read.
+ * The ids of the Overworld Randomizer's bonk drops (owr:Regions.py
+ * bonk_prize_table), in its order: what a save or a link may hold of them.
+ * The drops themselves (their regions, flags and places) are `BONK_DROPS`,
+ * the pack's `./bonk` entry, which only a run that shuffles them loads.
  */
-export const BONK_DROPS: readonly DrLocation[] = bonkData.drops.map(
-  (drop): DrLocation => ({
-    bonk: {
-      aga: drop.aga,
-      ...(drop.map === undefined
-        ? {}
-        : { map: { x: drop.map.x, y: drop.map.y } }),
-    },
-    cave: drop.flag === undefined,
-    dungeon: null,
-    // The cave's statue has no flag: no memory says it was taken
-    flag:
-      drop.flag === undefined
-        ? { mask: 0, memory: "overworld", screen: NO_SCREEN }
-        : {
-            mask: drop.flag.mask,
-            memory: "overworld",
-            screen: drop.flag.screen,
-          },
-    id: locationId(drop.name),
-    kind: "bonk",
-    name: drop.name,
-    region: drop.region,
-    source: drop.source,
-  }),
+export const BONK_DROP_IDS: readonly string[] = bonkNames.names.map((name) =>
+  locationId(name),
 );
 
 /** Every DR location, key drops first, then pots, enemies and shops. */
@@ -263,9 +240,14 @@ function potIsLocation(location: DrLocation, modes: DrModes): boolean {
  * The seed's DR locations, from its settings: key drops by the drop
  * shuffle (enemy-held) and the pottery (pot-held, Regions.py:1186-1187), the
  * pottery mode's pots, the underworld shuffle's enemies, shopsanity's shop
- * items and the take-any caves' items.
+ * items and the take-any caves' items; and, while `bonkDrops`, the bonk
+ * drops given (the `./bonk` entry's `BONK_DROPS`, once loaded).
+ * @param bonks - The bonk drops, once loaded: none until then
  */
-export function drLocationsOf(modes: DrModes): DrLocationSet {
+export function drLocationsOf(
+  modes: DrModes,
+  bonks: readonly DrLocation[] = [],
+): DrLocationSet {
   const partial = new Set<DrPartial>();
   const unflagged = new Set<string>();
   const potKeys = !["none", "cave"].includes(modes.pottery);
@@ -306,7 +288,7 @@ export function drLocationsOf(modes: DrModes): DrLocationSet {
   if (modes.pottery === "nonempty" && modes.potShuffle)
     partial.add("pot-contents");
   if (modes.bonkDrops === true)
-    for (const drop of BONK_DROPS) {
+    for (const drop of bonks) {
       if (drop.flag.memory === "overworld" && drop.flag.screen === NO_SCREEN)
         unflagged.add(drop.id);
       locations.push(drop);
@@ -332,15 +314,15 @@ export function drKeysAdded(
   return { big, small };
 }
 
+/** The save's overworld data, a byte a screen (z3:sram.asm:54-69). */
+export const OVERWORLD_FLAGS = 0x7e_f280;
+
 /**
  * The base patch's tables (aerinon/z3randomizer at d0f4651, sram.asm:390-392
  * and 644-646): RoomPotData and SpriteDropData, a word a room, and
  * PurchaseCounts, a byte a shop slot. Saved with the file in the expanded
  * SRAM, live in WRAM bank $7F.
  */
-/** The save's overworld data, a byte a screen (z3:sram.asm:54-69). */
-export const OVERWORLD_FLAGS = 0x7e_f280;
-
 export const DR_TABLES = {
   drop: { bus: 0x7f_6268, size: 592 },
   pot: { bus: 0x7f_6018, size: 592 },
