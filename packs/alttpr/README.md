@@ -1651,13 +1651,28 @@ fork links or rules otherwise (`overworld.ts`), a vanilla overworld only:
 
 `test/owr-contract.spec.ts` holds the ported files in the fork's harness
 (drVersion 157, `overrideBombCheck` as the fixture records it); a case it
-answers otherwise is listed in `test/owr-stale.ts` with why: the dungeon
-suites' 181, the same as DR's for the same reasons at the fork's lines, and
-in Inverted the cases written for vt's Inverted layout (Old Man Cave behind
-Bumper Cave's door, a bomb shop in the light world, the towers' old names)
-or holding the plain Ocarina where the fork asks the activated one (each
-such case is asserted to hold with it), and the everything-but cases that
-keep the pool's activated flute, which flies where the test expects none. `src/door-world/owr-world.spec.ts`
+answers otherwise is listed in `test/owr-stale.ts` with why, and held to it:
+
+- The dungeon suites' 181, the same cases as DR's. A true case lists every
+  reason it falls short for (most dark world ones lack the pearl and a key
+  besides) and must hold once each reason's want is given (`FIXES`: the
+  pearl, every key of its dungeon with its drops, the events swept, the
+  mirror, a beetle or wizzrobe killer, the powder); a false case must lose
+  its yes without the harness's bomb override, the Cane of Byrna or the
+  pearl, or reach its location through the overworld.
+- In Inverted, the cases written for vt's Inverted layout (Old Man Cave
+  behind Bumper Cave's door, a bomb shop in the light world, the towers'
+  old names), those holding the plain Ocarina where the fork asks the
+  activated one, and the everything-but cases that keep the pool's
+  activated flute, which flies where the test expects none. Each is shown
+  answered by the fork's own rules (`test/owr-proof.ts`): a false case the
+  pack answers yes by a route from the start, each event it reads reached
+  before it as the sweep would; a true case by the set the case reaches
+  (each dungeon touched closed over: its rooms leave only by its portals)
+  and every exit out of it, each worth `no`. Every exit and location a
+  proof reads is listed in `test/owr-edges.ts` with the rule the world
+  gives it and the fork's lines it was reviewed against, so a rule that
+  moves fails the spec until reviewed again. `src/door-world/owr-world.spec.ts`
 holds the links, the flute spots, the screens and the rules above.
 
 ## The entrance randomizer's tables
