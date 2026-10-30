@@ -4,6 +4,7 @@ import {
   MapDungeon,
   MapLocation,
 } from "@/games/alttpr/components/map/MapMarkers";
+import { entrancesShuffled } from "@/games/alttpr/data/presets";
 import { packSettings } from "@/games/alttpr/logic/settings";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { toWorldPosition, type World } from "@/games/alttpr/utils";
@@ -64,9 +65,7 @@ export const MapTracker = () => {
   const mapLayout = useGameStore((state) => state.mapLayout);
   const all = useGameStore((state) => markersOf(packSettings(state.settings)));
   const markers = byWorld(all);
-  const shuffled = useGameStore(
-    (state) => state.settings.entranceShuffle !== "none",
-  );
+  const shuffled = useGameStore((state) => entrancesShuffled(state.settings));
 
   return (
     <section

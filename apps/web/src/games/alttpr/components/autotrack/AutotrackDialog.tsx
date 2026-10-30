@@ -17,6 +17,7 @@ import {
 import { Modal } from "@/components/ui/Modal";
 import { seedLineText } from "@/games/alttpr/autotrack/seed";
 import { Readout } from "@/games/alttpr/components/autotrack/Readout";
+import { entrancesShuffled } from "@/games/alttpr/data/presets";
 import {
   connectAutotrack,
   type DarkRoomStyle,
@@ -101,9 +102,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
     : headlineOf(shown, active, elsewhere);
   const connected = active && !elsewhere && shown.code === "connected";
   const race = connected && shown.race.active ? shown.race : null;
-  const shuffled = useGameStore(
-    (state) => state.settings.entranceShuffle !== "none",
-  );
+  const shuffled = useGameStore((state) => entrancesShuffled(state.settings));
   const canRetry = active && "retryInMs" in shown;
   const seedCheck = useSeedCheck();
   const keptSeed = useAutotrackStore((state) => state.keptSeed);

@@ -490,6 +490,15 @@ export const entranceRandomized = (settings: RunSettings): boolean =>
   !isHidden(settings, "entranceShuffle") && settings.entranceShuffle !== "none";
 
 /**
+ * Whether a run's entrances are shuffled: by alttpr.com's shuffle, or in a
+ * Door Randomizer run by one of DR's own (`doorEntrances`), which leaves
+ * alttpr.com's at none. What shows the Entrances tab and the map's doors.
+ */
+export const entrancesShuffled = (settings: RunSettings): boolean =>
+  settings.entranceShuffle !== "none" ||
+  (isDoorRun(settings) && settings.doorEntrances !== undefined);
+
+/**
  * Whether a run's seed has No Logic: the map shows what the glitches the
  * player plays it with reach, never what is in logic. False while a
  * Mystery run's glitches are not known, and behind shuffled entrances,

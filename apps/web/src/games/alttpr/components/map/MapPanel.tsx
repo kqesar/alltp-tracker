@@ -13,6 +13,7 @@ import {
   VoiceControl,
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
+import { entrancesShuffled } from "@/games/alttpr/data/presets";
 import { marginShown, tricksShown } from "@/games/alttpr/logic/solution";
 import { capitalized, useLogicWords } from "@/games/alttpr/logic/words";
 import { useReview } from "@/games/alttpr/review/useReview";
@@ -58,9 +59,7 @@ export const MAP_VIEW_ID = "map-view";
  * while autotracking reads Link in one without the Lamp.
  */
 export const MapPanel = () => {
-  const shuffled = useGameStore(
-    (state) => state.settings.entranceShuffle !== "none",
-  );
+  const shuffled = useGameStore((state) => entrancesShuffled(state.settings));
   const saved = useGameStore((state) => state.mapView);
   // A run without shuffled entrances has no Entrances tab: the map instead
   const view = saved === "entrances" && !shuffled ? "map" : saved;

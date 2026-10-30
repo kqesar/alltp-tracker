@@ -71,6 +71,20 @@ describe("MapPanel", () => {
     expect(await screen.findByTestId("entrances-panel")).toBeInTheDocument();
   });
 
+  it("has an Entrances tab for one of the Door Randomizer's own shuffles", () => {
+    act(() => {
+      useGameStore.getState().applyPreset("door-randomizer");
+      useGameStore.getState().setMapView("entrances");
+    });
+    render(<MapPanel />);
+    expect(screen.queryByRole("tab", { name: "Entrances" })).toBeNull();
+    // A Lite seed leaves alttpr.com's shuffle at none
+    act(() =>
+      useGameStore.getState().updateDoorSettings({ doorEntrances: "lite" }),
+    );
+    expect(screen.getByRole("tab", { name: "Entrances" })).toBeInTheDocument();
+  });
+
   it("says why every check is maybe in a run whose logic is not modelled", () => {
     render(<MapPanel />);
     expect(screen.queryByTestId("logic-note")).not.toBeInTheDocument();
