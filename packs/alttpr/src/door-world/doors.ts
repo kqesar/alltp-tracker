@@ -404,3 +404,25 @@ export function doorNotesFromSpoiler(
   }
   return { kinds, links, lobbies };
 }
+
+/**
+ * The doors a run's shuffle may change the kind of without relinking them
+ * (an interior door, a door of a room's list it leaves where it is), each
+ * in a dungeon: their kinds are noted alone.
+ */
+export function kindOnlyDoors(
+  settings: DoorShuffleSettings,
+): readonly DrDoor[] {
+  return DR_DOORS.filter(
+    (door) =>
+      homeDungeonOf(door) !== null &&
+      !isShuffledDoor(door, settings) &&
+      kindShuffled(door, settings),
+  );
+}
+
+/** The portals of a dungeon, in Doors.py's order. */
+export const portalsOf = (dungeon: string): readonly string[] =>
+  DR_PORTALS.filter((p) => PORTAL_DUNGEON.get(p.name) === dungeon).map(
+    (p) => p.name,
+  );

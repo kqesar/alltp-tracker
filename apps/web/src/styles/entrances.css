@@ -207,3 +207,59 @@
 .entrance-row__target--unknown {
   color: var(--color-text-secondary);
 }
+
+/* The Doors tab: a dungeon at a time, each door its name, where it leads
+   and its kind, wrapping under the name where the panel is narrow */
+.doors {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.doors__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.doors__keys-input {
+  width: 5rem;
+}
+
+.door-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.door-row__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.door-row__link,
+.door-row__kind {
+  width: 100%;
+  min-width: 0;
+}
+
+.doors__plain {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.doors__plain:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

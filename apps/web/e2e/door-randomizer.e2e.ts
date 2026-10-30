@@ -54,16 +54,80 @@ test("a Door Randomizer run lists its key pots in DR's logic, checked in place",
   ).toBeChecked();
 });
 
-test("a door shuffle is named and every check left maybe", async ({ page }) => {
+/** A crossed door shuffle's run, its intensity not known, on the Doors tab. */
+const openDoorShuffle = async (page: Page) => {
   const dialog = await openDoorRun(page);
   await dialog
     .getByRole("combobox", { name: "Door shuffle" })
     .selectOption("crossed");
+  await expect(
+    dialog.getByRole("combobox", { name: "Door intensity" }),
+  ).toHaveValue("?");
   await dialog.getByRole("button", { name: "Close" }).first().click();
-  await expect(page.getByTestId("logic-note")).toHaveText(
-    "Not modelled yet: Crossed door shuffle. Every check shows as maybe.",
+  await page.getByRole("tab", { name: "Doors" }).click();
+  await expect(page.getByTestId("doors-panel")).toBeVisible();
+};
+
+test("a door shuffle is noted by hand, door by door, in DR's world", async ({
+  page,
+}) => {
+  await openDoorShuffle(page);
+  await expect(page.getByTestId("logic-note-door")).toContainText(
+    "Its doors are shuffled: the logic follows the doors you note",
+  );
+  await page.getByTestId("doors-dungeon").selectOption("Eastern Palace");
+  // Intensity not known reads as 3: Eastern's lobby is asked
+  const lobby = page.getByRole("combobox", {
+    name: "Eastern entrance: opens on",
+  });
+  await lobby.selectOption("eastern-lobby-s");
+  const link = page.getByTestId("door-link-eastern-lobby-bridge-n");
+  await link.selectOption("eastern-cannonball-s");
+  await expect(page.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+    "eastern-lobby-bridge-n",
+  );
+  await expect(page.getByTestId("doors-summary")).toContainText(
+    "2 of 31 doors of Eastern Palace noted",
+  );
+  await page
+    .getByRole("spinbutton", { name: "Small keys in Eastern Palace, in all" })
+    .fill("2");
+  await auditPage(page);
+  // One undo step a note
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(
+    page.getByRole("spinbutton", {
+      name: "Small keys in Eastern Palace, in all",
+    }),
+  ).toHaveValue("");
+  // The notes are the run's: kept across a reload
+  await page.reload();
+  await page.getByTestId("doors-dungeon").selectOption("Eastern Palace");
+  await expect(page.getByTestId("door-link-eastern-cannonball-s")).toHaveValue(
+    "eastern-lobby-bridge-n",
   );
 });
+
+for (const width of WIDTHS) {
+  test(`the Doors tab fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openDoorShuffle(page);
+    await page.getByTestId("doors-dungeon").selectOption("Ganons Tower");
+    await page
+      .getByTestId("door-link-gt-lobby-left-down-stairs")
+      .selectOption({ index: 1 });
+    await auditPage(page);
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.screenshot({
+        fullPage: false,
+        path: `${process.env.DOOR_SHOTS}/doors-${width}.png`,
+      });
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.getByTestId("doors-panel").screenshot({
+        path: `${process.env.DOOR_SHOTS}/doors-panel-${width}.png`,
+      });
+  });
+}
 
 for (const width of WIDTHS) {
   test(`a Door Randomizer run's settings fit the Mode dialog at ${width}px`, async ({

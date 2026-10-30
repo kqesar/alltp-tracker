@@ -13,7 +13,8 @@ import {
   VoiceControl,
   VoiceLiveRegion,
 } from "@/games/alttpr/components/map/VoiceControl";
-import { entrancesShuffled } from "@/games/alttpr/data/presets";
+import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
+import { doorLogic, entrancesShuffled } from "@/games/alttpr/data/presets";
 import { marginShown, tricksShown } from "@/games/alttpr/logic/solution";
 import { capitalized, useLogicWords } from "@/games/alttpr/logic/words";
 import { useReview } from "@/games/alttpr/review/useReview";
@@ -22,18 +23,23 @@ import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import type { MapView } from "@/games/alttpr/utils";
 import { useReviewStore } from "@/review/store";
 
-/** The panel's views, as its tabs; the Entrances list with shuffled ones. */
-const VIEWS = [
+/**
+ * The panel's views, as its tabs: the Entrances list with shuffled ones,
+ * the Doors list with shuffled doors.
+ */
+const viewsOf = (
+  entrances: boolean,
+  doors: boolean,
+): readonly Tab<MapView>[] => [
   { label: "Map", value: "map" },
   { label: "Checks", value: "checks" },
+  ...(entrances ? [{ label: "Entrances", value: "entrances" as const }] : []),
+  ...(doors ? [{ label: "Doors", value: "doors" as const }] : []),
   { label: "Run", value: "run" },
-] as const satisfies readonly Tab<MapView>[];
-const VIEWS_WITH_ENTRANCES = [
-  { label: "Map", value: "map" },
-  { label: "Checks", value: "checks" },
-  { label: "Entrances", value: "entrances" },
-  { label: "Run", value: "run" },
-] as const satisfies readonly Tab<MapView>[];
+];
+const VIEWS = [false, true].map((entrances) =>
+  [false, true].map((doors) => viewsOf(entrances, doors)),
+);
 
 /** The entrance assistant's list and picker, loaded with their tables. */
 const EntrancesPanel = lazy(
@@ -41,6 +47,11 @@ const EntrancesPanel = lazy(
 );
 const EntrancePicker = lazy(
   () => import("@/games/alttpr/components/map/entrances/EntrancePicker"),
+);
+
+/** A door shuffle's notes, loaded with DR's world. */
+const DoorsPanel = lazy(
+  () => import("@/games/alttpr/components/map/doors/DoorsPanel"),
 );
 
 /** The dark room's plan: its code loads only when a dark room is read. */
@@ -60,9 +71,17 @@ export const MAP_VIEW_ID = "map-view";
  */
 export const MapPanel = () => {
   const shuffled = useGameStore((state) => entrancesShuffled(state.settings));
+  const doors = useGameStore(
+    (state) =>
+      doorLogic(state.settings) &&
+      doorShuffleSettingsOf(state.settings) !== undefined,
+  );
   const saved = useGameStore((state) => state.mapView);
-  // A run without shuffled entrances has no Entrances tab: the map instead
-  const view = saved === "entrances" && !shuffled ? "map" : saved;
+  // A run without shuffled entrances or doors has no tab for them: the map
+  const view =
+    (saved === "entrances" && !shuffled) || (saved === "doors" && !doors)
+      ? "map"
+      : saved;
   const setMapView = useGameStore((state) => state.setMapView);
   const tricksOn = useGameStore(tricksShown);
   const marginOn = useGameStore(marginShown);
@@ -81,7 +100,9 @@ export const MapPanel = () => {
           onSelect={setMapView}
           panelId={MAP_VIEW_ID}
           selected={view}
-          tabs={shuffled ? VIEWS_WITH_ENTRANCES : VIEWS}
+          tabs={
+            VIEWS[Number(shuffled)]?.[Number(doors)] ?? viewsOf(false, false)
+          }
           testId="map-view-tab"
         />
         <div className="map-panel__status">
@@ -126,6 +147,11 @@ export const MapPanel = () => {
         {view === "entrances" && (
           <Suspense fallback={null}>
             <EntrancesPanel />
+          </Suspense>
+        )}
+        {view === "doors" && (
+          <Suspense fallback={null}>
+            <DoorsPanel />
           </Suspense>
         )}
         {view === "run" && <RunPanel />}
