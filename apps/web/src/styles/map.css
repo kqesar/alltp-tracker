@@ -60,6 +60,12 @@
     filter var(--transition);
 }
 
+/* An Overworld Randomizer bonk drop: a round pin, told apart from a chest's
+   square by its shape as well as by its name */
+.bonk {
+  border-radius: 50%;
+}
+
 .dungeon {
   --marker: clamp(20px, 10.86cqw, 80px);
   cursor: default;

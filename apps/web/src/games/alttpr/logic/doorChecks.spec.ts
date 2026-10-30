@@ -1,4 +1,4 @@
-import { DR_LOCATIONS } from "@alltp/pack-alttpr";
+import { DR_LOCATIONS, markersOf } from "@alltp/pack-alttpr";
 import { beforeEach, describe, expect, it } from "vitest";
 import { doorLocationsOf, setBonkDrops } from "@/games/alttpr/data/doorRando";
 import {
@@ -8,9 +8,12 @@ import {
 } from "@/games/alttpr/data/items";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { checkStates, runZones } from "@/games/alttpr/logic/checks";
+import { bonkPlacesOf } from "@/games/alttpr/logic/doorChecks";
 import { linkChange } from "@/games/alttpr/logic/doorNotes";
+import { packSettings } from "@/games/alttpr/logic/settings";
 import { setDoorSolver, solutionOf } from "@/games/alttpr/logic/solution";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
+import { toWorldPosition } from "@/games/alttpr/utils";
 
 const KEYDROP: RunSettings = {
   ...getPreset("door-randomizer").settings,
@@ -126,6 +129,43 @@ describe("a Door Randomizer run's checks", () => {
     expect(checkStates(state())["pyramid-tree"]).toBe("possible");
     useGameStore.getState().toggleChecks(["pyramid-tree"]);
     expect(checkStates(state())["pyramid-tree"]).toBe("opened");
+  });
+
+  it("draw an OWR run's bonk drops clear of every other marker", async () => {
+    const { BONK_DROPS } = await import("@alltp/pack-alttpr/bonk");
+    setBonkDrops(BONK_DROPS);
+    for (const mode of ["open", "inverted"] as const) {
+      const settings: RunSettings = {
+        ...getPreset("door-randomizer").settings,
+        bonkDrops: true,
+        mode,
+        randomizer: "owr",
+      };
+      const places = bonkPlacesOf(settings);
+      // Every drop but the cave's statue, three to a rock pile at most
+      expect(places.flatMap((p) => p.locations)).toHaveLength(41);
+      const squares = [
+        ...markersOf(packSettings(settings)).map((m) => {
+          const at = toWorldPosition(`${m.x}%`, `${m.y}%`);
+          return { ...at, half: m.dungeon === undefined ? 3.4 : 5.43 };
+        }),
+        ...places.map((p) => ({ half: 3.4, world: p.world, x: p.x, y: p.y })),
+      ];
+      for (const place of places) {
+        const near = squares.filter(
+          (s) =>
+            s.world === place.world &&
+            !(s.x === place.x && s.y === place.y) &&
+            Math.max(Math.abs(s.x - place.x), Math.abs(s.y - place.y)) <
+              s.half + 3.4 - 1e-9,
+        );
+        expect(
+          near,
+          `${place.id} at ${place.x},${place.y} moved ${place.moved}`,
+        ).toEqual([]);
+        expect(place.moved, place.id).toBeLessThanOrEqual(16);
+      }
+    }
   });
 
   it("are none in an alttpr.com run", () => {

@@ -1,5 +1,6 @@
 import { type MapMarker, markersOf } from "@alltp/pack-alttpr";
 import { lazy, Suspense } from "react";
+import { BonkMarkers } from "@/games/alttpr/components/map/BonkMarkers";
 import {
   MapDungeon,
   MapLocation,
@@ -56,7 +57,8 @@ const Markers = ({ markers }: { markers: readonly MapMarker[] }) =>
  * run's world that lie in it: a location's (or a cave's), or a dungeon's.
  * An Inverted run moves some doors (the pack's markersOf); a run with
  * shuffled entrances draws them too, and the checks inside each place
- * above the door noted to lead there (EntranceLayer, loaded on demand).
+ * above the door noted to lead there (EntranceLayer, loaded on demand). An
+ * Overworld Randomizer run that shuffles its bonk drops draws them too.
  * Side by side or
  * stacked, per the player's map layout; on "auto" the map stacks itself
  * when it gets too narrow (see map.css).
@@ -89,6 +91,7 @@ export const MapTracker = () => {
           ) : (
             <Markers markers={markers[world.id]} />
           )}
+          <BonkMarkers world={world.id} />
         </section>
       ))}
     </section>

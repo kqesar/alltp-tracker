@@ -242,3 +242,64 @@ test("a Door Randomizer run picks one of DR's own entrance shuffles in its summa
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("tab", { name: "Entrances" })).toHaveCount(0);
 });
+
+/**
+ * An Overworld Randomizer run that shuffles its bonk drops: a DR run whose
+ * save is made the fork's, as a seed's import makes it (the summary has no
+ * select for the generator).
+ */
+const openBonkRun = async (page: Page) => {
+  const dialog = await openDoorRun(page);
+  await dialog.getByRole("button", { name: "Close" }).first().click();
+  await page.evaluate(() => {
+    const key = "alltp-tracker-state";
+    const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+    saved.state.settings = {
+      ...saved.state.settings,
+      bonkDrops: true,
+      randomizer: "owr",
+    };
+    localStorage.setItem(key, JSON.stringify(saved));
+  });
+  await page.reload();
+  await expect(page.getByTestId("item-grid")).toBeVisible();
+};
+
+test("an OWR run's bonk drops are drawn and checked, loaded on demand", async ({
+  page,
+}) => {
+  const bonk = page.waitForResponse(/ondemand-bonk-/);
+  await openBonkRun(page);
+  await bonk;
+  const tree = page
+    .getByTestId("map-world-dark")
+    .getByRole("button", { name: /^Bonk drop: Pyramid Tree: / });
+  // Reached by keyboard, checked with Enter
+  await tree.focus();
+  await page.keyboard.press("Enter");
+  await expect(tree).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("map-view-tab-checks").click();
+  await page.getByTestId("checks-filter-opened").check();
+  await expect(
+    page.getByTestId("check-row-pyramid-tree").getByRole("checkbox"),
+  ).toBeChecked();
+  await auditPage(page, ".mapspan");
+});
+
+for (const width of WIDTHS) {
+  test(`an OWR run's bonk drops fit the map at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await openBonkRun(page);
+    await expect(page.getByTestId(/^marker-bonk-/).first()).toBeVisible();
+    await expect(page.getByTestId(/^marker-bonk-/)).toHaveCount(32);
+    // Map pins sit where the game has them: WCAG 2.5.8's "essential"
+    // exception (tracker.e2e.ts); the bonk drops' stand clear of the others
+    await auditPage(page, ".mapspan");
+    if (process.env.DOOR_SHOTS !== undefined)
+      await page.getByTestId("map-tracker").screenshot({
+        path: `${process.env.DOOR_SHOTS}/bonk-map-${width}.png`,
+      });
+  });
+}
