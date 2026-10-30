@@ -368,14 +368,12 @@ export const crossedLogic = (settings: RunSettings): boolean =>
  * Why an Overworld Randomizer run is not held by the fork's own world (the
  * pack's DR world on OWR_DATA, held to the fork's own tests in the Open and
  * Inverted worlds with vanilla doors and entrances, and to its seeds of
- * each of its entrance shuffles): a door shuffle on the fork's data and its
- * Standard world, which no test of the fork holds.
+ * each of its entrance shuffles and of its Standard world): a door shuffle
+ * on the fork's data, which no test or seed of the fork holds.
  */
 const owrUnheld = (settings: RunSettings): string[] => {
   if (settings.randomizer !== "owr") return [];
   const reasons: string[] = [];
-  if (settings.mode === "standard")
-    reasons.push("the Overworld Randomizer's Standard world");
   if ((settings.doorShuffle ?? "vanilla") !== "vanilla")
     reasons.push("a door shuffle in an Overworld Randomizer seed");
   return reasons;
@@ -387,7 +385,7 @@ const owrUnheld = (settings: RunSettings): string[] => {
  * doors vanilla or noted, its entrances vanilla or of a shuffle DR's pools
  * hold (`doorShuffleOf`), or of its Overworld fork, in the fork's own
  * world (OWR_DATA), its doors vanilla, its entrances vanilla or of any of
- * the fork's shuffles, outside Standard (`owrUnheld`); nothing the port
+ * the fork's shuffles (`owrUnheld`); nothing the port
  * leaves out (`doorReasons`), no glitched logic, its bosses in place (DR's
  * world reads each dungeon's own) and every setting known (a Mystery run's
  * are not).

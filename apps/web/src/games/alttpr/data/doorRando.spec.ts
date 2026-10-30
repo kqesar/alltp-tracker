@@ -142,10 +142,6 @@ describe("a Door Randomizer run's logic", () => {
     // Room's powder, DR's key analysis): a yes there would be unsound
     const cases: [Partial<RunSettings>, string][] = [
       [
-        { mode: "standard", ...OWR },
-        "the Overworld Randomizer's Standard world",
-      ],
-      [
         { doorShuffle: "basic", ...OWR },
         "a door shuffle in an Overworld Randomizer seed",
       ],
@@ -236,6 +232,8 @@ describe("a Door Randomizer run's logic", () => {
       { entranceShuffle: "crossed" },
       { entranceShuffle: "insanity" },
       { entranceShuffle: "crossed", mode: "inverted" },
+      { entranceShuffle: "crossed", mode: "standard" },
+      { doorEntrances: "lite", mode: "standard" },
     ] as const) {
       const run = with_(DR, { ...OWR, ...change });
       expect(doorShuffleOf(run)).toBe(

@@ -41,6 +41,12 @@ import open from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-2cWV
 import openBonks from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-n7Bg53tbm.json?raw";
 import inverted from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-nir3EmS5u.json?raw";
 import invertedBonks from "../../../../../../packs/alttpr/test/owr-spoilers/avianart-rcEzGOnFN.json?raw";
+import standardDungeons from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-0pr3QtXLU.json?raw";
+import standardBonks from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-0rrVwugI5.json?raw";
+import standard from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-AjT8OHdZc.json?raw";
+import standardLite from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-CK14WlYnG.json?raw";
+import standardCrossed from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-mGEeueUjZ.json?raw";
+import standardMixed from "../../../../../../packs/alttpr/test/owr-standard-spoilers/avianart-mhKQq39uX.json?raw";
 
 const SEEDS = [
   ["n7Bg53tbm", openBonks, false, true],
@@ -69,6 +75,12 @@ const SEEDS = [
   ["6DIwXjzG5", mixedInverted, true, false],
   ["4yKJq5H2E", mixedGrouped, false, false],
   ["t8B3wJpHK", mixedWhirlpools, false, false],
+  ["AjT8OHdZc", standard, false, false],
+  ["0rrVwugI5", standardBonks, false, true],
+  ["mhKQq39uX", standardMixed, false, false],
+  ["mGEeueUjZ", standardCrossed, false, false],
+  ["0pr3QtXLU", standardDungeons, false, false],
+  ["CK14WlYnG", standardLite, false, false],
 ] as const;
 
 describe("an Overworld Randomizer seed started from its permalink", () => {
@@ -104,9 +116,11 @@ describe("an Overworld Randomizer seed started from its permalink", () => {
         invertedMode,
       });
       // The fork's own entrance shuffles: its pool on the Entrances tab,
-      // its rules' `shuffle_<mode>`
-      const { shuffle } = (JSON.parse(raw) as { meta: { shuffle: string } })
-        .meta;
+      // its rules' `shuffle_<mode>`; its Standard world
+      const { mode, shuffle } = (
+        JSON.parse(raw) as { meta: { mode: string; shuffle: string } }
+      ).meta;
+      expect(drSettingsOf(run).standardMode === true).toBe(mode === "standard");
       expect(entrancesKnown(run)).toBe(shuffle !== "vanilla");
       expect(drSettingsOf(run)).toMatchObject(
         shuffle === "vanilla" ? {} : { [`shuffle_${shuffle}`]: true },
