@@ -1,11 +1,19 @@
 import { OWR_FLIP_SCREENS } from "@alltp/pack-alttpr";
-import { crossablePairsOf, whirlpoolsOf } from "@alltp/pack-alttpr/door-world";
+import {
+  crossablePairsOf,
+  forcedWhirlpoolsOf,
+  owrScreensOf,
+  whirlpoolsOf,
+} from "@alltp/pack-alttpr/door-world";
 import { OWR_DATA } from "@alltp/pack-alttpr/door-world/owr";
 import { describe, expect, it } from "vitest";
 import {
+  flipGroupsOf,
+  forcedWhirlpoolOf,
   OWR_CROSSINGS,
   OWR_DARK_WHIRLPOOLS,
   OWR_FLUTE_SCREENS,
+  OWR_WHIRLPOOL_SCREENS,
   OWR_WHIRLPOOLS,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -15,6 +23,7 @@ import {
   RENAMED_REGIONS,
   screenNameOf,
 } from "@/games/alttpr/data/owrScreens";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { withOverworldNotes } from "@/games/alttpr/logic/overworldNotes";
 import { isOverworldNotes } from "@/games/alttpr/stores/persistence";
 
@@ -134,6 +143,58 @@ describe("an OWR run's overworld notes", () => {
         .map(Number)
         .sort((a, b) => a - b),
     );
+  });
+
+  it("holds the whirlpools' screens to the pack's", () => {
+    expect(
+      Object.fromEntries(
+        [...whirlpoolsOf(OWR_DATA)].map(([name, { screen }]) => [name, screen]),
+      ),
+    ).toEqual(OWR_WHIRLPOOL_SCREENS);
+  });
+
+  it("pairs an uncrossed Mixed run's whirlpools as the pack's world does, once its flips tell", () => {
+    for (const mode of ["open", "inverted"] as const) {
+      const run = {
+        ...getPreset("door-randomizer").settings,
+        mode,
+        owCrossed: "none",
+        owMixed: true,
+        owWhirlpool: true,
+        randomizer: "owr",
+      } as const;
+      const groups = flipGroupsOf(run);
+      // Every group standing, then each group flipped alone, then all
+      const cases = [-1, ...groups.map((_, i) => i), groups.length].map(
+        (flipped) =>
+          Object.fromEntries(
+            groups.flatMap((group, i) =>
+              group.screens.map((screen) => [
+                String(screen),
+                flipped === groups.length || i === flipped,
+              ]),
+            ),
+          ),
+      );
+      let paired = 0;
+      for (const flips of cases) {
+        const notes = { flips, whirlpools: {} };
+        const pack = forcedWhirlpoolsOf(
+          OWR_DATA,
+          notes,
+          owrScreensOf(OWR_DATA, mode, notes),
+        );
+        for (const name of OWR_WHIRLPOOLS) {
+          expect(forcedWhirlpoolOf(name, run, flips), name).toBe(
+            pack.get(name),
+          );
+          if (pack.has(name)) paired++;
+        }
+      }
+      expect(paired).toBeGreaterThan(0);
+      // Not noted: neither the pack nor the tab pairs any
+      expect(forcedWhirlpoolOf("Qirn Jump Whirlpool", run, {})).toBeUndefined();
+    }
   });
 
   it("holds the dark world's whirlpools to the pack's screens", () => {

@@ -1,8 +1,9 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import OverworldPanel from "@/games/alttpr/components/map/overworld/OverworldPanel";
+import { flipGroupsOf } from "@/games/alttpr/data/doorRando";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
@@ -224,6 +225,42 @@ describe("the Overworld tab", () => {
     expect(lostWoods).toHaveValue("stands");
     // A whirlpool select offers the seven others: Mixed's pools wait on flips
     expect(screen.queryByTestId("whirlpool-row-C Whirlpool")).toBeNull();
+  });
+
+  it("shows an uncrossed Mixed run's pool of two once its screens tell", async () => {
+    const user = userEvent.setup();
+    run({ owMixed: true, owWhirlpool: true });
+    render(<OverworldPanel />);
+    // Every whirlpool's world waits on its screen's flip: a select for each
+    expect(
+      screen.getByRole("combobox", { name: "Qirn Jump Whirlpool: leads to" }),
+    ).toBeInTheDocument();
+    for (const select of screen.getAllByRole("combobox", { name: /flipped$/ }))
+      await user.selectOptions(select, ["stands"]);
+    // Nothing flipped: the dark world's two, a pool of two (:380-391)
+    expect(
+      screen.getByTestId("whirlpool-row-Qirn Jump Whirlpool"),
+    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
+    expect(screen.getByTestId("overworld-summary")).toHaveTextContent(
+      "2 of 8 whirlpools noted",
+    );
+    // River Bend's screen flipped (Qirn Jump its twin): River Bend and
+    // Bomber Corner are the dark world's two
+    const group = flipGroupsOf(store().settings).find(({ screens }) =>
+      screens.includes(0x15),
+    );
+    expect(group).toBeDefined();
+    const id = (group?.screens[0] ?? 0).toString(16).padStart(2, "0");
+    const select = within(screen.getByTestId(`flip-row-${id}`)).getByRole(
+      "combobox",
+    );
+    await user.selectOptions(select, ["flipped"]);
+    expect(
+      screen.getByTestId("whirlpool-row-River Bend Whirlpool"),
+    ).toHaveTextContent("leads to Bomber Corner Whirlpool (always)");
+    expect(
+      screen.getByRole("combobox", { name: "Qirn Jump Whirlpool: leads to" }),
+    ).toBeInTheDocument();
   });
 
   it("names the flute screens as the tracker names places", () => {

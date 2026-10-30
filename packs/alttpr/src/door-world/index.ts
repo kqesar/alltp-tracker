@@ -120,6 +120,7 @@ export { KEY_ITEMS } from "./keys";
 export {
   crossablePairsOf,
   crossingsOf,
+  forcedWhirlpoolsOf,
   type OwrNotes,
   owrNotesFromSpoiler,
   owrScreensOf,

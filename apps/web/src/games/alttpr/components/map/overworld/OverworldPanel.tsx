@@ -22,12 +22,13 @@ const WhirlpoolRow = memo(({ name }: { name: string }) => {
   const target = useGameStore((state) => state.overworld.whirlpools?.[name]);
   const noteOverworld = useGameStore((state) => state.noteOverworld);
   const settings = useGameStore((state) => state.settings);
+  const flips = useGameStore((state) => state.overworld.flips);
   // A note the run's pools no longer offer (its settings changed) stays shown
   const pool = whirlpoolTargetsOf(name, settings);
   const targets =
     target === undefined || pool.includes(target) ? pool : [...pool, target];
   // A pair the shuffle leaves no choice for is linked with no note
-  const forced = forcedWhirlpoolOf(name, settings);
+  const forced = forcedWhirlpoolOf(name, settings, flips);
   if (forced !== undefined)
     return (
       <li className="door-row" data-testid={`whirlpool-row-${name}`}>
@@ -158,7 +159,7 @@ const OverworldPanel = () => {
   const pools = OWR_WHIRLPOOLS.filter(
     (name) =>
       notes.whirlpools?.[name] !== undefined ||
-      forcedWhirlpoolOf(name, run) !== undefined,
+      forcedWhirlpoolOf(name, run, notes.flips) !== undefined,
   ).length;
   const crossings = Object.keys(notes.crossings ?? {}).length;
   const groups = flipGroupsOf(run);

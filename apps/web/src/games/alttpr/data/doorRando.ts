@@ -1233,13 +1233,29 @@ export const OWR_WHIRLPOOLS = [
 ] as const;
 
 /**
- * The whirlpools on dark world screens (whirlpool_map's 0x55 and 0x7f,
- * OverworldShuffle.py:370): its spec holds them to the pack's data.
+ * Each whirlpool's screen (default_whirlpool_connections' owid,
+ * OverworldShuffle.py:1764-1769): its spec holds them to the pack's data.
  */
-export const OWR_DARK_WHIRLPOOLS: ReadonlySet<string> = new Set([
-  "Qirn Jump Whirlpool",
-  "Bomber Corner Whirlpool",
-]);
+export const OWR_WHIRLPOOL_SCREENS: Readonly<
+  Record<(typeof OWR_WHIRLPOOLS)[number], number>
+> = {
+  "Bomber Corner Whirlpool": 0x7f,
+  "C Whirlpool": 0x33,
+  "Kakariko Pond Whirlpool": 0x12,
+  "Lake Hylia Whirlpool": 0x35,
+  "Octoballoon Whirlpool": 0x3f,
+  "Qirn Jump Whirlpool": 0x55,
+  "River Bend Whirlpool": 0x15,
+  "Zora Whirlpool": 0x0f,
+};
+
+/**
+ * The whirlpools on dark world screens (whirlpool_map's 0x55 and 0x7f,
+ * OverworldShuffle.py:370).
+ */
+export const OWR_DARK_WHIRLPOOLS: ReadonlySet<string> = new Set(
+  OWR_WHIRLPOOLS.filter((name) => OWR_WHIRLPOOL_SCREENS[name] >= 0x40),
+);
 
 /**
  * The whirlpools a run's whirlpool may lead into. The fork shuffles them in
@@ -1265,26 +1281,65 @@ export const whirlpoolTargetsOf = (
 };
 
 /**
+ * Whether Mixed flipped a screen, by its light world id, as the pack's
+ * `owrScreensOf` reads the notes: a screen of a group that may flip as
+ * its group's notes agree (undefined while none or they disagree), any
+ * other never.
+ */
+const flippedOf = (
+  settings: DoorRunSettings & { mode?: string },
+  flips: OverworldNotes["flips"],
+): ((screen: number) => boolean | undefined) => {
+  const flipOf = new Map<number, boolean | undefined>();
+  for (const { screens } of flipGroupsOf(settings)) {
+    const noted = new Set(
+      screens.flatMap((s) => {
+        const flip = flips?.[String(s)];
+        return flip === undefined ? [] : [flip];
+      }),
+    );
+    const flip = noted.size === 1 ? [...noted][0] : undefined;
+    for (const screen of screens) flipOf.set(screen, flip);
+  }
+  return (screen) => (flipOf.has(screen) ? flipOf.get(screen) : false);
+};
+
+/**
  * The whirlpool a run's whirlpool always leads into, where the fork's
  * shuffle leaves it no choice (the pack's `forcedWhirlpoolsOf`,
- * OverworldShuffle.py:370-413): the dark world's two, while the
- * overworld is neither crossed but Polar nor mixed (their pool of two),
- * or Polar with Mixed (linked outright, :376-378). Undefined otherwise,
- * Mixed's other pools waiting on its flips.
+ * OverworldShuffle.py:370-413): Polar with Mixed links the dark world's
+ * two outright (:376-378); an overworld neither crossed but Polar shuffles
+ * each world's whirlpools apart, by the world their screens stand in once
+ * Mixed flipped them (:380-391), so a pool of two pairs them: the dark
+ * world's two without Mixed, with it once the noted flips tell every
+ * whirlpool's world. Undefined otherwise.
  */
 export const forcedWhirlpoolOf = (
   name: string,
-  settings: DoorRunSettings,
+  settings: DoorRunSettings & { mode?: string },
+  flips?: OverworldNotes["flips"],
 ): string | undefined => {
   const door = doorOf(settings);
-  if (door === null || !door.owWhirlpool || !OWR_DARK_WHIRLPOOLS.has(name))
-    return undefined;
-  const forced = door.owMixed
-    ? door.owCrossed === "polar"
-    : door.owCrossed === "none" || door.owCrossed === "polar";
-  return forced
-    ? [...OWR_DARK_WHIRLPOOLS].find((other) => other !== name)
-    : undefined;
+  if (door === null || !door.owWhirlpool) return undefined;
+  if (door.owMixed && door.owCrossed === "polar")
+    return OWR_DARK_WHIRLPOOLS.has(name)
+      ? [...OWR_DARK_WHIRLPOOLS].find((other) => other !== name)
+      : undefined;
+  if (door.owCrossed !== "none" && door.owCrossed !== "polar") return undefined;
+  const flipped = door.owMixed
+    ? flippedOf(settings, flips)
+    : () => false as const;
+  const darkOf = (whirlpool: (typeof OWR_WHIRLPOOLS)[number]) => {
+    const screen = OWR_WHIRLPOOL_SCREENS[whirlpool];
+    const flip = flipped(screen % 0x40);
+    return flip === undefined ? undefined : screen >= 0x40 !== flip;
+  };
+  const worlds = OWR_WHIRLPOOLS.map(darkOf);
+  if (worlds.includes(undefined)) return undefined;
+  const own = OWR_WHIRLPOOLS.indexOf(name as (typeof OWR_WHIRLPOOLS)[number]);
+  if (own < 0) return undefined;
+  const pool = OWR_WHIRLPOOLS.filter((_, i) => worlds[i] === worlds[own]);
+  return pool.length === 2 ? pool.find((other) => other !== name) : undefined;
 };
 
 /**
