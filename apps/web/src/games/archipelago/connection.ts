@@ -34,6 +34,7 @@ import type { Runtime } from "@/games/archipelago/runtime";
 import { sameRun, useArchipelagoStore } from "@/games/archipelago/store";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isDesktopApp } from "@/utils/platform";
+import { isRunning } from "@/utils/runTimer";
 import { isObsView } from "@/utils/view";
 
 /** Where the connection's settings are saved: device-only. */
@@ -308,6 +309,10 @@ export const connect = async () => {
               notice:
                 "This room holds another run than the board did: the board now shows this one.",
             });
+            // The last run's time is not this one's, and this room's
+            // countdown starts only an idle timer; one the player started
+            // and left running is for this run
+            if (!isRunning(before.timer)) before.resetTimer();
           }
           before.apply({ ...run, updatedAt: Date.now() });
         },

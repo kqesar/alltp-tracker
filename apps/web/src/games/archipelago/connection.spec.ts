@@ -22,6 +22,7 @@ import {
   freshRun,
   useArchipelagoStore,
 } from "@/games/archipelago/store";
+import { finishTimer, IDLE_TIMER, startTimer } from "@/utils/runTimer";
 
 const state = () => useApConnectionStore.getState();
 const run = () => useArchipelagoStore.getState();
@@ -329,6 +330,40 @@ describe("connect", () => {
     await connect();
     await vi.waitFor(() => expect(state().notice).toMatch(/another run/));
     expect(run().room?.seedName).not.toBe("another seed");
+  });
+
+  it.each([
+    [
+      "clears another run's stopped timer",
+      finishTimer(startTimer(IDLE_TIMER, 1_000), 14_000),
+      IDLE_TIMER,
+    ],
+    [
+      "keeps a timer the player started for this run",
+      startTimer(IDLE_TIMER, 1_000),
+      startTimer(IDLE_TIMER, 1_000),
+    ],
+  ])("%s", async (_, timer, kept) => {
+    // Seen on a real room: the last room's goal time stayed, so this one's
+    // countdown, which starts only an idle timer, never started it
+    useArchipelagoStore.setState({
+      ...freshRun(),
+      room: {
+        checksum: null,
+        game: "A Link to the Past",
+        generatorVersion: "0.6.8",
+        seedName: "another seed",
+        slot: 1,
+        slotName: "Link",
+        team: 0,
+      },
+      timer,
+    });
+    startRoom();
+    saveRoom({ address: ROOM_ADDRESS, roomLink: null, slot: "Link" });
+    await connect();
+    await vi.waitFor(() => expect(state().notice).toMatch(/another run/));
+    expect(run().timer).toEqual(kept);
   });
 
   it("keeps the same run's items while the server resends them", async () => {

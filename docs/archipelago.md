@@ -203,7 +203,10 @@ flowchart LR
   30 (`CLIENT_GOAL`, AP 0.6.8's NetUtils.py) stops a running one for good,
   at the moment its `SetReply` arrives. A status already at 30 when a
   connection reads it stops nothing: it says nothing of when. The stopped
-  time is the run's `timer`, saved with it, so a reload shows it.
+  time is the run's `timer`, saved with it, so a reload shows it. When
+  another run replaces the board, its timer goes back to idle (so this
+  room's countdown starts it), unless it is running: one the player started
+  by hand before connecting is this run's.
 - **Performance.** Feed lines poke the same 250 ms batch as the snapshot: a
   release of 1,000 sends, each its own `PrintJSON` and `ReceivedItems`,
   renders the items and the feed once and writes the run once
