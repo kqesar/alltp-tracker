@@ -112,9 +112,10 @@ export type OpenPyramid = "auto" | "yes" | "no";
  * less than 1.5.6 in one place (the Inverted world's save point leads out,
  * EntranceShuffle2.py:171-176 at 1.5.8), so the tracker grants it only to a
  * seed known to be 1.5.7's or later. "1.5.6" stands for an older release
- * or one not known; a newer release than 1.5.8 reads as 1.5.8.
+ * or one not known; "newer" for a release after 1.5.8, which the logic
+ * reads with 1.5.8's rules, and the doors note says so (`doorNotes`).
  */
-export type DoorVersion = "1.5.6" | "1.5.7" | "1.5.8";
+export type DoorVersion = "1.5.6" | "1.5.7" | "1.5.8" | "newer";
 
 /**
  * The Overworld fork's release a seed was built by, as far as its logic
@@ -365,6 +366,7 @@ export const DOOR_OPTIONS = {
     ["1.5.6", "1.5.6 or older"],
     ["1.5.7", "1.5.7"],
     ["1.5.8", "1.5.8"],
+    ["newer", "Newer than 1.5.8"],
   ],
   dropShuffle: [
     ["none", "None"],
@@ -1015,6 +1017,12 @@ export const doorNotes = (
           "Its static key logic: each key door asks the entrance randomizer's number of keys, those from chests.",
         ]
       : []),
+    // A later release's rules may differ: read as 1.5.8's, never refused
+    ...(door.randomizer !== "owr" && door.doorVersion === "newer"
+      ? [
+          `Its release is newer than ${DOOR_RANDOMIZER_VERSION}: the logic reads it with ${DOOR_RANDOMIZER_VERSION}'s rules, which that release may have changed.`,
+        ]
+      : []),
   ];
 };
 
@@ -1481,7 +1489,7 @@ export const doorEntrancesUnknown = (seed: SeedSettingsReading): boolean => {
 
 /**
  * The release a DR version names, as a run keeps it (`DoorVersion`): 1.5.6
- * for 1.5.6 or an older one, 1.5.8 for 1.5.8 or a newer one; undefined
+ * for 1.5.6 or an older one, 1.5.7, 1.5.8, newer after it; undefined
  * when the seed tells none ("1.5.7-u", a ROM title's "1.5.7", a spoiler's
  * meta).
  */
@@ -1496,7 +1504,13 @@ export const doorVersionOf = (
     number,
   ];
   const release = major * 10_000 + minor * 100 + patch;
-  return release <= 10_506 ? "1.5.6" : release === 10_507 ? "1.5.7" : "1.5.8";
+  return release <= 10_506
+    ? "1.5.6"
+    : release === 10_507
+      ? "1.5.7"
+      : release === 10_508
+        ? "1.5.8"
+        : "newer";
 };
 
 /**

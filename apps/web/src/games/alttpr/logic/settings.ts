@@ -262,10 +262,13 @@ export const drSettingsOf = (run: RunSettings): Settings => {
   const owr = door?.randomizer === "owr";
   // The fork's release the pack reads (0.8.0.2) is built on DR 1.5.7: an
   // older or unknown base reads as 1.5.6, which asks more (static.ts)
+  // A release after 1.5.8 reads with 1.5.8's rules (`doorNotes` says so)
   const version =
     owr && door.doorVersion !== "1.5.6"
       ? "1.5.7"
-      : (door?.doorVersion ?? "1.5.6");
+      : door?.doorVersion === "newer"
+        ? "1.5.8"
+        : (door?.doorVersion ?? "1.5.6");
   // Not known reads as shuffled: no bonk then gives farmable bombs
   // (owr:ItemList.py:731-734), which shuffled drops take away, and the
   // drops' own places stay unlisted (`bonkDropsOf`)

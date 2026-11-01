@@ -497,6 +497,7 @@ export const SHARE_SETTINGS: readonly string[] = `
   dungeonItems:keys
   nearbyItems:false nearbyItems:true
   owrVersion:0.8.0.2 owrVersion:other
+  doorVersion:newer
 `
   .trim()
   .split(/\s+/);

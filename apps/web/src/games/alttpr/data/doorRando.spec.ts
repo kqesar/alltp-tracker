@@ -987,7 +987,7 @@ describe("the DR version a run keeps", () => {
       ["1.5.2", "1.5.6-u", "1.5.7-u", "1.5.8", "1.5.10", "1.6.0"].map(
         doorVersionOf,
       ),
-    ).toEqual(["1.5.6", "1.5.6", "1.5.7", "1.5.8", "1.5.8", "1.5.8"]);
+    ).toEqual(["1.5.6", "1.5.6", "1.5.7", "1.5.8", "newer", "newer"]);
     expect([null, undefined, "hth", ""].map(doorVersionOf)).toEqual([
       undefined,
       undefined,
@@ -1034,6 +1034,15 @@ describe("the DR version a run keeps", () => {
       drVersion: 158,
     });
     expect(doorLogic(with_(DR, { doorVersion: "1.5.8" }))).toBe(true);
+    // A later release: read with 1.5.8's rules, modelled, and said so
+    const newer = with_(DR, { doorVersion: "newer" });
+    expect(drSettingsOf(newer)).toMatchObject({ drVersion: 158 });
+    expect(doorLogic(newer)).toBe(true);
+    expect(unmodelledReasons(newer)).toEqual([]);
+    expect(doorNotes(newer).at(-1)).toBe(
+      "Its release is newer than 1.5.8: the logic reads it with 1.5.8's rules, which that release may have changed.",
+    );
+    expect(doorNotes(with_(DR, { doorVersion: "1.5.8" }))).toHaveLength(1);
     // The fork's world is OWR 0.8.0.2's, on DR 1.5.7: never more, an older
     // or unknown base read as 1.5.6; its bonk drops as the run says
     const owr = with_(DR, { bonkDrops: true, randomizer: "owr" });
@@ -1041,7 +1050,7 @@ describe("the DR version a run keeps", () => {
       bonkDrops: true,
       drVersion: 156,
     });
-    for (const doorVersion of ["1.5.7", "1.5.8"] as const)
+    for (const doorVersion of ["1.5.7", "1.5.8", "newer"] as const)
       expect(drSettingsOf(with_(owr, { doorVersion }))).toMatchObject({
         drVersion: 157,
       });
