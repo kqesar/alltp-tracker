@@ -796,6 +796,27 @@ export const isDoorSettings = (value: Record<string, unknown>): boolean => {
   );
 };
 
+/**
+ * The pottery modes whose dungeons hold pots beyond their keys
+ * (adjust_locations, Regions.py:1165-1232).
+ */
+const DUNGEON_POTS: ReadonlySet<PotteryMode> = new Set([
+  "dungeon",
+  "reduced",
+  "clustered",
+  "nonempty",
+  "lottery",
+]);
+
+/**
+ * Whether a run's dungeons hold pots or enemy drops beyond their keys,
+ * which DR's world counts in no key analysis (`dungeonPotsAndDrops`).
+ */
+export const dungeonPotsAndDropsOf = (
+  pottery: PotteryMode,
+  drops: DropShuffle,
+): boolean => DUNGEON_POTS.has(pottery) || drops === "underworld";
+
 /** Whether the run's key drops are shuffled: its drops' or its key pots'. */
 const keyDropsShuffled = (door: DoorSettings) =>
   door.dropShuffle !== "none" ||
@@ -941,7 +962,9 @@ export const RUN_SETTINGS_NOT_KNOWN = [
  * modelled (`unmodelledReasons`): alttpr.com's v31 is no stand-in, asking
  * less than DR in places.
  */
-export const doorNotes = (settings: DoorRunSettings): string[] => {
+export const doorNotes = (
+  settings: DoorRunSettings & { readonly mode?: string },
+): string[] => {
   const door = doorOf(settings);
   if (door === null) return [];
   const overworld = overworldShufflesOf(settings);
@@ -962,12 +985,17 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
       ? []
       : [
           // DR's own key analysis runs on a layout the notes tell whole at
-          // intensity 1 or 2, coupled, entrances vanilla, on DR's data (the
-          // pack's key-analysis/noted.ts); elsewhere strict-safe
+          // intensity 1 or 2, coupled, entrances vanilla, on DR's data, but
+          // for static key logic, pots or drops beyond the keys and Retro's
+          // universal keys (the pack's door-world index.ts and
+          // key-analysis/noted.ts); elsewhere strict-safe
           door.randomizer !== "owr" &&
           (door.doorIntensity ?? "3") !== "3" &&
           door.decoupledDoors === false &&
-          doorShuffleOf(settings) === undefined
+          doorShuffleOf(settings) === undefined &&
+          door.keyLogic !== "static" &&
+          !dungeonPotsAndDropsOf(door.pottery, door.dropShuffle) &&
+          settings.mode !== "retro"
             ? "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when DR's own key analysis counts them."
             : "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
         ]),

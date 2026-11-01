@@ -21,6 +21,7 @@ import {
   doorKeysExtra,
   doorOf,
   doorShuffleOf,
+  dungeonPotsAndDropsOf,
   isDoorRun,
 } from "@/games/alttpr/data/doorRando";
 import {
@@ -201,18 +202,6 @@ export const glitchBounds = (
   };
 };
 
-/**
- * The pottery modes whose dungeons hold pots beyond their keys
- * (adjust_locations, Regions.py:1165-1232).
- */
-const DUNGEON_POTS: ReadonlySet<string> = new Set([
-  "dungeon",
-  "reduced",
-  "clustered",
-  "nonempty",
-  "lottery",
-]);
-
 const doorSettings = new WeakMap<AlttprSettings, Map<string, Settings>>();
 
 /**
@@ -317,7 +306,7 @@ export const drSettingsOf = (run: RunSettings): Settings => {
       dropShuffle: drops !== "none",
       // DR's release as its ROM title's digits: what a later one asks less
       drVersion: Number(version.replaceAll(".", "")),
-      dungeonPotsAndDrops: DUNGEON_POTS.has(pottery) || drops === "underworld",
+      dungeonPotsAndDrops: dungeonPotsAndDropsOf(pottery, drops),
       ganonHuntGoal: run.goal === "ganonhunt",
       openPyramid: pyramid,
       potKeys: pottery !== "none" && pottery !== "cave",

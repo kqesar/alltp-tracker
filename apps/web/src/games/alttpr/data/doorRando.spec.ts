@@ -520,6 +520,18 @@ describe("a Door Randomizer run's logic", () => {
       expect(
         doorNotes(with_(run, { ...coupled, doorEntrances: "lite" }))[1],
       ).toMatch(/asks every key of its dungeon\.$/);
+      // Where the pack's gate refuses the analysis: static key logic, pots
+      // or drops beyond the keys, Retro's universal keys
+      for (const more of [
+        { keyLogic: "static" },
+        { pottery: "lottery" },
+        { dropShuffle: "underworld" },
+        { mode: "retro" },
+      ] as const)
+        expect(
+          doorNotes(with_(run, { ...coupled, ...more }))[1],
+          JSON.stringify(more),
+        ).toMatch(/asks every key of its dungeon\.$/);
       // DR's analysis reads DR's data alone: an OWR door shuffle's key doors
       // stay strict-safe
       expect(doorNotes(with_(run, { ...OWR, ...coupled }))[1]).toMatch(
