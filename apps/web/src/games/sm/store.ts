@@ -177,6 +177,11 @@ export const useSmStore = create<SmState>()(
         progressOf,
         set,
       });
+      /** The run's clock now, kept with a step that replaces the run. */
+      const clockNow = () => ({
+        clockBase: get().clockBase,
+        timer: get().timer,
+      });
       return {
         ...freshProgress(),
         ...freshTimerFields(),
@@ -184,7 +189,7 @@ export const useSmStore = create<SmState>()(
         applyGameNews,
         future: [],
         load: (progress) => {
-          record(progress);
+          record(progress, clockNow());
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
           requestResync("sm");
@@ -193,7 +198,10 @@ export const useSmStore = create<SmState>()(
         redo,
         reset: () => {
           const { objectives, splitSpeed, wallJump } = get();
-          record({ ...freshProgress(), objectives, splitSpeed, wallJump });
+          record(
+            { ...freshProgress(), objectives, splitSpeed, wallJump },
+            clockNow(),
+          );
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
           requestResync("sm");
@@ -219,7 +227,7 @@ export const useSmStore = create<SmState>()(
           record({ items: { ...get().items, [id]: next } });
         },
         takeSeed: (seed) => {
-          if (get().seed !== seed) record({ seed });
+          if (get().seed !== seed) record({ seed }, clockNow());
         },
         toggleDone: (id) => {
           const { done, objectives } = get();

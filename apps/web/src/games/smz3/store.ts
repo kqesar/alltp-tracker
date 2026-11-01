@@ -154,6 +154,8 @@ export const useSmz3Store = create<Smz3State>()(
         progressOf,
         set,
       });
+      /** The run's clock now, kept with a step that replaces the run. */
+      const clockNow = () => ({ timer: get().timer });
       return {
         ...freshProgress(),
         ...freshTimerSlice(),
@@ -161,7 +163,7 @@ export const useSmz3Store = create<Smz3State>()(
         applyGameNews,
         future: [],
         load: (progress) => {
-          record(progress);
+          record(progress, clockNow());
           set({ timer: IDLE_TIMER });
           runReplaced("smz3", get().past);
           requestResync("smz3");
@@ -169,7 +171,7 @@ export const useSmz3Store = create<Smz3State>()(
         past: [],
         redo,
         reset: () => {
-          record(freshProgress(get().settings));
+          record(freshProgress(get().settings), clockNow());
           set({ timer: IDLE_TIMER });
           runReplaced("smz3", get().past);
           requestResync("smz3");
@@ -194,7 +196,7 @@ export const useSmz3Store = create<Smz3State>()(
           record({ items: { ...get().items, [id]: next } });
         },
         takeSeed: (seed) => {
-          if (get().seed !== seed) record({ seed });
+          if (get().seed !== seed) record({ seed }, clockNow());
         },
         toggleChecks: (ids) => {
           const checked = new Set(get().checked);

@@ -720,6 +720,29 @@ describe("GameStore", () => {
   });
 
   describe("undo and redo", () => {
+    it("gives back the run's own time with a run New game or a seed taken replaced", () => {
+      const store = () => useGameStore.getState();
+      store().startTimer(1_000);
+      store().pauseTimer(61_000);
+      const own = store().timer;
+
+      store().reset();
+      store().startTimer(100_000);
+      const theirs = store().timer;
+      store().undo();
+      expect(store().timer).toEqual(own);
+      store().redo();
+      expect(store().timer).toEqual(theirs);
+      store().undo();
+
+      // Follow this ROM: the other game's clock then sets the timer
+      store().takeSeed("0yAObedRMV");
+      store().startTimer(200_000);
+      store().undo();
+      expect(store().timer).toEqual(own);
+      expect(store().seed).toBeNull();
+    });
+
     it("steps back through changes and forward again", () => {
       const { handleItemClick } = useGameStore.getState();
       handleItemClick("bow");

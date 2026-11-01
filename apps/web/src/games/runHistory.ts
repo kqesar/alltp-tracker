@@ -3,6 +3,52 @@
 // stamps its timeline on every step, so it keeps its own actions and takes
 // only the depth.
 
+/**
+ * What a step that replaces the run, or its seed, keeps beside the snapshot
+ * of the run it leaves: the run's clock (its timer, Super Metroid's clock
+ * base), which lives outside the run. Undo and Redo bring it back with the
+ * run, so undoing New game, a New run or Follow this ROM gives back the run's
+ * own time, not the one the other run counted since. A symbol, so it rides
+ * along every copy of the snapshot (game news rebases it) and no save holds
+ * it.
+ */
+const CLOCK = Symbol("clock");
+
+type Clocked = { [CLOCK]?: Record<string, unknown> };
+
+/** A snapshot with the run's clock kept beside it. */
+export const withClock = <P extends object>(
+  snapshot: P,
+  clock: Record<string, unknown>,
+): P => ({ ...snapshot, [CLOCK]: clock });
+
+/** The clock kept beside a snapshot, if its step kept one. */
+export const clockOf = (snapshot: object) => (snapshot as Clocked)[CLOCK];
+
+/**
+ * The snapshot of the run left by Undo or Redo: with the clock now, when the
+ * step it crosses kept one, so the way back brings it too.
+ * @param run - The run left
+ * @param state - The store's state, its clock now
+ * @param kept - The clock the step crossed kept, or undefined
+ */
+export const leaving = <P extends object>(
+  run: P,
+  state: object,
+  kept: Record<string, unknown> | undefined,
+): P =>
+  kept === undefined
+    ? run
+    : withClock(
+        run,
+        Object.fromEntries(
+          Object.keys(kept).map((key) => [
+            key,
+            (state as Record<string, unknown>)[key],
+          ]),
+        ),
+      );
+
 /** Undo depth: far more than a run needs, and each step is a few KB. */
 export const HISTORY_LIMIT = 200;
 
@@ -54,33 +100,47 @@ export const historyActions = <P extends object>({
       past: rebase(state.past),
     }));
   },
-  /** A change of the player's: one step of the history. */
-  record: (change: Partial<P>) =>
-    set((state) => ({
-      ...change,
-      future: [],
-      past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
-    })),
+  /**
+   * A change of the player's: one step of the history.
+   * @param clock - The run's clock now, for a step that replaces the run or
+   * its seed (`withClock`)
+   */
+  record: (change: Partial<P>, clock?: Record<string, unknown>) =>
+    set((state) => {
+      const run = progressOf(state);
+      return {
+        ...change,
+        future: [],
+        past: [
+          ...state.past,
+          clock === undefined ? run : withClock(run, clock),
+        ].slice(-HISTORY_LIMIT),
+      };
+    }),
   /** Redo the step undone last: the run now is a step of the past again. */
   redo: () =>
     set((state) => {
       const [next, ...future] = state.future;
       if (next === undefined) return state;
+      const kept = clockOf(next);
       return {
         ...next,
+        ...kept,
         future,
-        past: [...state.past, progressOf(state)],
-      };
+        past: [...state.past, leaving(progressOf(state), state, kept)],
+      } as Changes<P>;
     }),
   /** Undo the latest step: the run now is the first of the future. */
   undo: () =>
     set((state) => {
       const previous = state.past.at(-1);
       if (previous === undefined) return state;
+      const kept = clockOf(previous);
       return {
         ...previous,
-        future: [progressOf(state), ...state.future],
+        ...kept,
+        future: [leaving(progressOf(state), state, kept), ...state.future],
         past: state.past.slice(0, -1),
-      };
+      } as Changes<P>;
     }),
 });

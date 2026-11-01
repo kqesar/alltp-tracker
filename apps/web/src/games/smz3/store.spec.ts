@@ -306,6 +306,30 @@ describe("a save file", () => {
   });
 });
 
+describe("the run timer and Undo", () => {
+  it("gives back the run's own time with a run New game or a seed taken replaced", () => {
+    store().startTimer(1_000);
+    store().pauseTimer(61_000);
+    const own = store().timer;
+
+    store().reset();
+    store().startTimer(100_000);
+    const theirs = store().timer;
+    store().undo();
+    expect(store().timer).toEqual(own);
+    store().redo();
+    expect(store().timer).toEqual(theirs);
+    store().undo();
+
+    // Follow this ROM: the other game's clock then sets the timer
+    store().takeSeed("other");
+    store().startTimer(200_000);
+    store().undo();
+    expect(store().timer).toEqual(own);
+    expect(store().seed).toBeNull();
+  });
+});
+
 describe("the run's seed", () => {
   const GUID = "8506bbef2c2b4432af378b571c6c9133";
   const file = (progress: object) =>
