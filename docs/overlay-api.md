@@ -185,7 +185,7 @@ A browser cannot read the HTTP status of a refused WebSocket, so a refusal is an
 | Code | Reason | The client should |
 |---|---|---|
 | 4401 | `token`: missing, wrong (the view's token too), or from before **New addresses** | ask the player for the new address, not retry |
-| 4410 | `stopped`: the player turned the stream off, changed the network setting, or quit | retry with a backoff: the stream comes back at the same address after a restart or a network change |
+| 4410 | `stopped`: the player turned the stream off, changed the network setting, or quit (a SIGTERM or SIGINT counts; a SIGKILL or a crash gives 1006 instead) | retry with a backoff: the stream comes back at the same address after a restart or a network change |
 | 4503 | `full`: sixteen already hold a seat | retry later |
 
 The 16 seats are the stream's, shared by the Browser Sources and the overlay clients (the dialog's count of sources includes them).
