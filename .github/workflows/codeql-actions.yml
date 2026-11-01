@@ -6,15 +6,15 @@ name: "CodeQL Actions"
 # Markdown-only changes.
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     paths:
-      - '.github/**'
+      - ".github/**"
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     paths:
-      - '.github/**'
+      - ".github/**"
   schedule:
-    - cron: '21 13 * * 5'
+    - cron: "21 13 * * 5"
   # Allow manually re-running the analysis from the Actions tab
   workflow_dispatch:
 

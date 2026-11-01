@@ -4,16 +4,16 @@ name: "CodeQL Advanced"
 # which only runs when .github/ changes.
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     # Markdown holds no code to scan; the weekly run still covers everything
     paths-ignore: &docs-only
-      - '**.md'
+      - "**.md"
       - LICENSE
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     paths-ignore: *docs-only
   schedule:
-    - cron: '21 13 * * 5'
+    - cron: "21 13 * * 5"
   # Allow manually re-running the analysis from the Actions tab
   workflow_dispatch:
 

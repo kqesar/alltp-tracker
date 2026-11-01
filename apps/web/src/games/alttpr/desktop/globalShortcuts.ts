@@ -57,7 +57,7 @@ export const runGlobalStep = (action: string) => {
 };
 
 /** What a binding does, in the words the desktop shows beside the key. */
-const describe = (action: ActionId) => {
+const actionLabel = (action: ActionId) => {
   const { control, direction } = parseAction(action);
   return `${controlTitle(control)} ${direction === "back" ? "back" : "forward"}`;
 };
@@ -78,7 +78,7 @@ export const wantedBindings = (
     .map(([action, chord]) => ({
       action,
       chord,
-      description: describe(action),
+      description: actionLabel(action),
     }));
 };
 

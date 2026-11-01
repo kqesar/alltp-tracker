@@ -384,8 +384,8 @@ importers:
         specifier: workspace:*
         version: link:../alttpr
       yaml:
-        specifier: 2.9.1
-        version: 2.9.1
+        specifier: 1.10.3
+        version: 1.10.3
 
 packages:
 
@@ -2239,6 +2239,10 @@ packages:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
 
+  yaml@1.10.3:
+    resolution: {integrity: sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA==}
+    engines: {node: '>= 6'}
+
   yaml@2.9.1:
     resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
     engines: {node: '>= 14.6'}
@@ -3662,7 +3666,10 @@ snapshots:
 
   y18n@5.0.8: {}
 
-  yaml@2.9.1: {}
+  yaml@1.10.3: {}
+
+  yaml@2.9.1:
+    optional: true
 
   yargs-parser@22.0.0: {}
 

@@ -67,9 +67,6 @@ export const lazyDialog = (
   load: () => Promise<Dialog>,
   unavailable: Unavailable,
 ) => {
-  const Unavailable: Dialog = ({ onClose }) => (
-    <DialogUnavailable {...unavailable} onClose={onClose} />
-  );
   let loading: Promise<Dialog> | undefined;
   /** The dialog, once its code has arrived. */
   let loaded: Dialog | undefined;
@@ -104,7 +101,8 @@ export const lazyDialog = (
       const [isOpen, setIsOpen] = useState(false);
       // Not React.lazy: a dialog whose code has arrived opens in the same
       // frame as the click
-      const [dialog, setDialog] = useState<{ Component: Dialog } | null>(null);
+      // `Component` is absent when the fetch failed: the notice is shown instead
+      const [dialog, setDialog] = useState<{ Component?: Dialog } | null>(null);
       const open = () => {
         setIsOpen(true);
         if (loaded) {
@@ -113,13 +111,19 @@ export const lazyDialog = (
         }
         preload().then(
           (Component) => setDialog({ Component }),
-          () => setDialog({ Component: Unavailable }),
+          () => setDialog({}),
         );
       };
+      const close = () => setIsOpen(false);
       const Shown = isOpen ? dialog?.Component : undefined;
       return {
         open,
-        shown: Shown && <Shown onClose={() => setIsOpen(false)} />,
+        shown:
+          isOpen && dialog && !Shown ? (
+            <DialogUnavailable {...unavailable} onClose={close} />
+          ) : (
+            Shown && <Shown onClose={close} />
+          ),
       };
     },
   };
