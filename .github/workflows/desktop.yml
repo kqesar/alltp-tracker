@@ -1,7 +1,8 @@
 name: Desktop
 
 # The desktop app's Rust side (apps/desktop/src-tauri): lint, format and
-# tests on Linux, and the lint again on Windows and macOS (their own code),
+# tests on Linux, a smoke test of the built app (it starts, serves the overlay
+# API and quits on SIGTERM with 4410), and the lint again on Windows and macOS (their own code),
 # on a pull request or a push that touches it only. Its web side is
 # apps/web's, which the CI workflow tests; its installers are built for each
 # OS when a release is cut (desktop-release.yml, started by ci.yml).
@@ -38,7 +39,7 @@ jobs:
         working-directory: .
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xvfb xauth
 
       - name: Setup pnpm, Node.js and dependencies
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
@@ -73,6 +74,19 @@ jobs:
 
       - name: Test
         run: cargo test --locked
+
+      # Unit tests cannot see a crash at launch (a signal handler installed
+      # outside Tauri's runtime panicked in setup, with every test green):
+      # start the real binary on a virtual display, then quit it with SIGTERM.
+      # The dev profile reuses what the tests compiled; custom-protocol is what
+      # `tauri build` adds: without it a debug binary loads the dev server's
+      # address instead of the embedded pages.
+      - name: Build the app
+        run: cargo build --locked --features tauri/custom-protocol
+
+      - name: Smoke test
+        working-directory: apps/desktop
+        run: xvfb-run -a pnpm smoke
 
   # The code that compiles on one system only (cfg(windows), macOS) is linted
   # where it compiles: otherwise a mistake there fails the release matrix,
