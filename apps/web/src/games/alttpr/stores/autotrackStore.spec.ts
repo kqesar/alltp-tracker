@@ -205,8 +205,8 @@ describe("autotracking and the board", () => {
     it("counts again only the counters whose chests the setting moved", async () => {
       // Key pots off: the dungeons that have one. The last reading read
       // the pots, so it settles what the counters hold now
-      const from = { pottery: "keys" };
-      const to = { pottery: "none" };
+      const from = { pottery: "keys" } as const;
+      const to = { pottery: "none" } as const;
       const moved = countersMoved(run(from), run({ ...from, ...to }));
       expect(moved).toContain("chest0");
       const kept = COUNTER_INDICES.map((index) => `chest${index}`).find(
