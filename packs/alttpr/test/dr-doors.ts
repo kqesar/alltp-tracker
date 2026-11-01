@@ -95,12 +95,6 @@ export const KEY_NAMES: Readonly<Record<string, string>> = {
   "Turtle Rock": "Turtle Rock",
 };
 
-/** Every key and big key DR's items name, thirty of each small key. */
-export const EVERY_KEY = Object.values(KEY_NAMES).flatMap((word) => [
-  ...Array.from({ length: 30 }, () => `Small Key (${word})`),
-  `Big Key (${word})`,
-]);
-
 /** The region of each location of a release (its own and its key drops). */
 const regionsOf = (data: DrData): ReadonlyMap<string, string> =>
   new Map([

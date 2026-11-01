@@ -52,6 +52,29 @@ describe("binding a Door Randomizer log", () => {
     expect(binding.verdict === "verified" && binding.facts).toBeGreaterThan(10);
   });
 
+  it("states no take-any or enemies fact a run leaves not known, and refuses one it contradicts", () => {
+    play(vanilla);
+    const facts = (binding: ReturnType<typeof bindRun>) =>
+      binding.verdict === "verified" ? binding.facts : -1;
+    const full = facts(bindRun(vanilla, run()));
+    const { enemyShuffle: _, takeAny: __, ...unknown } = store().settings;
+    useGameStore.setState({ settings: unknown });
+    // Not known on the run's side: no fact, nothing refused
+    expect(facts(bindRun(vanilla, run()))).toBe(full - 2);
+    useGameStore.setState({
+      settings: { ...unknown, enemyShuffle: "shuffled" },
+    });
+    expect(bindRun(vanilla, run())).toMatchObject({
+      refusal: { error: "settings-differ" },
+      verdict: "refused",
+    });
+    useGameStore.setState({ settings: { ...unknown, takeAny: "random" } });
+    expect(bindRun(vanilla, run())).toMatchObject({
+      refusal: { error: "settings-differ" },
+      verdict: "refused",
+    });
+  });
+
   it("refuses another seed's log, saying both seeds", () => {
     play(vanilla);
     useGameStore.setState({ seed: "1_1_278438665" });

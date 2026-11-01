@@ -448,6 +448,24 @@ describe("DR's key analysis on a noted door shuffle", () => {
     expect(run(shuffle({ intensity: 3 }))?.size).toBe(0);
     expect(run(shuffle({ decoupled: true }))?.size).toBe(0);
     expect(run(shuffle({ shuffle: "crossed" }))?.size).toBe(13);
+    // Shuffled entrances, none noted yet: DR's portals follow them
+    expect(
+      run(shuffle(), {
+        entrances: {
+          noted: {},
+          pool: {
+            dropShuffle: "none",
+            enemyShuffle: false,
+            mode: "open",
+            pottery: "none",
+            shopsanity: false,
+            shuffleLinks: false,
+            shuffleTavern: false,
+          },
+          shuffle: "crossed",
+        },
+      }),
+    ).toBeUndefined();
     // Standard's escape starts from its courtyard and Zelda (std_flag)
     expect(
       drWorld(settings("standard"), {
