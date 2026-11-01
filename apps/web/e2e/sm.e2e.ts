@@ -181,6 +181,13 @@ test("follows nothing of a Map Rando ROM of another seed than the run's, until a
       "0 of 1 done.",
     );
     await expect(page.getByTestId("rom-seed-notice")).toBeEmpty();
+    // Undo gives the run back as it was, with nothing of that ROM
+    await page.getByTestId("undo").click();
+    await expect(page.getByTestId("rom-seed-notice")).toContainText("OldSeed");
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, not obtained/);
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "0 of 4 done.",
+    );
   } finally {
     await bridge.stop();
   }

@@ -396,6 +396,19 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
     await page.keyboard.press("Escape");
   }
 
+  // New run: one step, a new run of the ROM, which the board follows at once
+  await page.getByTestId("rom-seed-new-run").click();
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+  await expect(notice).toBeEmpty();
+  // Undo gives the run back as it was, with nothing of that ROM
+  await page.getByTestId("undo").click();
+  await expect(notice).toHaveText(/^The game runs seed OLDSEED/);
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
+  await expect(fairy).not.toHaveAccessibleName(/leads to/);
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+
   // Follow this ROM: the run takes the ROM's seed, and the board follows it at once
   await page.getByTestId("rom-seed-follow").click();
   await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
@@ -403,6 +416,10 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
     "Light Hype Fairy: leads to Blind's Hideout",
   );
   await expect(notice).toBeEmpty();
+  // One undo takes that back too
+  await page.getByTestId("undo").click();
+  await expect(notice).toHaveText(/^The game runs seed OLDSEED/);
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
 });
 
 test("starts the run timer as the game starts, and stops it at the goal", async ({
