@@ -21,7 +21,7 @@ import {
   drWorld,
   KEY_ITEMS,
 } from "./index";
-import type { KeyLogic } from "./key-analysis/analysis";
+import type { KeyRules } from "./key-analysis/analysis";
 import { forgetNotedKeyLogic } from "./key-analysis/noted";
 import { ALTERNATIVE_CRYSTAL_DOORS, UGLY_SMALLS } from "./keys";
 import { OWR_DATA } from "./owr-data";
@@ -276,7 +276,7 @@ describe("DR's world on noted doors", () => {
 describe("DR's key analysis on a noted door shuffle", () => {
   /** Each door rule's numbers, by door: what a key door asks. */
   const rulesOf = (
-    logic: KeyLogic | undefined,
+    logic: KeyRules | undefined,
     leave: readonly string[] = [],
   ) =>
     Object.fromEntries(
@@ -331,6 +331,37 @@ describe("DR's key analysis on a noted door shuffle", () => {
         ?.get("Palace of Darkness")
         ?.doorRules.get("PoD Middle Cage N")?.smallKeyNum,
     ).toBe(6);
+  });
+
+  it("keeps each analysis without the key world it was walked on", () => {
+    const s = shuffle();
+    const world = drWorld(settings("open"), {
+      data: DR_DATA,
+      doors: { notes: vanillaLayout(s), settings: s },
+    });
+    // Every object an entry reaches: none a region or a door of the world
+    // (a KDoor's `to`, a region's `doors`), whose graph reaches all of it
+    const seen = new Set<object>();
+    const walk = (value: unknown): void => {
+      if (typeof value !== "object" || value === null || seen.has(value))
+        return;
+      seen.add(value);
+      expect(value).not.toHaveProperty("to");
+      expect(value).not.toHaveProperty("doors");
+      expect(value).not.toHaveProperty("world");
+      const children =
+        value instanceof Map
+          ? [...value.keys(), ...value.values()]
+          : value instanceof Set || Array.isArray(value)
+            ? [...value]
+            : Object.values(value);
+      for (const child of children) walk(child);
+    };
+    expect(world.doorKeyLogic?.size).toBe(13);
+    for (const logic of world.doorKeyLogic?.values() ?? []) walk(logic);
+    // A few thousand small objects in all, against the world's tens of
+    // thousands
+    expect(seen.size).toBeLessThan(5_000);
   });
 
   it("leaves a dungeon strict-safe while a door of its layout or a kind is not noted", () => {

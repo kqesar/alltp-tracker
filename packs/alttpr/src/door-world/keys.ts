@@ -24,7 +24,7 @@
 import { locationId } from "@alltp/engine";
 import { DR_LOCATIONS } from "../door-rando/locations";
 import { type DrData, type DrMode, dependentsOf, perData } from "./data";
-import type { DoorRule, KeyLogic } from "./key-analysis/analysis";
+import type { DoorRule, KeyRules } from "./key-analysis/analysis";
 import { and, maybeOf, or, readFact } from "./text";
 
 /** DR's dungeons in the pack's key codes (`key<code>`, `bigKey<code>`). */
@@ -161,7 +161,7 @@ export interface WorldKeys {
    * The rule a key door asks, from its dungeon's analysis (universal keys
    * aside: addKeyRules reads them as bought, `maybe`).
    */
-  doorRule(dungeon: string, rule: DoorRule, logic: KeyLogic): string;
+  doorRule(dungeon: string, rule: DoorRule, logic: KeyRules): string;
   /**
    * The rule a small key door asks where no analysis ran: every key of its
    * dungeon, else maybe (strict-safe: never more yes than DR's rules).
@@ -331,7 +331,7 @@ export function addKeyRules(
   locations: Map<string, string>,
   keys: WorldKeys,
   mode: DrMode,
-  logic: ReadonlyMap<string, KeyLogic> | undefined,
+  logic: ReadonlyMap<string, KeyRules> | undefined,
 ): void {
   const special = specialBigKeyDoors(mode);
   const dependents = dependentsOf(data);

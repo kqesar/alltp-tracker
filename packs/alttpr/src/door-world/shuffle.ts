@@ -36,7 +36,7 @@ import {
   portalDungeonOf,
   vanillaKind,
 } from "./doors";
-import type { KeyLogic } from "./key-analysis/analysis";
+import type { KeyRules } from "./key-analysis/analysis";
 import {
   DR_KEY_CODES,
   isBigChest,
@@ -283,7 +283,7 @@ export function addShuffledDoorRules(
   doors: DrNotedDoors,
   dungeons: ReadonlyMap<string, string>,
   mode: DrMode,
-  logic: ReadonlyMap<string, KeyLogic> = new Map(),
+  logic: ReadonlyMap<string, KeyRules> = new Map(),
 ): void {
   const special = specialBigKeyDoors(mode);
   const doorNamed = data.doorByName;

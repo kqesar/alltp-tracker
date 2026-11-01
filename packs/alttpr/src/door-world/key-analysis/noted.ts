@@ -17,7 +17,7 @@ import type { DrData, DrMode } from "../data";
 import { doorById, isShuffledDoor } from "../doors";
 import { regionTypeOf, screensOf } from "../overworld";
 import { isShut, kindIn } from "../shuffle";
-import { analyzeDungeon, type KeyLogic } from "./analysis";
+import { analyzeDungeon, type KeyRules, keyRulesOf } from "./analysis";
 import { keyLayout } from "./counters";
 import {
   DR_DUNGEON_ORDER,
@@ -56,14 +56,17 @@ const destinationsOf = (mode: DrMode): ReadonlySet<string> =>
 /**
  * The analyses run, by all that one dungeon's reads (the run's settings,
  * its starts, each exit of its layout's rooms: its link, its kind, its
- * dest); null where DR could not walk the layout. The last few hundred
- * kept: a player's notes move one dungeon at a time.
+ * dest); null where DR could not walk the layout. The last 64 kept, about
+ * five a dungeon: a player's notes move one dungeon at a time. Each keeps
+ * its rules alone (`keyRulesOf`), about 40 kB measured on a crossed seed:
+ * the layout it was walked on holds the whole key world built for its
+ * batch, about 0.65 MB, which would stay as long as the entry.
  */
-const ANALYSES = new Map<string, KeyLogic | null>();
-const ANALYSES_KEPT = 256;
+const ANALYSES = new Map<string, KeyRules | null>();
+const ANALYSES_KEPT = 64;
 
 /** Keeps an analysis, the oldest let go past ANALYSES_KEPT. */
-function keep(key: string, analysed: KeyLogic | null): void {
+function keep(key: string, analysed: KeyRules | null): void {
   ANALYSES.set(key, analysed);
   for (const old of ANALYSES.keys()) {
     if (ANALYSES.size <= ANALYSES_KEPT) break;
@@ -140,9 +143,9 @@ export interface NotedDoorAnalysis {
  */
 export function notedDoorKeyLogic(
   input: NotedDoorAnalysis,
-): ReadonlyMap<string, KeyLogic> {
+): ReadonlyMap<string, KeyRules> {
   const { data, doors, dungeons, connections, mode, analysis } = input;
-  const found = new Map<string, KeyLogic>();
+  const found = new Map<string, KeyRules>();
   const { settings } = doors;
   if (
     data.flavor !== "dr" ||
@@ -249,7 +252,7 @@ export function notedDoorKeyLogic(
       const startRegions = starts.map((name) => world.regions.get(name));
       const proposal = proposalOf(world.doors, regions, kindOf);
       const units = proposal.length;
-      let analysed: KeyLogic | null = null;
+      let analysed: KeyRules | null = null;
       // Notes no generated layout has (a slip, or another run's settings)
       // stop DR's own walk (find_counter's "Unable to find door
       // permutation", KeyDoorShuffle.py): such a dungeon stays strict-safe
@@ -266,7 +269,7 @@ export function notedDoorKeyLogic(
             proposal,
             starts: startRegions as KRegion[],
           });
-          analysed = analyzeDungeon(layout);
+          analysed = keyRulesOf(analyzeDungeon(layout));
         }
       } catch (error) {
         if (!(error instanceof RangeError)) throw error;

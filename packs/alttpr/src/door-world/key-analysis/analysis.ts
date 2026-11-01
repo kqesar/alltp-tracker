@@ -69,6 +69,46 @@ export interface KeyLogic {
   readonly chestCounting?: boolean;
 }
 
+/**
+ * A dungeon's key logic without the world it was walked on: its door
+ * rules, chest counting and big key sets as KeyLogic holds them (their
+ * locations are leaves), its big key doors by name, and of its layout the
+ * keys its chests hold and its key doors' names, all the key rules read
+ * (keys.ts). A KeyLogic is one; `keyRulesOf` keeps only these, since a
+ * KDoor reaches the whole key world built for the analysis.
+ */
+export interface KeyRules {
+  readonly dungeon: string;
+  readonly doorRules: ReadonlyMap<string, DoorRule>;
+  readonly bkRestricted: ReadonlySet<KLocation>;
+  readonly bkDoors: ReadonlySet<{ readonly name: string }>;
+  readonly bkChests: ReadonlySet<KLocation>;
+  readonly chestCounting?: boolean;
+  readonly layout: {
+    readonly maxChests: number;
+    readonly flatProposal: readonly { readonly name: string }[];
+  };
+}
+
+/** A key logic's rules alone, for a cache to keep without its world. */
+export function keyRulesOf(logic: KeyLogic): KeyRules {
+  const named = ({ name }: { readonly name: string }) => ({ name });
+  return {
+    bkChests: logic.bkChests,
+    bkDoors: new Set([...logic.bkDoors].map(named)),
+    bkRestricted: logic.bkRestricted,
+    doorRules: logic.doorRules,
+    dungeon: logic.dungeon,
+    ...(logic.chestCounting === undefined
+      ? {}
+      : { chestCounting: logic.chestCounting }),
+    layout: {
+      flatProposal: logic.layout.flatProposal.map(named),
+      maxChests: logic.layout.maxChests,
+    },
+  };
+}
+
 const difference = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> =>
   new Set([...a].filter((x) => !b.has(x)));
 const subset = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean =>

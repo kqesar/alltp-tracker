@@ -56,6 +56,7 @@ import { portalDoorsOf } from "./doors";
 import {
   type DoorRule,
   type KeyLogic,
+  type KeyRules,
   vanillaKeyLogic,
 } from "./key-analysis/analysis";
 import { portalsKnown } from "./key-analysis/dungeon";
@@ -187,7 +188,7 @@ export interface DrWorldOptions {
   readonly doorRule?: (
     dungeon: string,
     rule: DoorRule,
-    logic: KeyLogic,
+    logic: KeyRules,
     keys: WorldKeys,
   ) => string;
   /**
@@ -233,7 +234,7 @@ export interface DrWorld extends FactWorld {
    * whole (key-analysis/noted.ts), by dungeon: the dungeons whose key
    * doors ask its rules, every other strict-safe.
    */
-  readonly doorKeyLogic?: ReadonlyMap<string, KeyLogic>;
+  readonly doorKeyLogic?: ReadonlyMap<string, KeyRules>;
 }
 
 /** The engine's id of the Menu, DR's start (BaseClasses.py:610-614). */

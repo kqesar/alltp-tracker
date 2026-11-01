@@ -26,7 +26,7 @@ import {
 } from "./doors";
 import { DR_DATA } from "./dr-data";
 import { DR_DEFAULTS, type DrWorld, drKeyLogic, drWorld } from "./index";
-import type { DoorRule, KeyLogic } from "./key-analysis/analysis";
+import type { DoorRule, KeyRules } from "./key-analysis/analysis";
 import { DUNGEON_EVENTS } from "./key-analysis/dungeon";
 import { DR_KEY_CODES, keyDropsOf, type WorldKeys } from "./keys";
 import { and, or } from "./text";
@@ -60,7 +60,7 @@ type Placement = ReadonlyMap<string, string>;
  * key in a door's one location behind (AllowSmall), the big key in a
  * door's locations behind (Lock).
  */
-function atomsOf(logic: ReadonlyMap<string, KeyLogic>) {
+function atomsOf(logic: ReadonlyMap<string, KeyRules>) {
   const allow = new Map<DoorRule, string>();
   const lock = new Map<DoorRule, string>();
   for (const [dungeon, dungeonLogic] of logic)
