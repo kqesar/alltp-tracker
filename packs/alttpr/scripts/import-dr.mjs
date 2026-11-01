@@ -43,7 +43,13 @@ import {
 } from "./dr-tests.mjs";
 import { importDrWorld } from "./dr-world-data.mjs";
 import { readCommit } from "./import-upstream-tests.mjs";
-import { assigned, expression, literal, tokens } from "./python.mjs";
+import {
+  assigned,
+  expression,
+  literal,
+  pythonString,
+  tokens,
+} from "./python.mjs";
 
 export const DR_REPO = "aerinon/ALttPDoorRandomizer";
 export const DR_VERSION = "1.5.8";
@@ -348,7 +354,7 @@ export function importDr(checkout, version = DR_VERSION) {
   // Each key drop sits where Regions.py lists it (_create_region's
   // locations, Regions.py:1104-1107): the sprite's or the pot's region
   for (const entry of out) {
-    const quoted = [`'${entry.name.replace(/'/g, "\\'")}'`, `"${entry.name}"`];
+    const quoted = [pythonString(entry.name), pythonString(entry.name, '"')];
     const at = quoted
       .map((q) => regions.indexOf(q))
       .find((index) => index !== -1);

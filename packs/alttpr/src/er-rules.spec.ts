@@ -2,7 +2,12 @@ import { compileWorld, loadRules, type World } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
 import { importErRules, regionId } from "../scripts/er-rules.mjs";
 import { importErTests } from "../scripts/er-tests.mjs";
-import { functionBody, pythonExpression } from "../scripts/python.mjs";
+import {
+  functionBody,
+  pythonExpression,
+  pythonLiteral,
+  pythonString,
+} from "../scripts/python.mjs";
 import er from "./entrances/er.json" with { type: "json" };
 import rules from "./entrances/rules.json" with { type: "json" };
 import { STATE_NAMES } from "./pack";
@@ -10,6 +15,18 @@ import { RULES } from "./rules";
 import { OPEN, STANDARD } from "./settings";
 
 describe("the Python reader", () => {
+  it("writes a name as the literal a source looks it up by", () => {
+    expect(pythonString("Link's House")).toBe("'Link\\'s House'");
+    expect(pythonString('Say "hi"', '"')).toBe('"Say \\"hi\\""');
+    // The backslash escaped first, so it never escapes the quote after it
+    for (const [text, quote] of [
+      ["a\\'b", "'"],
+      ["c\\\"d'", '"'],
+      ["\\", "'"],
+    ] as const)
+      expect(pythonLiteral(pythonString(text, quote))).toBe(text);
+  });
+
   it("reads an expression at Python's precedence", () => {
     expect(pythonExpression("a or b and not c")).toEqual({
       args: [

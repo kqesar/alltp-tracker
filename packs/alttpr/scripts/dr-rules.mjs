@@ -41,6 +41,7 @@ import {
   functionBody,
   pythonExpression,
   pythonLiteral,
+  pythonString,
 } from "./python.mjs";
 import {
   all,
@@ -1763,10 +1764,7 @@ export function importDrRules(read, world, extras, flavor = "dr") {
     for (const [location, item] of Object.entries(
       /** @type {Record<string, string>} */ (table.value),
     )) {
-      const at = regionsSource.indexOf(
-        `'${location.replace(/'/g, "\\'")}'`,
-        start,
-      );
+      const at = regionsSource.indexOf(pythonString(location), start);
       const line = regionsSource.slice(0, at).split("\n").length;
       if (item === "Beat Boss") {
         owrBossKills.push(location);
