@@ -48,6 +48,10 @@ futures-util = { version = "0.3.34", default-features = false, features = ["sink
 # A WebSocket client for follow.rs's tests: axum's own version, so it is built once
 tokio-tungstenite = "0.30.0"
 
+[target.'cfg(unix)'.dev-dependencies]
+# kill(2) on the test's own pid (quit_signal.rs): tokio already builds it
+libc = "0.2.191"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 # The GlobalShortcuts portal (Wayland). async-io, as tauri-plugin-opener's zbus
 # already runs: no second zbus runtime

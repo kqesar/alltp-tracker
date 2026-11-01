@@ -239,16 +239,8 @@ pub fn run() {
             });
             // A signal asking the app to quit takes the normal exit, so the
             // servers close their clients (4410) instead of dropping them
-            match quit_signal::QuitSignals::install() {
-                Ok(signals) => {
-                    let handle = app.handle().clone();
-                    tauri::async_runtime::spawn(async move {
-                        signals.wait().await;
-                        handle.exit(0);
-                    });
-                }
-                Err(error) => eprintln!("cannot listen for a quit signal: {error}"),
-            }
+            let handle = app.handle().clone();
+            quit_signal::listen(move || handle.exit(0));
             Ok(())
         })
         .on_page_load(shortcuts::on_page_load)
