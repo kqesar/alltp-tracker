@@ -60,6 +60,9 @@ describe("recordSeed", () => {
 
     recordSeed(store, "B");
     expect(store.getState().seed).toBe("A");
+    // Forms that cannot be compared prove no other seed, nor the same
+    recordSeed(store, "B", { same: () => null });
+    expect(store.getState().seed).toBe("A");
 
     // The same seed in another form, or a race's ROM, which the board follows
     recordSeed(store, "a", { same: (x, y) => x.toLowerCase() === y });

@@ -1145,7 +1145,8 @@ describe("a ROM of another seed than the run's", () => {
     createFollower().read(titled("DR158_1_1_840319254"));
 
     expect(store().items.hookshot).toBe(true);
-    expect(store().seed).toBe("1_1_840319254");
+    // The run keeps its own form: nothing proves the number is its seed
+    expect(store().seed).toBe("toInhuUYy");
   });
 
   it("follows an Overworld ROM's 9 characters of a 10-character hash", () => {

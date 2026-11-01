@@ -33,7 +33,7 @@ type SeedStore<Run extends { seed: string | null }> = {
  * @param store - The game's run store
  * @param seed - The seed the ROM names, or null when it names none
  * @param options - `same`, whether two ids name the same seed (null when
- * their forms cannot be compared, which proves no other seed), and `race`,
+ * their forms cannot be compared, which keeps the run's own form), and `race`,
  * whether the reading was in Race Mode
  */
 export const recordSeed = <Run extends { seed: string | null }>(
@@ -49,7 +49,7 @@ export const recordSeed = <Run extends { seed: string | null }>(
 ): void => {
   const before = store.getState().seed;
   if (seed === null || seed === before) return;
-  if (before !== null && !race && same(before, seed) === false) return;
+  if (before !== null && !race && same(before, seed) !== true) return;
   store
     .getState()
     .applyGameNews((run) =>
