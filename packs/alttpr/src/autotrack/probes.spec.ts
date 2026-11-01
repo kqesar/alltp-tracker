@@ -306,6 +306,10 @@ describe("sameSeedId", () => {
     expect(sameSeedId("1_1_840319254", "toInhuUYy")).toBeNull();
     // alttpr.com's hash against a DR ROM: no form to hold either
     expect(sameSeedId("9MQ9gO1wMD", "1_1_840319254")).toBeNull();
+    // Two titles alike: OWR writes the number without a site's ROM header
+    // (Rom.py:1855-1856), the hash's 9 characters with avianart's
+    expect(sameSeedId("1_1_4kxBlrWuP", "1_1_291792995")).toBeNull();
+    expect(sameSeedId("1_1_291792995", "1_1_4kxBlrWuP")).toBeNull();
     // Two numbers, two titles: they compare
     expect(sameSeedId("840319254", "1_1_840319254")).toBe(true);
     expect(sameSeedId("840319255", "1_1_840319254")).toBe(false);

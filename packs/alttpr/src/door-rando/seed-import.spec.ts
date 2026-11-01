@@ -84,9 +84,11 @@ describe("avianartReading", () => {
       u6BKiwo1E: { id: "1_1_u6BKiwo1E", rom: "1_1_u6BKiwo1E", same: true },
       uv7P2Luey: { id: "uv7P2Luey", rom: "1_1_657157563", same: null },
     });
-    // Another seed's ROM is another seed
-    expect(sameSeedId(ids.toInhuUYy.id, ids["4kxBlrWuP"].rom)).toBe(false);
-    expect(sameSeedId(ids["4kxBlrWuP"].id, ids.toInhuUYy.rom)).toBe(false);
+    // Another seed's ROM of the same form is another seed; a number against
+    // a hash proves nothing
+    expect(sameSeedId(ids.toInhuUYy.id, ids.C2BdrZOiV.rom)).toBe(false);
+    expect(sameSeedId(ids["4kxBlrWuP"].id, ids.u6BKiwo1E.rom)).toBe(false);
+    expect(sameSeedId(ids["4kxBlrWuP"].id, ids.toInhuUYy.rom)).toBeNull();
   });
 
   it("cuts an Overworld permalink's longer hash to the ROM's 9 characters", () => {

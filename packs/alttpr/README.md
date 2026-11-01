@@ -1066,9 +1066,10 @@ digits (`Rom.py:1503-1504`), the fork the hash's first 9 characters (OWR
 `Rom.py:1847`, under avianart's ROM header). `sameSeedId` then holds two
 ids of one seed the same when their seeds after team and player are, or a
 title's id long enough to have been cut, or the fork's 9 characters,
-begin the other's; a site's hash against a title's number (a run saved
-before, a 1.5.6 permalink whose `meta` names no seed) cannot be compared,
-null: the app's check that the ROM connected is the run's seed says
+begin the other's; a hash against a number, a site's or a title's (a
+run saved before, a 1.5.6 permalink whose `meta` names no seed, an OWR
+ROM written without a site's header, `Rom.py:1855-1856`) cannot be
+compared, null: the app's check that the ROM connected is the run's seed says
 nothing then, and the review's binding proves nothing from it. The
 race flag is vt's pair at the same address (`Rom.py:1156`, `1552-1553`;
 Mystery.py always asks for a race, `Mystery.py:70`), so the probe and its fail-closed answer are the same. The

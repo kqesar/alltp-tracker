@@ -126,10 +126,11 @@ const SITE_SEED_LENGTH = 9;
  * - A title's id long enough to have been cut to the title's 21 bytes
  *   matches any seed it begins, and the Overworld fork's 9 characters of a
  *   site's hash match that hash.
- * - A site's hash against a title's number cannot be compared: DR's own
- *   branch names the seed by its number, which the hash does not tell
- *   (DR 1.5.8 Rom.py:1503-1504), so null, which the app takes as no
- *   mismatch: the tracker never says a ROM is another seed's on a guess.
+ * - A number against a hash cannot be compared: DR's own branch names the
+ *   seed by its number (DR 1.5.8 Rom.py:1503-1504), and so does OWR without
+ *   a site's ROM header (OWR 0.8.0.2 Rom.py:1855-1856), which the hash does
+ *   not tell, a site's or a title's alike. So null, which the app takes as
+ *   no mismatch: the tracker never says a ROM is another seed's on a guess.
  * @param a - A seed id, as the run or a ROM holds it
  * @param b - Another
  */
@@ -138,14 +139,9 @@ export function sameSeedId(a: string, b: string): boolean | null {
   const [one, two] = [idOf(a), idOf(b)];
   if (one.seed === two.seed) return true;
   if (begins(one, two) || begins(two, one)) return true;
-  // A title's number against a site's hash: nothing holds them together
-  const [title, site] = one.titled ? [one, two] : [two, one];
-  return title.titled &&
-    !site.titled &&
-    DIGITS.test(title.seed) &&
-    !DIGITS.test(site.seed)
-    ? null
-    : false;
+  // A number against a hash, a site's or a title's: nothing holds them
+  // together
+  return DIGITS.test(one.seed) !== DIGITS.test(two.seed) ? null : false;
 }
 
 /** A seed id's seed, and whether it is a title's (`TITLE_ID`). */
