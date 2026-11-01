@@ -10,8 +10,8 @@ import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
+  RaceLine,
   RememberedRaceBadge,
-  raceReason,
   StatusDot,
 } from "@/components/autotrack/StatusDot";
 import { Modal } from "@/components/ui/Modal";
@@ -159,13 +159,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 ? "Reload the page to try again; your run is saved."
                 : detailOf(shown, active, elsewhere)}
             </p>
-            {connected && (
-              <p className="autotrack-status__detail" data-testid="race-mode">
-                {race
-                  ? raceReason(race)
-                  : "Race Mode is off: this seed is not a race seed."}
-              </p>
-            )}
+            {connected && <RaceLine race={race} />}
             {connected && seedCheck && (
               <p
                 className="autotrack-status__detail"

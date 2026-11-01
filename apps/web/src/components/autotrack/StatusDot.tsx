@@ -39,6 +39,29 @@ export const raceReason = (race: RaceStatus, flag = true) => {
 };
 
 /**
+ * The dialog's line on Race Mode while connected, in or out of it, the same
+ * in every game's dialog: why it is on, or that it is off.
+ * @param race - The session's race status while connected and Race Mode is
+ * on, else null
+ * @param flag - Whether the game's ROMs carry a race flag
+ */
+export const RaceLine = ({
+  flag = true,
+  race,
+}: {
+  flag?: boolean;
+  race: RaceStatus | null;
+}) => (
+  <p className="autotrack-status__detail" data-testid="race-mode">
+    {race
+      ? raceReason(race, flag)
+      : flag
+        ? "Race Mode is off: this seed is not a race seed."
+        : "Race Mode is off, as you set it."}
+  </p>
+);
+
+/**
  * The race-legal badge: shown while Race Mode is on, because the player set
  * it always on, from the seed's race flag, or because the flag could not be
  * read. Race Mode then reads nothing the race profile forbids, which keeps
