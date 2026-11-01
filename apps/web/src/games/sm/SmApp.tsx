@@ -1,5 +1,6 @@
+import { RomSeedNotice } from "@/components/autotrack/RomSeedNotice";
 import { GameShell } from "@/components/ui/GameShell";
-import { useSmAutotrack } from "@/games/sm/components/SmAutotrack";
+import { smRomSeed, useSmAutotrack } from "@/games/sm/components/SmAutotrack";
 import { SmControls } from "@/games/sm/components/SmControls";
 import { SmGrid } from "@/games/sm/components/SmGrid";
 import { SmObjectives } from "@/games/sm/components/SmObjectives";
@@ -27,7 +28,11 @@ const SmApp = () => {
   useSmAutotrack();
   useCloseReview();
   return (
-    <GameShell game="sm" toolbar={<SmControls />}>
+    <GameShell
+      game="sm"
+      notices={<RomSeedNotice romSeed={smRomSeed} />}
+      toolbar={<SmControls />}
+    >
       <div className="sm-layout" data-testid="layout">
         <div className="board-run">
           <SmRunTimer />

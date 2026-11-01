@@ -11,6 +11,7 @@ import {
   type Progress,
   parseSave,
 } from "@/games/alttpr/stores/persistence";
+import { recordSeed } from "@/games/seedId";
 
 const STORAGE_KEY = "alltp-tracker-state";
 
@@ -719,6 +720,29 @@ describe("GameStore", () => {
   });
 
   describe("undo and redo", () => {
+    it("gives back the run's own time with a run New game or a seed taken replaced", () => {
+      const store = () => useGameStore.getState();
+      store().startTimer(1_000);
+      store().pauseTimer(61_000);
+      const own = store().timer;
+
+      store().reset();
+      store().startTimer(100_000);
+      const theirs = store().timer;
+      store().undo();
+      expect(store().timer).toEqual(own);
+      store().redo();
+      expect(store().timer).toEqual(theirs);
+      store().undo();
+
+      // Follow this ROM: the other game's clock then sets the timer
+      store().takeSeed("0yAObedRMV");
+      store().startTimer(200_000);
+      store().undo();
+      expect(store().timer).toEqual(own);
+      expect(store().seed).toBeNull();
+    });
+
     it("steps back through changes and forward again", () => {
       const { handleItemClick } = useGameStore.getState();
       handleItemClick("bow");
@@ -1225,6 +1249,21 @@ describe("GameStore", () => {
       expect(store().items.hookshot).toBe(false);
       expect(store().settings.crystalsTower).toBe(3);
       expect(store().settings.hidden).not.toContain("crystalsTower");
+    });
+
+    it("never reveal a seed's settings to a run of another seed the history keeps", () => {
+      store().applyRun("mystery", getPreset("mystery").settings, () => ({
+        seed: "9MQ9gO1wMD",
+      }));
+      // New game, on which the ROM of another seed then names its own
+      store().reset();
+      recordSeed(useGameStore, "0yAObedRMV");
+      store().revealSettings({ crystalsTower: 3 });
+      expect(store().settings.crystalsTower).toBe(3);
+
+      store().undo();
+      expect(store().seed).toBe("9MQ9gO1wMD");
+      expect(store().settings.hidden).toContain("crystalsTower");
     });
 
     it("are saved and read back, and a damaged list is refused", () => {

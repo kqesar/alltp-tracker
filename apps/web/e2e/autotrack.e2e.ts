@@ -12,8 +12,11 @@ import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { comeOut, goIn, leadTo } from "../../../packs/alttpr/test/entrance-rom";
 import { writeSeedSettings } from "../../../packs/alttpr/test/seed-rom";
 import {
+  auditDialog,
   auditPage,
   clickToolbarAction,
+  expectLastFocusClear,
+  expectNoticesRoomFits,
   focusedTestId,
   focusRinged,
   tabTo,
@@ -324,6 +327,174 @@ test("notes the doors Link goes through in a Crosskeys run", async ({
   await expect(page.getByTestId("entrances-summary")).toHaveText(
     "2 of 138 entrances noted",
   );
+});
+
+test("follows nothing of a ROM of another seed than the run's, until told to", async ({
+  page,
+}) => {
+  // The run's seed, a Crosskeys run, read once: the run records its seed
+  bootSeed(bridge, { name: "RUNSEED", race: false });
+  writeSeedSettings(bridge.memory, { dungeonItems: "full" });
+  await openTracker(page);
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByRole("dialog", { name: "Choose a run type" })
+    .getByRole("button", { name: /^Crosskeys/ })
+    .click();
+  await page.getByRole("button", { name: "Switch & reset" }).click();
+  await connect(page);
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-disconnect").click();
+  await page.keyboard.press("Escape");
+
+  // Another seed's ROM in the console: the Hammer found, Link in Blind's
+  // Hideout by a door its tables shuffle
+  bootSeed(bridge, { name: "OLDSEED", race: false });
+  writeSeedSettings(bridge.memory, { dungeonItems: "full" });
+  bridge.memory[SAVE(0x34b)] = 0x01;
+  leadTo(bridge.memory, "Kakariko Shop", "Elder House Exit (East)");
+  goIn(bridge.memory, "Light Hype Fairy", "Blinds Hideout");
+  await connect(page);
+
+  const notice = page.getByTestId("rom-seed-notice");
+  await expect(notice).toHaveText(
+    /^The game runs seed OLDSEED, not this run's seed RUNSEED: the board does not follow it\./,
+  );
+  const hammer = page.getByTestId("item-hammer");
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
+  const fairy = page.getByTestId("entrance-light-hype-fairy");
+  await expect(fairy).not.toHaveAccessibleName(/leads to/);
+  await expect(page.getByTestId("seed-prompt")).toBeEmpty();
+
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ height: 900, width });
+    // The map's pins keep the WCAG 2.5.8 exception (components.md)
+    await auditPage(page, ".mapspan");
+    // The notice stays in the viewport, its answers on screen
+    const box = await notice.boundingBox();
+    expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+    await expect(page.getByTestId("rom-seed-follow")).toBeInViewport();
+    // Nothing a keyboard reaches is left under it
+    await expectLastFocusClear(page);
+    if (process.env.ROM_SEED_SHOTS) {
+      await page.screenshot({
+        path: `${process.env.ROM_SEED_SHOTS}/alttpr-notice-${width}.png`,
+      });
+    }
+    await openDialog(page);
+    const line = dialog(page).getByTestId("autotrack-rom-seed");
+    await expect(line).toContainText("The game runs seed OLDSEED");
+    await auditDialog(page, dialog(page), width);
+    if (process.env.ROM_SEED_SHOTS) {
+      await line.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: `${process.env.ROM_SEED_SHOTS}/alttpr-dialog-${width}.png`,
+      });
+    }
+    await page.keyboard.press("Escape");
+  }
+
+  // Laptop and tablet heights: the notices' room scrolls the page only where
+  // they cover the board, and narrows nothing
+  for (const [width, height] of [
+    [1440, 768],
+    [1280, 720],
+    [820, 1180],
+  ]) {
+    await page.setViewportSize({ height, width });
+    await expectNoticesRoomFits(page);
+    if (process.env.ROM_SEED_SHOTS) {
+      await page.screenshot({
+        path: `${process.env.ROM_SEED_SHOTS}/alttpr-notice-${width}x${height}.png`,
+      });
+    }
+  }
+
+  // New run: one step, a new run of the ROM, which the board follows at once
+  await page.getByTestId("rom-seed-new-run").click();
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+  await expect(notice).toBeEmpty();
+  // Undo gives the run back as it was, with nothing of that ROM
+  await page.getByTestId("undo").click();
+  await expect(notice).toHaveText(/^The game runs seed OLDSEED/);
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
+  await expect(fairy).not.toHaveAccessibleName(/leads to/);
+  await expect(page.getByTestId("item-hookshot")).toHaveAccessibleName(
+    cell("Hookshot", "obtained"),
+  );
+
+  // Follow this ROM: the run takes the ROM's seed, and the board follows it at once
+  await page.getByTestId("rom-seed-follow").click();
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
+  await expect(fairy).toHaveAccessibleName(
+    "Light Hype Fairy: leads to Blind's Hideout",
+  );
+  await expect(notice).toBeEmpty();
+  // One undo takes that back too
+  await page.getByTestId("undo").click();
+  await expect(notice).toHaveText(/^The game runs seed OLDSEED/);
+  await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
+});
+
+test("keeps a run started from another seed while the old ROM runs, then follows its own", async ({
+  page,
+}) => {
+  // alttpr.com's bucket: the Daily of Oct 16 (Inverted), and none other
+  await page.route(
+    "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/*",
+    (route) =>
+      route.request().url().endsWith("/eM43RgZ4Gj.json")
+        ? route.fulfill({
+            body: readFileSync(
+              new URL(
+                "../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json",
+                import.meta.url,
+              ),
+              "utf8",
+            ),
+            contentType: "application/json",
+            headers: { "Access-Control-Allow-Origin": "*" },
+          })
+        : route.fulfill({
+            headers: { "Access-Control-Allow-Origin": "*" },
+            status: 403,
+          }),
+  );
+  bootSeed(bridge, { name: "OLDSEED", race: false });
+  await openTracker(page);
+  await connect(page);
+  const hookshot = page.getByTestId("item-hookshot");
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "obtained"));
+
+  // Start from a seed, the old ROM still connected
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByTestId("seed-import-input")
+    .fill("https://alttpr.com/en/h/eM43RgZ4Gj");
+  await page.getByTestId("seed-import-load").click();
+  await page
+    .getByRole("dialog", { name: "Switch run type?" })
+    .getByRole("button", { name: "Switch & reset" })
+    .click();
+
+  // The new run keeps its seed, and nothing of the old ROM
+  const notice = page.getByTestId("rom-seed-notice");
+  await expect(notice).toHaveText(
+    /^The game runs seed OLDSEED, not this run's seed eM43RgZ4Gj:/,
+  );
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "not obtained"));
+
+  // Its own ROM loaded: followed
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-disconnect").click();
+  await page.keyboard.press("Escape");
+  bootSeed(bridge, { name: "eM43RgZ4Gj", race: false });
+  await connect(page);
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "obtained"));
+  await expect(notice).toBeEmpty();
 });
 
 test("starts the run timer as the game starts, and stops it at the goal", async ({

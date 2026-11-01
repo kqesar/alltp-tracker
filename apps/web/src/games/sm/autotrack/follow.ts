@@ -10,7 +10,10 @@
 //   stays as the player left it. In Race Mode (on by default: Map Rando's ROM
 //   has no race flag) the table is not read: the player sets the objectives,
 //   and the game marks done those of them a boss kill completes.
-// - The seed's name is recorded as the run's `seed` (outside Race Mode).
+// - The seed's name is recorded as the run's `seed` (outside Race Mode). A
+//   ROM that names another seed than the run's is not followed at all
+//   (games/seedId.ts, `checkRomSeed`), the timer included, until the run is
+//   replaced or takes that seed, when the reading held is laid as a first one.
 // - The items the seed adds (the Wall Jump Boots, the split Speed Booster)
 //   follow its settings (outside Race Mode; the player's in it).
 // - A location the game says collected is added to the run's `found` with
@@ -31,8 +34,9 @@ import {
   type SmItemId,
 } from "@alltp/pack-sm";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
-import { recordSeed } from "@/games/seedId";
+import { onRomSeed, recordSeed } from "@/games/seedId";
 import type { SmReading } from "@/games/sm/autotrack/reading";
+import { smRomSeedCheck, smRomSeedName } from "@/games/sm/autotrack/romSeed";
 import { clockBaseOf } from "@/games/sm/autotrack/timer";
 import { type SmProgress, useSmStore } from "@/games/sm/store";
 import { stampOf } from "@/games/stamp";
@@ -102,6 +106,16 @@ export const createSmFollower = () => {
   let frames: number | undefined;
   /** The game's clock the timer was last set on, to hold it if the game stops. */
   let lastGame: GameClock | undefined;
+  /**
+   * The seed of the ROM `lastGame` was read from: only a run of that seed
+   * has its timer stopped at that time, never one that replaced it since
+   * (in another tab, before a resync, by an Undo).
+   */
+  let clockSeed: string | null = null;
+  /** The last reading, of a ROM of another seed than the run's: not laid. */
+  let held: SmReading | null = null;
+  /** Whether the reading before `held` was before play, for the timer. */
+  let heldBeforePlay: boolean | undefined;
 
   /**
    * The run timer follows the game: started and stopped by it if the player
@@ -148,6 +162,7 @@ export const createSmFollower = () => {
       );
       if (base !== after.clockBase) after.setClockBase(base);
       lastGame = gameClockOf(ms, reading.goal, moving, after.autoTimer);
+      clockSeed = smRomSeedName(reading);
       after.alignTimer(lastGame, reading.at);
     } else if (news === "finish") after.finishTimer(reading.at);
     if (typeof reading.beforePlay === "boolean") {
@@ -158,10 +173,8 @@ export const createSmFollower = () => {
 
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: SmReading, at: number) => {
-    recordSeed(
-      useSmStore,
-      typeof reading.seed === "string" ? null : reading.seed.name,
-    );
+    const seed = smRomSeedName(reading);
+    recordSeed(useSmStore, seed, { race: reading.race });
     const now = viewOf(reading, useSmStore.getState().objectives);
     const before = shown;
     shown = now;
@@ -193,48 +206,84 @@ export const createSmFollower = () => {
     }
     // One stamp for the reading, taken after the timer followed it
     const stamp = stampOf(useSmStore.getState().timer, at);
-    useSmStore.getState().applyGameNews((run) => {
-      const change: Partial<SmProgress> = {};
-      if (itemNews.length > 0) {
-        const items = { ...run.items };
-        for (const [id, count] of itemNews) {
-          items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
+    // Nothing of this ROM reaches a run of another seed the history keeps
+    useSmStore.getState().applyGameNews(
+      onRomSeed(seed, (run) => {
+        const change: Partial<SmProgress> = {};
+        if (itemNews.length > 0) {
+          const items = { ...run.items };
+          for (const [id, count] of itemNews) {
+            items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
+          }
+          change.items = items;
         }
-        change.items = items;
+        const objectives = objectivesNews
+          ? now.objectives.split(",")
+          : run.objectives;
+        if (objectivesNews) change.objectives = objectives;
+        if (objectivesNews || doneNews.length > 0) {
+          change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
+            objectives.includes(id),
+          );
+        }
+        // A location found keeps its first stamp, and is never taken back
+        const fresh = foundNews.filter((key) => run.found[key] === undefined);
+        if (fresh.length > 0) {
+          change.found = {
+            ...run.found,
+            ...Object.fromEntries(fresh.map((key) => [key, stamp])),
+          };
+        }
+        for (const option of options) {
+          change[option] = now[option] === true;
+        }
+        return change;
+      }),
+    );
+  };
+
+  /** Lay a reading's news on the run. */
+  const read = (reading: SmReading) => {
+    if (
+      smRomSeedCheck(reading, useSmStore.getState().seed)?.kind === "differs"
+    ) {
+      // Nothing of another seed's game is the run's: the next reading of
+      // its own starts over, as a first one. A timer on the game's clock
+      // stops at the run's last time; whether the game was before play is
+      // kept, so a new run of this ROM read into play starts its timer
+      const run = useSmStore.getState();
+      if (
+        run.timerClock === "game" &&
+        lastGame?.status === "running" &&
+        clockSeed !== null &&
+        clockSeed === run.seed
+      ) {
+        run.alignTimer({ ms: lastGame.ms, status: "paused" }, reading.at);
       }
-      const objectives = objectivesNews
-        ? now.objectives.split(",")
-        : run.objectives;
-      if (objectivesNews) change.objectives = objectives;
-      if (objectivesNews || doneNews.length > 0) {
-        change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
-          objectives.includes(id),
-        );
+      held = reading;
+      shown = null;
+      last = null;
+      playing = false;
+      heldBeforePlay = beforePlay;
+      if (typeof reading.beforePlay === "boolean") {
+        beforePlay = reading.beforePlay;
       }
-      // A location found keeps its first stamp, and is never taken back
-      const fresh = foundNews.filter((key) => run.found[key] === undefined);
-      if (fresh.length > 0) {
-        change.found = {
-          ...run.found,
-          ...Object.fromEntries(fresh.map((key) => [key, stamp])),
-        };
-      }
-      for (const option of options) {
-        change[option] = now[option] === true;
-      }
-      return change;
-    });
+      atGoal = false;
+      lastClock = undefined;
+      frames = undefined;
+      lastGame = undefined;
+      return;
+    }
+    held = null;
+    followTimer(reading);
+    playing = reading.inPlay === true;
+    if (!playing) return;
+    last = reading;
+    lay(reading, reading.at);
   };
 
   return {
-    /** Lay a reading's news on the run. */
-    read: (reading: SmReading) => {
-      followTimer(reading);
-      playing = reading.inPlay === true;
-      if (!playing) return;
-      last = reading;
-      lay(reading, reading.at);
-    },
+    read,
     /**
      * The run was replaced (New game, Import, a shared link): lay all the
      * game says on the new one, now if the game in play was read last, else
@@ -242,7 +291,23 @@ export const createSmFollower = () => {
      */
     resync: (now: boolean) => {
       shown = null;
-      if (now && playing && last !== null) lay(last, Date.now());
+      // The clock was the run replaced's
+      lastGame = undefined;
+      // A ROM held for another seed: the new run may be its
+      if (now && held !== null) {
+        beforePlay = heldBeforePlay;
+        read(held);
+      } else if (now && playing && last !== null) {
+        // The new run may be another seed's (an Import, a shared link): the
+        // game read last is then held, as any reading of it. Its clock was
+        // the run replaced's
+        if (
+          smRomSeedCheck(last, useSmStore.getState().seed)?.kind === "differs"
+        ) {
+          lastGame = undefined;
+          read(last);
+        } else lay(last, Date.now());
+      }
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

@@ -9,13 +9,17 @@
 // select): memory there is not the run's.
 //
 // The seed the game names in its header (race seeds too: the title is on
-// the screen) is recorded as the run's `seed`.
+// the screen) is recorded as the run's `seed`. Outside Race Mode, a ROM that
+// names another seed than the run's is not followed at all (games/seedId.ts,
+// `checkRomSeed`): nothing of it is laid, neither its items nor its notes nor
+// the timer, until the run is replaced or takes that seed, when the reading
+// held is laid as a first one.
 //
 // Outside Race Mode, the doors and holes Link goes through are noted in a run
 // whose shuffled entrances the assistant knows: the entrance tables load on
 // demand, as for the assistant, and the notes land as the game's news.
 
-import type { EntranceReading } from "@alltp/pack-alttpr";
+import { type EntranceReading, sameSeedId } from "@alltp/pack-alttpr";
 import {
   bossesShown,
   type GameView,
@@ -28,6 +32,7 @@ import {
   syncView,
 } from "@/games/alttpr/autotrack/apply";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
+import { romSeedCheckOf } from "@/games/alttpr/autotrack/seed";
 import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
 import { gameClockOf, timerNews } from "@/games/alttpr/logic/timer";
 import {
@@ -35,7 +40,7 @@ import {
   useGameStore,
   withNotes,
 } from "@/games/alttpr/stores/gameStore";
-import { recordSeed } from "@/games/seedId";
+import { onRomSeed, recordSeed } from "@/games/seedId";
 import { type GameClock, isRunning } from "@/utils/runTimer";
 
 /** The board's side of a session. */
@@ -115,6 +120,12 @@ export const createFollower = (): Follower => {
   /** The game's clock the timer was last set on, to hold it if the game stops. */
   let lastClock: GameClock | undefined;
   /**
+   * The seed of the ROM `lastClock` was read from: only a run of that seed
+   * has its timer stopped at that time, never one that replaced it since
+   * (in another tab, before a resync, by an Undo).
+   */
+  let clockSeed: string | null = null;
+  /**
    * The medallions the game has shown, by slot of the board's `medallions`:
    * a reading shows one only while its pad's screen is in view (or its
    * entrance open), so the session keeps what was shown. The game never
@@ -139,6 +150,10 @@ export const createFollower = (): Follower => {
   let noted: string | null = null;
   /** The seed the last reading in play named. */
   let seedName: string | null = null;
+  /** The last reading, of a ROM of another seed than the run's: not laid. */
+  let held: AutotrackReading | null = null;
+  /** Whether the reading before `held` was before play, for the timer. */
+  let heldBeforePlay: boolean | undefined;
 
   /**
    * Forget what the session kept of the run it followed: the medallions
@@ -156,7 +171,7 @@ export const createFollower = (): Follower => {
    * Note where the game shows Link went, once per change, in a run whose
    * entrances the assistant knows. A note it contradicts gives way.
    */
-  const noteEntrances = (links: EntranceReading) => {
+  const noteEntrances = (links: EntranceReading, seed: string | null) => {
     if (typeof links === "string" || links.length === 0) return;
     if (!entrancesKnown(useGameStore.getState().settings)) return;
     const key = JSON.stringify(links);
@@ -164,13 +179,19 @@ export const createFollower = (): Follower => {
     noted = key;
     void import("@/games/alttpr/logic/entrances").then(
       ({ gameNotes, poolOf }) =>
-        useGameStore.getState().applyGameNews((board) => {
-          const pool = poolOf(board.settings);
-          if (pool === null) return null;
-          const notes = gameNotes(pool, board.entrances, links);
-          const entrances = withNotes(board.entrances, notes);
-          return entrances === null ? null : { entrances };
-        }),
+        useGameStore.getState().applyGameNews(
+          onRomSeed(
+            seed,
+            (board) => {
+              const pool = poolOf(board.settings);
+              if (pool === null) return null;
+              const notes = gameNotes(pool, board.entrances, links);
+              const entrances = withNotes(board.entrances, notes);
+              return entrances === null ? null : { entrances };
+            },
+            sameSeedId,
+          ),
+        ),
     );
   };
 
@@ -182,8 +203,8 @@ export const createFollower = (): Follower => {
     const name = reading.seed.seed;
     if (seedName !== null && name !== null && name !== seedName) forget();
     if (name !== null) seedName = name;
-    noteEntrances(reading.entrances);
-    recordSeed(useGameStore, reading.seed.seed);
+    noteEntrances(reading.entrances, name);
+    recordSeed(useGameStore, name, { race: reading.race, same: sameSeedId });
     const store = useGameStore.getState();
     if (reading.race) {
       for (const slot of Object.keys(known)) delete known[Number(slot)];
@@ -199,10 +220,50 @@ export const createFollower = (): Follower => {
     last = reading;
     shown = view;
     if (isEmptyView(news)) return;
-    store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    // Nothing of this ROM reaches a run of another seed the history keeps
+    store.applyGameNews(
+      onRomSeed(
+        name,
+        (board) => mergeView(board, news)?.next ?? null,
+        sameSeedId,
+      ),
+    );
   };
 
-  return {
+  /**
+   * Hold a reading of another seed's ROM: none of it is laid, and what the
+   * session kept of the game is not this run's either, so the next reading
+   * of the run's own seed starts over as at a first one.
+   */
+  const hold = (reading: AutotrackReading) => {
+    // A timer set on the game's clock stops at the run's last time: the
+    // other ROM's clock is not the run's
+    const game = useGameStore.getState();
+    if (
+      game.timerClock === "game" &&
+      lastClock?.status === "running" &&
+      clockSeed !== null &&
+      game.seed !== null &&
+      sameSeedId(game.seed, clockSeed) !== false
+    ) {
+      game.alignTimer({ ms: lastClock.ms, status: "paused" }, reading.at);
+    }
+    held = reading;
+    last = null;
+    shown = null;
+    playing = false;
+    // Whether the game was before play is kept, so a new run of this ROM,
+    // read from its file select into play, starts its timer
+    heldBeforePlay = beforePlay;
+    const { beforePlay: now } = reading.progress;
+    if (typeof now === "boolean") beforePlay = now;
+    atGoal = false;
+    frames = undefined;
+    lastClock = undefined;
+    forget();
+  };
+
+  const follower: Follower = {
     holdsGameOnly: () => {
       const store = useGameStore.getState();
       const fresh = createProgress(store.presetId, store.settings);
@@ -220,6 +281,14 @@ export const createFollower = (): Follower => {
       );
     },
     read: (reading) => {
+      if (
+        romSeedCheckOf(reading, useGameStore.getState().seed)?.kind ===
+        "differs"
+      ) {
+        hold(reading);
+        return;
+      }
+      held = null;
       // The run timer follows the game: set on the game's own clock if the
       // player chose that and it can be read, else started and stopped by
       // the game if the player lets it
@@ -234,6 +303,7 @@ export const createFollower = (): Follower => {
           ? undefined
           : romStats.playFrames;
       lastClock = typeof clock === "object" ? clock : undefined;
+      clockSeed = reading.seed.seed;
       if (typeof clock === "object") game.alignTimer(clock, reading.at);
       else if (clock === "unloaded") {
         // The title or the file select: the game's time is not there to read
@@ -260,7 +330,11 @@ export const createFollower = (): Follower => {
       const store = useGameStore.getState();
       const view = gameView(last, store, known, bombBought, bosses);
       store.applyGameNews(
-        (board) => recountView(board, view, counters)?.next ?? null,
+        onRomSeed(
+          last.seed.seed,
+          (board) => recountView(board, view, counters)?.next ?? null,
+          sameSeedId,
+        ),
       );
     },
     resume: () => {
@@ -268,9 +342,37 @@ export const createFollower = (): Follower => {
     },
     resync: (now) => {
       shown = null;
-      // Nothing the session kept belongs to the run replaced
+      // Nothing the session kept belongs to the run replaced, its clock
+      // neither
       forget();
-      if (now && playing && last !== null) lay(last);
+      lastClock = undefined;
+      // A ROM held for another seed: the new run may be its
+      if (now && held !== null) {
+        beforePlay = heldBeforePlay;
+        follower.read(held);
+      } else if (now && playing && last !== null) {
+        // The new run may be another seed's (Start from a seed, an Import):
+        // the game read last is then held, as any reading of it, and none
+        // of its seed or progress reaches the new run. Its clock was the
+        // run replaced's
+        const run = useGameStore.getState().seed;
+        const rom = last.seed.seed;
+        if (romSeedCheckOf(last, run)?.kind === "differs") {
+          lastClock = undefined;
+          follower.read(last);
+        } else if (
+          run !== null &&
+          rom !== null &&
+          sameSeedId(run, rom) === false
+        ) {
+          // A race's reading of another seed, which Race Mode would lay: the
+          // run was replaced since, so the next reading decides, never this
+          // one's seed or progress
+          last = null;
+          playing = false;
+          lastClock = undefined;
+        } else lay(last);
+      }
     },
     steady: (at) => {
       const game = useGameStore.getState();
@@ -302,4 +404,5 @@ export const createFollower = (): Follower => {
       return laid?.count ?? 0;
     },
   };
+  return follower;
 };

@@ -8,6 +8,7 @@ import {
   DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
   probeRaceFlag,
+  sameSeedId,
   seedRomOf,
 } from "./probes";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
@@ -250,5 +251,68 @@ describe("ALTTPR_RACE_FLAG", () => {
     expect(decode(0x00, 0x01)).toBe("open");
     expect(decode(0x00, 0x00)).toBe("unknown");
     expect(decode(0xff, 0xff)).toBe("unknown");
+  });
+});
+
+describe("sameSeedId", () => {
+  it("holds alttpr.com's hash to itself alone, as its title writes it", () => {
+    // "VT " and the hash, padded with spaces (vt World.php:1090, 1350)
+    const title = seedRomOf("VT 9MQ9gO1wMD        ");
+    expect(title?.seed).toBe("9MQ9gO1wMD");
+    expect(sameSeedId("9MQ9gO1wMD", title?.seed ?? "")).toBe(true);
+    expect(sameSeedId("9MQ9gO1wMD", "0yAObedRMV")).toBe(false);
+    // A hash is case-sensitive
+    expect(sameSeedId("9MQ9gO1wMD", "9mq9go1wmd")).toBe(false);
+  });
+
+  it("matches a Door Randomizer title's id to the site's hash, either way", () => {
+    // avianart's permalink names the seed; the title adds team and player
+    expect(sameSeedId("myYPIp0RY", "1_1_myYPIp0RY")).toBe(true);
+    expect(sameSeedId("1_1_myYPIp0RY", "myYPIp0RY")).toBe(true);
+    // Another player's ROM of the same seed
+    expect(sameSeedId("1_2_367825107", "1_1_367825107")).toBe(true);
+    expect(sameSeedId("myYPIp0RY", "1_1_toInhuUYy")).toBe(false);
+    expect(sameSeedId("1_1_367825107", "1_1_367825108")).toBe(false);
+  });
+
+  it("matches a title cut to its 21 bytes to the seed it begins", () => {
+    // The ROM holds 21 bytes of "DR158_1_1_abcdefghijklmn"
+    const title = seedRomOf("DR158_1_1_abcdefghijklmn".slice(0, 21));
+    expect(title?.seed).toBe("1_1_abcdefghijk");
+    expect(sameSeedId("abcdefghijklmn", "1_1_abcdefghijk")).toBe(true);
+    expect(sameSeedId("1_1_abcdefghijk", "abcdefghijklmn")).toBe(true);
+    // An id too short to have been cut is held whole
+    expect(sameSeedId("abcdefghi", "1_1_abcdefgh")).toBe(false);
+  });
+
+  it("matches the Overworld fork's 9 characters of a longer hash to it", () => {
+    // OWR writes seedstring[:9] of avianart's hash (Rom.py:1847): a
+    // 10-character permalink's ROM names 9 of them
+    const title = seedRomOf("ORAVT_1_1_Lyq3KAkAM\0\0");
+    expect(title?.seed).toBe("1_1_Lyq3KAkAM");
+    expect(sameSeedId("Lyq3KAkAM2", "1_1_Lyq3KAkAM")).toBe(true);
+    expect(sameSeedId("1_1_Lyq3KAkAM", "Lyq3KAkAM2")).toBe(true);
+    expect(sameSeedId("Lyq3KAkAN2", "1_1_Lyq3KAkAM")).toBe(false);
+    // Two titles' ids are each whole: the other's is no hash
+    expect(sameSeedId("1_1_Lyq3KAkAM", "1_1_Lyq3KAkAM2")).toBe(false);
+  });
+
+  it("cannot hold a site's hash to a title's number: null, never a mismatch", () => {
+    // perm/toInhuUYy: DR 1.5.8's title names the seed's number
+    // (Rom.py:1503-1504), which the permalink's hash does not tell
+    const title = seedRomOf("DR158_1_1_840319254\0\0");
+    expect(title?.seed).toBe("1_1_840319254");
+    expect(sameSeedId("toInhuUYy", "1_1_840319254")).toBeNull();
+    expect(sameSeedId("1_1_840319254", "toInhuUYy")).toBeNull();
+    // alttpr.com's hash against a DR ROM: no form to hold either
+    expect(sameSeedId("9MQ9gO1wMD", "1_1_840319254")).toBeNull();
+    // Two titles alike: OWR writes the number without a site's ROM header
+    // (Rom.py:1855-1856), the hash's 9 characters with avianart's
+    expect(sameSeedId("1_1_4kxBlrWuP", "1_1_291792995")).toBeNull();
+    expect(sameSeedId("1_1_291792995", "1_1_4kxBlrWuP")).toBeNull();
+    // Two numbers, two titles: they compare
+    expect(sameSeedId("840319254", "1_1_840319254")).toBe(true);
+    expect(sameSeedId("840319255", "1_1_840319254")).toBe(false);
+    expect(sameSeedId("1_1_840319255", "1_1_840319254")).toBe(false);
   });
 });

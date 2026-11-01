@@ -295,11 +295,42 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
 };
 
 /**
+ * The id an avianart seed's ROM gives itself, as its title writes it after
+ * the version (`seedRomOf`): team and player ("1_1_", a permalink being one
+ * player's), then the seed, the whole title cut to 21 bytes.
+ * - The Overworld fork, which avianart runs with a ROM header of its own,
+ *   writes the permalink's hash cut to 9 characters (OWR 0.8.0.2 Rom.py:
+ *   1841-1848, `seedstring[:9]`; both recorded OWR permalinks' titles read
+ *   "ORAVT_1_1_<hash>").
+ * - DR's own branch writes the seed's number, 9 digits at least (DR 1.5.8
+ *   Rom.py:1503-1504, `f'{world.seed:09}'`; Main.py:90-94), which `meta`
+ *   names (`seed`, BaseClasses.py:2615).
+ * A DR permalink whose `meta` does not name it (1.5.6's) keeps the hash: a
+ * form the ROM's number cannot be held to (`sameSeedId`, null).
+ * @param meta - The permalink's spoiler `meta`
+ * @param hash - The permalink's hash
+ */
+const avianartSeedId = (meta: Meta, hash: string): string => {
+  const versions = isRecord(meta.versions) ? meta.versions : {};
+  const seed =
+    typeof versions.Overworld === "string"
+      ? hash.slice(0, 9)
+      : typeof meta.seed === "number" && Number.isSafeInteger(meta.seed)
+        ? String(meta.seed).padStart(9, "0")
+        : typeof meta.seed === "string" && /^[A-Za-z0-9]+$/.test(meta.seed)
+          ? meta.seed
+          : null;
+  // "DR158_" or "ORAVT_" is 6 of the title's 21 bytes
+  return seed === null ? hash : `1_1_${seed}`.slice(0, 15);
+};
+
+/**
  * A DR seed's settings from an avianart permalink's JSON: its spoiler's
- * `meta`, each setting the tracker keeps. Null when the JSON holds no DR
- * meta (an alttpr.com preset's seed, a hash avianart does not know).
+ * `meta`, each setting the tracker keeps, and the seed's id as its ROM's
+ * title writes it (`avianartSeedId`). Null when the JSON holds no DR meta
+ * (an alttpr.com preset's seed, a hash avianart does not know).
  * @param json - The permalink's answer, `{ response: { spoiler: { meta } } }`
- * @param hash - The permalink's hash: the seed's name here
+ * @param hash - The permalink's hash
  */
 export const avianartReading = (
   json: unknown,
@@ -308,7 +339,9 @@ export const avianartReading = (
   const response = isRecord(json) ? json.response : null;
   const spoiler = isRecord(response) ? response.spoiler : null;
   const meta = isRecord(spoiler) ? spoiler.meta : null;
-  return isRecord(meta) ? doorMetaReading(meta, hash) : null;
+  return isRecord(meta)
+    ? doorMetaReading(meta, avianartSeedId(meta, hash))
+    : null;
 };
 
 /**
@@ -318,8 +351,8 @@ export const avianartReading = (
  * reads a text log's lines into the same names). Null when it holds no DR
  * version or one of the settings that decide a DR run.
  * @param meta - The settings by DR's names
- * @param seed - The seed's id for the reading: a permalink's hash, the ROM
- *   title's seed
+ * @param seed - The seed's id for the reading: as a permalink's ROM names
+ *   it (`avianartSeedId`), the ROM title's seed
  */
 export const doorMetaReading = (
   meta: Meta,

@@ -3,8 +3,10 @@
 // (test/dr-seeds/): what avianart.games and Hyrule Town Hall serve for a few
 // real race seeds, cut to what the tracker reads, so no fixture holds where
 // an item is.
-// - An avianart permalink's JSON keeps its `response.type` and its spoiler's
-//   `meta` alone (the permalink also holds the patch and the spoiler).
+// - An avianart permalink's JSON keeps its `response.type`, its spoiler's
+//   `meta` and, of its patch, the ROM header's title alone (`patch["32704"]`,
+//   ROM 0x7FC0: the seed's id as the ROM writes it); the permalink also holds
+//   the rest of the patch and the spoiler.
 // - A Hyrule Town Hall patch is written again as a reduced BPS holding only
 //   the bytes the settings decoder reads (the ROM header's title and layout,
 //   DR's and OWR's tables, alttpr.com's settings bytes in bank $30 and the
@@ -32,7 +34,13 @@ const AVIANART = [
   // OWR 0.8.0.2 on DR 1.5.7 (the release the pack's OWR world reads),
   // avianart's Swapkeys: swapped entrances, every dungeon item wild
   "4kxBlrWuP",
+  // DR 1.5.8, the bench's Crosskeys: a title of DR's own branch, which
+  // names the seed by its number (`meta.seed`), not by the permalink's hash
+  "toInhuUYy",
 ];
+
+/** The patch's key of the ROM header's title: ROM 0x7FC0, 21 bytes. */
+const TITLE = String(0x7fc0);
 const HTH = [
   // DR156_1_1_367825107: vanilla doors, mirror scroll, Hyrule Town Hall's
   // Crosskeys 2026
@@ -174,12 +182,13 @@ async function main() {
   for (const hash of AVIANART) {
     const url = `https://avianart.games/api.php?action=permlink&hash=${hash}`;
     const json =
-      /** @type {{ response: { type: string, spoiler: { meta: unknown } } }} */ (
+      /** @type {{ response: { type: string, patch: Record<string, number[]>, spoiler: { meta: unknown } } }} */ (
         await (await get(url)).json()
       );
     const fixture = {
-      provenance: `${url}, ${recorded}: response.type and response.spoiler.meta kept, nothing else (scripts/record-dr-seeds.mjs)`,
+      provenance: `${url}, ${recorded}: response.type, response.spoiler.meta and the title of response.patch kept, nothing else (scripts/record-dr-seeds.mjs)`,
       response: {
+        patch: { [TITLE]: json.response.patch[TITLE] },
         spoiler: { meta: json.response.spoiler.meta },
         type: json.response.type,
       },

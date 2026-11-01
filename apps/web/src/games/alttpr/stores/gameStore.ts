@@ -79,7 +79,7 @@ import {
   validateProgress,
 } from "@/games/alttpr/stores/persistence";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
-import { HISTORY_LIMIT } from "@/games/runHistory";
+import { clockOf, HISTORY_LIMIT, leaving, withClock } from "@/games/runHistory";
 import { type Stamp, stampOf } from "@/games/stamp";
 import {
   alignTimer,
@@ -229,6 +229,11 @@ type GameState = Progress &
 
     /** Start a new game of the same run type and settings; display prefs are kept */
     reset: () => void;
+    /**
+     * The run takes another seed as its own, the player's answer to a ROM of
+     * that seed (Follow this ROM): one undo step, the run kept.
+     */
+    takeSeed: (seed: string) => void;
 
     /** Earlier states of the run, most recent last; never persisted */
     past: Progress[];
@@ -582,10 +587,21 @@ const keyCellsFor = (state: GameState, settings: RunSettings) => ({
  * the redo stack, as any editor does once a new change is made. What it
  * finds is stamped now.
  */
-const record = (state: GameState, next: Partial<Progress>) => ({
+const record = (
+  state: GameState,
+  next: Partial<Progress>,
+  // For a step that replaces the run or its seed: its timer, which Undo
+  // gives back with it (games/runHistory.ts, `withClock`)
+  keepTimer = false,
+) => ({
   ...dated(progressOf(state), next, stampOf(state.timer, Date.now())),
   future: [],
-  past: [...state.past, progressOf(state)].slice(-HISTORY_LIMIT),
+  past: [
+    ...state.past,
+    keepTimer
+      ? withClock(progressOf(state), { timer: state.timer })
+      : progressOf(state),
+  ].slice(-HISTORY_LIMIT),
 });
 
 /**
@@ -664,7 +680,7 @@ export const useGameStore = create<GameState>()(
           set((state) => {
             const fresh = createProgress(presetId, settings);
             return {
-              ...record(state, { ...fresh, ...lay?.(fresh) }),
+              ...record(state, { ...fresh, ...lay?.(fresh) }, !keepTimer),
               ...keyCellsFor(state, settings),
               timer: keepTimer ? state.timer : IDLE_TIMER,
             };
@@ -814,10 +830,11 @@ export const useGameStore = create<GameState>()(
           set((state) => ({
             // The escape a file or a link says is another session's reading:
             // never this run's until autotracking reads it again
-            ...record(state, {
-              ...loaded,
-              items: withoutEscape(loaded.items),
-            }),
+            ...record(
+              state,
+              { ...loaded, items: withoutEscape(loaded.items) },
+              true,
+            ),
             timer: IDLE_TIMER,
           }));
           runReplaced("alttpr", get().past);
@@ -852,16 +869,22 @@ export const useGameStore = create<GameState>()(
           set((state) => {
             const [next, ...later] = state.future;
             if (!next) return state;
+            const kept = clockOf(next);
             return {
               ...next,
+              ...kept,
               future: later,
-              past: [...state.past, progressOf(state)],
+              past: [...state.past, leaving(progressOf(state), state, kept)],
             };
           }),
 
         reset: () => {
           set((state) => ({
-            ...record(state, createProgress(state.presetId, state.settings)),
+            ...record(
+              state,
+              createProgress(state.presetId, state.settings),
+              true,
+            ),
             timer: IDLE_TIMER,
           }));
           runReplaced("alttpr", get().past);
@@ -869,9 +892,15 @@ export const useGameStore = create<GameState>()(
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         revealSettings: (change) => {
-          const before = get().settings;
+          const { seed, settings: before } = get();
           const settings = retune(progressOf(get()), change)?.settings;
-          get().applyGameNews((progress) => retune(progress, change));
+          // The seed's settings, never laid on a run of another seed the
+          // history keeps (the run a New run replaced)
+          get().applyGameNews((progress) =>
+            seed !== null && progress.seed !== null && progress.seed !== seed
+              ? null
+              : retune(progress, change),
+          );
           if (settings) set((state) => keyCellsFor(state, settings));
           requestRecount("alttpr", countersMoved(before, get().settings));
         },
@@ -941,6 +970,10 @@ export const useGameStore = create<GameState>()(
 
         syncWithGame: (next: Partial<Progress>) =>
           set((state) => record(state, next)),
+        takeSeed: (seed) =>
+          set((state) =>
+            state.seed === seed ? state : record(state, { seed }, true),
+          ),
         timer: IDLE_TIMER,
 
         toggleChecks: (locations: readonly string[]) =>
@@ -958,11 +991,18 @@ export const useGameStore = create<GameState>()(
         undo: () => {
           const previous = get().past.at(-1);
           if (!previous) return;
-          set((state) => ({
-            ...previous,
-            future: [progressOf(state), ...state.future],
-            past: state.past.slice(0, -1),
-          }));
+          set((state) => {
+            const kept = clockOf(previous);
+            return {
+              ...previous,
+              ...kept,
+              future: [
+                leaving(progressOf(state), state, kept),
+                ...state.future,
+              ],
+              past: state.past.slice(0, -1),
+            };
+          });
           boardRestored("alttpr", previous);
         },
 

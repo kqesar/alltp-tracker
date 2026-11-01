@@ -131,6 +131,68 @@ test("autotracks a Map Rando seed through SNI", async ({ page }) => {
   }
 });
 
+test("follows nothing of a Map Rando ROM of another seed than the run's, until a new run", async ({
+  page,
+}) => {
+  const bridge = await FakeUsb2Snes.start();
+  try {
+    const MORPH = 0x0004;
+    // The run's seed, read once outside Race Mode: the run records its name
+    writeMapRando(bridge.memory, { name: "RunSeed" });
+    await smRaceModeOff(page);
+    await openOnGame(page, "sm", `?bridge=${new URL(bridge.url).port}`);
+    const dialog = page.getByRole("dialog", { name: "Autotracking" });
+    const connect = async () => {
+      await page.getByTestId("autotrack-button").click();
+      await dialog.getByTestId("autotrack-connect").click();
+      await expect(dialog.getByTestId("autotrack-headline")).toHaveText(
+        "Connected",
+      );
+    };
+    await connect();
+    await dialog.getByTestId("autotrack-disconnect").click();
+    await page.keyboard.press("Escape");
+
+    // Another seed's ROM, the Morphing Ball found and Kraid asked for alone
+    writeMapRando(bridge.memory, {
+      items: MORPH,
+      name: "OldSeed",
+      objectives: ["kraid"],
+    });
+    await connect();
+    const line = dialog.getByTestId("autotrack-rom-seed");
+    await expect(line).toContainText(
+      "The game runs seed OldSeed, not this run's seed RunSeed",
+    );
+    await auditDialog(page, dialog, 1280);
+    await page.keyboard.press("Escape");
+    const morph = page.getByTestId("sm-item-morph");
+    await expect(page.getByTestId("rom-seed-notice")).toContainText("OldSeed");
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, not obtained/);
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "0 of 4 done.",
+    );
+    await auditPage(page);
+
+    // A new run from this ROM: the board follows it at once
+    await page.getByTestId("rom-seed-new-run").click();
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, obtained/);
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "0 of 1 done.",
+    );
+    await expect(page.getByTestId("rom-seed-notice")).toBeEmpty();
+    // Undo gives the run back as it was, with nothing of that ROM
+    await page.getByTestId("undo").click();
+    await expect(page.getByTestId("rom-seed-notice")).toContainText("OldSeed");
+    await expect(morph).toHaveAccessibleName(/^Morphing Ball, not obtained/);
+    await expect(page.getByTestId("sm-objectives-summary")).toHaveText(
+      "0 of 4 done.",
+    );
+  } finally {
+    await bridge.stop();
+  }
+});
+
 test("starts the run timer with the game, follows its clock and stops at the ship", async ({
   page,
 }) => {

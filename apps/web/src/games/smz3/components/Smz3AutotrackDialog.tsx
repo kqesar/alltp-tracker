@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { GameAutotrackDialog } from "@/components/autotrack/GameAutotrackDialog";
 import { smz3Autotrack } from "@/games/smz3/autotrack/store";
+import { smz3RomSeed } from "@/games/smz3/components/Smz3Autotrack";
 
 const GAMES = {
   credits: "the credits",
@@ -97,6 +98,7 @@ export const Smz3AutotrackDialog = ({ onClose }: { onClose: () => void }) => (
     follows="The board follows your SMZ3 game as you play, in both games: the items you hold, the rewards found, the locations checked, and the seed's settings. The marks you set beyond it stay. In Race Mode (on for a race seed), the requirements, medallions and crystals stay yours to set."
     game="SMZ3"
     onClose={onClose}
+    romSeed={smz3RomSeed}
     session={smz3Autotrack}
   >
     <SeedRead />

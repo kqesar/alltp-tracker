@@ -2,7 +2,7 @@ import { rtaMs } from "@alltp/pack-sm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createSmFollower } from "@/games/sm/autotrack/follow";
 import { readSm } from "@/games/sm/autotrack/reading";
-import { useSmStore } from "@/games/sm/store";
+import { freshProgress, useSmStore } from "@/games/sm/store";
 import { timerMs } from "@/utils/runTimer";
 import {
   MEMORY_RANGE,
@@ -365,6 +365,42 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("stops at the game's last time while a ROM of another seed is read", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    const own = { name: "dsjF6gGsH" };
+    follower.read(readingAt(T0, { ...own, state: FILE_SELECT }));
+    follower.read(at(1_000, 100_000, own));
+    follower.read(at(11_000, 100_601, own));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    follower.read(at(12_000, 500_000, { name: "cHXhTSCB8" }));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(601),
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("never sets a run replaced in another tab to the held ROM's time", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    const own = { name: "dsjF6gGsH" };
+    follower.read(readingAt(T0, { ...own, state: FILE_SELECT }));
+    follower.read(at(1_000, 100_000, own));
+    follower.read(at(11_000, 100_601, own));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A run of another seed, which this tab's follower is not told of
+    run().load({ ...freshProgress(), seed: "cHXhTSCB8" });
+    follower.read(at(12_000, 100_661, own));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("writes nothing for a reading that agrees with the timer", () => {
     const follower = start();
     follower.read(at(11_000, 100_601));
@@ -553,6 +589,112 @@ describe("the run's seed", () => {
     expect(run().seed).toBe("cHXhTSCB8");
 
     run().undo();
+    expect(run().items.morph).toBe(1);
+    expect(run().seed).toBe("dsjF6gGsH");
+  });
+
+  it("lays nothing of another seed's ROM, its objectives and timer included", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().setAutoTimer(true);
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { name: "cHXhTSCB8", state: FILE_SELECT }));
+    follower.read(
+      readingAt(T0 + 1000, {
+        items: MORPH,
+        name: "cHXhTSCB8",
+        objectives: ["kraid"],
+        state: PLAY,
+      }),
+    );
+
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.morph ?? 0).toBe(0);
+    expect(run().objectives).toEqual(useSmStore.getInitialState().objectives);
+    expect(run().timer.startedAt).toBeNull();
+  });
+
+  it("lays the ROM held once the run is New game's or takes its seed", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    follower.read(reading({ items: MORPH, name: "cHXhTSCB8" }));
+    expect(run().items.morph ?? 0).toBe(0);
+
+    // Follow this ROM: the run takes its seed, as a step of the player's
+    run().takeSeed("cHXhTSCB8");
+    follower.resync(true);
+    expect(run().items.morph).toBe(1);
+
+    // Undone, the run is its own seed's again, with nothing of the ROM
+    run().undo();
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.morph ?? 0).toBe(0);
+  });
+
+  it("starts the new run's timer when the ROM held went from its file select into play", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().setAutoTimer(true);
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { name: "cHXhTSCB8", state: FILE_SELECT }));
+    follower.read(readingAt(T0 + 1000, { name: "cHXhTSCB8", state: PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+
+    run().reset();
+    follower.resync(true);
+    expect(run().timer.startedAt).not.toBeNull();
+  });
+
+  it("keeps a run imported of another seed while the old ROM is followed, then follows its own", () => {
+    const follower = createSmFollower();
+    follower.read(reading({ items: MORPH, name: "dsjF6gGsH" }));
+    expect(run().seed).toBe("dsjF6gGsH");
+
+    // Import: a save of cHXhTSCB8 replaces the run, the old ROM still read
+    run().load({ ...freshProgress(), seed: "cHXhTSCB8" });
+    follower.resync(true);
+    expect(run().seed).toBe("cHXhTSCB8");
+    expect(run().items.morph ?? 0).toBe(0);
+
+    follower.read(reading({ items: MORPH, name: "cHXhTSCB8" }));
+    expect(run().items.morph).toBe(1);
+  });
+
+  it("gives the run New game replaced back as it was, with nothing of the ROM", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().step("bombs", 1);
+    const before = run().objectives;
+    const follower = createSmFollower();
+    follower.read(
+      reading({ items: MORPH, name: "cHXhTSCB8", objectives: ["kraid"] }),
+    );
+
+    run().reset();
+    follower.resync(true);
+    expect(run().items.morph).toBe(1);
+    expect(run().objectives).toEqual(["kraid"]);
+
+    run().undo();
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.bombs).toBe(1);
+    expect(run().items.morph ?? 0).toBe(0);
+    expect(run().objectives).toEqual(before);
+    expect(run().found).toEqual({});
+  });
+
+  it("checks nothing in Race Mode, which never reads the seed's name", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const raced = readSm(
+      viewOf(
+        writeMapRando(new Uint8Array(0x100_0000), {
+          items: MORPH,
+          name: "cHXhTSCB8",
+        }),
+        RACE_UNREAD,
+      ),
+      0,
+      true,
+    );
+    createSmFollower().read(raced);
+
     expect(run().items.morph).toBe(1);
     expect(run().seed).toBe("dsjF6gGsH");
   });

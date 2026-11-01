@@ -122,6 +122,7 @@ export {
   probeRaceFlag,
   type RaceFlagProbeResult,
   type SeedRom,
+  sameSeedId,
   seedRomOf,
 } from "./autotrack/probes";
 export { ALTTPR_RACE_PROFILE } from "./autotrack/race-profile";

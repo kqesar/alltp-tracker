@@ -2,6 +2,7 @@ import { OBJECTIVES } from "@alltp/pack-sm";
 import { useId } from "react";
 import { GameAutotrackDialog } from "@/components/autotrack/GameAutotrackDialog";
 import { smAutotrack, useSmAutotrackStore } from "@/games/sm/autotrack/store";
+import { smRomSeed } from "@/games/sm/components/SmAutotrack";
 
 const OBJECTIVE_NAMES = new Map(OBJECTIVES.map(({ id, name }) => [id, name]));
 
@@ -136,6 +137,7 @@ export const SmAutotrackDialog = ({ onClose }: { onClose: () => void }) => (
     follows="The board follows your Map Rando game as you play: the items you hold, the seed's objectives and those done, its Wall Jump Boots and split Speed Booster. The marks you set beyond it stay. racetime.gg's Super Metroid Randomizer rules say nothing of autotracking; Map Rando's tournament rules allow it for items and boss kills, so in Race Mode (on by default) it reads those alone: the seed's objectives and settings are yours to set in Mode, and the run timer yours to start and end."
     game="Map Rando"
     onClose={onClose}
+    romSeed={smRomSeed}
     session={smAutotrack}
   >
     <SeedRead />

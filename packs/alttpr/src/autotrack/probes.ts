@@ -98,6 +98,79 @@ export function seedRomOf(title: string): SeedRom | null {
   };
 }
 
+/** A Door Randomizer title's id: team, player and seed (`seedRomOf`). */
+const TITLE_ID = /^\d+_\d+_(.+)$/;
+
+/**
+ * The shortest id a 21-byte Door Randomizer title may have cut: after "DR",
+ * three digits (or a site's tag of three characters) and "_", 15 bytes are
+ * left (DR 1.5.8 Rom.py:1503-1507; OWR 0.8.0.2 Rom.py:1841-1856).
+ */
+const CUT_ID_LENGTH = 15;
+
+/**
+ * The seed the Overworld fork writes of a site's hash: its first 9
+ * characters (OWR 0.8.0.2 Rom.py:1847, `seedstring[:9]`).
+ */
+const SITE_SEED_LENGTH = 9;
+
+/**
+ * Whether two seed ids of A Link to the Past name the same seed: true or
+ * false when their forms prove it, null when they cannot be held to each
+ * other. alttpr.com's hash is the same everywhere; a Door Randomizer seed's
+ * id is its title's ("1_1_840319254": team, player, then the seed), and a
+ * site may name it otherwise (avianart's permalink hash, which a run saved
+ * or shared before the tracker took the ROM's form may hold).
+ * - The seeds after team and player are held against each other: another
+ *   player's ROM of the seed is the same seed.
+ * - A title's id long enough to have been cut to the title's 21 bytes
+ *   matches any seed it begins, and the Overworld fork's 9 characters of a
+ *   site's hash match that hash.
+ * - A number against a hash cannot be compared: DR's own branch names the
+ *   seed by its number (DR 1.5.8 Rom.py:1503-1504), and so does OWR without
+ *   a site's ROM header (OWR 0.8.0.2 Rom.py:1855-1856), which the hash does
+ *   not tell, a site's or a title's alike. So null, which the app takes as
+ *   no mismatch: the tracker never says a ROM is another seed's on a guess.
+ * @param a - A seed id, as the run or a ROM holds it
+ * @param b - Another
+ */
+export function sameSeedId(a: string, b: string): boolean | null {
+  if (a === b) return true;
+  const [one, two] = [idOf(a), idOf(b)];
+  if (one.seed === two.seed) return true;
+  if (begins(one, two) || begins(two, one)) return true;
+  // A number against a hash, a site's or a title's: nothing holds them
+  // together
+  return DIGITS.test(one.seed) !== DIGITS.test(two.seed) ? null : false;
+}
+
+/** A seed id's seed, and whether it is a title's (`TITLE_ID`). */
+type IdOf = {
+  readonly seed: string;
+  readonly titled: boolean;
+  readonly id: string;
+};
+
+const DIGITS = /^\d+$/;
+
+/** An id's seed: after team and player for a title's, else the whole id. */
+const idOf = (id: string): IdOf => {
+  const seed = TITLE_ID.exec(id)?.[1];
+  return seed === undefined
+    ? { id, seed: id, titled: false }
+    : { id, seed, titled: true };
+};
+
+/**
+ * Whether a title's seed is a cut of the other id's: the title cut to its
+ * 21 bytes, or the Overworld fork's 9 characters of a site's hash.
+ */
+const begins = (title: IdOf, other: IdOf): boolean =>
+  title.titled &&
+  other.seed.startsWith(title.seed) &&
+  (title.id.length >= CUT_ID_LENGTH ||
+    (title.seed.length === SITE_SEED_LENGTH && !other.titled));
+
 /**
  * The original game's title, which the base patch leaves alone
  * (LTTP_RND_GeneralBugfixes.asm:14, quoting Bank00.asm:9173).

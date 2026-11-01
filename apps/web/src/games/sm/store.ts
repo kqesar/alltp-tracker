@@ -121,6 +121,11 @@ type SmState = SmProgress &
     setOption: (option: "wallJump" | "splitSpeed", on: boolean) => void;
     /** A new game: nothing held or done, the seed's objectives and settings kept. */
     reset: () => void;
+    /**
+     * The run takes another seed as its own, the player's answer to a ROM of
+     * that seed (Follow this ROM): one undo step, the run kept.
+     */
+    takeSeed: (seed: string) => void;
     undo: () => void;
     redo: () => void;
     /** Replace the run with a save's: one undo step. */
@@ -172,6 +177,11 @@ export const useSmStore = create<SmState>()(
         progressOf,
         set,
       });
+      /** The run's clock now, kept with a step that replaces the run. */
+      const clockNow = () => ({
+        clockBase: get().clockBase,
+        timer: get().timer,
+      });
       return {
         ...freshProgress(),
         ...freshTimerFields(),
@@ -179,7 +189,7 @@ export const useSmStore = create<SmState>()(
         applyGameNews,
         future: [],
         load: (progress) => {
-          record(progress);
+          record(progress, clockNow());
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
           requestResync("sm");
@@ -188,7 +198,10 @@ export const useSmStore = create<SmState>()(
         redo,
         reset: () => {
           const { objectives, splitSpeed, wallJump } = get();
-          record({ ...freshProgress(), objectives, splitSpeed, wallJump });
+          record(
+            { ...freshProgress(), objectives, splitSpeed, wallJump },
+            clockNow(),
+          );
           set({ clockBase: null, timer: IDLE_TIMER });
           runReplaced("sm", get().past);
           requestResync("sm");
@@ -212,6 +225,9 @@ export const useSmStore = create<SmState>()(
           const value = get().items[id] ?? 0;
           const next = (value + direction + max + 1) % (max + 1);
           record({ items: { ...get().items, [id]: next } });
+        },
+        takeSeed: (seed) => {
+          if (get().seed !== seed) record({ seed }, clockNow());
         },
         toggleDone: (id) => {
           const { done, objectives } = get();

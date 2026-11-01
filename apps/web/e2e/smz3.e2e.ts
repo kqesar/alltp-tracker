@@ -4,6 +4,7 @@ import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { writeSmz3 } from "../../../packs/smz3/test/smz3-rom";
 import {
   auditDialog,
+  expectLastFocusClear,
   openOnGame,
   unreachableClickables,
   WCAG_AA,
@@ -115,6 +116,74 @@ test("autotracks an SMZ3 seed through SNI, in both games", async ({ page }) => {
     await expect(page.getByTestId("marker-morphing-ball")).toHaveAccessibleName(
       /: checked$/,
     );
+  } finally {
+    await bridge.stop();
+  }
+});
+
+test("follows nothing of an SMZ3 ROM of another seed than the run's, until told to", async ({
+  page,
+}) => {
+  const bridge = await FakeUsb2Snes.start();
+  try {
+    // The run's seed, read once: the run records its guid
+    writeSmz3(bridge.memory, { guid: "8506bbef2c2b4432af378b571c6c9133" });
+    await page.goto(`./?bridge=${new URL(bridge.url).port}`);
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem("alltp-tracker-game", "smz3");
+    });
+    await page.reload();
+    const dialog = page.getByRole("dialog", { name: "Autotracking" });
+    const connect = async () => {
+      await page.getByTestId("autotrack-button").click();
+      await dialog.getByTestId("autotrack-connect").click();
+      await expect(dialog.getByTestId("autotrack-headline")).toHaveText(
+        "Connected",
+      );
+    };
+    await connect();
+    await dialog.getByTestId("autotrack-disconnect").click();
+    await page.keyboard.press("Escape");
+
+    // Another seed's ROM, the Hookshot found
+    writeSmz3(bridge.memory, {
+      guid: "c4538986b998477dbef480df8eb6eaec",
+      zelda: { 834: 0x01 },
+    });
+    await connect();
+    await expect(dialog.getByTestId("autotrack-rom-seed")).toContainText(
+      "The game runs seed c4538986b998477dbef480df8eb6eaec, not this run's seed 8506bbef2c2b4432af378b571c6c9133",
+    );
+    await page.keyboard.press("Escape");
+    const hookshot = page.getByTestId("smz3-item-hookshot");
+    await expect(hookshot).toHaveAccessibleName(/^Hookshot, not obtained/);
+    const notice = page.getByTestId("rom-seed-notice");
+    // A guid is 32 characters with no break: the notice wraps it at a phone's width
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ height: 900, width });
+      await expect(page.getByTestId("rom-seed-follow")).toBeInViewport();
+      const box = await notice.boundingBox();
+      expect(box && box.x + box.width).toBeLessThanOrEqual(width);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(width);
+      // Nothing a keyboard reaches is left under it
+      await expectLastFocusClear(page);
+      if (process.env.ROM_SEED_SHOTS) {
+        // Once the dialog's closing and the notice's opening have ended
+        await page.evaluate(() =>
+          Promise.all(document.getAnimations().map((a) => a.finished)),
+        );
+        await page.screenshot({
+          path: `${process.env.ROM_SEED_SHOTS}/smz3-notice-${width}.png`,
+        });
+      }
+    }
+
+    await page.getByTestId("rom-seed-follow").click();
+    await expect(hookshot).toHaveAccessibleName(/^Hookshot, obtained/);
+    await expect(notice).toBeEmpty();
   } finally {
     await bridge.stop();
   }

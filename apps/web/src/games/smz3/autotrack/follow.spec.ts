@@ -2,7 +2,7 @@ import { smz3Ms } from "@alltp/pack-smz3";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createSmz3Follower } from "@/games/smz3/autotrack/follow";
 import { readSmz3 } from "@/games/smz3/autotrack/reading";
-import { useSmz3Store } from "@/games/smz3/store";
+import { freshProgress, useSmz3Store } from "@/games/smz3/store";
 import { timerMs } from "@/utils/runTimer";
 import type { MemoryRangeId } from "../../../../../../packs/smz3/src/autotrack/memory";
 import {
@@ -178,6 +178,46 @@ describe("the run timer, on the game's time", () => {
   };
 
   beforeEach(() => run().setTimerClock("game"));
+
+  it("stops at the game's last time while a ROM of another seed is read", () => {
+    const GUID = "8506bbef2c2b4432af378b571c6c9133";
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: GUID, state: ZELDA.FILE_SELECT }));
+    follower.read(at(1_000, { sm: 0, zelda: 600 }, { guid: GUID }));
+    follower.read(at(11_000, { sm: 0, zelda: 1_200 }, { guid: GUID }));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    const other = { guid: "c4538986b998477dbef480df8eb6eaec" };
+    follower.read(at(12_000, { sm: 9_000, zelda: 9_000 }, other));
+    expect(run().timer).toEqual({
+      elapsedMs: smz3Ms(1_200),
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("never sets a run replaced in another tab to the held ROM's time", () => {
+    const GUID = "8506bbef2c2b4432af378b571c6c9133";
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: GUID, state: ZELDA.FILE_SELECT }));
+    follower.read(at(1_000, { sm: 0, zelda: 600 }, { guid: GUID }));
+    follower.read(at(11_000, { sm: 0, zelda: 1_200 }, { guid: GUID }));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A run of another seed, which this tab's follower is not told of
+    run().load({
+      ...freshProgress(run().settings),
+      seed: "c4538986b998477dbef480df8eb6eaec",
+    });
+    follower.read(at(12_000, { sm: 0, zelda: 1_260 }, { guid: GUID }));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
 
   it("is the sum of both games' counters: the running game's live one and the other's saved", () => {
     const follower = start({ sm: 6_000, zelda: 1_500 });
@@ -440,6 +480,113 @@ describe("the run's seed", () => {
     expect(run().seed).toBe(OTHER);
 
     run().undo();
+    expect(run().items.hookshot).toBe(1);
+    expect(run().seed).toBe(GUID);
+  });
+
+  /** Another seed's game in play: the Hookshot, and Ganon's Tower at 3. */
+  const other = (race = false) =>
+    readingAt(
+      T0,
+      { guid: OTHER, towerCrystals: 3, zelda: { 834: 0x01 } },
+      race,
+    );
+
+  it("lays nothing of another seed's ROM, its settings included", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const before = run().settings;
+    createSmz3Follower().read(other());
+
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().settings).toEqual(before);
+  });
+
+  it("holds a guid whatever its case", () => {
+    run().applyGameNews(() => ({ seed: OTHER.toUpperCase() }));
+    createSmz3Follower().read(other());
+
+    expect(run().items.hookshot).toBe(1);
+  });
+
+  it("lays the ROM held once the run is New game's", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().reset();
+    follower.resync(true);
+    expect(run().seed).toBe(OTHER);
+    expect(run().items.hookshot).toBe(1);
+    expect(run().settings.towerCrystals).toBe(3);
+  });
+
+  it("gives the run New game replaced back as it was, with nothing of the ROM", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    run().step("bow", 1);
+    const settings = run().settings;
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().reset();
+    follower.resync(true);
+    expect(run().items.hookshot).toBe(1);
+
+    run().undo();
+    expect(run().seed).toBe(GUID);
+    expect(run().items.bow).toBe(1);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().checked).toEqual([]);
+    expect(run().settings).toEqual(settings);
+  });
+
+  it("follows the ROM once the run takes its guid, which one undo takes back", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().takeSeed(OTHER);
+    follower.resync(true);
+    expect(run().items.hookshot).toBe(1);
+
+    run().undo();
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().settings.towerCrystals).not.toBe(3);
+  });
+
+  it("starts the new run's timer when the ROM held went from its file select into play", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    run().setAutoTimer(true);
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: OTHER, state: ZELDA.FILE_SELECT }));
+    follower.read(readingAt(T0 + 1000, { guid: OTHER, state: ZELDA.PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+
+    run().reset();
+    follower.resync(true);
+    expect(run().timer.startedAt).not.toBeNull();
+  });
+
+  it("keeps a run imported of another seed while the old ROM is followed, then follows its own", () => {
+    const follower = createSmz3Follower();
+    follower.read(other());
+    expect(run().seed).toBe(OTHER);
+
+    // Import: a save of GUID replaces the run, the old ROM still read
+    run().load({ ...freshProgress(run().settings), seed: GUID });
+    follower.resync(true);
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+
+    follower.read(readingAt(T0, { guid: GUID, zelda: { 834: 0x01 } }));
+    expect(run().items.hookshot).toBe(1);
+  });
+
+  it("checks nothing in Race Mode, which never reads the guid", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    createSmz3Follower().read(other(true));
+
     expect(run().items.hookshot).toBe(1);
     expect(run().seed).toBe(GUID);
   });

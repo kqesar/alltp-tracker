@@ -12,12 +12,13 @@
 // goals) is said, never rounded to the nearest run type. A Mystery seed's
 // file hides its settings: its run type is Mystery, in the run's world.
 
-import type {
-  SeedGoal,
-  SeedLogic,
-  SeedSetting,
-  SeedSettingsReading,
-  SeedUnknown,
+import {
+  type SeedGoal,
+  type SeedLogic,
+  type SeedSetting,
+  type SeedSettingsReading,
+  type SeedUnknown,
+  sameSeedId,
 } from "@alltp/pack-alttpr";
 import {
   DOOR_OPTIONS,
@@ -58,6 +59,7 @@ import {
   type TuningValue,
   tunedOf,
 } from "@/games/alttpr/data/presets";
+import { checkRomSeed, type RomSeedCheck } from "@/games/seedId";
 
 /** The run the tracker holds: its run type and settings. */
 export type Run = {
@@ -702,3 +704,19 @@ export const seedLineText = (check: SeedCheck, kept: boolean): string => {
         : `This seed is ${check.seedText}. The tracker is set to ${check.runText}.`;
   }
 };
+
+/**
+ * What a reading's ROM says of the run's seed (games/seedId.ts): the header's
+ * seed, alttpr.com's hash or a Door Randomizer title's id, against the run's,
+ * either form of a DR seed's id matching (the pack's `sameSeedId`).
+ * @param reading - The reading: its seed's name and whether it was a race's
+ * @param run - The run's seed, null while unknown
+ */
+export const romSeedCheckOf = (
+  reading: {
+    readonly race: boolean;
+    readonly seed: Pick<SeedSettingsReading, "seed">;
+  },
+  run: string | null,
+): RomSeedCheck | null =>
+  checkRomSeed(run, reading.seed.seed, reading.race, sameSeedId);

@@ -1059,9 +1059,20 @@ text or title, a spoiler's meta).
 **The ROM.** DR names its seeds `DR` and its version's first three digits,
 then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1503-1507`); OWR
 `OR` and the same digits (OWR `Rom.py:1843-1848`), or a site's tag
-(`probes.ts`, `seedRomOf`). The race flag is vt's pair at the same address
-(`Rom.py:1156`, `1552-1553`; Mystery.py always asks for a race,
-`Mystery.py:70`), so the probe and its fail-closed answer are the same. The
+(`probes.ts`, `seedRomOf`). The title's id is cut with it to 21 bytes.
+avianart's permalink takes the id its ROM writes (`seed-import.ts`,
+`avianartSeedId`): DR's branch the seed's number, `meta.seed` padded to 9
+digits (`Rom.py:1503-1504`), the fork the hash's first 9 characters (OWR
+`Rom.py:1847`, under avianart's ROM header). `sameSeedId` then holds two
+ids of one seed the same when their seeds after team and player are, or a
+title's id long enough to have been cut, or the fork's 9 characters,
+begin the other's; a hash against a number, a site's or a title's (a
+run saved before, a 1.5.6 permalink whose `meta` names no seed, an OWR
+ROM written without a site's header, `Rom.py:1855-1856`) cannot be
+compared, null: the app's check that the ROM connected is the run's seed says
+nothing then, and the review's binding proves nothing from it. The
+race flag is vt's pair at the same address (`Rom.py:1156`, `1552-1553`;
+Mystery.py always asks for a race, `Mystery.py:70`), so the probe and its fail-closed answer are the same. The
 SRAM the decoders read is vt's for every range (the two patches'
 `%assertSRAM` lists differ only where DR moved `DungeonLocationsChecked`,
 which no decoder reads, and dropped the absorbed keys), and so are bank
@@ -1653,8 +1664,9 @@ permalink's JSON (`api.php?action=permlink&hash=`) holds its spoiler's
 `bpsTarget` recovers without the base ROM (its TargetRead runs). Both hold
 the seed's placements too, so the app asks neither in Race Mode. Their
 fixtures (`test/dr-seeds/`) are written by `pnpm --filter
-@alltp/pack-alttpr record-dr-seeds`: the permalink cut to `meta`, the patch
-re-encoded with the decoder's bytes alone.
+@alltp/pack-alttpr record-dr-seeds`: the permalink cut to `meta` and its
+patch's title (the ROM's form of the seed's id), the patch re-encoded with
+the decoder's bytes alone.
 
 ### The Overworld Randomizer
 
