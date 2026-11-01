@@ -660,14 +660,18 @@ export const describeReading = (
     } else items.push(itemName(id, count));
   }
   // The hearts on screen and the pieces toward the next, as the pause menu
-  // shows them, Race Mode too (v2.0: "heart count, heart piece count")
-  const { health } = reading;
+  // shows them, Race Mode too (v2.0: "heart count, heart piece count"); the
+  // Triforce pieces of a hunt, likewise (v2.0 lists them among the items)
+  const { health, pieces } = reading;
   if (typeof health === "string") withheld.set("Hearts", health);
   else {
     items.push(
       `Hearts ${health.hearts}`,
       `Heart pieces ${health.quarters} of 4`,
     );
+  }
+  if (typeof pieces === "number" && pieces > 0) {
+    items.push(`Triforce pieces ×${pieces}`);
   }
   // How many bombs and arrows Link can hold, outside Race Mode: v2.0 does
   // not name the capacity upgrades

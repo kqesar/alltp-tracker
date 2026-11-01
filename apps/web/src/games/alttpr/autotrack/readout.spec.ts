@@ -72,6 +72,20 @@ describe("describeReading", () => {
     }
   });
 
+  it("tells the Triforce pieces of a hunt, Race Mode too", () => {
+    for (const race of [false, true]) {
+      const memory = seedMemory({ race });
+      // No hunt, no pieces to list
+      expect(describeSeed(memory, race).items.join(" ")).not.toContain(
+        "Triforce",
+      );
+      memory[SAVE(0x418)] = 12; // GoalCounter: the pieces found
+      expect(describeSeed(memory, race).items, `race ${race}`).toContain(
+        "Triforce pieces ×12",
+      );
+    }
+  });
+
   it("names what the board has no cell for, which it leaves alone", () => {
     const memory = seedMemory({ race: false });
     // Eastern and Desert Palace's maps, and Hyrule Castle's: each its cell
