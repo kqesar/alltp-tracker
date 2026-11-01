@@ -69,18 +69,27 @@ impl QuitSignals {
         Ok(Self {})
     }
 
+    /// A stream that ends (`None`: the signal driver is gone, which happens
+    /// only as the runtime shuts down) is not a signal: its branch is
+    /// disabled, and with none left `wait` pends for good.
     #[cfg(unix)]
     async fn wait(&mut self) {
         tokio::select! {
-            _ = self.terminate.recv() => {}
-            _ = self.interrupt.recv() => {}
-            _ = self.hangup.recv() => {}
+            Some(()) = self.terminate.recv() => {}
+            Some(()) = self.interrupt.recv() => {}
+            Some(()) = self.hangup.recv() => {}
+            else => std::future::pending::<()>().await,
         }
     }
 
+    /// `ctrl_c` fails at once when the console handler cannot be registered:
+    /// that is no signal, so `wait` pends rather than quit the app.
     #[cfg(not(unix))]
     async fn wait(&mut self) {
-        let _ = tokio::signal::ctrl_c().await;
+        if let Err(error) = tokio::signal::ctrl_c().await {
+            eprintln!("cannot listen for Ctrl+C: {error}");
+            std::future::pending::<()>().await;
+        }
     }
 }
 
