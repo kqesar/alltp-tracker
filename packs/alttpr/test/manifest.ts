@@ -23,6 +23,53 @@ export interface ManifestEntry {
 
 export interface Manifest {
   readonly commit: string;
+  /**
+   * The Door Randomizer release the DR locations, world and rules are read
+   * from (scripts/import-dr.mjs), its base patch (the memory it keeps) and the
+   * Overworld Randomizer release built on it.
+   */
+  readonly doorRandomizer: {
+    readonly basePatch: {
+      readonly branch: string;
+      readonly commit: string;
+      readonly repo: string;
+    };
+    readonly commit: string;
+    readonly data: string;
+    readonly importer: string;
+    readonly license: string;
+    /**
+     * The Overworld fork (OWR), its world imported apart (import-dr.mjs
+     * --owr) at the release players race, and the DR release it merged.
+     */
+    readonly overworld: {
+      readonly commit: string;
+      readonly data: string;
+      readonly door: string;
+      readonly importer: string;
+      readonly license: string;
+      readonly repo: string;
+      /** Its own tests, imported as fixtures under test/owr-upstream/. */
+      readonly tests: readonly ManifestEntry[];
+      readonly version: string;
+      readonly why: string;
+    };
+    readonly repo: string;
+    /** Its item names joined to vt's classes (scripts/import-item-names.mjs). */
+    readonly spoilerItems: string;
+    /**
+     * The commit DR's unit tests were made to run again at (DoorDevUnstable):
+     * the harness is read there, the cases at the release (scripts/dr-tests.mjs).
+     */
+    readonly testHarness: {
+      readonly branch: string;
+      readonly commit: string;
+      readonly why: string;
+    };
+    /** Its own tests, imported as fixtures under test/dr-upstream/. */
+    readonly tests: readonly ManifestEntry[];
+    readonly version: string;
+  };
   /** The entrance randomizer vt hands shuffled entrances to, pinned too. */
   readonly entranceRandomizer: {
     readonly commit: string;

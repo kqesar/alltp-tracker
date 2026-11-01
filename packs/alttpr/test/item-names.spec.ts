@@ -2,11 +2,14 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   codeKey,
+  drCodes,
   erCodes,
+  joinDr,
   joinOnCode,
   vtCodes,
 } from "../scripts/import-item-names.mjs";
 import { UPSTREAM_ITEMS } from "../src/items";
+import DR_ITEMS from "../src/spoiler/dr-items.json";
 import ER_ITEMS from "../src/spoiler/er-items.json";
 import ITEM_NAMES from "../src/spoiler/item-names.json";
 import { loadItemTable } from "./fixtures";
@@ -92,6 +95,56 @@ describe("er-items.json", () => {
   });
 });
 
+describe("dr-items.json", () => {
+  const items = DR_ITEMS.items as Record<string, string | null>;
+
+  it("is pinned to the Door Randomizer's release and vt's commit", () => {
+    expect(DR_ITEMS.upstream).toEqual({
+      dr: {
+        commit: manifest.doorRandomizer.commit,
+        repo: manifest.doorRandomizer.repo,
+      },
+      vt: { commit: manifest.commit, repo: manifest.repo },
+    });
+    expect(manifest.doorRandomizer.spoilerItems).toBe(
+      "src/spoiler/dr-items.json",
+    );
+  });
+
+  it("maps each item to a class of the pack, none for an event", () => {
+    for (const [name, itemClass] of Object.entries(items)) {
+      if (itemClass !== null) {
+        expect(UPSTREAM_ITEMS.has(itemClass), `${name} -> ${itemClass}`).toBe(
+          true,
+        );
+      }
+    }
+    expect(items).toMatchObject({
+      "Beat Agahnim 1": null,
+      "Crystal 5": "Crystal5",
+      "Green Pendant": "PendantOfCourage",
+      Nothing: "Nothing",
+      "Progressive Bow (Alt)": "ProgressiveBowAlternate",
+      "Small Key (Agahnims Tower)": "KeyA1",
+      "Small Key (Universal)": "KeyGK",
+      "Trench 1 Filled": null,
+    });
+  });
+
+  it("keeps apart DR's pickups vt has no item for, and Arrows (5), which shares Nothing's code", () => {
+    expect(DR_ITEMS.unmatched).toEqual([
+      "Arrows (5)",
+      "Bee Trap",
+      "Big Magic",
+      "Chicken",
+      "Fairy",
+    ]);
+    for (const name of DR_ITEMS.unmatched) {
+      expect(Object.hasOwn(items, name), name).toBe(false);
+    }
+  });
+});
+
 describe("the importer", () => {
   it("keys a code by its number, or a prize by its bytes but the last", () => {
     expect(codeKey(0x0a)).toBe("10");
@@ -161,6 +214,50 @@ describe("the importer", () => {
       /"Lost" \(code 7\) matches no vt item/,
     );
     expect(() => joinOnCode(vt, new Map([["Twin", "5"]]))).toThrow(
+      /matches Same, Alike/,
+    );
+  });
+
+  it("reads DR's item table: a price after the code, a dungeon byte after a prize's", () => {
+    const codes = drCodes(
+      `item_table = {'Hammer': (True, False, None, 0x09, 250, 'x', None, None, None, None, None, 'y'),
+      'Green Pendant': (True, False, 'Crystal', [0x04, 0x38, 0x62, 0x00, 0x69, 0x37, 0x08], 999, None, None, None, None, None, None, None),
+      'Beat Agahnim 1': (True, False, 'Event', 999, None, None, None, None, None, None, None, None),
+      }`,
+    );
+    expect([...codes]).toEqual([
+      ["Hammer", "9"],
+      ["Green Pendant", "4,56,98,0,105"],
+      ["Beat Agahnim 1", null],
+    ]);
+    expect(() => drCodes("item_table = [1]")).toThrow(/not a dict/);
+  });
+
+  it("joins DR's names on the code, the rest apart, and stops at two classes", () => {
+    const vt = new Map([
+      ["Hammer", "9"],
+      ["Nothing", "90"],
+      ["Same", "5"],
+      ["Alike", "5"],
+    ]);
+    const english = { Hammer: "Hammer", Nothing: "Nothing" };
+    expect(
+      joinDr(
+        vt,
+        english,
+        new Map<string, string | null>([
+          ["Hammer", "9"],
+          ["Nothing", "90"],
+          ["Arrows (5)", "90"],
+          ["Fairy", "210"],
+          ["Beat", null],
+        ]),
+      ),
+    ).toEqual({
+      items: { Beat: null, Hammer: "Hammer", Nothing: "Nothing" },
+      unmatched: ["Arrows (5)", "Fairy"],
+    });
+    expect(() => joinDr(vt, english, new Map([["Twin", "5"]]))).toThrow(
       /matches Same, Alike/,
     );
   });

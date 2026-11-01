@@ -1,6 +1,8 @@
 import { useShallow } from "zustand/react/shallow";
+import { doorNotes, doorShuffleOf } from "@/games/alttpr/data/doorRando";
 import {
   crossedLogic,
+  doorLogic,
   GLITCHES_LABELS,
   glitchesOf,
   isHidden,
@@ -9,30 +11,47 @@ import {
   unmodelledReasons,
 } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
-
-/** "A", "A and B", "A, B and C". */
-const listOf = (items: readonly string[]) =>
-  items.length < 2
-    ? items.join("")
-    : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+import { listOf } from "@/utils/listOf";
 
 /**
  * What the map's states rest on, when not the whole world: with shuffled
  * entrances, the doors noted (a check behind a door not noted stays out of
  * logic), and, when the run names glitches, that such a seed is filled
  * without them; under logic the pack does not model yet, the causes by name
- * (`unmodelledReasons`: a glitched logic, an entrance shuffle, the
- * Inverted world's entrances), "not modelled yet", and that every check is
+ * (`unmodelledReasons`: an entrance shuffle, the Inverted world's
+ * entrances, a Door Randomizer seed's glitched logic, door, overworld or
+ * enemy shuffle), "not modelled yet", and that every check is
  * maybe; in a No Logic run, that the seed promises no route and what the
  * map shows instead; in a Mystery run, that its entrances or its glitches
  * are not set yet and what the map shows meanwhile. Nothing for any other
- * run.
+ * run. A Door Randomizer seed whose logic it does model says what that
+ * logic rests on (`doorNotes`).
  */
 export const LogicNote = () => {
   const reasons = useGameStore(
     useShallow((state) => unmodelledReasons(state.settings)),
   );
   const crossed = useGameStore((state) => crossedLogic(state.settings));
+  // DR's world on its shuffled entrances follows the notes alike
+  const noted = useGameStore(
+    (state) =>
+      crossed ||
+      (doorLogic(state.settings) &&
+        doorShuffleOf(state.settings) !== undefined),
+  );
+  const door = useGameStore(
+    useShallow((state) =>
+      unmodelledReasons(state.settings).length === 0
+        ? doorNotes(state.settings)
+        : [],
+    ),
+  );
+  const doorNote =
+    door.length > 0 ? (
+      <p className="logic-note" data-testid="logic-note-door">
+        {door.join(" ")}
+      </p>
+    ) : null;
   const noLogic = useGameStore((state) => noLogicRun(state.settings));
   const play = useGameStore((state) => playGlitchesOf(state.settings));
   const entrancesHidden = useGameStore((state) =>
@@ -55,20 +74,23 @@ export const LogicNote = () => {
         shows as maybe until you set <strong>Entrances</strong> in Mode.
       </p>
     );
-  if (crossed)
+  if (noted)
     return (
-      <p className="logic-note" data-testid="logic-note">
-        The logic follows the entrances you noted: a check behind a door you
-        have not noted stays out of logic.
-        {glitched && (
-          <>
-            {" "}
-            A seed with shuffled entrances is filled without glitches, whatever
-            its <strong>Glitches</strong>: the map shows what is in logic
-            without them, and Link starts without the boots.
-          </>
-        )}
-      </p>
+      <>
+        <p className="logic-note" data-testid="logic-note">
+          The logic follows the entrances you noted: a check behind a door you
+          have not noted stays out of logic.
+          {crossed && glitched && (
+            <>
+              {" "}
+              A seed with shuffled entrances is filled without glitches,
+              whatever its <strong>Glitches</strong>: the map shows what is in
+              logic without them, and Link starts without the boots.
+            </>
+          )}
+        </p>
+        {doorNote}
+      </>
     );
   if (reasons.length === 0 && noLogic)
     return (
@@ -89,7 +111,7 @@ export const LogicNote = () => {
         until you set <strong>Glitches</strong> in Mode.
       </p>
     );
-  if (reasons.length === 0) return null;
+  if (reasons.length === 0) return doorNote;
   return (
     <p className="logic-note" data-testid="logic-note">
       Not modelled yet: {listOf(reasons)}. Every check shows as maybe.

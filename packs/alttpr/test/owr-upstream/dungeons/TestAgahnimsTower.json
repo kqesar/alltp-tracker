@@ -1,0 +1,88 @@
+{
+  "file": "test/dungeons/TestAgahnimsTower.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "overrideBombCheck": true,
+    "source": "test/dungeons/TestDungeon.py:9@1ada5b5",
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Castle Tower - Room 03", false, []],
+        [
+          "Castle Tower - Room 03",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Progressive Bow",
+            "Fire Rod",
+            "Ice Rod",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        ["Castle Tower - Room 03", true, ["Progressive Sword"]],
+        ["Castle Tower - Dark Maze", false, []],
+        ["Castle Tower - Dark Maze", false, [], ["Small Key (Agahnims Tower)"]],
+        ["Castle Tower - Dark Maze", false, [], ["Lamp"]],
+        [
+          "Castle Tower - Dark Maze",
+          false,
+          [],
+          [
+            "Progressive Sword",
+            "Hammer",
+            "Progressive Bow",
+            "Fire Rod",
+            "Ice Rod",
+            "Cane of Somaria",
+            "Cane of Byrna"
+          ]
+        ],
+        [
+          "Castle Tower - Dark Maze",
+          true,
+          ["Progressive Sword", "Small Key (Agahnims Tower)", "Lamp"]
+        ],
+        ["Agahnim 1", false, []],
+        [
+          "Agahnim 1",
+          false,
+          ["Small Key (Agahnims Tower)"],
+          ["Small Key (Agahnims Tower)"]
+        ],
+        ["Agahnim 1", false, [], ["Progressive Sword"]],
+        ["Agahnim 1", false, [], ["Lamp"]],
+        [
+          "Agahnim 1",
+          true,
+          [
+            "Small Key (Agahnims Tower)",
+            "Small Key (Agahnims Tower)",
+            "Lamp",
+            "Progressive Sword"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testTower",
+      "startingRegions": ["Tower Lobby"]
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

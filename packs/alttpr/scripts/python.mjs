@@ -182,6 +182,15 @@ export function literal(stream) {
 export const pythonLiteral = (text) => literal(tokens(text, 0, "<text>"));
 
 /**
+ * `text` as a Python string literal in `quote`, its backslashes and that
+ * quote escaped: how a source writes the name a script looks it up by.
+ * @param {string} text
+ * @param {"'" | '"'} [quote]
+ */
+export const pythonString = (text, quote = "'") =>
+  `${quote}${text.replace(/[\\'"]/g, (c) => (c === "\\" || c === quote ? `\\${c}` : c))}${quote}`;
+
+/**
  * The literal assigned to `name` at the start of a line, and its line.
  * @param {string} source
  * @param {string} name
@@ -453,8 +462,10 @@ export function expression(stream, primaryOnly = false) {
       if (name === "None") return { t: "const", value: null };
       return { name, t: "name" };
     }
-    if (token.value === "(" || token.value === "[") {
-      const close = token.value === "(" ? ")" : "]";
+    // A set display is a sequence too: {'a', 'b'} (KeyDoorShuffle.py's
+    // validators); a dict display still stops the import at its ':'
+    if (token.value === "(" || token.value === "[" || token.value === "{") {
+      const close = token.value === "(" ? ")" : token.value === "[" ? "]" : "}";
       /** @type {Expr[]} */
       const items = [];
       let comma = false;

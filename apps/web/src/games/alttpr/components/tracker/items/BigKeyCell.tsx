@@ -31,6 +31,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
   );
   const keyCount = useGameStore((state) => state.smallKeys[dungeonIndex] || 0);
   const genericKeys = useGameStore((state) => state.settings.mode === "retro");
+  const settings = useGameStore((state) => state.settings);
 
   if (!bigKeysVisible) {
     return (
@@ -43,7 +44,7 @@ export const BigKeyCell = ({ row, col, item }: BigKeyCellProps) => {
     );
   }
 
-  const maxKeys = genericKeys ? 0 : smallKeysMax(dungeonIndex);
+  const maxKeys = genericKeys ? 0 : smallKeysMax(dungeonIndex, settings);
   const own = ownItems(dungeonIndex);
   const toggle = (variant: "big-key" | "small-key" | "map" | "compass") => (
     <KeyToggle

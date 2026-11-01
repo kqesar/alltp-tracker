@@ -465,7 +465,12 @@ ranges of a **forbidden** category, so Race Mode never reaches them
   outlives a reconnection). Off, the poller plans no request for it, a tick due
   for nothing else sends nothing, the range forgets its bytes (`has` is false,
   the id is reported changed), and a read in flight is not laid back. Plans are
-  cached per due set, mode **and** switch mask. At most 8 switches.
+  cached per due set, mode **and** switch mask. At most 8 switches. A switch
+  may also guard a range of a permitted category, which Race Mode then reads
+  while it is on: ALttPR's Door Randomizer tables (pots, enemy drops, shop
+  slots) are locations in v2.0 "only ... in modes where they are shuffled",
+  so the app turns each on from the run's settings alone (`packs/alttpr`,
+  "The Door Randomizer").
 - `when(view)` (with `everyMs`): a **gate**. The range is read only while it
   holds over the snapshot as the tick left it, after the tick's other reads
   and never in a plan: the gated ranges that are not alone go together, as one

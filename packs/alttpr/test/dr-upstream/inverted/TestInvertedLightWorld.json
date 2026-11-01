@@ -1,0 +1,922 @@
+{
+  "file": "test/inverted/TestInvertedLightWorld.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "inverted",
+    "source": "test/inverted/TestInverted.py:5@5c44da3",
+    "suite": "inverted"
+  },
+  "suite": "inverted",
+  "tests": [
+    {
+      "cases": [
+        ["Master Sword Pedestal", false, []],
+        ["Master Sword Pedestal", false, [], ["Green Pendant"]],
+        ["Master Sword Pedestal", false, [], ["Red Pendant"]],
+        ["Master Sword Pedestal", false, [], ["Blue Pendant"]],
+        [
+          "Master Sword Pedestal",
+          true,
+          [
+            "Green Pendant",
+            "Red Pendant",
+            "Blue Pendant",
+            "Beat Agahnim 1",
+            "Moon Pearl"
+          ]
+        ],
+        [
+          "Master Sword Pedestal",
+          true,
+          [
+            "Green Pendant",
+            "Red Pendant",
+            "Blue Pendant",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Hammer"
+          ]
+        ],
+        [
+          "Master Sword Pedestal",
+          true,
+          [
+            "Green Pendant",
+            "Red Pendant",
+            "Blue Pendant",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Mushroom", false, []],
+        ["Mushroom", false, [], ["Moon Pearl"]],
+        ["Mushroom", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Mushroom", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Mushroom",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Lost Woods Hideout", false, []],
+        ["Lost Woods Hideout", false, [], ["Moon Pearl"]],
+        ["Lost Woods Hideout", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Lost Woods Hideout",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Lost Woods Hideout",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Lumberjack Tree", false, []],
+        ["Lumberjack Tree", false, [], ["Pegasus Boots"]],
+        ["Lumberjack Tree", false, [], ["Beat Agahnim 1"]],
+        ["Lumberjack Tree", false, [], ["Moon Pearl"]],
+        [
+          "Lumberjack Tree",
+          true,
+          ["Pegasus Boots", "Beat Agahnim 1", "Moon Pearl"]
+        ]
+      ],
+      "kind": "location",
+      "line": 8,
+      "name": "testLostWoods"
+    },
+    {
+      "cases": [
+        ["Kakariko Tavern", false, []],
+        ["Kakariko Tavern", false, [], ["Moon Pearl"]],
+        ["Kakariko Tavern", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Tavern",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Tavern",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Chicken House", false, []],
+        ["Chicken House", false, [], ["Moon Pearl"]],
+        ["Chicken House", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Chicken House", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Chicken House",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Kakariko Well - Top", false, []],
+        ["Kakariko Well - Top", false, [], ["Moon Pearl"]],
+        ["Kakariko Well - Top", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Well - Top",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Well - Top",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Kakariko Well - Left", false, []],
+        ["Kakariko Well - Left", false, [], ["Moon Pearl"]],
+        ["Kakariko Well - Left", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Well - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Well - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Kakariko Well - Middle", false, []],
+        ["Kakariko Well - Middle", false, [], ["Moon Pearl"]],
+        ["Kakariko Well - Middle", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Well - Middle",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Well - Middle",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Kakariko Well - Right", false, []],
+        ["Kakariko Well - Right", false, [], ["Moon Pearl"]],
+        ["Kakariko Well - Right", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Well - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Well - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Kakariko Well - Bottom", false, []],
+        ["Kakariko Well - Bottom", false, [], ["Moon Pearl"]],
+        ["Kakariko Well - Bottom", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Kakariko Well - Bottom",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Kakariko Well - Bottom",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Blind's Hideout - Top", false, []],
+        ["Blind's Hideout - Top", false, [], ["Moon Pearl"]],
+        ["Blind's Hideout - Top", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Blind's Hideout - Top",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Blind's Hideout - Top",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Blind's Hideout - Left", false, []],
+        ["Blind's Hideout - Left", false, [], ["Moon Pearl"]],
+        ["Blind's Hideout - Left", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Blind's Hideout - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Blind's Hideout - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Blind's Hideout - Right", false, []],
+        ["Blind's Hideout - Right", false, [], ["Moon Pearl"]],
+        ["Blind's Hideout - Right", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Blind's Hideout - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Blind's Hideout - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Blind's Hideout - Far Left", false, []],
+        ["Blind's Hideout - Far Left", false, [], ["Moon Pearl"]],
+        ["Blind's Hideout - Far Left", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Blind's Hideout - Far Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Blind's Hideout - Far Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Blind's Hideout - Far Right", false, []],
+        ["Blind's Hideout - Far Right", false, [], ["Moon Pearl"]],
+        ["Blind's Hideout - Far Right", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Blind's Hideout - Far Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Blind's Hideout - Far Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Bottle Merchant", false, []],
+        ["Bottle Merchant", true, ["Beat Agahnim 1", "Moon Pearl"]],
+        [
+          "Bottle Merchant",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Bottle Merchant",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sick Kid", false, []],
+        ["Sick Kid", false, [], ["AnyBottle"]],
+        ["Sick Kid", false, ["Bottle (Bee)"]],
+        ["Sick Kid", false, ["Bottle (Fairy)"]],
+        ["Sick Kid", false, ["Bottle (Red Potion)"]],
+        ["Sick Kid", false, ["Bottle (Green Potion)"]],
+        ["Sick Kid", false, ["Bottle (Blue Potion)"]],
+        ["Sick Kid", false, ["Bottle"]],
+        ["Sick Kid", false, ["Bottle (Good Bee)"]],
+        ["Sick Kid", true, ["Bottle (Bee)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Bee)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Bee)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Sick Kid", true, ["Bottle (Fairy)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Fairy)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Fairy)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Sick Kid", true, ["Bottle (Red Potion)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Red Potion)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Red Potion)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Sick Kid", true, ["Bottle (Green Potion)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Green Potion)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Green Potion)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Sick Kid", true, ["Bottle (Blue Potion)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Blue Potion)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Blue Potion)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Sick Kid", true, ["Bottle", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sick Kid", true, ["Bottle (Good Bee)", "Beat Agahnim 1"]],
+        [
+          "Sick Kid",
+          true,
+          ["Bottle (Good Bee)", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sick Kid",
+          true,
+          [
+            "Bottle (Good Bee)",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Magic Bat", false, []],
+        ["Magic Bat", false, [], ["Magic Powder"]],
+        ["Magic Bat", false, [], ["Hammer"]],
+        ["Magic Bat", false, [], ["Moon Pearl"]],
+        ["Magic Bat", false, ["Magic Powder", "Hammer", "Moon Pearl"]],
+        [
+          "Magic Bat",
+          true,
+          ["Magic Powder", "Hammer", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Magic Bat",
+          true,
+          ["Magic Powder", "Hammer", "Moon Pearl", "Progressive Glove"]
+        ],
+        ["Library", false, []],
+        ["Library", false, [], ["Pegasus Boots"]],
+        ["Library", false, [], ["Moon Pearl"]],
+        ["Library", true, ["Pegasus Boots", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Library",
+          true,
+          ["Pegasus Boots", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Library",
+          true,
+          [
+            "Pegasus Boots",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Maze Race", false, []],
+        ["Maze Race", false, [], ["Moon Pearl"]],
+        ["Maze Race", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Maze Race", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Maze Race",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ]
+      ],
+      "kind": "location",
+      "line": 39,
+      "name": "testKakariko"
+    },
+    {
+      "cases": [
+        ["Desert Ledge", false, []],
+        ["Desert Ledge", false, [], ["Book of Mudora"]],
+        ["Desert Ledge", false, [], ["Moon Pearl"]],
+        [
+          "Desert Ledge",
+          true,
+          ["Book of Mudora", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Desert Ledge",
+          true,
+          ["Book of Mudora", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Desert Ledge",
+          true,
+          [
+            "Book of Mudora",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Checkerboard Cave", false, []],
+        ["Checkerboard Cave", false, [], ["Progressive Glove"]],
+        ["Checkerboard Cave", false, [], ["Moon Pearl"]],
+        [
+          "Checkerboard Cave",
+          true,
+          ["Progressive Glove", "Beat Agahnim 1", "Moon Pearl"]
+        ],
+        [
+          "Checkerboard Cave",
+          true,
+          ["Progressive Glove", "Hammer", "Moon Pearl"]
+        ],
+        [
+          "Checkerboard Cave",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Moon Pearl"]
+        ],
+        ["Aginah's Cave", false, []],
+        ["Aginah's Cave", false, [], ["Moon Pearl"]],
+        ["Aginah's Cave", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Aginah's Cave", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Aginah's Cave",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Bombos Tablet", false, []],
+        ["Bombos Tablet", false, ["Progressive Sword"], ["Progressive Sword"]],
+        ["Bombos Tablet", false, [], ["Book of Mudora"]],
+        ["Bombos Tablet", false, [], ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Bombos Tablet",
+          true,
+          [
+            "Beat Agahnim 1",
+            "Book of Mudora",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Bombos Tablet",
+          true,
+          [
+            "Moon Pearl",
+            "Book of Mudora",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Bombos Tablet",
+          true,
+          [
+            "Moon Pearl",
+            "Book of Mudora",
+            "Progressive Glove",
+            "Hammer",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Bombos Tablet",
+          true,
+          [
+            "Moon Pearl",
+            "Book of Mudora",
+            "Beat Agahnim 1",
+            "Progressive Sword",
+            "Progressive Sword"
+          ]
+        ],
+        ["Floodgate Chest", false, []],
+        ["Floodgate Chest", false, [], ["Moon Pearl"]],
+        ["Floodgate Chest", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Floodgate Chest",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Floodgate Chest",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sunken Treasure", false, []],
+        ["Sunken Treasure", false, [], ["Moon Pearl"]],
+        ["Sunken Treasure", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Sunken Treasure",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sunken Treasure",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Far Left", false, []],
+        ["Mini Moldorm Cave - Far Left", false, [], ["Moon Pearl"]],
+        [
+          "Mini Moldorm Cave - Far Left",
+          true,
+          ["Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Mini Moldorm Cave - Far Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mini Moldorm Cave - Far Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Left", false, []],
+        ["Mini Moldorm Cave - Left", false, [], ["Moon Pearl"]],
+        ["Mini Moldorm Cave - Left", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Mini Moldorm Cave - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mini Moldorm Cave - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Generous Guy", false, []],
+        ["Mini Moldorm Cave - Generous Guy", false, [], ["Moon Pearl"]],
+        [
+          "Mini Moldorm Cave - Generous Guy",
+          true,
+          ["Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Mini Moldorm Cave - Generous Guy",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mini Moldorm Cave - Generous Guy",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Right", false, []],
+        ["Mini Moldorm Cave - Right", false, [], ["Moon Pearl"]],
+        ["Mini Moldorm Cave - Right", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Mini Moldorm Cave - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mini Moldorm Cave - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Mini Moldorm Cave - Far Right", false, []],
+        ["Mini Moldorm Cave - Far Right", false, [], ["Moon Pearl"]],
+        [
+          "Mini Moldorm Cave - Far Right",
+          true,
+          ["Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Mini Moldorm Cave - Far Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mini Moldorm Cave - Far Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Ice Rod Cave", false, []],
+        ["Ice Rod Cave", false, [], ["Moon Pearl"]],
+        ["Ice Rod Cave", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Ice Rod Cave", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Ice Rod Cave",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ]
+      ],
+      "kind": "location",
+      "line": 173,
+      "name": "testSouthLightWorld"
+    },
+    {
+      "cases": [
+        ["King Zora", false, []],
+        ["King Zora", false, [], ["Progressive Glove", "Flippers"]],
+        ["King Zora", false, [], ["Moon Pearl"]],
+        ["King Zora", true, ["Flippers", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "King Zora",
+          true,
+          ["Progressive Glove", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        ["King Zora", true, ["Progressive Glove", "Moon Pearl", "Hammer"]],
+        [
+          "King Zora",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Moon Pearl"]
+        ],
+        ["Zora's Ledge", false, []],
+        ["Zora's Ledge", false, [], ["Flippers"]],
+        ["Zora's Ledge", false, [], ["Moon Pearl"]],
+        ["Zora's Ledge", true, ["Flippers", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Zora's Ledge",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Zora's Ledge",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Waterfall Fairy - Left", false, []],
+        ["Waterfall Fairy - Left", false, [], ["Flippers"]],
+        ["Waterfall Fairy - Left", false, [], ["Moon Pearl"]],
+        [
+          "Waterfall Fairy - Left",
+          true,
+          ["Flippers", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Waterfall Fairy - Left",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Waterfall Fairy - Left",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Waterfall Fairy - Right", false, []],
+        ["Waterfall Fairy - Right", false, [], ["Flippers"]],
+        ["Waterfall Fairy - Right", false, [], ["Moon Pearl"]],
+        [
+          "Waterfall Fairy - Right",
+          true,
+          ["Flippers", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Waterfall Fairy - Right",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Waterfall Fairy - Right",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ]
+      ],
+      "kind": "location",
+      "line": 253,
+      "name": "testZoraArea"
+    },
+    {
+      "cases": [
+        ["Link's Uncle", false, []],
+        ["Link's Uncle", false, [], ["Moon Pearl"]],
+        ["Link's Uncle", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Link's Uncle", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Link's Uncle",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Secret Passage", false, []],
+        ["Secret Passage", false, [], ["Moon Pearl"]],
+        ["Secret Passage", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Secret Passage", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        [
+          "Secret Passage",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["King's Tomb", false, []],
+        ["King's Tomb", false, [], ["Pegasus Boots"]],
+        ["King's Tomb", false, ["Progressive Glove"], ["Progressive Glove"]],
+        ["King's Tomb", false, [], ["Moon Pearl"]],
+        [
+          "King's Tomb",
+          true,
+          [
+            "Pegasus Boots",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl"
+          ]
+        ],
+        ["Sahasrahla's Hut - Left", false, []],
+        ["Sahasrahla's Hut - Left", false, [], ["Moon Pearl"]],
+        ["Sahasrahla's Hut - Left", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Sahasrahla's Hut - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sahasrahla's Hut - Left",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sahasrahla's Hut - Middle", false, []],
+        ["Sahasrahla's Hut - Middle", false, [], ["Moon Pearl"]],
+        ["Sahasrahla's Hut - Middle", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Sahasrahla's Hut - Middle",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sahasrahla's Hut - Middle",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sahasrahla's Hut - Right", false, []],
+        ["Sahasrahla's Hut - Right", false, [], ["Moon Pearl"]],
+        ["Sahasrahla's Hut - Right", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Sahasrahla's Hut - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sahasrahla's Hut - Right",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Sahasrahla", false, []],
+        ["Sahasrahla", false, [], ["Green Pendant"]],
+        ["Sahasrahla", true, ["Green Pendant", "Beat Agahnim 1"]],
+        [
+          "Sahasrahla",
+          true,
+          ["Green Pendant", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Sahasrahla",
+          true,
+          [
+            "Green Pendant",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Bonk Rock Cave", false, []],
+        ["Bonk Rock Cave", false, [], ["Pegasus Boots"]],
+        ["Bonk Rock Cave", false, [], ["Moon Pearl"]],
+        [
+          "Bonk Rock Cave",
+          true,
+          ["Pegasus Boots", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        [
+          "Bonk Rock Cave",
+          true,
+          ["Pegasus Boots", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Bonk Rock Cave",
+          true,
+          [
+            "Pegasus Boots",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Hobo", false, []],
+        ["Hobo", false, [], ["Flippers"]],
+        ["Hobo", false, [], ["Flippers", "Moon Pearl"]],
+        ["Hobo", true, ["Flippers", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Hobo",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Hobo",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Cave 45", false, []],
+        ["Cave 45", false, [], ["Moon Pearl"]],
+        [
+          "Cave 45",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Cave 45", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        ["Cave 45", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Graveyard Cave", false, []],
+        ["Graveyard Cave", false, [], ["Moon Pearl"]],
+        [
+          "Graveyard Cave",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Graveyard Cave", true, ["Moon Pearl", "Progressive Glove", "Hammer"]],
+        ["Graveyard Cave", true, ["Moon Pearl", "Beat Agahnim 1"]],
+        ["Potion Shop", false, []],
+        ["Potion Shop", false, [], ["Mushroom"]],
+        ["Potion Shop", false, [], ["Moon Pearl"]],
+        ["Potion Shop", true, ["Mushroom", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Potion Shop",
+          true,
+          ["Mushroom", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Potion Shop",
+          true,
+          ["Mushroom", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Lake Hylia Island", false, []],
+        ["Lake Hylia Island", false, [], ["Moon Pearl"]],
+        ["Lake Hylia Island", false, [], ["Flippers"]],
+        [
+          "Lake Hylia Island",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        [
+          "Lake Hylia Island",
+          true,
+          ["Flippers", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Lake Hylia Island",
+          true,
+          ["Flippers", "Moon Pearl", "Beat Agahnim 1"]
+        ],
+        ["Flute Spot", false, []],
+        ["Flute Spot", false, [], ["Shovel"]],
+        ["Flute Spot", false, [], ["Moon Pearl"]],
+        ["Flute Spot", true, ["Shovel", "Moon Pearl", "Beat Agahnim 1"]],
+        [
+          "Flute Spot",
+          true,
+          ["Shovel", "Moon Pearl", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Flute Spot",
+          true,
+          ["Shovel", "Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Ganon", false, []],
+        ["Ganon", false, [], ["Moon Pearl"]],
+        ["Ganon", false, [], ["Beat Agahnim 2"]]
+      ],
+      "kind": "location",
+      "line": 286,
+      "name": "testLightWorld"
+    }
+  ],
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "harness": {
+      "branch": "1.5.8",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  }
+}

@@ -5,6 +5,9 @@
 
 import type { AlttprSpoilerLog } from "@alltp/pack-alttpr";
 import { useEffect, useState } from "react";
+import { doorLogic } from "@/games/alttpr/data/presets";
+import { loadDoorSolver } from "@/games/alttpr/hooks/useDoorLogic";
+import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
 import type {
   ReviewComparison,
   ReviewedRun,
@@ -53,29 +56,41 @@ export const useSweep = (
   const [worked, setWorked] = useState<Done | null>(null);
   useEffect(() => {
     if (skip || keptFor(review, run, endMs) !== null) return;
-    const work = sweepRun(
-      review.log as AlttprSpoilerLog,
-      run,
-      comparison,
-      endMs,
-    );
     let handle: ReturnType<typeof setTimeout> | undefined;
-    const slice = () => {
-      const until = performance.now() + SLICE_MS;
-      for (;;) {
-        const next = work.next();
-        if (next.done === true) {
-          const result = { endMs, run, sweep: next.value };
-          done.set(review, result);
-          setWorked(result);
-          return;
+    let stopped = false;
+    const start = (door?: DoorSolver) => {
+      if (stopped) return;
+      const work = sweepRun(
+        review.log as AlttprSpoilerLog,
+        run,
+        comparison,
+        endMs,
+        door,
+      );
+      const slice = () => {
+        const until = performance.now() + SLICE_MS;
+        for (;;) {
+          const next = work.next();
+          if (next.done === true) {
+            const result = { endMs, run, sweep: next.value };
+            done.set(review, result);
+            setWorked(result);
+            return;
+          }
+          if (performance.now() >= until) break;
         }
-        if (performance.now() >= until) break;
-      }
+        handle = setTimeout(slice, 0);
+      };
       handle = setTimeout(slice, 0);
     };
-    handle = setTimeout(slice, 0);
-    return () => clearTimeout(handle);
+    // A run solved in DR's own world is swept there: its chunk first
+    if (doorLogic(run.settings))
+      void loadDoorSolver(run.settings).then((solver) => start(solver));
+    else start();
+    return () => {
+      stopped = true;
+      clearTimeout(handle);
+    };
   }, [review, run, comparison, endMs, skip]);
   if (skip) return null;
   return (

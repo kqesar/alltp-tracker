@@ -56,6 +56,12 @@
   --glyph: "▼";
 }
 
+/* Told by another door's note (Swapped's partner), not noted: its ring
+   dotted, so a note you made and one you did not read apart */
+.entrance-marker--told {
+  border-style: dotted;
+}
+
 /* Every entrance into the place the one pointed at leads to: a cave's
    other sides, ringed in the accent colour */
 .entrance-marker--linked {
@@ -206,4 +212,98 @@
 .entrance-row__hole,
 .entrance-row__target--unknown {
   color: var(--color-text-secondary);
+}
+
+/* A destination told by another door's note: whose, under it */
+.entrance-row__target {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.entrance-row__from {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.entrance-picker__told {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* The Doors tab: a dungeon at a time, each door its name, where it leads
+   and its kind, wrapping under the name where the panel is narrow */
+.doors {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.doors__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.doors__keys-input {
+  width: 5rem;
+}
+
+/* "?": not known, as legible as the hints */
+.doors__keys-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.door-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--spacing-xs) var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--surface-1);
+  border-radius: var(--border-radius-sm);
+}
+
+.door-row__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A phone's panel: each control a whole line, so the door noted reads in
+   full without opening its select */
+@media (max-width: 30rem) {
+  .door-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.door-row__link,
+.door-row__kind {
+  width: 100%;
+  min-width: 0;
+}
+
+.doors__plain {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--border-radius-sm);
+}
+
+.doors__plain:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* An OWR run's flute screens: as many columns of checkboxes as fit */
+.overworld__screens {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
 }

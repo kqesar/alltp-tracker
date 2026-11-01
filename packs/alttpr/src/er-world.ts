@@ -11,21 +11,15 @@
 // read of the connections, and the boss slots under boss shuffle
 // (Bosses.py place_bosses, 145-219).
 import {
-  type Analysis,
-  type AnalyzeOptions,
-  type Atom,
-  analyze,
-  type Blockers,
   type CompiledWorld,
   compileWorld,
   type Exit,
   type Location,
   loadRules,
+  parse,
   type Region,
+  type Rules,
   type Settings,
-  type Solution,
-  type State,
-  solve,
   type Tri,
   type UnknownSetting,
   type World,
@@ -47,7 +41,7 @@ import {
 } from "./entrances";
 import er from "./entrances/er.json" with { type: "json" };
 import ruleTables from "./entrances/rules.json" with { type: "json" };
-import { joinBlockers } from "./goals";
+import { type FactWorld, solveFacts } from "./facts";
 import { everything } from "./keys";
 import { STATE_NAMES } from "./pack";
 import { RULES } from "./rules";
@@ -321,7 +315,7 @@ export interface ErOptions {
 }
 
 /** A compiled world of the entrance randomizer, and its facts. */
-export interface ErWorld {
+export interface ErWorld extends FactWorld {
   readonly compiled: CompiledWorld;
   /** What it was built from: the connections, and how (er-keys.ts). */
   readonly connections: ErConnections;
@@ -484,6 +478,16 @@ const GANON = "Ganon";
  * or stricter, so noting a door never takes a `yes` away. The world where
  * the doors not noted lead anywhere (er-keys.ts) holds the pearl
  * throughout.
+ *
+ * Each rule found is a helper of the world's own (`@bunny<n>`), its text
+ * what the rule is when found: the randomizer's paths capture each
+ * entrance's rule as a function (`path + [entrance.access_rule]`), so a
+ * rule grown by an earlier bunny rule is shared, not copied. Written out
+ * as text it would be copied at each step, the way the Door Randomizer's
+ * world ran out of memory on a dungeon both worlds reach (door-world/
+ * bunny.ts).
+ * @returns The helpers the rules call, by name (`bunny<n>`), each a rule
+ *   that reads only those before it
  */
 function addBunnyRules(
   connections: ErConnections,
@@ -494,7 +498,9 @@ function addBunnyRules(
   },
   exits: Map<string, string>,
   locations: Map<string, string>,
-): void {
+): Map<string, string> {
+  /** The rules found, each a helper read by name, in the order found. */
+  const helpers = new Map<string, string>();
   const into = new Map<string, string[]>();
   for (const [exit, to] of connections)
     into.set(to, [...(into.get(to) ?? []), exit]);
@@ -522,7 +528,12 @@ function addBunnyRules(
         else options.push(and(`reach(${region(from).id})`, rule, ...newPath));
       }
     }
-    const rule = or(...options);
+    let rule = pearl;
+    if (options.length > 1) {
+      const helper = `bunny${helpers.size}`;
+      helpers.set(helper, or(...options));
+      rule = `@${helper}`;
+    }
     return marked.dark.has(name) ? rule : or(rule, "maybe");
   };
 
@@ -547,6 +558,7 @@ function addBunnyRules(
       and(locations.get(location) ?? "true", ruleToAdd(name)),
     );
   }
+  return helpers;
 }
 
 /** A boss of boss_table (Bosses.py) by the pack's id: `Armos Knights`. */
@@ -611,6 +623,20 @@ const RULES_SOURCE = {
 };
 const LOADED_RULES = loadRules(RULES_SOURCE);
 
+/** The pack's rules and a world's own helpers (the bunny's), reach() as facts. */
+const withHelpers = (helpers: ReadonlyMap<string, string>): Rules =>
+  helpers.size === 0
+    ? LOADED_RULES
+    : {
+        groups: LOADED_RULES.groups,
+        helpers: new Map([
+          ...LOADED_RULES.helpers,
+          ...[...helpers].map(
+            ([name, req]) => [name, parse(withFacts(req))] as const,
+          ),
+        ]),
+      };
+
 /** The regions a helper reaches, by id: an exit may call it. */
 const HELPERS_REACH = Object.values(RULE_TABLES.helpers).flatMap(({ req }) =>
   [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
@@ -626,12 +652,15 @@ const OLD_MAN = "Old Man";
 const reachedBy = (
   exits: ReadonlyMap<string, string>,
   locations: ReadonlyMap<string, string>,
+  helpers: ReadonlyMap<string, string> = new Map(),
 ): string[] => [
   ...new Set([
     ...HELPERS_REACH,
-    ...[...exits.values(), locations.get(OLD_MAN) ?? ""].flatMap((req) =>
-      [...req.matchAll(REACH)].map((m) => m[1] ?? ""),
-    ),
+    ...[
+      ...exits.values(),
+      ...helpers.values(),
+      locations.get(OLD_MAN) ?? "",
+    ].flatMap((req) => [...req.matchAll(REACH)].map((m) => m[1] ?? "")),
   ]),
 ];
 
@@ -890,16 +919,14 @@ function allItemsReach(
     LOADED_RULES,
     { items: itemsOf(events, reached), settings: thenSettings },
   );
-  const solved = solveFacts(
-    {
-      compiled: then,
-      connections,
-      facts: eventFacts(events, reached),
-      options,
-      settings: thenSettings,
-    },
-    everything(settings),
-  );
+  const thenWorld: ErWorld = {
+    compiled: then,
+    connections,
+    facts: eventFacts(events, reached),
+    options,
+    settings: thenSettings,
+  };
+  const solved = solveFacts(thenWorld, everything(settings));
   return (name) =>
     solved.region(region(RULE_TABLES.derived[name]?.region ?? "").id);
 }
@@ -940,14 +967,16 @@ export function erWorld(
     undefined,
     options.anywhere,
   );
-  if (options.marked !== false)
-    addBunnyRules(
-      connections,
-      { ...marked, mayBeDark: markWorlds(connections, true).dark },
-      exits,
-      locations,
-    );
-  const reached = reachedBy(exits, locations);
+  const bunny =
+    options.marked === false
+      ? new Map<string, string>()
+      : addBunnyRules(
+          connections,
+          { ...marked, mayBeDark: markWorlds(connections, true).dark },
+          exits,
+          locations,
+        );
+  const reached = reachedBy(exits, locations, bunny);
   const compiledSettings: Settings = {
     ...settings,
     ...derivedSettings(settings, connections, marked, options),
@@ -962,7 +991,7 @@ export function erWorld(
       reached,
       options,
     ),
-    LOADED_RULES,
+    withHelpers(bunny),
     { items: itemsOf(events, reached), settings: compiledSettings },
   );
   return {
@@ -974,101 +1003,6 @@ export function erWorld(
   };
 }
 
-/**
- * Solves a world, holding each fact once what gives it is surely reached,
- * as the randomizer sweeps for events, until nothing more is gained. Each
- * pass can only add facts, so this ends within a pass per fact.
- * @returns The solution, and the state with the facts gained
- */
-export function solveFactsState(
-  world: ErWorld,
-  state: State,
-): { readonly solution: Solution; readonly state: State } {
-  let current: State = state;
-  for (;;) {
-    const solution = solve(world.compiled, current);
-    const gained = world.facts.filter(
-      ({ item, location }) =>
-        !current[item] && solution.location(location) === "yes",
-    );
-    if (gained.length === 0) return { solution, state: current };
-    current = {
-      ...current,
-      ...Object.fromEntries(gained.map(({ item }) => [item, 1])),
-    };
-  }
-}
-
-/** solveFactsState's solution. */
-export const solveFacts = (world: ErWorld, state: State): Solution =>
-  solveFactsState(world, state).solution;
-
-/**
- * The engine's analysis of a world, its facts read through: a fact is no
- * item to get, so the analysis proposes it, then each set that holds one
- * takes, in its place, what brings the location that gives it (`yes`, the
- * level a fact asks), every way of it, at most `maxAtoms` atoms in all. A
- * fact that needs itself again gives nothing.
- * @param state - The state with its facts gained (solveFactsState)
- */
-export function analyzeFacts(
-  world: ErWorld,
-  state: State,
-  options: AnalyzeOptions = {},
-): Analysis {
-  const sources = new Map(world.facts.map((f) => [f.item, f.location]));
-  const inner = analyze(world.compiled, state, {
-    ...options,
-    acquirable: (item) =>
-      sources.has(item) || (options.acquirable?.(item) ?? true),
-  });
-  const memo = new Map<string, Blockers>();
-  const expand = (
-    location: string,
-    target: "yes" | "maybe",
-    seen: ReadonlySet<string>,
-  ): Blockers => {
-    const key = `${location}/${target}`;
-    const known = memo.get(key);
-    if (known !== undefined) return known;
-    const raw = inner.blockers(location, target);
-    let sets: (readonly Atom[])[] = [];
-    let truncated = raw.truncated;
-    for (const set of raw.sets) {
-      let ways: Blockers = {
-        sets: [
-          set.filter((atom) => !("item" in atom && sources.has(atom.item))),
-        ],
-        truncated: false,
-      };
-      for (const atom of set) {
-        const from = "item" in atom ? sources.get(atom.item) : undefined;
-        if (from === undefined) continue;
-        if (seen.has(from)) {
-          ways = { sets: [], truncated: ways.truncated };
-          break;
-        }
-        ways = joinBlockers(
-          ways,
-          expand(from, "yes", new Set([...seen, from])),
-          options.maxAtoms,
-        );
-      }
-      sets = [...sets, ...ways.sets];
-      truncated ||= ways.truncated;
-    }
-    // Each way once, the minimal ones
-    const found = joinBlockers(
-      { sets: [[]], truncated: false },
-      { sets, truncated },
-      options.maxAtoms,
-    );
-    memo.set(key, found);
-    return found;
-  };
-  return {
-    blockers: (location, target) =>
-      expand(location, target, new Set([location])),
-    doableNow: () => inner.doableNow(),
-  };
-}
+// The fact solver moved to facts.ts, which the Door Randomizer's world
+// shares; kept here under the names the app imports.
+export { analyzeFacts, solveFacts, solveFactsState } from "./facts";

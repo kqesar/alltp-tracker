@@ -11,9 +11,10 @@
   justify-content: space-between;
 }
 
-/* A narrow panel: the view tabs span its width in equal shares, as a
-   phone's segmented control does, so that three of them never push the
-   page wider, even at a large text size */
+/* A narrow panel: the view tabs span its width, each with its label's width
+   plus an equal share of what is left, so that up to five of them neither
+   clip a label nor push the page wider (equal shares clipped "Overworld"
+   at 390 px). */
 @container map (width < 30rem) {
   .map-panel__bar .tabs {
     flex: 1 1 100%;
@@ -21,7 +22,7 @@
   }
 
   .map-panel__bar .tabs__tab {
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
     padding-inline: var(--spacing-xs);
   }

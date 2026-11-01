@@ -7,7 +7,8 @@ import { PERFORMANCE_SPECS, webProject } from "./vitest.shared.ts";
 // `forks` project of vitest.perf.config.ts.
 export default webProject({
   exclude: [PERFORMANCE_SPECS],
-  include: ["src/**/*.spec.{ts,tsx}"],
+  // The build's lazy guard too, a plugin of vite.config.ts
+  include: ["src/**/*.spec.{ts,tsx}", "lazy-guard/*.spec.ts"],
   name: "web",
   pool: "vmThreads",
 });

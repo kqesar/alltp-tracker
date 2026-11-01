@@ -20,6 +20,7 @@ import {
   type BossDungeon,
   CHECK_FLAGS,
   type DungeonId,
+  drKeysAdded,
   dungeon,
   dungeonLocations,
   dungeonPool,
@@ -42,13 +43,18 @@ import {
   prizeOf,
 } from "@/games/alttpr/autotrack/table";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import { doorLocationsOf } from "@/games/alttpr/data/doorRando";
 import {
   BOTTLE_SLOTS,
   type Hearts,
   heartsOf,
   heartsValue,
 } from "@/games/alttpr/data/items";
-import { bossesMayMove, wildItems } from "@/games/alttpr/data/presets";
+import {
+  bossesMayMove,
+  type RunSettings,
+  wildItems,
+} from "@/games/alttpr/data/presets";
 import { knownBossCell, valueOfBoss } from "@/games/alttpr/logic/knownBosses";
 import { ACTIVATION, ESCAPE } from "@/games/alttpr/logic/packItems";
 import {
@@ -409,14 +415,17 @@ export const gameCells = (
  * that rises there, Tower of Hera's, would only say where a generic key was
  * taken (its basement cage, which the base patch counts whatever the key).
  */
-const keysFound = (reading: AutotrackReading): Record<number, number> => {
+const keysFound = (
+  reading: AutotrackReading,
+  run: RunSettings,
+): Record<number, number> => {
   const found: Record<number, number> = {};
   KEY_DUNGEONS.forEach((id, index) => {
     const count = (reading.items.counts as Readonly<Record<string, number>>)[
       `key${dungeon(id).code}`
     ];
     if (count !== undefined)
-      found[index] = Math.min(count, smallKeysMax(index));
+      found[index] = Math.min(count, smallKeysMax(index, run));
   });
   return found;
 };
@@ -459,11 +468,24 @@ const counterRanges = (
 ): Record<string, readonly [number, number]> => {
   const settings = packSettings(board.settings);
   const ranges: Record<string, readonly [number, number]> = {};
+  const door = doorLocationsOf(board.settings).locations;
   for (const { code, id, index } of COUNTED) {
-    const locations = dungeonLocationsOf(id, settings);
+    // A Door Randomizer run's locations of the dungeon count too, and the
+    // keys its key drops bring join the dungeon's own
+    const here = door.filter((location) => location.dungeon === id);
+    const locations = [
+      ...dungeonLocationsOf(id, settings),
+      ...here.map((location) => location.id),
+    ];
     if (!locations.every((location) => settled.has(location))) continue;
     const opened = locations.filter((location) => checked.has(location)).length;
-    const pool = dungeonPool(dungeon(id));
+    const added = drKeysAdded(here, id);
+    const own = dungeonPool(dungeon(id));
+    const pool = {
+      ...own,
+      bigKey: own.bigKey + added.big,
+      smallKeys: own.smallKeys + added.small,
+    };
     let ownLeast = 0;
     let ownMost = 0;
     for (const [wild, inPool, item] of [
@@ -516,13 +538,21 @@ export const gameView = (
   for (const id of FLAGGED) {
     if (!unsettled.has(id)) checked[id] = isChecked.has(id);
   }
+  // A Door Randomizer run's own: those its settings make, where read
+  const doorRead = new Set(reading.doorRead);
+  const { locations, unflagged } = doorLocationsOf(board.settings);
+  for (const { id } of locations) {
+    if (doorRead.has(id) && !unflagged.has(id)) {
+      checked[id] = isChecked.has(id);
+    }
+  }
   // Only Inverted's map has the Bomb Merchant (the pack's INVERTED_MARKERS)
   if (bombBought && worldOf(packSettings(board.settings)) === "inverted") {
     checked[BOMB_MERCHANT] = true;
   }
   const smallKeys =
     wildItems(board.settings).keys && !packSettings(board.settings).genericKeys
-      ? keysFound(reading)
+      ? keysFound(reading, board.settings)
       : {};
   return {
     checked,

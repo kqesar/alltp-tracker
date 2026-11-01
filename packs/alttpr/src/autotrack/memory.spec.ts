@@ -97,6 +97,11 @@ const RACE_READS = [
   "dungeons-completed:items",
   // The small keys found (DungeonCollectedKeys)
   "collected-keys:keys",
+  // A Door Randomizer seed's pots, enemy drops and shop slots, each behind
+  // its switch: v2.0's locations "only ... in modes where they are shuffled"
+  "door-pots:pots",
+  "door-drops:enemy-drops",
+  "door-purchases:shop-items",
 ];
 
 const overlaps = (a: ByteRange, b: ByteRange) =>
@@ -171,14 +176,21 @@ describe("MEMORY_RANGES", () => {
       // Where the seed's doors and holes lead, and where Link went through
       "hole-table:entrances",
       "door-table:entrances",
-      // Outside Race Mode's windows: anything else, which Race Mode leaves
+      // Outside Race Mode's windows: anything else, which Race Mode leaves;
+      // first the Door Randomizer's settings and its Overworld fork's
+      "door-settings:other",
+      "standing-items:other",
+      "overworld-settings:other",
       "medallions:other",
       "map-mode:prizes",
+      "compass-mode:other",
       "swordless-mode:other",
       "dungeon-item-menu:other",
       "inverted-mode:other",
+      "follower-shuffle:other",
       "prize-kinds:prizes",
       "goal-items:other",
+      "free-item-text:other",
       "generic-keys:other",
       "tower-crystals:other",
       "ganon-crystals:other",
@@ -187,6 +199,7 @@ describe("MEMORY_RANGES", () => {
       "seed-type:other",
       "initial-pyramid:other",
       "initial-progress:other",
+      "item-substitutions:other",
       // The dark room map (dark-room.ts): navigation, which no race permits
       "dark-room-mode:navigation",
       "dark-room-indoors:navigation",
@@ -210,6 +223,8 @@ describe("MEMORY_RANGES", () => {
       "dark-room-art-bg1:navigation",
       "dark-room-dark:navigation",
       "dark-room-art-palette:navigation",
+      // The Overworld Randomizer's bonk drops, kept out of races
+      "owr-bonks:bonk-drops",
       "bomb-count:hud",
       "bottle-index:hud",
       // The bomb and arrow capacities: v2.0 names no capacity upgrade
@@ -230,7 +245,7 @@ describe("MEMORY_RANGES", () => {
     ]);
   });
 
-  it("overlaps only where a permitted room sits inside the dungeon rooms", () => {
+  it("overlaps only where a permitted room sits inside the dungeon rooms, and the bonk drops' screens", () => {
     const pairs: string[] = [];
     MEMORY_RANGES.forEach((a, i) => {
       for (const b of MEMORY_RANGES.slice(i + 1)) {
@@ -254,6 +269,9 @@ describe("MEMORY_RANGES", () => {
       "dungeon-rooms/thieves-town-boss-room",
       "dungeon-rooms/eastern-palace-boss-room",
       "dungeon-rooms/ice-palace-boss-room",
+      // The bonk drops' bits of the screens' bytes, under a category of
+      // their own that Race Mode forbids
+      "overworld/owr-bonks",
     ]);
   });
 
@@ -400,7 +418,17 @@ describe("MEMORY_RANGES", () => {
     // the starting entrance): 35 bytes less, in six more pieces, one request.
     // The bomb and arrow capacities (capacities, forbidden) join the casual
     // phase alone: 2 bytes in a piece of their own; the race phase is
-    // unchanged.
+    // unchanged. The Door Randomizer's settings and its Overworld fork's
+    // (seed-settings.ts) join the casual phase with the rest of the seed's:
+    // 70 bytes in three more pieces, every 10 s. A Door Randomizer seed's
+    // pots, enemy drops and shop slots, all three switches on, join the race
+    // phase (they are v2.0's locations): 1,280 bytes in six more pieces
+    // (usb2snes cuts a span into 255-byte ones). The Overworld fork's bonk
+    // drops, switch on, join the casual phase alone: the screens' 130 bytes
+    // again, in a piece of their own. The fork's prize and follower bytes
+    // (seed-settings.ts) are three ranges more, in pieces the settings
+    // already span: no byte or piece more. The item substitutions' bomb
+    // upgrade entry (the bomb bag) is 4 bytes in a piece of their own.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -411,9 +439,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 438, pieces: 20 },
-      race: { bytes: 793, pieces: 20 },
-      ranges: { casual: 34, race: 38 },
+      casual: { bytes: 642, pieces: 25 },
+      race: { bytes: 2073, pieces: 26 },
+      ranges: { casual: 42, race: 41 },
     });
   });
 });
@@ -481,6 +509,80 @@ describe("Race Mode, byte by byte", () => {
     expect(() =>
       assertRaceSafe(bridging, ALTTPR_RACE_PROFILE, pack.permittedBytes),
     ).toThrow(/\$F5F360, which no permitted range covers/);
+  });
+});
+
+describe("Race Mode and the Door Randomizer's tables", () => {
+  const TABLES = ["door-pots", "door-drops", "door-purchases"] as const;
+
+  /** The race phase's plan with only the tables `on` switched on. */
+  const raceWith = (on: readonly (typeof TABLES)[number][]) =>
+    planReads(
+      MEMORY_RANGES.filter(
+        (range) =>
+          "everyMs" in range &&
+          !("when" in range) &&
+          permitted(range.id) &&
+          (!(TABLES as readonly string[]).includes(range.id) ||
+            on.includes(range.id as (typeof TABLES)[number])),
+      ),
+      {
+        barriers: pack.raceBarriers[0],
+        gap: pack.gap,
+        limits: USB2SNES_LIMITS,
+      },
+    );
+
+  it("reads each table behind its switch, never the others nor a byte past them", () => {
+    const tables = TABLES.map((id) => ({
+      address: MEMORY_RANGE[id].address,
+      id,
+      size: MEMORY_RANGE[id].size,
+    }));
+    for (const on of [
+      [],
+      ["door-pots"],
+      ["door-drops"],
+      ["door-purchases"],
+    ] as const) {
+      const plan = raceWith(on);
+      expect(() =>
+        assertRaceSafe(plan, ALTTPR_RACE_PROFILE, pack.permittedBytes),
+      ).not.toThrow();
+      for (const table of tables) {
+        const read = planPieces(plan).some((piece) => overlaps(piece, table));
+        expect(read, `${table.id} with ${on.join(",")}`).toBe(
+          (on as readonly string[]).includes(table.id),
+        );
+      }
+      // Nothing of WRAM bank $7F beside them: the dark room's collision map
+      // and the overworld door Link went in by are no race's
+      for (const piece of planPieces(plan)) {
+        if (piece.address >= 0xf6_0000) {
+          expect(
+            tables.some(
+              (table) =>
+                piece.address >= table.address &&
+                piece.address + piece.size <= table.address + table.size,
+            ),
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("is v2.0's line on pots, enemy drops and shop items, under their own categories", () => {
+    for (const [id, category] of [
+      ["door-pots", "pots"],
+      ["door-drops", "enemy-drops"],
+      ["door-purchases", "shop-items"],
+    ] as const) {
+      expect(MEMORY_RANGE[id].category).toBe(category);
+      expect(ALTTPR_RACE_PROFILE.categories[category]?.rule).toContain(
+        "The last 4 examples are only considered locations in modes where they are shuffled",
+      );
+      expect(MEMORY_RANGE[id].optIn).toBeDefined();
+    }
   });
 });
 

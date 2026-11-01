@@ -1,0 +1,276 @@
+{
+  "file": "test/inverted/TestInvertedDarkWorld.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "inverted",
+    "overrideBombCheck": true,
+    "source": "test/inverted/TestInverted.py:5@1ada5b5",
+    "suite": "inverted"
+  },
+  "suite": "inverted",
+  "tests": [
+    {
+      "cases": [
+        ["Brewery", true, []],
+        ["C-Shaped House", true, []],
+        ["Chest Game", true, []],
+        ["Peg Cave", false, []],
+        ["Peg Cave", false, [], ["Hammer"]],
+        ["Peg Cave", false, [], ["Progressive Glove", "Magic Mirror"]],
+        [
+          "Peg Cave",
+          true,
+          ["Hammer", "Progressive Glove", "Progressive Glove"]
+        ],
+        [
+          "Peg Cave",
+          true,
+          ["Hammer", "Progressive Glove", "Magic Mirror", "Moon Pearl"]
+        ],
+        ["Peg Cave", true, ["Hammer", "Beat Agahnim 1", "Magic Mirror"]],
+        ["Bumper Cave Ledge", false, []],
+        ["Bumper Cave Ledge", false, [], ["Moon Pearl"]],
+        ["Bumper Cave Ledge", false, [], ["Cape"]],
+        ["Bumper Cave Ledge", false, [], ["Progressive Glove"]],
+        ["Bumper Cave Ledge", false, [], ["Magic Mirror"]],
+        [
+          "Bumper Cave Ledge",
+          true,
+          [
+            "Moon Pearl",
+            "Cape",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Bumper Cave Ledge",
+          true,
+          ["Moon Pearl", "Cape", "Magic Mirror", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Bumper Cave Ledge",
+          true,
+          [
+            "Moon Pearl",
+            "Cape",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Beat Agahnim 1"
+          ]
+        ],
+        ["Blacksmith", false, []],
+        ["Blacksmith", false, [], ["Progressive Glove", "Magic Mirror"]],
+        [
+          "Blacksmith",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Moon Pearl"]
+        ],
+        ["Blacksmith", true, ["Beat Agahnim 1", "Magic Mirror", "Moon Pearl"]],
+        [
+          "Blacksmith",
+          true,
+          ["Progressive Glove", "Hammer", "Magic Mirror", "Moon Pearl"]
+        ],
+        ["Purple Chest", false, []],
+        ["Purple Chest", false, [], ["Progressive Glove", "Magic Mirror"]],
+        [
+          "Purple Chest",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Moon Pearl"]
+        ],
+        [
+          "Purple Chest",
+          true,
+          ["Beat Agahnim 1", "Magic Mirror", "Moon Pearl"]
+        ],
+        [
+          "Purple Chest",
+          true,
+          ["Progressive Glove", "Hammer", "Magic Mirror", "Moon Pearl"]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testNorthWest"
+    },
+    {
+      "cases": [
+        ["Catfish", false, []],
+        ["Catfish", false, [], ["Progressive Glove", "Flippers"]],
+        ["Catfish", false, [], ["Progressive Glove", "Magic Mirror"]],
+        ["Catfish", false, [], ["Progressive Glove", "Moon Pearl"]],
+        [
+          "Catfish",
+          true,
+          ["Beat Agahnim 1", "Magic Mirror", "Progressive Glove"]
+        ],
+        [
+          "Catfish",
+          true,
+          ["Beat Agahnim 1", "Moon Pearl", "Magic Mirror", "Flippers"]
+        ],
+        ["Catfish", true, ["Progressive Glove", "Hammer"]],
+        ["Catfish", true, ["Progressive Glove", "Flippers"]],
+        [
+          "Catfish",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Moon Pearl"
+          ]
+        ],
+        ["Pyramid", false, []],
+        ["Pyramid", true, ["Beat Agahnim 1", "Magic Mirror"]],
+        ["Pyramid", true, ["Hammer"]],
+        ["Pyramid", true, ["Flippers", "Progressive Glove"]],
+        [
+          "Pyramid",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror",
+            "Moon Pearl"
+          ]
+        ],
+        ["Pyramid Fairy - Left", false, []],
+        ["Pyramid Fairy - Left", false, [], ["Magic Mirror"]],
+        ["Pyramid Fairy - Left", false, [], ["Crystal 5"]],
+        ["Pyramid Fairy - Left", false, [], ["Crystal 6"]],
+        [
+          "Pyramid Fairy - Left",
+          true,
+          [
+            "Crystal 5",
+            "Crystal 6",
+            "Magic Mirror",
+            "Hammer",
+            "Progressive Glove",
+            "Moon Pearl"
+          ]
+        ],
+        [
+          "Pyramid Fairy - Left",
+          true,
+          [
+            "Crystal 5",
+            "Crystal 6",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl"
+          ]
+        ],
+        [
+          "Pyramid Fairy - Left",
+          true,
+          ["Crystal 5", "Crystal 6", "Magic Mirror", "Beat Agahnim 1"]
+        ],
+        ["Pyramid Fairy - Right", false, []],
+        ["Pyramid Fairy - Right", false, [], ["Magic Mirror"]],
+        ["Pyramid Fairy - Right", false, [], ["Crystal 5"]],
+        ["Pyramid Fairy - Right", false, [], ["Crystal 6"]],
+        [
+          "Pyramid Fairy - Right",
+          true,
+          [
+            "Crystal 5",
+            "Crystal 6",
+            "Magic Mirror",
+            "Hammer",
+            "Progressive Glove",
+            "Moon Pearl"
+          ]
+        ],
+        [
+          "Pyramid Fairy - Right",
+          true,
+          [
+            "Crystal 5",
+            "Crystal 6",
+            "Magic Mirror",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl"
+          ]
+        ],
+        [
+          "Pyramid Fairy - Right",
+          true,
+          ["Crystal 5", "Crystal 6", "Magic Mirror", "Beat Agahnim 1"]
+        ]
+      ],
+      "kind": "location",
+      "line": 47,
+      "name": "testNorthEast"
+    },
+    {
+      "cases": [
+        ["Hype Cave - Top", true, []],
+        ["Hype Cave - Middle Right", true, []],
+        ["Hype Cave - Middle Left", true, []],
+        ["Hype Cave - Bottom", true, []],
+        ["Hype Cave - Generous Guy", true, []],
+        ["Stumpy", true, []],
+        ["Digging Game", true, []],
+        ["Link's House", true, []]
+      ],
+      "kind": "location",
+      "line": 82,
+      "name": "testSouth"
+    },
+    {
+      "cases": [
+        ["Mire Shed - Left", false, []],
+        ["Mire Shed - Left", false, [], ["Ocarina", "Magic Mirror"]],
+        [
+          "Mire Shed - Left",
+          true,
+          ["Moon Pearl", "Ocarina", "Progressive Glove", "Progressive Glove"]
+        ],
+        [
+          "Mire Shed - Left",
+          true,
+          ["Moon Pearl", "Ocarina", "Progressive Glove", "Hammer"]
+        ],
+        ["Mire Shed - Left", true, ["Moon Pearl", "Ocarina", "Beat Agahnim 1"]],
+        ["Mire Shed - Left", true, ["Magic Mirror", "Beat Agahnim 1"]],
+        ["Mire Shed - Right", false, []],
+        ["Mire Shed - Right", false, [], ["Ocarina", "Magic Mirror"]],
+        [
+          "Mire Shed - Right",
+          true,
+          ["Moon Pearl", "Ocarina", "Progressive Glove", "Progressive Glove"]
+        ],
+        [
+          "Mire Shed - Right",
+          true,
+          ["Moon Pearl", "Ocarina", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Mire Shed - Right",
+          true,
+          ["Moon Pearl", "Ocarina", "Beat Agahnim 1"]
+        ],
+        ["Mire Shed - Right", true, ["Magic Mirror", "Beat Agahnim 1"]]
+      ],
+      "kind": "location",
+      "line": 97,
+      "name": "testMireArea"
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

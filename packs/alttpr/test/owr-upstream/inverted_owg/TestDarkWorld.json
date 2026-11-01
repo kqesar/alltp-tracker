@@ -1,0 +1,117 @@
+{
+  "file": "test/inverted_owg/TestDarkWorld.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "owglitches",
+    "mode": "inverted",
+    "overrideBombCheck": true,
+    "source": "test/inverted_owg/TestInvertedOWG.py:5@1ada5b5",
+    "suite": "inverted_owg"
+  },
+  "suite": "inverted_owg",
+  "tests": [
+    {
+      "cases": [
+        ["Hype Cave - Top", true, []],
+        ["Hype Cave - Middle Right", true, []],
+        ["Hype Cave - Middle Left", true, []],
+        ["Hype Cave - Bottom", true, []],
+        ["Hype Cave - Generous Guy", true, []],
+        ["Stumpy", true, []],
+        ["Digging Game", true, []]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testSouthDarkWorld"
+    },
+    {
+      "cases": [
+        ["Brewery", true, []],
+        ["C-Shaped House", true, []],
+        ["Chest Game", true, []],
+        ["Peg Cave", false, []],
+        ["Peg Cave", false, [], ["Hammer"]],
+        ["Peg Cave", true, ["Hammer", "Pegasus Boots"]],
+        ["Bumper Cave Ledge", false, []],
+        ["Bumper Cave Ledge", true, ["Pegasus Boots"]],
+        ["Blacksmith", false, []],
+        ["Blacksmith", true, ["Magic Mirror", "Pegasus Boots"]],
+        [
+          "Blacksmith",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Pegasus Boots",
+            "Moon Pearl"
+          ]
+        ],
+        ["Purple Chest", false, []],
+        ["Purple Chest", true, ["Magic Mirror", "Pegasus Boots"]],
+        [
+          "Purple Chest",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Pegasus Boots",
+            "Moon Pearl"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 19,
+      "name": "testWestDarkWorld"
+    },
+    {
+      "cases": [
+        ["Catfish", false, []],
+        ["Catfish", true, ["Pegasus Boots"]],
+        ["Pyramid", false, []],
+        ["Pyramid", true, ["Pegasus Boots"]],
+        ["Pyramid", true, ["Flippers"]],
+        ["Pyramid Fairy - Left", false, []],
+        ["Pyramid Fairy - Left", false, [], ["Magic Mirror"]],
+        ["Pyramid Fairy - Left", false, [], ["Crystal 5"]],
+        ["Pyramid Fairy - Left", false, [], ["Crystal 6"]],
+        [
+          "Pyramid Fairy - Left",
+          true,
+          ["Crystal 5", "Crystal 6", "Magic Mirror", "Pegasus Boots"]
+        ],
+        ["Pyramid Fairy - Right", false, []],
+        ["Pyramid Fairy - Right", false, [], ["Magic Mirror"]],
+        ["Pyramid Fairy - Right", false, [], ["Crystal 5"]],
+        ["Pyramid Fairy - Right", false, [], ["Crystal 6"]],
+        [
+          "Pyramid Fairy - Right",
+          true,
+          ["Crystal 5", "Crystal 6", "Magic Mirror", "Pegasus Boots"]
+        ]
+      ],
+      "kind": "location",
+      "line": 43,
+      "name": "testEastDarkWorld"
+    },
+    {
+      "cases": [
+        ["Mire Shed - Left", false, []],
+        ["Mire Shed - Left", true, ["Pegasus Boots"]],
+        ["Mire Shed - Right", false, []],
+        ["Mire Shed - Right", true, ["Pegasus Boots"]]
+      ],
+      "kind": "location",
+      "line": 67,
+      "name": "testMireArea"
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

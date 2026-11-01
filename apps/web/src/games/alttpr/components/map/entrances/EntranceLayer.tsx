@@ -5,10 +5,13 @@ import {
   MapLocation,
 } from "@/games/alttpr/components/map/MapMarkers";
 import {
+  entranceById,
   entranceText,
   layoutOf,
   placeMarkers,
   poolOf,
+  shownNotes,
+  swapText,
   targetById,
   targetText,
 } from "@/games/alttpr/logic/entrances";
@@ -20,7 +23,8 @@ import { mergeHandlers } from "@/utils/mergeHandlers";
 
 /**
  * One shuffled entrance on the map: a round marker, hollow while where it
- * leads is not known, filled by the kind of place once noted. A click opens
+ * leads is not known, filled by the kind of place once noted, its ring
+ * dotted where another's note tells it (Swapped's partner). A click opens
  * the destination picker.
  */
 const EntranceMarker = memo(
@@ -32,8 +36,20 @@ const EntranceMarker = memo(
     entrance: OverworldEntrance;
   }) => {
     const target = useGameStore((state) => {
-      const id = state.entrances[entrance.id];
+      const pool = poolOf(state.settings);
+      const id =
+        pool === null
+          ? undefined
+          : shownNotes(pool, state.entrances).notes[entrance.id];
       return id === undefined ? undefined : targetById(id);
+    });
+    const from = useGameStore((state) => {
+      const pool = poolOf(state.settings);
+      const id =
+        pool === null
+          ? undefined
+          : shownNotes(pool, state.entrances).derived.get(entrance.id);
+      return id === undefined ? undefined : entranceById(id);
     });
     const pick = useEntrancePicker((state) => state.pick);
     const link = useEntrancePicker((state) => state.link);
@@ -46,7 +62,7 @@ const EntranceMarker = memo(
       text:
         target === undefined
           ? "Not known yet: click to note where it leads"
-          : `Leads to ${targetText(target)}`,
+          : `Leads to ${targetText(target)}${from === undefined ? "" : `, ${swapText(from)}`}`,
       title: `${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}`,
     });
     // Where layoutEntrances draws it: by its door, clear of its neighbours
@@ -67,8 +83,8 @@ const EntranceMarker = memo(
     return (
       <button
         {...handlers}
-        aria-label={entranceText(entrance, target)}
-        className={`mapspan entrance-marker entrance-marker--${entrance.kind} entrance-marker--${target?.kind ?? "unknown"}${linked ? " entrance-marker--linked" : ""}`}
+        aria-label={entranceText(entrance, target, from)}
+        className={`mapspan entrance-marker entrance-marker--${entrance.kind} entrance-marker--${target?.kind ?? "unknown"}${from === undefined ? "" : " entrance-marker--told"}${linked ? " entrance-marker--linked" : ""}`}
         data-testid={`entrance-${entrance.id}`}
         onClick={() => pick(entrance.id)}
         style={style}
@@ -104,7 +120,13 @@ const EntranceLayer = ({
   world: World;
 }) => {
   const pool = useGameStore((state) => poolOf(state.settings));
-  const noted = useGameStore((state) => state.entrances);
+  // The notes made and those they tell: a place told stands above its door
+  const noted = useGameStore((state) => {
+    const run = poolOf(state.settings);
+    return run === null
+      ? state.entrances
+      : shownNotes(run, state.entrances).notes;
+  });
   const placed = useMemo(
     () => (pool === null ? markers : placeMarkers(pool, noted, markers)),
     [pool, noted, markers],

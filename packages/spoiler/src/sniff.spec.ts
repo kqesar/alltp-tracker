@@ -23,6 +23,15 @@ const SMZ3_API_SM = '{"seed":{"id":1,"guid":"x","gameId":"sm","spoiler":"[]"}}';
 const SM_YAML = "- SM 11.3.2 AAAA BBBB CCCC\n- Playthrough:";
 const ARCHIPELAGO =
   "Archipelago Version 0.6.8  -  Seed: 123456\n\nFilling Algorithm:  balanced";
+// The Door Randomizer's text log, as SahasrahBot posts it for a spoiler race,
+// and its Overworld fork's first line (OWR 0.8.0.0 BaseClasses.py:3335)
+const DR_TEXT =
+  "ALttP Dungeon Randomizer Version 1.5.6-u  -  Seed: 660701088\n\nHash: Powder, Key, Bottle, Compass, Pearl";
+const OWR_TEXT =
+  "ALttP Overworld Randomizer  -  Seed: 660701088\n\nDoor Version:                      1.5.6";
+// DR's Spoiler.to_json: json.dumps of its lists first (BaseClasses.py:2722-2729)
+const DR_JSON =
+  '{"Entrances": [], "Doors": [{"player": 1, "entrance": "Hyrule Castle Lobby W"';
 
 describe("sniffSpoiler", () => {
   it.each([
@@ -39,6 +48,22 @@ describe("sniffSpoiler", () => {
     ],
     ["samus.link server YAML", SMZ3_SERVER_YAML, "", "smz3", "smz3-yaml"],
     ["samus.link API", SMZ3_API, "spoiler.json", "smz3", "smz3-api"],
+    [
+      "Door Randomizer text",
+      DR_TEXT,
+      "DR_660701088_Spoiler.txt",
+      "alttpr",
+      "dr",
+    ],
+    ["Overworld Randomizer text", OWR_TEXT, "", "alttpr", "dr"],
+    ["Door Randomizer JSON", DR_JSON, "", "alttpr", "dr"],
+    [
+      "avianart's Download Spoiler",
+      '{\n    "Entrances": [\n        {',
+      "alttprcustom - DR__C2BdrZOiV_Spoiler.txt",
+      "alttpr",
+      "dr",
+    ],
   ] as const)("%s", (_name, head, fileName, game, format) => {
     expect(sniffSpoiler(head, fileName)).toEqual({ format, game, known: true });
   });
@@ -68,6 +93,24 @@ describe("sniffSpoiler", () => {
       known: true,
     });
     expect(sniffSpoiler('{"x": 1}', "other.txt")).toEqual({
+      known: false,
+      what: "unknown",
+    });
+  });
+
+  it("tells a Door Randomizer JSON by a DR key or a DR file name, not by its lists alone", () => {
+    expect(sniffSpoiler('{"Entrances": [], "Lobbies": []}')).toMatchObject({
+      format: "dr",
+    });
+    // alttpr.com's entrance randomizer writes an Entrances list too
+    expect(sniffSpoiler('{"Entrances": [{"entrance": "Link\'s House"')).toEqual(
+      { known: false, what: "unknown" },
+    );
+    expect(sniffSpoiler('{"x": 1}', "OR_1234_Spoiler.json")).toMatchObject({
+      format: "dr",
+    });
+    // A text log is told by its first line, not by a name
+    expect(sniffSpoiler("Seed: 1", "DR_1_Spoiler.txt")).toEqual({
       known: false,
       what: "unknown",
     });

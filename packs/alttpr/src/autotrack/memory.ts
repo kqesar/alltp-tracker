@@ -40,10 +40,36 @@ export const MEMORY_SOURCES = {
     license: "MIT",
     repo: "https://github.com/ArchipelagoMW/Archipelago",
   },
+  // The Door Randomizer (DR), for what it writes into its ROMs: the title,
+  // the race flag, its settings and its pots', drops' and shops' tables
+  dr: {
+    commit: "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    license: "MIT",
+    repo: "https://github.com/aerinon/ALttPDoorRandomizer",
+    version: "1.5.8",
+  },
+  // The base patch DR 1.5.8 ships, as 1.5.6 did (data/base2current.bps,
+  // last changed in 0e43210 with the same change as this commit,
+  // 2026-02-11): its SRAM map
+  // is vt's for every range below, but for the tables DR adds
+  // (`RoomPotData`, `SpriteDropData`, `PurchaseCounts`)
+  drz3: {
+    branch: "DRUnstable",
+    commit: "d0f46511300be05076b7403d71656f3955f3f8fc",
+    license: "MIT",
+    repo: "https://github.com/aerinon/z3randomizer",
+  },
   er: {
     commit: "8a1ac4d451b397ec5fb424e3a24fb7f252773381",
     license: "MIT",
     repo: "https://github.com/cassidoxa/ALttPEntranceRandomizer",
+  },
+  // DR's Overworld fork (OWR), the last release on DR 1.5.6
+  owr: {
+    commit: "2297be2f45c6b9710a7dfdbdc11cf166baa6de70",
+    license: "MIT",
+    repo: "https://github.com/codemann8/ALttPDoorRandomizer",
+    version: "0.8.0.0",
   },
   spec: {
     title: "ALTTPR Auto-tracker Rules and Guidelines",
@@ -225,6 +251,24 @@ export const DARK_ROOM_SWITCH = "dark-room";
  * is "Game art". Its ranges are the `dark-room-art-…` ones.
  */
 export const DARK_ROOM_ART_SWITCH = "dark-room-art";
+
+/**
+ * The switches for the Door Randomizer's pots, enemy drops and shop slots
+ * (`door-pots`, `door-drops`, `door-purchases`): the app turns each on
+ * while the run's settings shuffle what its table records, in Race Mode
+ * too, and only then (v2.0: such things are locations "only ... in modes
+ * where they are shuffled").
+ */
+export const DOOR_POTS_SWITCH = "door-pots";
+export const DOOR_DROPS_SWITCH = "door-drops";
+export const DOOR_SHOPS_SWITCH = "door-shops";
+
+/**
+ * The switch for the Overworld Randomizer's bonk drops (`owr-bonks`): the
+ * app turns it on while the run shuffles them, never in Race Mode, whose
+ * profile forbids their category (`bonk-drops`).
+ */
+export const OWR_BONKS_SWITCH = "owr-bonks";
 
 /**
  * How often the room's tilemaps are read again when nothing said they
@@ -670,6 +714,20 @@ export const MEMORY_RANGES = [
     "z3:sram.asm:54-69",
     GAME_MS,
   ),
+  // The Overworld Randomizer's bonk drops: a bit of each screen's byte of
+  // the overworld's save data, as the fork's own client reads them
+  // (owr:MultiClient.py:978-987, SAVEDATA_START + 0x280 + screen). Read
+  // apart from `overworld`, under a category Race Mode forbids, and only
+  // while the run shuffles them.
+  range({
+    at: 0x7e_f280,
+    category: "bonk-drops",
+    everyMs: GAME_MS,
+    id: "owr-bonks",
+    optIn: OWR_BONKS_SWITCH,
+    size: 0x82,
+    source: "owr:MultiClient.py:978-987",
+  }),
   // Bow, boomerang, hookshot.
   save("equipment-a", 0x340, 3, "items", "z3:sram.asm:80-85"),
   // Bombs held, a HUD count.
@@ -815,6 +873,41 @@ export const MEMORY_RANGES = [
     id: "overworld-door",
     size: 1,
     source: "z3:ram.asm:554",
+  }),
+  // The Door Randomizer's tables beside the save, which its base patch
+  // saves with it (sram.asm:7-9, 386-393, 644-646 at aerinon/z3randomizer
+  // d0f4651): a word per room of the pots taken and of the enemy drops
+  // taken, then a byte per shop slot of the purchases. Each is read only
+  // while the run's settings shuffle what it records (its switch, which the
+  // app sets from them): v2.0 counts a pot, an enemy drop and a shop item
+  // as a location "only ... in modes where they are shuffled". An
+  // alttpr.com seed never turns them on.
+  range({
+    at: 0x7f_6018,
+    category: "pots",
+    everyMs: GAME_MS,
+    id: "door-pots",
+    optIn: DOOR_POTS_SWITCH,
+    size: 0x250,
+    source: "drz3:sram.asm:390",
+  }),
+  range({
+    at: 0x7f_6268,
+    category: "enemy-drops",
+    everyMs: GAME_MS,
+    id: "door-drops",
+    optIn: DOOR_DROPS_SWITCH,
+    size: 0x250,
+    source: "drz3:sram.asm:391",
+  }),
+  range({
+    at: 0x7f_64b8,
+    category: "shop-items",
+    everyMs: GAME_MS,
+    id: "door-purchases",
+    optIn: DOOR_SHOPS_SWITCH,
+    size: 0x60,
+    source: "drz3:sram.asm:392",
   }),
 ] as const;
 

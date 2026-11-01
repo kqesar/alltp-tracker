@@ -40,6 +40,8 @@ const LEVELS: Readonly<Record<string, readonly string[]>> = {
 
 /** Pack items whose name is not their cell's. */
 const NAMES: Readonly<Record<string, string>> = {
+  // A bomb-bag run's +10 upgrade, which its bombs cell tells (BAG_BOMBS)
+  bombUpgrade: "Bomb Bag",
   boomerang: "Blue Boomerang",
   bow: "Bow",
   crystal1: "Crystal 1",
@@ -62,6 +64,7 @@ const NAMES: Readonly<Record<string, string>> = {
 
 /** Icons of what no cell draws at its own value. */
 const ICONS: Readonly<Record<string, string>> = {
+  bombUpgrade: "bomb.png",
   crystal1: "dungeon3.png",
   crystal2: "dungeon3.png",
   crystal3: "dungeon3.png",

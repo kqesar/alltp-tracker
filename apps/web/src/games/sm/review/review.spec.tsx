@@ -298,7 +298,7 @@ describe("a log that is refused", () => {
     const error = await refused(
       new File(['{"meta":{"worlds":1}}'], "alttpr - x_9MQ9gO1wMD.txt"),
     );
-    expect(error).toHaveTextContent("alttpr.com spoiler log");
+    expect(error).toHaveTextContent("A Link to the Past spoiler log");
   });
 
   it("a ROM or any other file", async () => {

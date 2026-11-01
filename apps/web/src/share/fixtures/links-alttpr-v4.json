@@ -1,0 +1,3579 @@
+{
+  "description": "Links as the tracker packed them with link 4 (the timeline in bits, the settings packed), recorded by the packLink of v2.67.0 (commit 5b130fae), the last release before the Door Randomizer's settings joined the settings table after its own, each beside the save it was made from: settings v2.67.0 added to that table (Ganonhunt, Completionist, the swords, the enemies' health, a No Logic run's glitches, a Mystery run's hidden glitches and entrances, shuffled bosses with keys in their dungeons). They stand for links already shared: never change their content or regenerate them (Biome only orders their keys).",
+  "links": [
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "C9hRBIMaACoIOEMAsfCWI0CoABJDhELIAIYVAQ",
+          "entrances": {},
+          "items": "AAEAAAABAAEAAAABAAAAAAAAAAABAQAAAAAABgAAAAAEAgAAAgIAAAAAAAACAgAAAAAAAgAAAAAAAgAAAAACAAACAAICAgICAgICAgIGBAQKDAQIBgQKKAAAAgAAAAAAAAAAAgICAAAAAAAAUgAAAAICAAICAAAAAAAAHjw",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "ganonhunt",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCQ1KLyUqABM",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "VMry3suYNB4FEAABAMCgmFBWGw4HRaMBiOByPyKSiaZTMaDgcTmdDqeT2f0KhkYjkgkU8oFEqFgsVktVsu2KyWUzGi0mm1Gs12y3G63nE63g8no_oDBYNC4fFItG5BI5JLpfNJrN5zPbUTWjHtOnT2SHt32T2kvMAAAAAa3j5cwtQVj6o5kDbsTouktWnxH9w8VQGjVbnkhUKPfHPFquw2ktnd2zMaaswibV0qhfnvbmpa4u2FqOBY21hKfRU2kntdwRn2KxhfbAOWd-W2XGMCM8R9kS7ogzUbfubeAKHqFXr6ZVyEkwpa19or75BqeIf2yKUA8ps41Z32VksFfeeauHOlmGNfG4GVnJdgjmu0n6ljF7lZ0sqmEIeUhmn1TJgA"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "a Ganonhunt run",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "blinds-hideout/right": true,
+            "bomb-merchant": true,
+            "castle-tower/room-03": true,
+            "catfish": true,
+            "desert-ledge": true,
+            "desert-palace/big-key-chest": true,
+            "desert-palace/boss": true,
+            "desert-palace/compass-chest": true,
+            "digging-game": true,
+            "eastern-palace/big-chest": true,
+            "eastern-palace/cannonball-chest": true,
+            "eastern-palace/map-chest": true,
+            "ether-tablet": true,
+            "floating-island": true,
+            "floodgate-chest": true,
+            "ganons-tower/big-key-room/left": true,
+            "ganons-tower/compass-room/bottom-left": true,
+            "ganons-tower/compass-room/bottom-right": true,
+            "ganons-tower/dms-room/top-left": true,
+            "ganons-tower/dms-room/top-right": true,
+            "ganons-tower/hope-room/left": true,
+            "ganons-tower/hope-room/right": true,
+            "ganons-tower/mini-helmasaur-room/left": true,
+            "hype-cave/bottom": true,
+            "hype-cave/npc": true,
+            "ice-palace/freezor-chest": true,
+            "ice-palace/spike-room": true,
+            "kakariko-well/left": true,
+            "kakariko-well/right": true,
+            "kings-tomb": true,
+            "links-house": true,
+            "maze-race": true,
+            "mini-moldorm-cave/left": true,
+            "mini-moldorm-cave/right": true,
+            "mire-shed/left": true,
+            "mire-shed/right": true,
+            "misery-mire/main-lobby": true,
+            "misery-mire/map-chest": true,
+            "palace-of-darkness/harmless-hellway": true,
+            "palace-of-darkness/stalfos-basement": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "palace-of-darkness/the-arena/ledge": true,
+            "paradox-cave-upper/left": true,
+            "pegasus-rocks": true,
+            "purple-chest": true,
+            "pyramid": true,
+            "pyramid-fairy/left": true,
+            "sahasrahlas-hut/left": true,
+            "sahasrahlas-hut/middle": true,
+            "sewers/secret-room/right": true,
+            "skull-woods/big-chest": true,
+            "skull-woods/compass-chest": true,
+            "spectacle-rock-cave": true,
+            "superbunny-cave/bottom": true,
+            "swamp-palace/map-chest": true,
+            "swamp-palace/waterfall-room": true,
+            "thieves-town/ambush-chest": true,
+            "thieves-town/boss": true,
+            "tower-of-hera/big-key-chest": true,
+            "tower-of-hera/boss": true,
+            "tower-of-hera/compass-chest": true,
+            "tower-of-hera/map-chest": true,
+            "turtle-rock/big-chest": true,
+            "turtle-rock/eye-bridge/top-left": true,
+            "turtle-rock/roller-room/left": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 0,
+            "agahnim2": 0,
+            "arrowcapacity": 30,
+            "bigkey0": 1,
+            "bigkey1": 0,
+            "bigkey2": 0,
+            "bigkey3": 1,
+            "bigkey4": 1,
+            "bigkey5": 0,
+            "bigkey6": 0,
+            "bigkey7": 0,
+            "bigkey8": 0,
+            "bigkey9": 0,
+            "bigkey12": 0,
+            "blank": false,
+            "bombcapacity": 15,
+            "bombos": true,
+            "book": false,
+            "boomerang": 0,
+            "boots": false,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 3,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": false,
+            "cape": true,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 0,
+            "compass1": 0,
+            "compass2": 0,
+            "compass3": 0,
+            "compass4": 1,
+            "compass5": 0,
+            "compass6": 0,
+            "compass7": 0,
+            "compass8": 0,
+            "compass9": 1,
+            "compass12": 0,
+            "escape": 1,
+            "ether": false,
+            "firerod": true,
+            "flippers": false,
+            "flute": false,
+            "fluteactive": 0,
+            "glove": 0,
+            "goalpieces": 41,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 1,
+            "heldcrystals": 0,
+            "heldgreen": 0,
+            "heldpendants": 0,
+            "hookshot": true,
+            "icerod": false,
+            "knownboss0": 0,
+            "knownboss1": 0,
+            "knownboss2": 0,
+            "knownboss3": 1,
+            "knownboss4": 1,
+            "knownboss5": 0,
+            "knownboss6": 1,
+            "knownboss7": 1,
+            "knownboss8": 0,
+            "knownboss9": 0,
+            "lantern": false,
+            "magic": 0,
+            "map0": 0,
+            "map1": 1,
+            "map2": 1,
+            "map3": 0,
+            "map4": 0,
+            "map5": 0,
+            "map6": 0,
+            "map7": 0,
+            "map8": 1,
+            "map9": 0,
+            "map10": 1,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": false,
+            "mushroom": false,
+            "net": false,
+            "powder": false,
+            "quake": false,
+            "reward0": 0,
+            "reward1": 0,
+            "reward2": 1,
+            "reward3": 0,
+            "reward4": 0,
+            "reward5": 0,
+            "reward6": 0,
+            "reward7": 0,
+            "reward8": 0,
+            "reward9": 0,
+            "shield": 0,
+            "shoparrow": true,
+            "shopkey": true,
+            "shovel": false,
+            "somaria": false,
+            "sword": 0,
+            "tenbombs": 1,
+            "triforce": 0,
+            "tunic": 2
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "ganonhunt",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "entranceShuffle": "none",
+            "goal": "ganonhunt",
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "swordless": false
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:blinds-hideout/right": {
+              "at": 1793309516819,
+              "ms": 1916819
+            },
+            "check:bomb-merchant": {
+              "at": 1793312824719,
+              "ms": 5224719
+            },
+            "check:castle-tower/room-03": {
+              "at": 1793312283708,
+              "ms": 4683708
+            },
+            "check:catfish": {
+              "at": 1793310093668,
+              "ms": 2493668
+            },
+            "check:desert-ledge": {
+              "at": 1793310314687,
+              "ms": 2714687
+            },
+            "check:desert-palace/big-key-chest": {
+              "at": 1793310826895,
+              "ms": 3226895
+            },
+            "check:desert-palace/boss": {
+              "at": 1793310935787,
+              "ms": 3335787
+            },
+            "check:desert-palace/compass-chest": {
+              "at": 1793310889424,
+              "ms": 3289424
+            },
+            "check:digging-game": {
+              "at": 1793310441309,
+              "ms": 2841309
+            },
+            "check:eastern-palace/big-chest": {
+              "at": 1793310615788,
+              "ms": 3015788
+            },
+            "check:eastern-palace/cannonball-chest": {
+              "at": 1793310687485,
+              "ms": 3087485
+            },
+            "check:eastern-palace/map-chest": {
+              "at": 1793310735684,
+              "ms": 3135684
+            },
+            "check:ether-tablet": {
+              "at": 1793310000731,
+              "ms": 2400731
+            },
+            "check:floating-island": {
+              "at": 1793310166698,
+              "ms": 2566698
+            },
+            "check:floodgate-chest": {
+              "at": 1793308903566,
+              "ms": 1303566
+            },
+            "check:ganons-tower/big-key-room/left": {
+              "at": 1793312681024,
+              "ms": 5081024
+            },
+            "check:ganons-tower/compass-room/bottom-left": {
+              "at": 1793312581554,
+              "ms": 4981554
+            },
+            "check:ganons-tower/compass-room/bottom-right": {
+              "at": 1793312658156,
+              "ms": 5058156
+            },
+            "check:ganons-tower/dms-room/top-left": {
+              "at": 1793312342881,
+              "ms": 4742881
+            },
+            "check:ganons-tower/dms-room/top-right": {
+              "at": 1793312433135,
+              "ms": 4833135
+            },
+            "check:ganons-tower/hope-room/left": {
+              "at": 1793312460707,
+              "ms": 4860707
+            },
+            "check:ganons-tower/hope-room/right": {
+              "at": 1793312509685,
+              "ms": 4909685
+            },
+            "check:ganons-tower/mini-helmasaur-room/left": {
+              "at": 1793312748675,
+              "ms": 5148675
+            },
+            "check:hype-cave/bottom": {
+              "at": 1793309594780,
+              "ms": 1994780
+            },
+            "check:hype-cave/npc": {
+              "at": 1793309654917,
+              "ms": 2054917
+            },
+            "check:ice-palace/freezor-chest": {
+              "at": 1793311854356,
+              "ms": 4254356
+            },
+            "check:ice-palace/spike-room": {
+              "at": 1793311762864,
+              "ms": 4162864
+            },
+            "check:kakariko-well/left": {
+              "at": 1793309348573,
+              "ms": 1748573
+            },
+            "check:kakariko-well/right": {
+              "at": 1793309444521,
+              "ms": 1844521
+            },
+            "check:kings-tomb": {
+              "at": 1793308882056,
+              "ms": 1282056
+            },
+            "check:links-house": {
+              "at": 1793308943163,
+              "ms": 1343163
+            },
+            "check:maze-race": {
+              "at": 1793310215256,
+              "ms": 2615256
+            },
+            "check:mini-moldorm-cave/left": {
+              "at": 1793309837006,
+              "ms": 2237006
+            },
+            "check:mini-moldorm-cave/right": {
+              "at": 1793309866052,
+              "ms": 2266052
+            },
+            "check:mire-shed/left": {
+              "at": 1793309024203,
+              "ms": 1424203
+            },
+            "check:mire-shed/right": {
+              "at": 1793309077614,
+              "ms": 1477614
+            },
+            "check:misery-mire/main-lobby": {
+              "at": 1793311911875,
+              "ms": 4311875
+            },
+            "check:misery-mire/map-chest": {
+              "at": 1793311975849,
+              "ms": 4375849
+            },
+            "check:palace-of-darkness/harmless-hellway": {
+              "at": 1793311408227,
+              "ms": 3808227
+            },
+            "check:palace-of-darkness/stalfos-basement": {
+              "at": 1793311318267,
+              "ms": 3718267
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793311250081,
+              "ms": 3650081
+            },
+            "check:palace-of-darkness/the-arena/ledge": {
+              "at": 1793311208829,
+              "ms": 3608829
+            },
+            "check:paradox-cave-upper/left": {
+              "at": 1793309676468,
+              "ms": 2076468
+            },
+            "check:pegasus-rocks": {
+              "at": 1793309757857,
+              "ms": 2157857
+            },
+            "check:purple-chest": {
+              "at": 1793309934485,
+              "ms": 2334485
+            },
+            "check:pyramid": {
+              "at": 1793310405488,
+              "ms": 2805488
+            },
+            "check:pyramid-fairy/left": {
+              "at": 1793310522420,
+              "ms": 2922420
+            },
+            "check:sahasrahlas-hut/left": {
+              "at": 1793309246348,
+              "ms": 1646348
+            },
+            "check:sahasrahlas-hut/middle": {
+              "at": 1793309304128,
+              "ms": 1704128
+            },
+            "check:sewers/secret-room/right": {
+              "at": 1793310474306,
+              "ms": 2874306
+            },
+            "check:skull-woods/big-chest": {
+              "at": 1793311537028,
+              "ms": 3937028
+            },
+            "check:skull-woods/compass-chest": {
+              "at": 1793311628246,
+              "ms": 4028246
+            },
+            "check:spectacle-rock-cave": {
+              "at": 1793310114054,
+              "ms": 2514054
+            },
+            "check:superbunny-cave/bottom": {
+              "at": 1793309175009,
+              "ms": 1575009
+            },
+            "check:swamp-palace/map-chest": {
+              "at": 1793311465439,
+              "ms": 3865439
+            },
+            "check:swamp-palace/waterfall-room": {
+              "at": 1793311499910,
+              "ms": 3899910
+            },
+            "check:thieves-town/ambush-chest": {
+              "at": 1793311661256,
+              "ms": 4061256
+            },
+            "check:thieves-town/boss": {
+              "at": 1793311707961,
+              "ms": 4107961
+            },
+            "check:tower-of-hera/big-key-chest": {
+              "at": 1793310968273,
+              "ms": 3368273
+            },
+            "check:tower-of-hera/boss": {
+              "at": 1793311156434,
+              "ms": 3556434
+            },
+            "check:tower-of-hera/compass-chest": {
+              "at": 1793311101219,
+              "ms": 3501219
+            },
+            "check:tower-of-hera/map-chest": {
+              "at": 1793311064531,
+              "ms": 3464531
+            },
+            "check:turtle-rock/big-chest": {
+              "at": 1793312117010,
+              "ms": 4517010
+            },
+            "check:turtle-rock/eye-bridge/top-left": {
+              "at": 1793312189450,
+              "ms": 4589450
+            },
+            "check:turtle-rock/roller-room/left": {
+              "at": 1793312032226,
+              "ms": 4432226
+            },
+            "item:bigkey0:1": {
+              "at": 1793308277631,
+              "ms": 677631
+            },
+            "item:bigkey3:1": {
+              "at": 1793308355040,
+              "ms": 755040
+            },
+            "item:bigkey4:1": {
+              "at": 1793308382186,
+              "ms": 782186
+            },
+            "item:bombos": {
+              "at": 1793307687242,
+              "ms": 87242
+            },
+            "item:bottle:1": {
+              "at": 1793308188600,
+              "ms": 588600
+            },
+            "item:bottle:2": {
+              "at": 1793308188600,
+              "ms": 588600
+            },
+            "item:bottle:3": {
+              "at": 1793308188600,
+              "ms": 588600
+            },
+            "item:cape": {
+              "at": 1793307747184,
+              "ms": 147184
+            },
+            "item:compass4:1": {
+              "at": 1793308560996,
+              "ms": 960996
+            },
+            "item:compass9:1": {
+              "at": 1793308603407,
+              "ms": 1003407
+            },
+            "item:firerod": {
+              "at": 1793307806775,
+              "ms": 206775
+            },
+            "item:hookshot": {
+              "at": 1793307866634,
+              "ms": 266634
+            },
+            "item:map1:1": {
+              "at": 1793308455742,
+              "ms": 855742
+            },
+            "item:map2:1": {
+              "at": 1793308485214,
+              "ms": 885214
+            },
+            "item:map8:1": {
+              "at": 1793308513334,
+              "ms": 913334
+            },
+            "item:map10:1": {
+              "at": 1793308623767,
+              "ms": 1023767
+            },
+            "item:shoparrow": {
+              "at": 1793307919726,
+              "ms": 319726
+            },
+            "item:shopkey": {
+              "at": 1793307956444,
+              "ms": 356444
+            },
+            "item:tunic:2": {
+              "at": 1793308146130,
+              "ms": 546130
+            }
+          }
+        },
+        "version": 12
+      }
+    },
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "IKAgSoURBSZUhlQABIEGr5BMFBEHVxgABAJAAA",
+          "entrances": {},
+          "items": "AAAAAQEBAQABAAAAAAEAAAABAQAAAAAAAAIAAAAAAAICAAAAAAIAAgAAAAIAAAAAAgAAAgACAAACAgAAAAAAAgICAAICAgICAgICAgIGBAQKDAQIBgQKKAAAAAAAAAAAAAAAAAICAgAAAAAAKgAABgACAAAAAAAAAAAAFEY",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCQ0ELyUqABNPTA",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "ULzCnc6YNB4FEAEAwIBQODAgEQwJhiMxuPB-QSIRSWTCaajkdD0fkAg0Kh0YjUilUunk-olOqVWrletFuuV2x2a1Gs1263m-4HE5HS7He8Hm93y_YDBYNB4bDofEYnGIzJ5dO4O7wKqwPjigJJr7KPOBXG3E_vZ1_qoDQph_ba-Yzs4wBCx3112eqirs3fiKX-QJ8ERbGt29udPrWimdkVNHNV8KjO46_rzRhDzmQ1QTrHwuih2E31vBZhyspc96uBC6sn41F7wnRjTecbYDvC2mM_Oet7lg1VHyfmzERhbxqXrWYq0g1qw8-9dfmplF4dy5z1UEakuxsQDXYvUKrTjmiTkm4sowpdvRL9xZtlG1n9DrIA"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "an Open run with assured swords and hard enemy health",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "blinds-hideout/far-left": true,
+            "blinds-hideout/left": true,
+            "bumper-cave": true,
+            "catfish": true,
+            "cave-45": true,
+            "checkerboard-cave": true,
+            "eastern-palace/boss": true,
+            "ganons-tower/hope-room/left": true,
+            "ganons-tower/pre-moldorm-chest": true,
+            "ganons-tower/randomizer-room/top-left": true,
+            "hobo": true,
+            "hookshot-cave/bottom-right": true,
+            "hookshot-cave/top-left": true,
+            "hype-cave/bottom": true,
+            "hype-cave/middle-right": true,
+            "ice-palace/freezor-chest": true,
+            "ice-palace/iced-t-room": true,
+            "ice-palace/spike-room": true,
+            "kakariko-well/middle": true,
+            "lumberjack-tree": true,
+            "master-sword-pedestal": true,
+            "mimic-cave": true,
+            "mini-moldorm-cave/right": true,
+            "misery-mire/boss": true,
+            "misery-mire/bridge-chest": true,
+            "misery-mire/compass-chest": true,
+            "misery-mire/map-chest": true,
+            "mushroom": true,
+            "palace-of-darkness/big-chest": true,
+            "palace-of-darkness/dark-basement/right": true,
+            "palace-of-darkness/harmless-hellway": true,
+            "palace-of-darkness/map-chest": true,
+            "palace-of-darkness/stalfos-basement": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "paradox-cave-lower/far-left": true,
+            "paradox-cave-upper/left": true,
+            "paradox-cave-upper/right": true,
+            "purple-chest": true,
+            "sahasrahlas-hut/left": true,
+            "sewers/secret-room/left": true,
+            "sewers/secret-room/right": true,
+            "skull-woods/big-key-chest": true,
+            "skull-woods/boss": true,
+            "skull-woods/pot-prison": true,
+            "spectacle-rock": true,
+            "superbunny-cave/top": true,
+            "swamp-palace/big-chest": true,
+            "swamp-palace/flooded-room/right": true,
+            "swamp-palace/waterfall-room": true,
+            "swamp-palace/west-chest": true,
+            "thieves-town/boss": true,
+            "thieves-town/compass-chest": true,
+            "tower-of-hera/big-key-chest": true,
+            "tower-of-hera/compass-chest": true,
+            "tower-of-hera/map-chest": true,
+            "turtle-rock/compass-chest": true,
+            "turtle-rock/crystaroller-room": true,
+            "turtle-rock/eye-bridge/bottom-left": true,
+            "zoras-ledge": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 0,
+            "agahnim2": 1,
+            "arrowcapacity": 35,
+            "bigkey0": 0,
+            "bigkey1": 0,
+            "bigkey2": 0,
+            "bigkey3": 0,
+            "bigkey4": 1,
+            "bigkey5": 0,
+            "bigkey6": 1,
+            "bigkey7": 0,
+            "bigkey8": 0,
+            "bigkey9": 0,
+            "bigkey12": 1,
+            "blank": false,
+            "bombcapacity": 10,
+            "bombos": false,
+            "book": false,
+            "boomerang": 0,
+            "boots": true,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 0,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": true,
+            "cape": true,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 1,
+            "compass1": 0,
+            "compass2": 0,
+            "compass3": 1,
+            "compass4": 1,
+            "compass5": 0,
+            "compass6": 0,
+            "compass7": 0,
+            "compass8": 0,
+            "compass9": 0,
+            "compass12": 1,
+            "escape": 1,
+            "ether": true,
+            "firerod": false,
+            "flippers": true,
+            "flute": false,
+            "fluteactive": 1,
+            "glove": 0,
+            "goalpieces": 21,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 0,
+            "heldcrystals": 0,
+            "heldgreen": 0,
+            "heldpendants": 0,
+            "hookshot": false,
+            "icerod": false,
+            "knownboss0": 0,
+            "knownboss1": 0,
+            "knownboss2": 3,
+            "knownboss3": 0,
+            "knownboss4": 1,
+            "knownboss5": 0,
+            "knownboss6": 0,
+            "knownboss7": 0,
+            "knownboss8": 0,
+            "knownboss9": 0,
+            "lantern": true,
+            "magic": 0,
+            "map0": 1,
+            "map1": 0,
+            "map2": 0,
+            "map3": 0,
+            "map4": 0,
+            "map5": 1,
+            "map6": 0,
+            "map7": 0,
+            "map8": 1,
+            "map9": 0,
+            "map10": 1,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": false,
+            "mushroom": false,
+            "net": true,
+            "powder": true,
+            "quake": false,
+            "reward0": 0,
+            "reward1": 0,
+            "reward2": 0,
+            "reward3": 0,
+            "reward4": 0,
+            "reward5": 0,
+            "reward6": 0,
+            "reward7": 0,
+            "reward8": 0,
+            "reward9": 0,
+            "shield": 0,
+            "shoparrow": false,
+            "shopkey": false,
+            "shovel": false,
+            "somaria": false,
+            "sword": 1,
+            "tenbombs": 1,
+            "triforce": 0,
+            "tunic": 1
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "enemyHealth": "hard",
+            "entranceShuffle": "none",
+            "goal": "ganon",
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "swordless": false,
+            "swords": "assured"
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:blinds-hideout/far-left": {
+              "at": 1793314881377,
+              "ms": 2056658
+            },
+            "check:blinds-hideout/left": {
+              "at": 1793314792760,
+              "ms": 1968041
+            },
+            "check:bumper-cave": {
+              "at": 1793315837883,
+              "ms": 3013164
+            },
+            "check:catfish": {
+              "at": 1793315539705,
+              "ms": 2714986
+            },
+            "check:cave-45": {
+              "at": 1793315668924,
+              "ms": 2844205
+            },
+            "check:checkerboard-cave": {
+              "at": 1793315714209,
+              "ms": 2889490
+            },
+            "check:eastern-palace/boss": {
+              "at": 1793316098940,
+              "ms": 3274221
+            },
+            "check:ganons-tower/hope-room/left": {
+              "at": 1793318014745,
+              "ms": 5190026
+            },
+            "check:ganons-tower/pre-moldorm-chest": {
+              "at": 1793318057971,
+              "ms": 5233252
+            },
+            "check:ganons-tower/randomizer-room/top-left": {
+              "at": 1793317943468,
+              "ms": 5118749
+            },
+            "check:hobo": {
+              "at": 1793315489259,
+              "ms": 2664540
+            },
+            "check:hookshot-cave/bottom-right": {
+              "at": 1793315287948,
+              "ms": 2463229
+            },
+            "check:hookshot-cave/top-left": {
+              "at": 1793315366310,
+              "ms": 2541591
+            },
+            "check:hype-cave/bottom": {
+              "at": 1793314981791,
+              "ms": 2157072
+            },
+            "check:hype-cave/middle-right": {
+              "at": 1793314929283,
+              "ms": 2104564
+            },
+            "check:ice-palace/freezor-chest": {
+              "at": 1793317372962,
+              "ms": 4548243
+            },
+            "check:ice-palace/iced-t-room": {
+              "at": 1793317463587,
+              "ms": 4638868
+            },
+            "check:ice-palace/spike-room": {
+              "at": 1793317330506,
+              "ms": 4505787
+            },
+            "check:kakariko-well/middle": {
+              "at": 1793314762814,
+              "ms": 1938095
+            },
+            "check:lumberjack-tree": {
+              "at": 1793315607735,
+              "ms": 2783016
+            },
+            "check:master-sword-pedestal": {
+              "at": 1793316067766,
+              "ms": 3243047
+            },
+            "check:mimic-cave": {
+              "at": 1793314609456,
+              "ms": 1784737
+            },
+            "check:mini-moldorm-cave/right": {
+              "at": 1793315220243,
+              "ms": 2395524
+            },
+            "check:misery-mire/boss": {
+              "at": 1793317742381,
+              "ms": 4917662
+            },
+            "check:misery-mire/bridge-chest": {
+              "at": 1793317606488,
+              "ms": 4781769
+            },
+            "check:misery-mire/compass-chest": {
+              "at": 1793317520302,
+              "ms": 4695583
+            },
+            "check:misery-mire/map-chest": {
+              "at": 1793317692049,
+              "ms": 4867330
+            },
+            "check:mushroom": {
+              "at": 1793315740111,
+              "ms": 2915392
+            },
+            "check:palace-of-darkness/big-chest": {
+              "at": 1793316537974,
+              "ms": 3713255
+            },
+            "check:palace-of-darkness/dark-basement/right": {
+              "at": 1793316651775,
+              "ms": 3827056
+            },
+            "check:palace-of-darkness/harmless-hellway": {
+              "at": 1793316616071,
+              "ms": 3791352
+            },
+            "check:palace-of-darkness/map-chest": {
+              "at": 1793316462224,
+              "ms": 3637505
+            },
+            "check:palace-of-darkness/stalfos-basement": {
+              "at": 1793316407625,
+              "ms": 3582906
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793316378248,
+              "ms": 3553529
+            },
+            "check:paradox-cave-lower/far-left": {
+              "at": 1793315069327,
+              "ms": 2244608
+            },
+            "check:paradox-cave-upper/left": {
+              "at": 1793315122988,
+              "ms": 2298269
+            },
+            "check:paradox-cave-upper/right": {
+              "at": 1793315196075,
+              "ms": 2371356
+            },
+            "check:purple-chest": {
+              "at": 1793315415776,
+              "ms": 2591057
+            },
+            "check:sahasrahlas-hut/left": {
+              "at": 1793314701520,
+              "ms": 1876801
+            },
+            "check:sewers/secret-room/left": {
+              "at": 1793315932309,
+              "ms": 3107590
+            },
+            "check:sewers/secret-room/right": {
+              "at": 1793316028643,
+              "ms": 3203924
+            },
+            "check:skull-woods/big-key-chest": {
+              "at": 1793316995644,
+              "ms": 4170925
+            },
+            "check:skull-woods/boss": {
+              "at": 1793317131361,
+              "ms": 4306642
+            },
+            "check:skull-woods/pot-prison": {
+              "at": 1793317085654,
+              "ms": 4260935
+            },
+            "check:spectacle-rock": {
+              "at": 1793315771812,
+              "ms": 2947093
+            },
+            "check:superbunny-cave/top": {
+              "at": 1793314643317,
+              "ms": 1818598
+            },
+            "check:swamp-palace/big-chest": {
+              "at": 1793316738548,
+              "ms": 3913829
+            },
+            "check:swamp-palace/flooded-room/right": {
+              "at": 1793316853892,
+              "ms": 4029173
+            },
+            "check:swamp-palace/waterfall-room": {
+              "at": 1793316913991,
+              "ms": 4089272
+            },
+            "check:swamp-palace/west-chest": {
+              "at": 1793316794238,
+              "ms": 3969519
+            },
+            "check:thieves-town/boss": {
+              "at": 1793317281072,
+              "ms": 4456353
+            },
+            "check:thieves-town/compass-chest": {
+              "at": 1793317200710,
+              "ms": 4375991
+            },
+            "check:tower-of-hera/big-key-chest": {
+              "at": 1793316189111,
+              "ms": 3364392
+            },
+            "check:tower-of-hera/compass-chest": {
+              "at": 1793316296985,
+              "ms": 3472266
+            },
+            "check:tower-of-hera/map-chest": {
+              "at": 1793316257568,
+              "ms": 3432849
+            },
+            "check:turtle-rock/compass-chest": {
+              "at": 1793317785103,
+              "ms": 4960384
+            },
+            "check:turtle-rock/crystaroller-room": {
+              "at": 1793317861073,
+              "ms": 5036354
+            },
+            "check:turtle-rock/eye-bridge/bottom-left": {
+              "at": 1793317905839,
+              "ms": 5081120
+            },
+            "check:zoras-ledge": {
+              "at": 1793315859978,
+              "ms": 3035259
+            },
+            "item:agahnim2:1": {
+              "at": 1793313326036,
+              "ms": 501317
+            },
+            "item:bigkey4:1": {
+              "at": 1793313772559,
+              "ms": 947840
+            },
+            "item:bigkey6:1": {
+              "at": 1793313822375,
+              "ms": 997656
+            },
+            "item:bigkey12:1": {
+              "at": 1793314242727,
+              "ms": 1418008
+            },
+            "item:boots": {
+              "at": 1793312907580,
+              "ms": 82861
+            },
+            "item:byrna": {
+              "at": 1793312942259,
+              "ms": 117540
+            },
+            "item:cape": {
+              "at": 1793312975709,
+              "ms": 150990
+            },
+            "item:compass0:1": {
+              "at": 1793314025663,
+              "ms": 1200944
+            },
+            "item:compass3:1": {
+              "at": 1793314098868,
+              "ms": 1274149
+            },
+            "item:compass4:1": {
+              "at": 1793314188370,
+              "ms": 1363651
+            },
+            "item:compass12:1": {
+              "at": 1793314334614,
+              "ms": 1509895
+            },
+            "item:ether": {
+              "at": 1793313042240,
+              "ms": 217521
+            },
+            "item:flippers": {
+              "at": 1793313080132,
+              "ms": 255413
+            },
+            "item:lantern": {
+              "at": 1793313122818,
+              "ms": 298099
+            },
+            "item:map0:1": {
+              "at": 1793313854996,
+              "ms": 1030277
+            },
+            "item:map5:1": {
+              "at": 1793313912133,
+              "ms": 1087414
+            },
+            "item:map8:1": {
+              "at": 1793313960061,
+              "ms": 1135342
+            },
+            "item:map10:1": {
+              "at": 1793314404577,
+              "ms": 1579858
+            },
+            "item:net": {
+              "at": 1793313198837,
+              "ms": 374118
+            },
+            "item:powder": {
+              "at": 1793313232301,
+              "ms": 407582
+            },
+            "item:sword:1": {
+              "at": 1793313488654,
+              "ms": 663935
+            }
+          }
+        },
+        "version": 12
+      }
+    },
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "AVGjhiAKWUoTSGRSAAAEF44AJwqAmiAYAvALAA",
+          "entrances": {},
+          "items": "AAEBAAAAAQEAAQAAAAAAAQAAAAEBAAEAAgIACAAAAAAEAAAAAAAAAAAAAgIAAgAAAAACAAACAAAAAAACAAAAAAAAAAICAgICAgICAgIGBAQKDAQIBgQKKAAAAgAAAAIAAgAAAAACAAAAAAACKgAABgIAAgAAAAAAAAAAFDw",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCQ0ELyUqABM2RQ",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "Ve-729CYNB4FEAAAQKBgQDgkEwqFwwGxWHA6HhsNxyPiCRzKbTiczqdj0fD8f0IikckEqmEym08oFGpVMqVgs1uul2vmCw2u3W833C5nO6HY9Xs930_oBDIdEIjFI1IJDJpjMpnNJrNpxFArc-Dcr7X3isseDZ6skM-jCy6sOUzWP5pbLgwAAAAAbwvxeU1_wkN7sbZkcx__siBhCfHDqPr8KNbpp1Nxsh7hwxHc7LlJO4pPdXIPqc4vXGk7k123_bvEHGmuu6MpO8L8MBhYSoXvStFhD92D2LlSR7okyjeBTNXmRtumcW-orIiu4BUeG6VsKopT-sE2x8Mop8rSsgV9E-KR3RsumTLgCBa-NPFsIdsonp3p5_5bPfP0xPTHU2X7gA"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "a No Logic run played with Overworld Glitches",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "blinds-hideout/left": true,
+            "blinds-hideout/right": true,
+            "brewery": true,
+            "castle-tower/dark-maze": true,
+            "castle-tower/room-03": true,
+            "cave-45": true,
+            "chest-game": true,
+            "ether-tablet": true,
+            "floating-island": true,
+            "ganons-tower/big-key-chest": true,
+            "ganons-tower/big-key-room/right": true,
+            "ganons-tower/compass-room/bottom-left": true,
+            "ganons-tower/compass-room/bottom-right": true,
+            "ganons-tower/compass-room/top-left": true,
+            "ganons-tower/compass-room/top-right": true,
+            "ganons-tower/dms-room/bottom-right": true,
+            "ganons-tower/tile-room": true,
+            "hookshot-cave/bottom-left": true,
+            "hookshot-cave/bottom-right": true,
+            "hype-cave/middle-left": true,
+            "hyrule-castle/boomerang-chest": true,
+            "kakariko-well/bottom": true,
+            "kakariko-well/middle": true,
+            "king-zora": true,
+            "kings-tomb": true,
+            "lake-hylia-island": true,
+            "lost-woods-hideout": true,
+            "magic-bat": true,
+            "mini-moldorm-cave/left": true,
+            "mire-shed/right": true,
+            "misery-mire/big-key-chest": true,
+            "misery-mire/boss": true,
+            "misery-mire/bridge-chest": true,
+            "misery-mire/spike-chest": true,
+            "palace-of-darkness/boss": true,
+            "palace-of-darkness/compass-chest": true,
+            "palace-of-darkness/dark-maze/bottom": true,
+            "palace-of-darkness/map-chest": true,
+            "palace-of-darkness/stalfos-basement": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "paradox-cave-lower/far-right": true,
+            "pegasus-rocks": true,
+            "potion-shop": true,
+            "purple-chest": true,
+            "sahasrahla": true,
+            "sahasrahlas-hut/middle": true,
+            "sahasrahlas-hut/right": true,
+            "sewers/dark-cross": true,
+            "sewers/secret-room/middle": true,
+            "sewers/secret-room/right": true,
+            "skull-woods/bridge-room": true,
+            "skull-woods/map-chest": true,
+            "skull-woods/pot-prison": true,
+            "superbunny-cave/bottom": true,
+            "swamp-palace/entrance": true,
+            "swamp-palace/west-chest": true,
+            "thieves-town/ambush-chest": true,
+            "thieves-town/attic": true,
+            "thieves-town/blinds-cell": true,
+            "tower-of-hera/compass-chest": true,
+            "turtle-rock/eye-bridge/bottom-right": true,
+            "turtle-rock/roller-room/left": true,
+            "zoras-ledge": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 1,
+            "agahnim2": 1,
+            "arrowcapacity": 30,
+            "bigkey0": 0,
+            "bigkey1": 0,
+            "bigkey2": 0,
+            "bigkey3": 0,
+            "bigkey4": 0,
+            "bigkey5": 0,
+            "bigkey6": 0,
+            "bigkey7": 0,
+            "bigkey8": 0,
+            "bigkey9": 1,
+            "bigkey12": 0,
+            "blank": false,
+            "bombcapacity": 10,
+            "bombos": true,
+            "book": true,
+            "boomerang": 0,
+            "boots": false,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 4,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": false,
+            "cape": false,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 1,
+            "compass1": 0,
+            "compass2": 0,
+            "compass3": 0,
+            "compass4": 0,
+            "compass5": 0,
+            "compass6": 1,
+            "compass7": 0,
+            "compass8": 0,
+            "compass9": 0,
+            "compass12": 0,
+            "escape": 1,
+            "ether": true,
+            "firerod": true,
+            "flippers": false,
+            "flute": true,
+            "fluteactive": 0,
+            "glove": 0,
+            "goalpieces": 21,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 0,
+            "heldcrystals": 0,
+            "heldgreen": 0,
+            "heldpendants": 0,
+            "hookshot": false,
+            "icerod": false,
+            "knownboss0": 0,
+            "knownboss1": 0,
+            "knownboss2": 3,
+            "knownboss3": 1,
+            "knownboss4": 0,
+            "knownboss5": 1,
+            "knownboss6": 0,
+            "knownboss7": 0,
+            "knownboss8": 0,
+            "knownboss9": 0,
+            "lantern": false,
+            "magic": 0,
+            "map0": 1,
+            "map1": 0,
+            "map2": 1,
+            "map3": 0,
+            "map4": 0,
+            "map5": 0,
+            "map6": 0,
+            "map7": 1,
+            "map8": 0,
+            "map9": 0,
+            "map10": 0,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": true,
+            "mushroom": false,
+            "net": false,
+            "powder": false,
+            "quake": true,
+            "reward0": 0,
+            "reward1": 0,
+            "reward2": 1,
+            "reward3": 0,
+            "reward4": 0,
+            "reward5": 0,
+            "reward6": 1,
+            "reward7": 0,
+            "reward8": 1,
+            "reward9": 0,
+            "shield": 0,
+            "shoparrow": true,
+            "shopkey": false,
+            "shovel": true,
+            "somaria": false,
+            "sword": 0,
+            "tenbombs": 0,
+            "triforce": 1,
+            "tunic": 2
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "entranceShuffle": "none",
+            "glitches": "no_logic",
+            "goal": "ganon",
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "playGlitches": "overworld_glitches",
+            "swordless": false
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:blinds-hideout/left": {
+              "at": 1793320354746,
+              "ms": 2296775
+            },
+            "check:blinds-hideout/right": {
+              "at": 1793320395144,
+              "ms": 2337173
+            },
+            "check:brewery": {
+              "at": 1793319994195,
+              "ms": 1936224
+            },
+            "check:castle-tower/dark-maze": {
+              "at": 1793322729738,
+              "ms": 4671767
+            },
+            "check:castle-tower/room-03": {
+              "at": 1793322669351,
+              "ms": 4611380
+            },
+            "check:cave-45": {
+              "at": 1793321111637,
+              "ms": 3053666
+            },
+            "check:chest-game": {
+              "at": 1793320760501,
+              "ms": 2702530
+            },
+            "check:ether-tablet": {
+              "at": 1793320903406,
+              "ms": 2845435
+            },
+            "check:floating-island": {
+              "at": 1793321177562,
+              "ms": 3119591
+            },
+            "check:ganons-tower/big-key-chest": {
+              "at": 1793323148111,
+              "ms": 5090140
+            },
+            "check:ganons-tower/big-key-room/right": {
+              "at": 1793323196544,
+              "ms": 5138573
+            },
+            "check:ganons-tower/compass-room/bottom-left": {
+              "at": 1793323023609,
+              "ms": 4965638
+            },
+            "check:ganons-tower/compass-room/bottom-right": {
+              "at": 1793323115703,
+              "ms": 5057732
+            },
+            "check:ganons-tower/compass-room/top-left": {
+              "at": 1793322893620,
+              "ms": 4835649
+            },
+            "check:ganons-tower/compass-room/top-right": {
+              "at": 1793322941703,
+              "ms": 4883732
+            },
+            "check:ganons-tower/dms-room/bottom-right": {
+              "at": 1793322749984,
+              "ms": 4692013
+            },
+            "check:ganons-tower/tile-room": {
+              "at": 1793322817686,
+              "ms": 4759715
+            },
+            "check:hookshot-cave/bottom-left": {
+              "at": 1793320676057,
+              "ms": 2618086
+            },
+            "check:hookshot-cave/bottom-right": {
+              "at": 1793320651809,
+              "ms": 2593838
+            },
+            "check:hype-cave/middle-left": {
+              "at": 1793320472538,
+              "ms": 2414567
+            },
+            "check:hyrule-castle/boomerang-chest": {
+              "at": 1793321408314,
+              "ms": 3350343
+            },
+            "check:kakariko-well/bottom": {
+              "at": 1793320285602,
+              "ms": 2227631
+            },
+            "check:kakariko-well/middle": {
+              "at": 1793320227173,
+              "ms": 2169202
+            },
+            "check:king-zora": {
+              "at": 1793320942937,
+              "ms": 2884966
+            },
+            "check:kings-tomb": {
+              "at": 1793319926532,
+              "ms": 1868561
+            },
+            "check:lake-hylia-island": {
+              "at": 1793321212714,
+              "ms": 3154743
+            },
+            "check:lost-woods-hideout": {
+              "at": 1793321043045,
+              "ms": 2985074
+            },
+            "check:magic-bat": {
+              "at": 1793321478342,
+              "ms": 3420371
+            },
+            "check:mini-moldorm-cave/left": {
+              "at": 1793320597637,
+              "ms": 2539666
+            },
+            "check:mire-shed/right": {
+              "at": 1793320034189,
+              "ms": 1976218
+            },
+            "check:misery-mire/big-key-chest": {
+              "at": 1793322309911,
+              "ms": 4251940
+            },
+            "check:misery-mire/boss": {
+              "at": 1793322518356,
+              "ms": 4460385
+            },
+            "check:misery-mire/bridge-chest": {
+              "at": 1793322383726,
+              "ms": 4325755
+            },
+            "check:misery-mire/spike-chest": {
+              "at": 1793322466918,
+              "ms": 4408947
+            },
+            "check:palace-of-darkness/boss": {
+              "at": 1793321913981,
+              "ms": 3856010
+            },
+            "check:palace-of-darkness/compass-chest": {
+              "at": 1793321790707,
+              "ms": 3732736
+            },
+            "check:palace-of-darkness/dark-maze/bottom": {
+              "at": 1793321888312,
+              "ms": 3830341
+            },
+            "check:palace-of-darkness/map-chest": {
+              "at": 1793321705489,
+              "ms": 3647518
+            },
+            "check:palace-of-darkness/stalfos-basement": {
+              "at": 1793321663652,
+              "ms": 3605681
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793321584427,
+              "ms": 3526456
+            },
+            "check:paradox-cave-lower/far-right": {
+              "at": 1793320492732,
+              "ms": 2434761
+            },
+            "check:pegasus-rocks": {
+              "at": 1793320535670,
+              "ms": 2477699
+            },
+            "check:potion-shop": {
+              "at": 1793320999722,
+              "ms": 2941751
+            },
+            "check:purple-chest": {
+              "at": 1793320839787,
+              "ms": 2781816
+            },
+            "check:sahasrahla": {
+              "at": 1793320807056,
+              "ms": 2749085
+            },
+            "check:sahasrahlas-hut/middle": {
+              "at": 1793320110369,
+              "ms": 2052398
+            },
+            "check:sahasrahlas-hut/right": {
+              "at": 1793320173044,
+              "ms": 2115073
+            },
+            "check:sewers/dark-cross": {
+              "at": 1793321437662,
+              "ms": 3379691
+            },
+            "check:sewers/secret-room/middle": {
+              "at": 1793321336748,
+              "ms": 3278777
+            },
+            "check:sewers/secret-room/right": {
+              "at": 1793321373577,
+              "ms": 3315606
+            },
+            "check:skull-woods/bridge-room": {
+              "at": 1793322096301,
+              "ms": 4038330
+            },
+            "check:skull-woods/map-chest": {
+              "at": 1793322060811,
+              "ms": 4002840
+            },
+            "check:skull-woods/pot-prison": {
+              "at": 1793322139818,
+              "ms": 4081847
+            },
+            "check:superbunny-cave/bottom": {
+              "at": 1793320074988,
+              "ms": 2017017
+            },
+            "check:swamp-palace/entrance": {
+              "at": 1793321944445,
+              "ms": 3886474
+            },
+            "check:swamp-palace/west-chest": {
+              "at": 1793321998174,
+              "ms": 3940203
+            },
+            "check:thieves-town/ambush-chest": {
+              "at": 1793322190118,
+              "ms": 4132147
+            },
+            "check:thieves-town/attic": {
+              "at": 1793322164549,
+              "ms": 4106578
+            },
+            "check:thieves-town/blinds-cell": {
+              "at": 1793322233293,
+              "ms": 4175322
+            },
+            "check:tower-of-hera/compass-chest": {
+              "at": 1793321520919,
+              "ms": 3462948
+            },
+            "check:turtle-rock/eye-bridge/bottom-right": {
+              "at": 1793322603751,
+              "ms": 4545780
+            },
+            "check:turtle-rock/roller-room/left": {
+              "at": 1793322558082,
+              "ms": 4500111
+            },
+            "check:zoras-ledge": {
+              "at": 1793321277180,
+              "ms": 3219209
+            },
+            "item:agahnim:1": {
+              "at": 1793318642056,
+              "ms": 584085
+            },
+            "item:agahnim2:1": {
+              "at": 1793318697466,
+              "ms": 639495
+            },
+            "item:bigkey9:1": {
+              "at": 1793319106175,
+              "ms": 1048204
+            },
+            "item:bombos": {
+              "at": 1793318116847,
+              "ms": 58876
+            },
+            "item:book": {
+              "at": 1793318154745,
+              "ms": 96774
+            },
+            "item:bottle:1": {
+              "at": 1793318743378,
+              "ms": 685407
+            },
+            "item:bottle:2": {
+              "at": 1793319009824,
+              "ms": 951853
+            },
+            "item:bottle:3": {
+              "at": 1793319009824,
+              "ms": 951853
+            },
+            "item:bottle:4": {
+              "at": 1793319009824,
+              "ms": 951853
+            },
+            "item:compass0:1": {
+              "at": 1793319367468,
+              "ms": 1309497
+            },
+            "item:compass6:1": {
+              "at": 1793319442116,
+              "ms": 1384145
+            },
+            "item:ether": {
+              "at": 1793318249945,
+              "ms": 191974
+            },
+            "item:firerod": {
+              "at": 1793318344855,
+              "ms": 286884
+            },
+            "item:flute": {
+              "at": 1793318434831,
+              "ms": 376860
+            },
+            "item:map0:1": {
+              "at": 1793319144979,
+              "ms": 1087008
+            },
+            "item:map2:1": {
+              "at": 1793319235075,
+              "ms": 1177104
+            },
+            "item:map7:1": {
+              "at": 1793319276480,
+              "ms": 1218509
+            },
+            "item:moonpearl": {
+              "at": 1793318490482,
+              "ms": 432511
+            },
+            "item:quake": {
+              "at": 1793318557761,
+              "ms": 499790
+            },
+            "item:shoparrow": {
+              "at": 1793318579849,
+              "ms": 521878
+            },
+            "item:shovel": {
+              "at": 1793318606426,
+              "ms": 548455
+            },
+            "item:tunic:2": {
+              "at": 1793318986248,
+              "ms": 928277
+            }
+          }
+        },
+        "version": 12
+      }
+    },
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "TDwOJe4lQsVpWQGQAjYgF0zCBViygUFyipcAAQ",
+          "entrances": {},
+          "items": "AAAAAAAAAAAAAQAAAQAAAQABAAABAAABAAICBAAAAgACAAACAAAAAAICAAIAAgAAAgAAAAAAAAICAgIAAAAAAAAAAAICAgICAgICAgIGBAQKDAQIBgQKKAIAAAAAAAIAAAAAAAIAAgACAAAAKAAAAAAAAAIAAAAAAAAAFDw",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "mystery",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCQ0ELyUqABM3ODk6Ozw9Pj9ESEk",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "ZoHultOYNB4GEAQCwcEAmFgwGRGGw4LxoNRuOR4QyIRSMZzQazecDicjsdzwfT-gkMh0QikWjEaj0klk2nU-o1IpVQqlWrVgsVmtWCxGMzme0Wk2m63m-4XO6HW7nm9Hq94BAYHBoTCoZDYpFY3HpDIpHJpRLJbLpfMZpPdHPa4yaGfsRDRcVZs5Wh_Sf3w1xAABtJpUe7rPR8au6Zmbpk-BDVu3c-iiv9fxLeUNOxF67Np5qWU5P3ZEnJBImu7hutRuUhuKfbTe1CbUO5kBd6R9o_8mtF-OzTTznwyzf376xYpkWHMUjXs_c4vL-7W77NMB_scqXbN5wAczeItdG479oJVE2fOvgTXAsGZ4mfFkGGs5ktfVZaS1cndm6PsWcK0CZdc3rFW0uU03nhLHMX2X2q44UCJrfRDt2ypOqWWCUkgZdywYpBTFqiXy2TUd_cBgWxo07kperQE"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "a Mystery run, its glitches and entrances hidden",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "aginahs-cave": true,
+            "blacksmith": true,
+            "blinds-hideout/right": true,
+            "blinds-hideout/top": true,
+            "bomb-merchant": true,
+            "castle-tower/dark-maze": true,
+            "checkerboard-cave": true,
+            "desert-palace/big-chest": true,
+            "desert-palace/big-key-chest": true,
+            "desert-palace/compass-chest": true,
+            "desert-palace/map-chest": true,
+            "floating-island": true,
+            "ganons-tower/big-chest": true,
+            "ganons-tower/bobs-torch": true,
+            "ganons-tower/compass-room/bottom-left": true,
+            "ganons-tower/dms-room/bottom-right": true,
+            "ganons-tower/dms-room/top-left": true,
+            "ganons-tower/hope-room/left": true,
+            "ganons-tower/hope-room/right": true,
+            "ganons-tower/map-chest": true,
+            "ganons-tower/randomizer-room/top-right": true,
+            "ganons-tower/tile-room": true,
+            "graveyard-ledge": true,
+            "hobo": true,
+            "hookshot-cave/top-right": true,
+            "hype-cave/npc": true,
+            "hype-cave/top": true,
+            "ice-palace/boss": true,
+            "ice-palace/compass-chest": true,
+            "ice-palace/freezor-chest": true,
+            "kakariko-tavern": true,
+            "kakariko-well/top": true,
+            "king-zora": true,
+            "lake-hylia-island": true,
+            "library": true,
+            "links-house": true,
+            "maze-race": true,
+            "mini-moldorm-cave/far-left": true,
+            "mini-moldorm-cave/far-right": true,
+            "mire-shed/left": true,
+            "mire-shed/right": true,
+            "misery-mire/big-chest": true,
+            "misery-mire/big-key-chest": true,
+            "misery-mire/compass-chest": true,
+            "old-man": true,
+            "palace-of-darkness/boss": true,
+            "palace-of-darkness/compass-chest": true,
+            "palace-of-darkness/map-chest": true,
+            "palace-of-darkness/shooter-room": true,
+            "palace-of-darkness/stalfos-basement": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "paradox-cave-lower/far-left": true,
+            "paradox-cave-lower/far-right": true,
+            "paradox-cave-lower/left": true,
+            "paradox-cave-lower/middle": true,
+            "paradox-cave-upper/left": true,
+            "paradox-cave-upper/right": true,
+            "potion-shop": true,
+            "pyramid": true,
+            "pyramid-fairy/right": true,
+            "sahasrahla": true,
+            "sahasrahlas-hut/right": true,
+            "sewers/dark-cross": true,
+            "sick-kid": true,
+            "skull-woods/big-key-chest": true,
+            "skull-woods/compass-chest": true,
+            "skull-woods/map-chest": true,
+            "skull-woods/pot-prison": true,
+            "spectacle-rock-cave": true,
+            "spike-cave": true,
+            "sunken-treasure": true,
+            "superbunny-cave/top": true,
+            "swamp-palace/entrance": true,
+            "swamp-palace/flooded-room/left": true,
+            "swamp-palace/map-chest": true,
+            "thieves-town/blinds-cell": true,
+            "thieves-town/boss": true,
+            "turtle-rock/eye-bridge/top-left": true,
+            "turtle-rock/roller-room/left": true,
+            "turtle-rock/roller-room/right": true,
+            "waterfall-fairy/left": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 0,
+            "agahnim2": 1,
+            "arrowcapacity": 30,
+            "bigkey0": 0,
+            "bigkey1": 0,
+            "bigkey2": 1,
+            "bigkey3": 0,
+            "bigkey4": 0,
+            "bigkey5": 0,
+            "bigkey6": 0,
+            "bigkey7": 1,
+            "bigkey8": 1,
+            "bigkey9": 0,
+            "bigkey12": 0,
+            "blank": false,
+            "bombcapacity": 10,
+            "bombos": false,
+            "book": false,
+            "boomerang": 1,
+            "boots": false,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 2,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": false,
+            "cape": false,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 0,
+            "compass1": 0,
+            "compass2": 1,
+            "compass3": 1,
+            "compass4": 1,
+            "compass5": 1,
+            "compass6": 0,
+            "compass7": 0,
+            "compass8": 0,
+            "compass9": 0,
+            "compass12": 0,
+            "escape": 0,
+            "ether": false,
+            "firerod": false,
+            "flippers": false,
+            "flute": true,
+            "fluteactive": 1,
+            "glove": 0,
+            "goalpieces": 20,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 0,
+            "heldcrystals": 0,
+            "heldgreen": 1,
+            "heldpendants": 0,
+            "hookshot": false,
+            "icerod": true,
+            "knownboss0": 0,
+            "knownboss1": 0,
+            "knownboss2": 0,
+            "knownboss3": 0,
+            "knownboss4": 0,
+            "knownboss5": 0,
+            "knownboss6": 1,
+            "knownboss7": 0,
+            "knownboss8": 0,
+            "knownboss9": 0,
+            "lantern": false,
+            "magic": 0,
+            "map0": 1,
+            "map1": 0,
+            "map2": 1,
+            "map3": 0,
+            "map4": 0,
+            "map5": 1,
+            "map6": 0,
+            "map7": 0,
+            "map8": 0,
+            "map9": 0,
+            "map10": 0,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": true,
+            "mushroom": false,
+            "net": true,
+            "powder": false,
+            "quake": false,
+            "reward0": 1,
+            "reward1": 0,
+            "reward2": 0,
+            "reward3": 0,
+            "reward4": 0,
+            "reward5": 0,
+            "reward6": 1,
+            "reward7": 0,
+            "reward8": 0,
+            "reward9": 0,
+            "shield": 1,
+            "shoparrow": true,
+            "shopkey": false,
+            "shovel": false,
+            "somaria": true,
+            "sword": 0,
+            "tenbombs": 1,
+            "triforce": 0,
+            "tunic": 1
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "mystery",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "entranceShuffle": "none",
+            "goal": "ganon",
+            "hidden": [
+              "goal",
+              "swordless",
+              "crystalsTower",
+              "crystalsGanon",
+              "itemPlacement",
+              "itemPool",
+              "itemFunctionality",
+              "accessibility",
+              "bossShuffle",
+              "glitches",
+              "entranceShuffle"
+            ],
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "swordless": false
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:aginahs-cave": {
+              "at": 1793324954255,
+              "ms": 1757711
+            },
+            "check:blacksmith": {
+              "at": 1793327184980,
+              "ms": 3988436
+            },
+            "check:blinds-hideout/right": {
+              "at": 1793325417790,
+              "ms": 2221246
+            },
+            "check:blinds-hideout/top": {
+              "at": 1793325329073,
+              "ms": 2132529
+            },
+            "check:bomb-merchant": {
+              "at": 1793329428599,
+              "ms": 6232055
+            },
+            "check:castle-tower/dark-maze": {
+              "at": 1793328857188,
+              "ms": 5660644
+            },
+            "check:checkerboard-cave": {
+              "at": 1793326736177,
+              "ms": 3539633
+            },
+            "check:desert-palace/big-chest": {
+              "at": 1793327274454,
+              "ms": 4077910
+            },
+            "check:desert-palace/big-key-chest": {
+              "at": 1793327354673,
+              "ms": 4158129
+            },
+            "check:desert-palace/compass-chest": {
+              "at": 1793327386652,
+              "ms": 4190108
+            },
+            "check:desert-palace/map-chest": {
+              "at": 1793327333883,
+              "ms": 4137339
+            },
+            "check:floating-island": {
+              "at": 1793326904239,
+              "ms": 3707695
+            },
+            "check:ganons-tower/big-chest": {
+              "at": 1793329180947,
+              "ms": 5984403
+            },
+            "check:ganons-tower/bobs-torch": {
+              "at": 1793328923912,
+              "ms": 5727368
+            },
+            "check:ganons-tower/compass-room/bottom-left": {
+              "at": 1793329342867,
+              "ms": 6146323
+            },
+            "check:ganons-tower/dms-room/bottom-right": {
+              "at": 1793329059886,
+              "ms": 5863342
+            },
+            "check:ganons-tower/dms-room/top-left": {
+              "at": 1793328964973,
+              "ms": 5768429
+            },
+            "check:ganons-tower/hope-room/left": {
+              "at": 1793329208749,
+              "ms": 6012205
+            },
+            "check:ganons-tower/hope-room/right": {
+              "at": 1793329249194,
+              "ms": 6052650
+            },
+            "check:ganons-tower/map-chest": {
+              "at": 1793329143322,
+              "ms": 5946778
+            },
+            "check:ganons-tower/randomizer-room/top-right": {
+              "at": 1793329097904,
+              "ms": 5901360
+            },
+            "check:ganons-tower/tile-room": {
+              "at": 1793329315115,
+              "ms": 6118571
+            },
+            "check:graveyard-ledge": {
+              "at": 1793326658371,
+              "ms": 3461827
+            },
+            "check:hobo": {
+              "at": 1793326315189,
+              "ms": 3118645
+            },
+            "check:hookshot-cave/top-right": {
+              "at": 1793326059756,
+              "ms": 2863212
+            },
+            "check:hype-cave/npc": {
+              "at": 1793325564742,
+              "ms": 2368198
+            },
+            "check:hype-cave/top": {
+              "at": 1793325493835,
+              "ms": 2297291
+            },
+            "check:ice-palace/boss": {
+              "at": 1793328455033,
+              "ms": 5258489
+            },
+            "check:ice-palace/compass-chest": {
+              "at": 1793328334383,
+              "ms": 5137839
+            },
+            "check:ice-palace/freezor-chest": {
+              "at": 1793328419862,
+              "ms": 5223318
+            },
+            "check:kakariko-tavern": {
+              "at": 1793324915425,
+              "ms": 1718881
+            },
+            "check:kakariko-well/top": {
+              "at": 1793325265828,
+              "ms": 2069284
+            },
+            "check:king-zora": {
+              "at": 1793326386398,
+              "ms": 3189854
+            },
+            "check:lake-hylia-island": {
+              "at": 1793327013309,
+              "ms": 3816765
+            },
+            "check:library": {
+              "at": 1793326825199,
+              "ms": 3628655
+            },
+            "check:links-house": {
+              "at": 1793324888329,
+              "ms": 1691785
+            },
+            "check:maze-race": {
+              "at": 1793326936928,
+              "ms": 3740384
+            },
+            "check:mini-moldorm-cave/far-left": {
+              "at": 1793325956235,
+              "ms": 2759691
+            },
+            "check:mini-moldorm-cave/far-right": {
+              "at": 1793325980697,
+              "ms": 2784153
+            },
+            "check:mire-shed/left": {
+              "at": 1793325033773,
+              "ms": 1837229
+            },
+            "check:mire-shed/right": {
+              "at": 1793325060998,
+              "ms": 1864454
+            },
+            "check:misery-mire/big-chest": {
+              "at": 1793328500470,
+              "ms": 5303926
+            },
+            "check:misery-mire/big-key-chest": {
+              "at": 1793328545451,
+              "ms": 5348907
+            },
+            "check:misery-mire/compass-chest": {
+              "at": 1793328569115,
+              "ms": 5372571
+            },
+            "check:old-man": {
+              "at": 1793326428065,
+              "ms": 3231521
+            },
+            "check:palace-of-darkness/boss": {
+              "at": 1793327761124,
+              "ms": 4564580
+            },
+            "check:palace-of-darkness/compass-chest": {
+              "at": 1793327680850,
+              "ms": 4484306
+            },
+            "check:palace-of-darkness/map-chest": {
+              "at": 1793327646520,
+              "ms": 4449976
+            },
+            "check:palace-of-darkness/shooter-room": {
+              "at": 1793327485575,
+              "ms": 4289031
+            },
+            "check:palace-of-darkness/stalfos-basement": {
+              "at": 1793327565068,
+              "ms": 4368524
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793327519048,
+              "ms": 4322504
+            },
+            "check:paradox-cave-lower/far-left": {
+              "at": 1793325591811,
+              "ms": 2395267
+            },
+            "check:paradox-cave-lower/far-right": {
+              "at": 1793325665932,
+              "ms": 2469388
+            },
+            "check:paradox-cave-lower/left": {
+              "at": 1793325645214,
+              "ms": 2448670
+            },
+            "check:paradox-cave-lower/middle": {
+              "at": 1793325691537,
+              "ms": 2494993
+            },
+            "check:paradox-cave-upper/left": {
+              "at": 1793325788376,
+              "ms": 2591832
+            },
+            "check:paradox-cave-upper/right": {
+              "at": 1793325880791,
+              "ms": 2684247
+            },
+            "check:potion-shop": {
+              "at": 1793326473449,
+              "ms": 3276905
+            },
+            "check:pyramid": {
+              "at": 1793327072432,
+              "ms": 3875888
+            },
+            "check:pyramid-fairy/right": {
+              "at": 1793327245303,
+              "ms": 4048759
+            },
+            "check:sahasrahla": {
+              "at": 1793326140124,
+              "ms": 2943580
+            },
+            "check:sahasrahlas-hut/right": {
+              "at": 1793325176857,
+              "ms": 1980313
+            },
+            "check:sewers/dark-cross": {
+              "at": 1793327105228,
+              "ms": 3908684
+            },
+            "check:sick-kid": {
+              "at": 1793326217147,
+              "ms": 3020603
+            },
+            "check:skull-woods/big-key-chest": {
+              "at": 1793327980787,
+              "ms": 4784243
+            },
+            "check:skull-woods/compass-chest": {
+              "at": 1793328021589,
+              "ms": 4825045
+            },
+            "check:skull-woods/map-chest": {
+              "at": 1793328101547,
+              "ms": 4905003
+            },
+            "check:skull-woods/pot-prison": {
+              "at": 1793328134928,
+              "ms": 4938384
+            },
+            "check:spectacle-rock-cave": {
+              "at": 1793326563256,
+              "ms": 3366712
+            },
+            "check:spike-cave": {
+              "at": 1793325224249,
+              "ms": 2027705
+            },
+            "check:sunken-treasure": {
+              "at": 1793324827105,
+              "ms": 1630561
+            },
+            "check:superbunny-cave/top": {
+              "at": 1793325081045,
+              "ms": 1884501
+            },
+            "check:swamp-palace/entrance": {
+              "at": 1793327851065,
+              "ms": 4654521
+            },
+            "check:swamp-palace/flooded-room/left": {
+              "at": 1793327950469,
+              "ms": 4753925
+            },
+            "check:swamp-palace/map-chest": {
+              "at": 1793327895390,
+              "ms": 4698846
+            },
+            "check:thieves-town/blinds-cell": {
+              "at": 1793328224238,
+              "ms": 5027694
+            },
+            "check:thieves-town/boss": {
+              "at": 1793328282267,
+              "ms": 5085723
+            },
+            "check:turtle-rock/eye-bridge/top-left": {
+              "at": 1793328711273,
+              "ms": 5514729
+            },
+            "check:turtle-rock/roller-room/left": {
+              "at": 1793328618404,
+              "ms": 5421860
+            },
+            "check:turtle-rock/roller-room/right": {
+              "at": 1793328674700,
+              "ms": 5478156
+            },
+            "check:waterfall-fairy/left": {
+              "at": 1793328769970,
+              "ms": 5573426
+            },
+            "item:agahnim2:1": {
+              "at": 1793323605882,
+              "ms": 409338
+            },
+            "item:bigkey2:1": {
+              "at": 1793323994961,
+              "ms": 798417
+            },
+            "item:bigkey7:1": {
+              "at": 1793324038542,
+              "ms": 841998
+            },
+            "item:bigkey8:1": {
+              "at": 1793324134188,
+              "ms": 937644
+            },
+            "item:boomerang:1": {
+              "at": 1793323649725,
+              "ms": 453181
+            },
+            "item:bottle:1": {
+              "at": 1793323967019,
+              "ms": 770475
+            },
+            "item:bottle:2": {
+              "at": 1793323967019,
+              "ms": 770475
+            },
+            "item:compass2:1": {
+              "at": 1793324392646,
+              "ms": 1196102
+            },
+            "item:compass3:1": {
+              "at": 1793324428833,
+              "ms": 1232289
+            },
+            "item:compass4:1": {
+              "at": 1793324489992,
+              "ms": 1293448
+            },
+            "item:compass5:1": {
+              "at": 1793324573213,
+              "ms": 1376669
+            },
+            "item:flute": {
+              "at": 1793323284225,
+              "ms": 87681
+            },
+            "item:icerod": {
+              "at": 1793323367998,
+              "ms": 171454
+            },
+            "item:map0:1": {
+              "at": 1793324174918,
+              "ms": 978374
+            },
+            "item:map2:1": {
+              "at": 1793324238226,
+              "ms": 1041682
+            },
+            "item:map5:1": {
+              "at": 1793324316934,
+              "ms": 1120390
+            },
+            "item:moonpearl": {
+              "at": 1793323424418,
+              "ms": 227874
+            },
+            "item:net": {
+              "at": 1793323507169,
+              "ms": 310625
+            },
+            "item:shield:1": {
+              "at": 1793323832506,
+              "ms": 635962
+            },
+            "item:shoparrow": {
+              "at": 1793323532290,
+              "ms": 335746
+            },
+            "item:somaria": {
+              "at": 1793323582919,
+              "ms": 386375
+            }
+          }
+        },
+        "version": 12
+      }
+    },
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "oUAZYEyTBAIoBEBGAhKAKQQyPOIBEKSo4QoAAA",
+          "entrances": {},
+          "items": "AAABAAAAAQEAAQAAAQAAAAAAAAAAAQAAAAIAAgACAAAEAAIAAAACAgIAAAACAAAAAAIAAgAAAAAAAgACAAAAAgAAAAICAgICAgICAgIGBAQKDAQIBgQKKAAAAAACAgAAAAAAAAAAAAAAAAAAKAIABgAAAAAAAAAAAAAAFDw",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "crosskeys",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCREELyUqABNC",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "TtWuk9aYNB4FEACBQMCAWFAwGxCKxcMhmNBwPR-RSOSzKajYczqeDygkGh0Qi0ajkilEunlQqleu18v2Gxmc0W43XA4nO7ni8nu-Hy-n9AoHBILEYvGo5IJFJJLKpXLJdMJdbY7NxDpVvPeLXN4TPryqrm4hWNWTIFZs327ZtLvtXtOOeYhs_ocdM__P7rdXrSvt_JL0RLrTMTDD3nVJmj4tDg5mf19lkShJmHGZHMLDOZrasmJFuaPeT6d_XJgKYyCtf9h9rhnZoqI00FswIaJVOhUarDprRKteyJX91GUUR3FIV7n6BQXaJi_PTEKlcSv24ZkKB433W390_o7U7UNCXOPT9nWpzN69uw"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "a Crosskeys run with its keys in their dungeons and shuffled bosses",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "castle-tower/room-03": true,
+            "chicken-house": true,
+            "desert-palace/big-chest": true,
+            "desert-palace/big-key-chest": true,
+            "ganons-tower/bobs-chest": true,
+            "ganons-tower/bobs-torch": true,
+            "ganons-tower/dms-room/bottom-left": true,
+            "ganons-tower/dms-room/top-right": true,
+            "ganons-tower/firesnake-room": true,
+            "ganons-tower/hope-room/left": true,
+            "ganons-tower/map-chest": true,
+            "ganons-tower/randomizer-room/bottom-right": true,
+            "graveyard-ledge": true,
+            "hookshot-cave/top-left": true,
+            "hype-cave/middle-right": true,
+            "hype-cave/top": true,
+            "hyrule-castle/boomerang-chest": true,
+            "hyrule-castle/map-chest": true,
+            "ice-palace/big-key-chest": true,
+            "ice-palace/compass-chest": true,
+            "ice-palace/map-chest": true,
+            "ice-palace/spike-room": true,
+            "ice-rod-cave": true,
+            "kakariko-well/left": true,
+            "kakariko-well/top": true,
+            "kings-tomb": true,
+            "magic-bat": true,
+            "mimic-cave": true,
+            "mini-moldorm-cave/right": true,
+            "misery-mire/boss": true,
+            "palace-of-darkness/big-chest": true,
+            "palace-of-darkness/boss": true,
+            "palace-of-darkness/harmless-hellway": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "palace-of-darkness/the-arena/ledge": true,
+            "paradox-cave-lower/far-left": true,
+            "paradox-cave-lower/left": true,
+            "paradox-cave-lower/middle": true,
+            "paradox-cave-upper/right": true,
+            "pegasus-rocks": true,
+            "purple-chest": true,
+            "pyramid-fairy/right": true,
+            "sahasrahlas-hut/middle": true,
+            "sewers/secret-room/right": true,
+            "skull-woods/big-chest": true,
+            "skull-woods/boss": true,
+            "skull-woods/pinball-room": true,
+            "skull-woods/pot-prison": true,
+            "spectacle-rock": true,
+            "spectacle-rock-cave": true,
+            "superbunny-cave/bottom": true,
+            "swamp-palace/boss": true,
+            "swamp-palace/flooded-room/left": true,
+            "thieves-town/ambush-chest": true,
+            "thieves-town/attic": true,
+            "turtle-rock/big-key-chest": true,
+            "turtle-rock/eye-bridge/bottom-right": true,
+            "turtle-rock/eye-bridge/top-right": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 0,
+            "agahnim2": 1,
+            "arrowcapacity": 30,
+            "bigkey0": 0,
+            "bigkey1": 1,
+            "bigkey2": 0,
+            "bigkey3": 0,
+            "bigkey4": 0,
+            "bigkey5": 1,
+            "bigkey6": 1,
+            "bigkey7": 1,
+            "bigkey8": 0,
+            "bigkey9": 0,
+            "bigkey12": 1,
+            "blank": false,
+            "bombcapacity": 10,
+            "bombos": false,
+            "book": true,
+            "boomerang": 0,
+            "boots": false,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 1,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": false,
+            "cape": false,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 0,
+            "compass1": 0,
+            "compass2": 0,
+            "compass3": 0,
+            "compass4": 1,
+            "compass5": 0,
+            "compass6": 1,
+            "compass7": 0,
+            "compass8": 0,
+            "compass9": 0,
+            "compass12": 0,
+            "escape": 0,
+            "ether": true,
+            "firerod": true,
+            "flippers": false,
+            "flute": true,
+            "fluteactive": 0,
+            "glove": 1,
+            "goalpieces": 20,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 0,
+            "heldcrystals": 0,
+            "heldgreen": 0,
+            "heldpendants": 0,
+            "hookshot": false,
+            "icerod": true,
+            "knownboss0": 1,
+            "knownboss1": 0,
+            "knownboss2": 3,
+            "knownboss3": 0,
+            "knownboss4": 0,
+            "knownboss5": 0,
+            "knownboss6": 0,
+            "knownboss7": 0,
+            "knownboss8": 0,
+            "knownboss9": 0,
+            "lantern": false,
+            "magic": 0,
+            "map0": 0,
+            "map1": 1,
+            "map2": 0,
+            "map3": 0,
+            "map4": 0,
+            "map5": 0,
+            "map6": 1,
+            "map7": 0,
+            "map8": 1,
+            "map9": 0,
+            "map10": 0,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": false,
+            "mushroom": false,
+            "net": false,
+            "powder": false,
+            "quake": false,
+            "reward0": 0,
+            "reward1": 0,
+            "reward2": 0,
+            "reward3": 0,
+            "reward4": 1,
+            "reward5": 1,
+            "reward6": 0,
+            "reward7": 0,
+            "reward8": 0,
+            "reward9": 0,
+            "shield": 0,
+            "shoparrow": false,
+            "shopkey": true,
+            "shovel": false,
+            "somaria": false,
+            "sword": 0,
+            "tenbombs": 0,
+            "triforce": 0,
+            "tunic": 2
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "crosskeys",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "bossShuffle": "full",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "entranceShuffle": "crossed",
+            "goal": "ganon",
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "swordless": false
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:castle-tower/room-03": {
+              "at": 1793333754633,
+              "ms": 4326034
+            },
+            "check:chicken-house": {
+              "at": 1793331232837,
+              "ms": 1804238
+            },
+            "check:desert-palace/big-chest": {
+              "at": 1793332638746,
+              "ms": 3210147
+            },
+            "check:desert-palace/big-key-chest": {
+              "at": 1793332707590,
+              "ms": 3278991
+            },
+            "check:ganons-tower/bobs-chest": {
+              "at": 1793334234980,
+              "ms": 4806381
+            },
+            "check:ganons-tower/bobs-torch": {
+              "at": 1793333783235,
+              "ms": 4354636
+            },
+            "check:ganons-tower/dms-room/bottom-left": {
+              "at": 1793333926484,
+              "ms": 4497885
+            },
+            "check:ganons-tower/dms-room/top-right": {
+              "at": 1793333877425,
+              "ms": 4448826
+            },
+            "check:ganons-tower/firesnake-room": {
+              "at": 1793334036492,
+              "ms": 4607893
+            },
+            "check:ganons-tower/hope-room/left": {
+              "at": 1793334146248,
+              "ms": 4717649
+            },
+            "check:ganons-tower/map-chest": {
+              "at": 1793334060271,
+              "ms": 4631672
+            },
+            "check:ganons-tower/randomizer-room/bottom-right": {
+              "at": 1793333986506,
+              "ms": 4557907
+            },
+            "check:graveyard-ledge": {
+              "at": 1793332204452,
+              "ms": 2775853
+            },
+            "check:hookshot-cave/top-left": {
+              "at": 1793331993876,
+              "ms": 2565277
+            },
+            "check:hype-cave/middle-right": {
+              "at": 1793331555382,
+              "ms": 2126783
+            },
+            "check:hype-cave/top": {
+              "at": 1793331468189,
+              "ms": 2039590
+            },
+            "check:hyrule-castle/boomerang-chest": {
+              "at": 1793332424526,
+              "ms": 2995927
+            },
+            "check:hyrule-castle/map-chest": {
+              "at": 1793332469602,
+              "ms": 3041003
+            },
+            "check:ice-palace/big-key-chest": {
+              "at": 1793333387236,
+              "ms": 3958637
+            },
+            "check:ice-palace/compass-chest": {
+              "at": 1793333436548,
+              "ms": 4007949
+            },
+            "check:ice-palace/map-chest": {
+              "at": 1793333499661,
+              "ms": 4071062
+            },
+            "check:ice-palace/spike-room": {
+              "at": 1793333538548,
+              "ms": 4109949
+            },
+            "check:ice-rod-cave": {
+              "at": 1793331915876,
+              "ms": 2487277
+            },
+            "check:kakariko-well/left": {
+              "at": 1793331398692,
+              "ms": 1970093
+            },
+            "check:kakariko-well/top": {
+              "at": 1793331353332,
+              "ms": 1924733
+            },
+            "check:kings-tomb": {
+              "at": 1793331052496,
+              "ms": 1623897
+            },
+            "check:magic-bat": {
+              "at": 1793332541543,
+              "ms": 3112944
+            },
+            "check:mimic-cave": {
+              "at": 1793331148106,
+              "ms": 1719507
+            },
+            "check:mini-moldorm-cave/right": {
+              "at": 1793331843795,
+              "ms": 2415196
+            },
+            "check:misery-mire/boss": {
+              "at": 1793333590838,
+              "ms": 4162239
+            },
+            "check:palace-of-darkness/big-chest": {
+              "at": 1793332878506,
+              "ms": 3449907
+            },
+            "check:palace-of-darkness/boss": {
+              "at": 1793332968797,
+              "ms": 3540198
+            },
+            "check:palace-of-darkness/harmless-hellway": {
+              "at": 1793332914620,
+              "ms": 3486021
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793332817898,
+              "ms": 3389299
+            },
+            "check:palace-of-darkness/the-arena/ledge": {
+              "at": 1793332790858,
+              "ms": 3362259
+            },
+            "check:paradox-cave-lower/far-left": {
+              "at": 1793331606523,
+              "ms": 2177924
+            },
+            "check:paradox-cave-lower/left": {
+              "at": 1793331656574,
+              "ms": 2227975
+            },
+            "check:paradox-cave-lower/middle": {
+              "at": 1793331702461,
+              "ms": 2273862
+            },
+            "check:paradox-cave-upper/right": {
+              "at": 1793331759650,
+              "ms": 2331051
+            },
+            "check:pegasus-rocks": {
+              "at": 1793331801202,
+              "ms": 2372603
+            },
+            "check:purple-chest": {
+              "at": 1793332074158,
+              "ms": 2645559
+            },
+            "check:pyramid-fairy/right": {
+              "at": 1793332569189,
+              "ms": 3140590
+            },
+            "check:sahasrahlas-hut/middle": {
+              "at": 1793331329419,
+              "ms": 1900820
+            },
+            "check:sewers/secret-room/right": {
+              "at": 1793332359154,
+              "ms": 2930555
+            },
+            "check:skull-woods/big-chest": {
+              "at": 1793333142092,
+              "ms": 3713493
+            },
+            "check:skull-woods/boss": {
+              "at": 1793333264035,
+              "ms": 3835436
+            },
+            "check:skull-woods/pinball-room": {
+              "at": 1793333210383,
+              "ms": 3781784
+            },
+            "check:skull-woods/pot-prison": {
+              "at": 1793333166356,
+              "ms": 3737757
+            },
+            "check:spectacle-rock": {
+              "at": 1793332283423,
+              "ms": 2854824
+            },
+            "check:spectacle-rock-cave": {
+              "at": 1793332167031,
+              "ms": 2738432
+            },
+            "check:superbunny-cave/bottom": {
+              "at": 1793331265385,
+              "ms": 1836786
+            },
+            "check:swamp-palace/boss": {
+              "at": 1793333058977,
+              "ms": 3630378
+            },
+            "check:swamp-palace/flooded-room/left": {
+              "at": 1793332989703,
+              "ms": 3561104
+            },
+            "check:thieves-town/ambush-chest": {
+              "at": 1793333355589,
+              "ms": 3926990
+            },
+            "check:thieves-town/attic": {
+              "at": 1793333284800,
+              "ms": 3856201
+            },
+            "check:turtle-rock/big-key-chest": {
+              "at": 1793333642776,
+              "ms": 4214177
+            },
+            "check:turtle-rock/eye-bridge/bottom-right": {
+              "at": 1793333665285,
+              "ms": 4236686
+            },
+            "check:turtle-rock/eye-bridge/top-right": {
+              "at": 1793333734093,
+              "ms": 4305494
+            },
+            "item:agahnim2:1": {
+              "at": 1793329871803,
+              "ms": 443204
+            },
+            "item:bigkey1:1": {
+              "at": 1793330174863,
+              "ms": 746264
+            },
+            "item:bigkey5:1": {
+              "at": 1793330200473,
+              "ms": 771874
+            },
+            "item:bigkey6:1": {
+              "at": 1793330279944,
+              "ms": 851345
+            },
+            "item:bigkey7:1": {
+              "at": 1793330341089,
+              "ms": 912490
+            },
+            "item:bigkey12:1": {
+              "at": 1793330708502,
+              "ms": 1279903
+            },
+            "item:book": {
+              "at": 1793329518421,
+              "ms": 89822
+            },
+            "item:bottle:1": {
+              "at": 1793329953399,
+              "ms": 524800
+            },
+            "item:compass4:1": {
+              "at": 1793330586434,
+              "ms": 1157835
+            },
+            "item:compass6:1": {
+              "at": 1793330635491,
+              "ms": 1206892
+            },
+            "item:ether": {
+              "at": 1793329563147,
+              "ms": 134548
+            },
+            "item:firerod": {
+              "at": 1793329636262,
+              "ms": 207663
+            },
+            "item:flute": {
+              "at": 1793329673359,
+              "ms": 244760
+            },
+            "item:glove:1": {
+              "at": 1793330008019,
+              "ms": 579420
+            },
+            "item:icerod": {
+              "at": 1793329695618,
+              "ms": 267019
+            },
+            "item:map1:1": {
+              "at": 1793330400856,
+              "ms": 972257
+            },
+            "item:map6:1": {
+              "at": 1793330493774,
+              "ms": 1065175
+            },
+            "item:map8:1": {
+              "at": 1793330541109,
+              "ms": 1112510
+            },
+            "item:shopkey": {
+              "at": 1793329792055,
+              "ms": 363456
+            },
+            "item:tunic:2": {
+              "at": 1793330102493,
+              "ms": 673894
+            }
+          }
+        },
+        "version": 12
+      }
+    },
+    {
+      "link": {
+        "format": "alltp-tracker-link",
+        "game": "alttpr",
+        "link": 4,
+        "progress": {
+          "checked": "BQKOFCglIAEJLABIoAYtSUTTMUhgw8KjIFkxAA",
+          "entrances": {},
+          "items": "AAAAAAAAAQAAAAAAAAAAAQABAAEBAAEAAgAABAAAAgIEAAIAAgACAgIAAgAAAAAAAgAAAAICAAIAAAACAgACAgAAAAICAgICAgICAgIGBAQKDAQIBgQKKAIAAgIAAAICAAICAgACAAACAAACKAIABgIAAAAAAAIAAAAAHjw",
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": "JyQcCQ1LLyUqABNQNE0",
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": "XsCGt9iYNCAFEAKDggEgmFQuGzGIxMKw4LhgMhmNBsPCAQSGRyQSiWZTObjsdzwfD-gUQikaj0kmk6pVQr1gsmAw2UzGcz2q12w2m64HG53W7Xc8Xm9Hq-X1AIHCoXDYdE4pFo3HI7HpFJJVLZhMZnNZzOloZT0ppfvelieaBPshR_PErLIT1KSvrjXXefLFQjWOLf9Hs8ClEFN8f0SjS4RmZQ3UnYq4EgXTka5_9a_75JVuan6aRhaXBmK6mNzNWd840EfRMxWsXlD8dVVuy6kQprMv2g5qnMMM_SUghpPM7aZo_nkCJqJZL-lsqPixhb7Dq0QqIvCdUbO_amnFPkSb1Yyy2IHMPafXQfAlcWyeUH0dp1XeB84TmBch0886wcHo6rnJdKikVw9oUJLLjlQI_A4vPP5DO8zO-VhJIhW7ue3A"
+        },
+        "sizes": [217, 125, 81],
+        "table": "uyfToA",
+        "version": 12
+      },
+      "name": "a Completionist run on Major Glitches, swords vanilla, expert enemy health",
+      "save": {
+        "format": "alltp-tracker-save",
+        "game": "alttpr",
+        "progress": {
+          "checked": {
+            "blinds-hideout/far-right": true,
+            "blinds-hideout/right": true,
+            "bottle-merchant": true,
+            "c-shaped-house": true,
+            "desert-ledge": true,
+            "desert-palace/big-chest": true,
+            "desert-palace/map-chest": true,
+            "eastern-palace/cannonball-chest": true,
+            "eastern-palace/map-chest": true,
+            "floating-island": true,
+            "ganons-tower/big-chest": true,
+            "ganons-tower/bobs-chest": true,
+            "ganons-tower/bobs-torch": true,
+            "ganons-tower/compass-room/bottom-right": true,
+            "ganons-tower/compass-room/top-right": true,
+            "ganons-tower/dms-room/top-right": true,
+            "ganons-tower/mini-helmasaur-room/left": true,
+            "ganons-tower/mini-helmasaur-room/right": true,
+            "ganons-tower/randomizer-room/bottom-right": true,
+            "ganons-tower/tile-room": true,
+            "hyrule-castle/zeldas-cell": true,
+            "ice-palace/compass-chest": true,
+            "kakariko-well/bottom": true,
+            "kakariko-well/top": true,
+            "kings-tomb": true,
+            "magic-bat": true,
+            "mini-moldorm-cave/far-left": true,
+            "mini-moldorm-cave/far-right": true,
+            "misery-mire/big-chest": true,
+            "misery-mire/bridge-chest": true,
+            "misery-mire/compass-chest": true,
+            "misery-mire/main-lobby": true,
+            "palace-of-darkness/big-chest": true,
+            "palace-of-darkness/boss": true,
+            "palace-of-darkness/dark-basement/left": true,
+            "palace-of-darkness/shooter-room": true,
+            "palace-of-darkness/the-arena/bridge": true,
+            "paradox-cave-lower/far-right": true,
+            "paradox-cave-lower/left": true,
+            "paradox-cave-upper/right": true,
+            "potion-shop": true,
+            "sahasrahlas-hut/right": true,
+            "sick-kid": true,
+            "skull-woods/big-key-chest": true,
+            "skull-woods/boss": true,
+            "skull-woods/compass-chest": true,
+            "skull-woods/map-chest": true,
+            "spectacle-rock": true,
+            "spectacle-rock-cave": true,
+            "spike-cave": true,
+            "sunken-treasure": true,
+            "swamp-palace/boss": true,
+            "swamp-palace/compass-chest": true,
+            "swamp-palace/flooded-room/left": true,
+            "swamp-palace/map-chest": true,
+            "thieves-town/attic": true,
+            "thieves-town/blinds-cell": true,
+            "tower-of-hera/basement-cage": true,
+            "tower-of-hera/big-chest": true,
+            "tower-of-hera/compass-chest": true,
+            "turtle-rock/big-chest": true,
+            "turtle-rock/boss": true,
+            "turtle-rock/compass-chest": true,
+            "turtle-rock/eye-bridge/top-left": true,
+            "turtle-rock/eye-bridge/top-right": true,
+            "turtle-rock/roller-room/left": true,
+            "waterfall-fairy/left": true
+          },
+          "entrances": {},
+          "items": {
+            "agahnim": 1,
+            "agahnim2": 0,
+            "arrowcapacity": 30,
+            "bigkey0": 0,
+            "bigkey1": 1,
+            "bigkey2": 0,
+            "bigkey3": 1,
+            "bigkey4": 0,
+            "bigkey5": 1,
+            "bigkey6": 1,
+            "bigkey7": 1,
+            "bigkey8": 0,
+            "bigkey9": 1,
+            "bigkey12": 1,
+            "blank": false,
+            "bombcapacity": 15,
+            "bombos": false,
+            "book": false,
+            "boomerang": 0,
+            "boots": false,
+            "boss0": 1,
+            "boss1": 1,
+            "boss2": 1,
+            "boss3": 1,
+            "boss4": 1,
+            "boss5": 1,
+            "boss6": 1,
+            "boss7": 1,
+            "boss8": 1,
+            "boss9": 1,
+            "bottle": 2,
+            "bottlecontents1": 0,
+            "bottlecontents2": 0,
+            "bottlecontents3": 0,
+            "bottlecontents4": 0,
+            "bow": 0,
+            "byrna": false,
+            "cape": false,
+            "chest0": 3,
+            "chest1": 2,
+            "chest2": 2,
+            "chest3": 5,
+            "chest4": 6,
+            "chest5": 2,
+            "chest6": 4,
+            "chest7": 3,
+            "chest8": 2,
+            "chest9": 5,
+            "chest12": 20,
+            "compass0": 1,
+            "compass1": 0,
+            "compass2": 1,
+            "compass3": 0,
+            "compass4": 0,
+            "compass5": 0,
+            "compass6": 1,
+            "compass7": 1,
+            "compass8": 0,
+            "compass9": 1,
+            "compass12": 0,
+            "escape": 1,
+            "ether": true,
+            "firerod": false,
+            "flippers": false,
+            "flute": false,
+            "fluteactive": 0,
+            "glove": 0,
+            "goalpieces": 20,
+            "hammer": false,
+            "heartquarters": 0,
+            "hearts": 1,
+            "heldcrystals": 0,
+            "heldgreen": 1,
+            "heldpendants": 0,
+            "hookshot": false,
+            "icerod": false,
+            "knownboss0": 1,
+            "knownboss1": 0,
+            "knownboss2": 3,
+            "knownboss3": 1,
+            "knownboss4": 0,
+            "knownboss5": 0,
+            "knownboss6": 0,
+            "knownboss7": 0,
+            "knownboss8": 0,
+            "knownboss9": 1,
+            "lantern": false,
+            "magic": 1,
+            "map0": 0,
+            "map1": 0,
+            "map2": 0,
+            "map3": 0,
+            "map4": 0,
+            "map5": 1,
+            "map6": 0,
+            "map7": 0,
+            "map8": 0,
+            "map9": 1,
+            "map10": 0,
+            "map12": 0,
+            "mirror": false,
+            "moonpearl": true,
+            "mushroom": false,
+            "net": true,
+            "powder": false,
+            "quake": true,
+            "reward0": 1,
+            "reward1": 0,
+            "reward2": 1,
+            "reward3": 1,
+            "reward4": 0,
+            "reward5": 0,
+            "reward6": 1,
+            "reward7": 1,
+            "reward8": 0,
+            "reward9": 1,
+            "shield": 1,
+            "shoparrow": true,
+            "shopkey": false,
+            "shovel": true,
+            "somaria": false,
+            "sword": 1,
+            "tenbombs": 0,
+            "triforce": 1,
+            "tunic": 2
+          },
+          "medallions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "presetId": "open",
+          "seed": "9MQ9gO1wMD",
+          "settings": {
+            "accessibility": "items",
+            "crystalsGanon": 7,
+            "crystalsTower": 7,
+            "dungeonItems": "standard",
+            "enemyHealth": "expert",
+            "entranceShuffle": "none",
+            "glitches": "major_glitches",
+            "goal": "completionist",
+            "itemFunctionality": "normal",
+            "itemPlacement": "advanced",
+            "itemPool": "normal",
+            "mode": "open",
+            "swordless": false,
+            "swords": "vanilla"
+          },
+          "smallKeys": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          "timeline": {
+            "check:blinds-hideout/far-right": {
+              "at": 1793337293809,
+              "ms": 3058829
+            },
+            "check:blinds-hideout/right": {
+              "at": 1793337249538,
+              "ms": 3014558
+            },
+            "check:bottle-merchant": {
+              "at": 1793337746761,
+              "ms": 3511781
+            },
+            "check:c-shaped-house": {
+              "at": 1793337001286,
+              "ms": 2766306
+            },
+            "check:desert-ledge": {
+              "at": 1793338150076,
+              "ms": 3915096
+            },
+            "check:desert-palace/big-chest": {
+              "at": 1793338409746,
+              "ms": 4174766
+            },
+            "check:desert-palace/map-chest": {
+              "at": 1793338449307,
+              "ms": 4214327
+            },
+            "check:eastern-palace/cannonball-chest": {
+              "at": 1793338320912,
+              "ms": 4085932
+            },
+            "check:eastern-palace/map-chest": {
+              "at": 1793338347790,
+              "ms": 4112810
+            },
+            "check:floating-island": {
+              "at": 1793338123475,
+              "ms": 3888495
+            },
+            "check:ganons-tower/big-chest": {
+              "at": 1793340353817,
+              "ms": 6118837
+            },
+            "check:ganons-tower/bobs-chest": {
+              "at": 1793340421168,
+              "ms": 6186188
+            },
+            "check:ganons-tower/bobs-torch": {
+              "at": 1793340173951,
+              "ms": 5938971
+            },
+            "check:ganons-tower/compass-room/bottom-right": {
+              "at": 1793340642553,
+              "ms": 6407573
+            },
+            "check:ganons-tower/compass-room/top-right": {
+              "at": 1793340590090,
+              "ms": 6355110
+            },
+            "check:ganons-tower/dms-room/top-right": {
+              "at": 1793340273429,
+              "ms": 6038449
+            },
+            "check:ganons-tower/mini-helmasaur-room/left": {
+              "at": 1793340730123,
+              "ms": 6495143
+            },
+            "check:ganons-tower/mini-helmasaur-room/right": {
+              "at": 1793340767253,
+              "ms": 6532273
+            },
+            "check:ganons-tower/randomizer-room/bottom-right": {
+              "at": 1793340320762,
+              "ms": 6085782
+            },
+            "check:ganons-tower/tile-room": {
+              "at": 1793340517932,
+              "ms": 6282952
+            },
+            "check:hyrule-castle/zeldas-cell": {
+              "at": 1793338171076,
+              "ms": 3936096
+            },
+            "check:ice-palace/compass-chest": {
+              "at": 1793339430716,
+              "ms": 5195736
+            },
+            "check:kakariko-well/bottom": {
+              "at": 1793337169871,
+              "ms": 2934891
+            },
+            "check:kakariko-well/top": {
+              "at": 1793337093158,
+              "ms": 2858178
+            },
+            "check:kings-tomb": {
+              "at": 1793336890604,
+              "ms": 2655624
+            },
+            "check:magic-bat": {
+              "at": 1793338224957,
+              "ms": 3989977
+            },
+            "check:mini-moldorm-cave/far-left": {
+              "at": 1793337638391,
+              "ms": 3403411
+            },
+            "check:mini-moldorm-cave/far-right": {
+              "at": 1793337703020,
+              "ms": 3468040
+            },
+            "check:misery-mire/big-chest": {
+              "at": 1793339494775,
+              "ms": 5259795
+            },
+            "check:misery-mire/bridge-chest": {
+              "at": 1793339654213,
+              "ms": 5419233
+            },
+            "check:misery-mire/compass-chest": {
+              "at": 1793339596556,
+              "ms": 5361576
+            },
+            "check:misery-mire/main-lobby": {
+              "at": 1793339535054,
+              "ms": 5300074
+            },
+            "check:palace-of-darkness/big-chest": {
+              "at": 1793338755822,
+              "ms": 4520842
+            },
+            "check:palace-of-darkness/boss": {
+              "at": 1793338851645,
+              "ms": 4616665
+            },
+            "check:palace-of-darkness/dark-basement/left": {
+              "at": 1793338791600,
+              "ms": 4556620
+            },
+            "check:palace-of-darkness/shooter-room": {
+              "at": 1793338670831,
+              "ms": 4435851
+            },
+            "check:palace-of-darkness/the-arena/bridge": {
+              "at": 1793338720922,
+              "ms": 4485942
+            },
+            "check:paradox-cave-lower/far-right": {
+              "at": 1793337469978,
+              "ms": 3234998
+            },
+            "check:paradox-cave-lower/left": {
+              "at": 1793337388433,
+              "ms": 3153453
+            },
+            "check:paradox-cave-upper/right": {
+              "at": 1793337560783,
+              "ms": 3325803
+            },
+            "check:potion-shop": {
+              "at": 1793337907047,
+              "ms": 3672067
+            },
+            "check:sahasrahlas-hut/right": {
+              "at": 1793337033696,
+              "ms": 2798716
+            },
+            "check:sick-kid": {
+              "at": 1793337836177,
+              "ms": 3601197
+            },
+            "check:skull-woods/big-key-chest": {
+              "at": 1793339146589,
+              "ms": 4911609
+            },
+            "check:skull-woods/boss": {
+              "at": 1793339311149,
+              "ms": 5076169
+            },
+            "check:skull-woods/compass-chest": {
+              "at": 1793339196779,
+              "ms": 4961799
+            },
+            "check:skull-woods/map-chest": {
+              "at": 1793339246917,
+              "ms": 5011937
+            },
+            "check:spectacle-rock": {
+              "at": 1793338028487,
+              "ms": 3793507
+            },
+            "check:spectacle-rock-cave": {
+              "at": 1793337959261,
+              "ms": 3724281
+            },
+            "check:spike-cave": {
+              "at": 1793337069581,
+              "ms": 2834601
+            },
+            "check:sunken-treasure": {
+              "at": 1793336954385,
+              "ms": 2719405
+            },
+            "check:swamp-palace/boss": {
+              "at": 1793339068050,
+              "ms": 4833070
+            },
+            "check:swamp-palace/compass-chest": {
+              "at": 1793338987419,
+              "ms": 4752439
+            },
+            "check:swamp-palace/flooded-room/left": {
+              "at": 1793339028157,
+              "ms": 4793177
+            },
+            "check:swamp-palace/map-chest": {
+              "at": 1793338947882,
+              "ms": 4712902
+            },
+            "check:thieves-town/attic": {
+              "at": 1793339342902,
+              "ms": 5107922
+            },
+            "check:thieves-town/blinds-cell": {
+              "at": 1793339390188,
+              "ms": 5155208
+            },
+            "check:tower-of-hera/basement-cage": {
+              "at": 1793338500890,
+              "ms": 4265910
+            },
+            "check:tower-of-hera/big-chest": {
+              "at": 1793338620944,
+              "ms": 4385964
+            },
+            "check:tower-of-hera/compass-chest": {
+              "at": 1793338539492,
+              "ms": 4304512
+            },
+            "check:turtle-rock/big-chest": {
+              "at": 1793339876727,
+              "ms": 5641747
+            },
+            "check:turtle-rock/boss": {
+              "at": 1793340079492,
+              "ms": 5844512
+            },
+            "check:turtle-rock/compass-chest": {
+              "at": 1793339721229,
+              "ms": 5486249
+            },
+            "check:turtle-rock/eye-bridge/top-left": {
+              "at": 1793339946174,
+              "ms": 5711194
+            },
+            "check:turtle-rock/eye-bridge/top-right": {
+              "at": 1793339990106,
+              "ms": 5755126
+            },
+            "check:turtle-rock/roller-room/left": {
+              "at": 1793339781108,
+              "ms": 5546128
+            },
+            "check:waterfall-fairy/left": {
+              "at": 1793340100527,
+              "ms": 5865547
+            },
+            "item:agahnim:1": {
+              "at": 1793334613865,
+              "ms": 378885
+            },
+            "item:bigkey1:1": {
+              "at": 1793335390441,
+              "ms": 1155461
+            },
+            "item:bigkey3:1": {
+              "at": 1793335426636,
+              "ms": 1191656
+            },
+            "item:bigkey5:1": {
+              "at": 1793335503947,
+              "ms": 1268967
+            },
+            "item:bigkey6:1": {
+              "at": 1793335540658,
+              "ms": 1305678
+            },
+            "item:bigkey7:1": {
+              "at": 1793335607514,
+              "ms": 1372534
+            },
+            "item:bigkey9:1": {
+              "at": 1793335675721,
+              "ms": 1440741
+            },
+            "item:bigkey12:1": {
+              "at": 1793336188653,
+              "ms": 1953673
+            },
+            "item:bottle:1": {
+              "at": 1793334634853,
+              "ms": 399873
+            },
+            "item:bottle:2": {
+              "at": 1793335302209,
+              "ms": 1067229
+            },
+            "item:compass0:1": {
+              "at": 1793335869391,
+              "ms": 1634411
+            },
+            "item:compass2:1": {
+              "at": 1793335955628,
+              "ms": 1720648
+            },
+            "item:compass6:1": {
+              "at": 1793335993437,
+              "ms": 1758457
+            },
+            "item:compass7:1": {
+              "at": 1793336037985,
+              "ms": 1803005
+            },
+            "item:compass9:1": {
+              "at": 1793336105012,
+              "ms": 1870032
+            },
+            "item:ether": {
+              "at": 1793334297408,
+              "ms": 62428
+            },
+            "item:magic:1": {
+              "at": 1793334906570,
+              "ms": 671590
+            },
+            "item:map5:1": {
+              "at": 1793335757547,
+              "ms": 1522567
+            },
+            "item:map9:1": {
+              "at": 1793335799350,
+              "ms": 1564370
+            },
+            "item:moonpearl": {
+              "at": 1793334343538,
+              "ms": 108558
+            },
+            "item:net": {
+              "at": 1793334440389,
+              "ms": 205409
+            },
+            "item:quake": {
+              "at": 1793334479284,
+              "ms": 244304
+            },
+            "item:shield:1": {
+              "at": 1793334989124,
+              "ms": 754144
+            },
+            "item:shoparrow": {
+              "at": 1793334541925,
+              "ms": 306945
+            },
+            "item:shovel": {
+              "at": 1793334573061,
+              "ms": 338081
+            },
+            "item:sword:1": {
+              "at": 1793335075739,
+              "ms": 840759
+            },
+            "item:tunic:2": {
+              "at": 1793335254130,
+              "ms": 1019150
+            }
+          }
+        },
+        "version": 12
+      }
+    }
+  ]
+}

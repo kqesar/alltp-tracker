@@ -1,0 +1,53 @@
+{
+  "file": "test/suite/default_key_logic.yaml",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "placements": {
+    "Hobo": "Big Key (Misery Mire)",
+    "Palace of Darkness - Big Chest": "Hammer",
+    "Waterfall Fairy - Left": "Small Key (Misery Mire)",
+    "Waterfall Fairy - Right": "Small Key (Misery Mire)"
+  },
+  "settings": {
+    "crystals_needed_for_gt": 0,
+    "key_logic_algorithm": "dangerous",
+    "keysanity": true
+  },
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  },
+  "verifications": [
+    {
+      "item": "Flippers",
+      "locations": {
+        "Misery Mire - Big Key Chest": false,
+        "Misery Mire - Boss": false,
+        "Misery Mire - Bridge Chest": true,
+        "Misery Mire - Compass Chest": false,
+        "Misery Mire - Main Lobby": true,
+        "Misery Mire - Map Chest": true,
+        "Misery Mire - Spike Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Big Key (Ganons Tower)",
+      "locations": {
+        "Ganons Tower - Big Key Chest": true,
+        "Ganons Tower - Big Key Room - Left": true,
+        "Ganons Tower - Big Key Room - Right": true,
+        "Ganons Tower - Bob's Chest": true
+      },
+      "type": "Verification"
+    },
+    {
+      "item": "Small Key (Palace of Darkness)",
+      "locations": {
+        "Palace of Darkness - Dark Maze - Bottom": true
+      },
+      "type": "Verification"
+    }
+  ]
+}

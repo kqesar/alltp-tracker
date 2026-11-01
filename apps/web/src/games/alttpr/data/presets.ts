@@ -14,6 +14,21 @@
  * them best, under the seed's exact crystals and swords.
  */
 
+import {
+  DOOR_RUN_DEFAULTS,
+  DOOR_SETTING_LABELS,
+  type DoorRunSettings,
+  type DoorSetting,
+  type DoorSettings,
+  doorEntranceText,
+  doorOf,
+  doorReasons,
+  doorRows,
+  doorShuffleOf,
+  doorValueText,
+  isDoorRun,
+} from "@/games/alttpr/data/doorRando";
+
 type RunMode = "open" | "standard" | "inverted" | "retro";
 
 type RunGoal =
@@ -75,9 +90,13 @@ export type PlayGlitches = Exclude<Glitches, "no_logic">;
  * alttpr.com's dungeon items (config/alttp.php:185-190): which of a
  * dungeon's own items may lie outside it. Each level lets out the ones below
  * it too (World.php:111-129): maps and compasses (mc), then small keys
- * (mcs), then big keys (full, keysanity).
+ * (mcs), then big keys (full, keysanity). The Door Randomizer and its
+ * Overworld fork shuffle each kind apart (args.json `keyshuffle`,
+ * `bigkeyshuffle`, `mapshuffle`, `compassshuffle`), so a DR run may also
+ * let out its small keys alone (`keys`: keyshuffle wild, the rest kept),
+ * which alttpr.com never rolls.
  */
-export type DungeonItems = "standard" | "mc" | "mcs" | "full";
+export type DungeonItems = "standard" | "mc" | "mcs" | "full" | "keys";
 
 /** alttpr.com's item placement (config/alttp.php:181-184). */
 type ItemPlacement = "advanced" | "basic";
@@ -173,7 +192,7 @@ export type RunSettings = {
    * stand in, and the logic reads them as unknown. Absent when all are known.
    */
   hidden?: readonly HiddenSetting[];
-};
+} & DoorRunSettings;
 
 type Preset = {
   id: string;
@@ -272,6 +291,40 @@ export const presets: Preset[] = [
     name: "Mystery",
     settings: { ...baseSettings, hidden: HIDEABLE },
   },
+  {
+    // aerinon's Door Randomizer with its doors vanilla: Hyrule Town Hall's
+    // and SahasrahBot's seeds for most races of 2026 (the DR study)
+    description:
+      "A Door Randomizer seed, doors vanilla: key drops, pots, enemy drops and shop items as its settings shuffle them.",
+    id: "door-randomizer",
+    name: "Door Randomizer",
+    settings: { ...baseSettings, ...DOOR_RUN_DEFAULTS, randomizer: "dr" },
+  },
+  {
+    // Crosskeys rolled on the Door Randomizer (Crosskeys 2026, Hyrule Town
+    // Hall): crossed entrances, every dungeon item wild, doors vanilla.
+    // Link's House and the Tavern's back are left unset: race seeds differ
+    // (avianart's Crosskeys metas of 2026 shuffle neither on 1.5.7 and
+    // 1.5.8, both on some 1.5.6 ones), so each may be moved and leads
+    // nowhere until noted, never somewhere it may not. No bomb bag: every
+    // Crosskeys meta and log recorded says so (five SahasrahBot Crosskeys
+    // races' "Bombbag: No", test/dr-entrance-spoilers/; avianart's race
+    // uv7P2Luey and its "crosskeys" preset's 7E8eFbBNH and oVvBJQPnb,
+    // generated 2026-10-30, `bombbag` 0; Hyrule Town Hall's patch reads no
+    // bag, test/dr-seeds/)
+    description:
+      "Crosskeys on the Door Randomizer: Crossworld entrances, keysanity, doors vanilla.",
+    id: "door-crosskeys",
+    name: "DR Crosskeys",
+    settings: {
+      ...baseSettings,
+      ...DOOR_RUN_DEFAULTS,
+      bombBag: false,
+      dungeonItems: "full",
+      entranceShuffle: "crossed",
+      randomizer: "dr",
+    },
+  },
 ];
 
 /**
@@ -308,11 +361,36 @@ export const portedShuffleOf = (
  * er-keys.ts). Its boss slots read the boss shuffle as vt's world does, set
  * or hidden. The Glitches setting changes nothing: such a seed is filled
  * as NoGlitches, without the boots, whatever it names (`entranceRandomized`).
+ * Never a Door Randomizer seed: DR shuffles entrances with its own pools,
+ * which its own world reads (`doorLogic`).
  */
 export const crossedLogic = (settings: RunSettings): boolean =>
   portedShuffleOf(settings) !== undefined &&
   !isHidden(settings, "entranceShuffle") &&
-  settings.mode !== "inverted";
+  settings.mode !== "inverted" &&
+  !isDoorRun(settings);
+
+/**
+ * Whether a run takes the Door Randomizer's own world (the pack's
+ * door-world, loaded on demand by `useDoorLogic`): a seed of DR itself, its
+ * doors vanilla or noted, its entrances vanilla or of a shuffle DR's pools
+ * hold (`doorShuffleOf`), or of its Overworld fork, in the fork's own
+ * world (OWR_DATA), its doors and entrances as the fork shuffles them;
+ * nothing the port
+ * leaves out (`doorReasons`), no glitched logic, its bosses in place (DR's
+ * world reads each dungeon's own) and every setting known (a Mystery run's
+ * are not).
+ */
+export const doorLogic = (settings: RunSettings): boolean =>
+  isDoorRun(settings) &&
+  !isHidden(settings, "entranceShuffle") &&
+  ((settings.entranceShuffle === "none" &&
+    settings.doorEntrances === undefined) ||
+    doorShuffleOf(settings) !== undefined) &&
+  settings.glitches === undefined &&
+  !bossesMayMove(settings) &&
+  (settings.hidden ?? []).length === 0 &&
+  doorReasons(settings, false).length === 0;
 
 /** A run's boss shuffle: "none" when its settings name none. */
 export const bossShuffleOf = (settings: RunSettings): BossShuffle =>
@@ -326,28 +404,46 @@ export const bossesMayMove = (settings: RunSettings): boolean =>
  * Whether the entrance assistant knows a run's shuffled entrances
  * (`logic/entrances.ts`, `poolOf`): those of a shuffle the pack ports
  * (`PORTED_SHUFFLES`) in the Open world (Retro's too) or the Standard one
- * (packs/alttpr, `entrancePool`). Insanity's and the Inverted world's,
- * which runs tables of its own, are not modelled yet.
+ * (packs/alttpr, `entrancePool`); for a Door Randomizer seed, any shuffle
+ * of DR's own pools (`doorShuffleOf`, the pack's `drEntrancePool`), in any
+ * world. alttpr.com's Insanity and Inverted world, which run tables of
+ * their own, are not modelled yet.
  */
 export const entrancesKnown = (settings: RunSettings): boolean =>
   !isHidden(settings, "entranceShuffle") &&
-  portedShuffleOf(settings) !== undefined &&
-  settings.mode !== "inverted";
+  (isDoorRun(settings)
+    ? doorShuffleOf(settings) !== undefined
+    : portedShuffleOf(settings) !== undefined && settings.mode !== "inverted");
 
 /**
  * Why the pack does not model a run's logic, one phrase per cause: an
  * entrance shuffle the pack does not port (Insanity) and the Inverted
- * world's shuffled entrances. The pack ports vt's logics without shuffled
- * entrances and the entrance randomizer's NoGlitches for `crossedLogic`,
- * whatever the run's Glitches. Empty when the run is modelled. The one
- * place the cause is told, for the note over the map.
+ * world's shuffled entrances; for a Door Randomizer seed, what its port
+ * leaves out (`doorReasons`), its glitched logics (the pack ports
+ * alttpr.com's, not DR's), and what else keeps it out of DR's own world
+ * (`doorBorrowed`), its entrances vanilla or shuffled by DR's pools. The pack ports vt's logics without shuffled entrances
+ * and the entrance randomizer's NoGlitches for `crossedLogic`, whatever an
+ * alttpr.com run's Glitches. Empty when the run is modelled. The one place
+ * the cause is told, for the note over the map.
  */
 export const unmodelledReasons = (settings: RunSettings): string[] => {
   const reasons: string[] = [];
+  // A Door Randomizer seed's own (data/doorRando.ts); DR's world counts
+  // the drops' keys, which alttpr.com's v31 borrowed elsewhere does not
+  reasons.push(
+    ...doorReasons(settings, wildItems(settings).keys && !doorLogic(settings)),
+  );
+  // DR's own glitched logics: the pack ports alttpr.com's, not DR's
+  if (isDoorRun(settings) && settings.glitches !== undefined)
+    reasons.push(`the Door Randomizer's ${GLITCHES_LABELS[settings.glitches]}`);
   const { entranceShuffle: shuffle, mode } = settings;
   // Not known yet: any shuffle, or none (`LogicNote` says to set it)
   if (isHidden(settings, "entranceShuffle")) return [HIDDEN_ENTRANCES];
-  if (shuffle === "none") return reasons;
+  // DR's own pools hold its every shuffle, the fork's its own every one
+  if (shuffle === "none" || isDoorRun(settings)) {
+    if (reasons.length === 0) reasons.push(...doorBorrowed(settings));
+    return reasons;
+  }
   // Glitches are no cause: alttpr.com hands any shuffled seed to the
   // entrance randomizer as NoGlitches (`entranceRandomized`)
   if (portedShuffleOf(settings) === undefined)
@@ -356,6 +452,32 @@ export const unmodelledReasons = (settings: RunSettings): string[] => {
     reasons.push(`shuffled entrances in the ${MODE_LABELS[mode]} world`);
   return reasons;
 };
+
+/**
+ * Why a Door Randomizer run that DR's own world does not hold is not
+ * modelled: alttpr.com's v31 is no stand-in, its
+ * rules differing from DR's where DR asks more (an enemy room's kills,
+ * Ganons Tower's Tile Room's powder, DR's key analysis over DR's own fill:
+ * Rules.py:909-, the pack's README). A boss shuffle, whose slots DR's world reads as their own
+ * bosses; a Mystery run while any of its settings is hidden, which DR's
+ * world needs all of (the owner's decision of 2026-10-30: v31 is no
+ * longer read for it, between two logics or otherwise).
+ */
+const doorBorrowed = (settings: RunSettings): string[] => {
+  if (!isDoorRun(settings) || doorLogic(settings)) return [];
+  const reasons: string[] = [];
+  if (!isHidden(settings, "bossShuffle") && bossShuffleOf(settings) !== "none")
+    reasons.push("shuffled bosses in a Door Randomizer seed");
+  if ((settings.hidden ?? []).length > 0) reasons.push(HIDDEN_DOOR_SETTINGS);
+  return reasons;
+};
+
+/**
+ * The cause `unmodelledReasons` gives while a Door Randomizer run's
+ * settings are not all known (a Mystery seed's): DR's world reads each.
+ */
+export const HIDDEN_DOOR_SETTINGS =
+  "a Door Randomizer seed with hidden settings (set them in Mode)";
 
 /**
  * The cause `unmodelledReasons` gives while a Mystery run's entrance
@@ -376,6 +498,15 @@ export const HIDDEN_ENTRANCES = "entrances not known yet";
  */
 export const entranceRandomized = (settings: RunSettings): boolean =>
   !isHidden(settings, "entranceShuffle") && settings.entranceShuffle !== "none";
+
+/**
+ * Whether a run's entrances are shuffled: by alttpr.com's shuffle, or in a
+ * Door Randomizer run by one of DR's own (`doorEntrances`), which leaves
+ * alttpr.com's at none. What shows the Entrances tab and the map's doors.
+ */
+export const entrancesShuffled = (settings: RunSettings): boolean =>
+  settings.entranceShuffle !== "none" ||
+  (isDoorRun(settings) && settings.doorEntrances !== undefined);
 
 /**
  * Whether a run's seed has No Logic: the map shows what the glitches the
@@ -460,6 +591,7 @@ export const ENEMY_HEALTH_LABELS: Record<EnemyHealth | "default", string> = {
 
 export const DUNGEON_ITEM_LABELS: Record<DungeonItems, string> = {
   full: "Full Shuffle",
+  keys: "Small keys only",
   mc: "MC Shuffle",
   mcs: "MCS Shuffle",
   standard: "Standard",
@@ -471,10 +603,16 @@ export const wildItems = ({
 }: Pick<RunSettings, "dungeonItems">) => ({
   /** Big keys: full shuffle only. */
   bigKeys: dungeonItems === "full",
-  /** Small keys: mcs and full. */
-  keys: dungeonItems === "mcs" || dungeonItems === "full",
-  /** Maps and compasses, which always go together: every level but standard. */
-  mapsAndCompasses: dungeonItems !== "standard",
+  /** Small keys: mcs, full, and a DR run's small keys alone. */
+  keys:
+    dungeonItems === "mcs" ||
+    dungeonItems === "full" ||
+    dungeonItems === "keys",
+  /**
+   * Maps and compasses, which always go together: every alttpr.com level
+   * but standard.
+   */
+  mapsAndCompasses: dungeonItems !== "standard" && dungeonItems !== "keys",
 });
 
 export const PLACEMENT_LABELS: Record<ItemPlacement, string> = {
@@ -613,7 +751,10 @@ export const TUNING = {
   ),
   crystalsGanon: CRYSTAL_COUNTS,
   crystalsTower: CRYSTAL_COUNTS,
-  dungeonItems: ordered(["standard", "mc", "mcs", "full"], DUNGEON_ITEM_LABELS),
+  dungeonItems: ordered(
+    ["standard", "mc", "mcs", "full", "keys"],
+    DUNGEON_ITEM_LABELS,
+  ),
   enemyHealth: ordered<EnemyHealth | "default">(
     ["default", "easy", "hard", "expert"],
     ENEMY_HEALTH_LABELS,
@@ -670,6 +811,13 @@ export type SettingRow = {
   readonly label: string;
   readonly value: string;
   readonly setting?: TunableSetting;
+  /** A Door Randomizer setting, which its own select changes. */
+  readonly doorSetting?: DoorSetting;
+  /**
+   * A Door Randomizer run's entrance shuffle, which a select of DR's own
+   * shuffles changes (`doorEntranceModes`): alttpr.com's or DR's own.
+   */
+  readonly doorEntrances?: true;
 };
 
 /** Whether a run's setting is one it has not discovered yet. */
@@ -677,6 +825,30 @@ export const isHidden = (settings: RunSettings, setting: TunableSetting) =>
   (settings.hidden as readonly TunableSetting[] | undefined)?.includes(
     setting,
   ) === true;
+
+/**
+ * Whether a run shows its key cells on its own: its maps and compasses or
+ * its small keys leave their dungeons, so the cells record items found.
+ */
+export const keyCellsShown = (
+  settings: Pick<RunSettings, "dungeonItems">,
+): boolean => {
+  const wild = wildItems(settings);
+  return wild.mapsAndCompasses || wild.keys;
+};
+
+/**
+ * The options a run's summary offers for a tunable setting: `TUNING`'s,
+ * but small keys alone (`keys`) for a Door Randomizer run only, which
+ * alttpr.com never rolls.
+ */
+export const tuningOptionsOf = (
+  settings: RunSettings,
+  setting: TunableSetting,
+): readonly (readonly [boolean | number | string, string])[] =>
+  setting === "dungeonItems" && !isDoorRun(settings)
+    ? TUNING.dungeonItems.filter(([value]) => value !== "keys")
+    : TUNING[setting];
 
 /**
  * A tunable setting's value as its options name it: a boss shuffle, the
@@ -757,11 +929,20 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
       "enemyHealth",
       ENEMY_HEALTH_LABELS[enemyHealthOf(settings)],
     ),
-    row(
-      "Entrances",
-      "entranceShuffle",
-      ENTRANCE_LABELS[settings.entranceShuffle],
-    ),
+    // A DR run's are DR's own shuffles, by DR's names
+    isDoorRun(settings)
+      ? {
+          doorEntrances: true,
+          label: "Entrances",
+          value: isHidden(settings, "entranceShuffle")
+            ? "?"
+            : doorEntranceText(settings),
+        }
+      : row(
+          "Entrances",
+          "entranceShuffle",
+          ENTRANCE_LABELS[settings.entranceShuffle],
+        ),
     row("Glitches", "glitches", GLITCHES_LABELS[glitchesOf(settings)]),
     ...(noLogicRun(settings)
       ? [
@@ -772,5 +953,21 @@ export const describeSettings = (settings: RunSettings): SettingRow[] => {
           ),
         ]
       : []),
+    ...(isDoorRun(settings)
+      ? [
+          {
+            label: DOOR_SETTING_LABELS.randomizer,
+            value: doorValueText("randomizer", settings.randomizer),
+          },
+        ]
+      : []),
+    ...doorRows(settings).map((doorSetting) => ({
+      doorSetting,
+      label: DOOR_SETTING_LABELS[doorSetting],
+      value: doorValueText(
+        doorSetting,
+        (doorOf(settings) as DoorSettings)[doorSetting],
+      ),
+    })),
   ];
 };

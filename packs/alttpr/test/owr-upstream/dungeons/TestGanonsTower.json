@@ -1,0 +1,574 @@
+{
+  "file": "test/dungeons/TestGanonsTower.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs --owr from the Overworld Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "open",
+    "overrideBombCheck": true,
+    "source": "test/dungeons/TestDungeon.py:9@1ada5b5",
+    "suite": "dungeons"
+  },
+  "suite": "dungeons",
+  "tests": [
+    {
+      "cases": [
+        ["Ganons Tower - Bob's Torch", false, []],
+        ["Ganons Tower - Bob's Torch", false, [], ["Pegasus Boots"]],
+        ["Ganons Tower - Bob's Torch", true, ["Pegasus Boots"]],
+        ["Ganons Tower - DMs Room - Top Left", false, []],
+        ["Ganons Tower - DMs Room - Top Left", false, [], ["Hammer"]],
+        ["Ganons Tower - DMs Room - Top Left", false, [], ["Hookshot"]],
+        ["Ganons Tower - DMs Room - Top Left", true, ["Hookshot", "Hammer"]],
+        ["Ganons Tower - DMs Room - Top Right", false, []],
+        ["Ganons Tower - DMs Room - Top Right", false, [], ["Hammer"]],
+        ["Ganons Tower - DMs Room - Top Right", false, [], ["Hookshot"]],
+        ["Ganons Tower - DMs Room - Top Right", true, ["Hookshot", "Hammer"]],
+        ["Ganons Tower - DMs Room - Bottom Left", false, []],
+        ["Ganons Tower - DMs Room - Bottom Left", false, [], ["Hammer"]],
+        ["Ganons Tower - DMs Room - Bottom Left", false, [], ["Hookshot"]],
+        ["Ganons Tower - DMs Room - Bottom Left", true, ["Hookshot", "Hammer"]],
+        ["Ganons Tower - DMs Room - Bottom Right", false, []],
+        ["Ganons Tower - DMs Room - Bottom Right", false, [], ["Hammer"]],
+        ["Ganons Tower - DMs Room - Bottom Right", false, [], ["Hookshot"]],
+        [
+          "Ganons Tower - DMs Room - Bottom Right",
+          true,
+          ["Hookshot", "Hammer"]
+        ],
+        ["Ganons Tower - Randomizer Room - Top Left", false, []],
+        ["Ganons Tower - Randomizer Room - Top Left", false, [], ["Hammer"]],
+        ["Ganons Tower - Randomizer Room - Top Left", false, [], ["Hookshot"]],
+        [
+          "Ganons Tower - Randomizer Room - Top Left",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Randomizer Room - Top Right", false, []],
+        ["Ganons Tower - Randomizer Room - Top Right", false, [], ["Hammer"]],
+        ["Ganons Tower - Randomizer Room - Top Right", false, [], ["Hookshot"]],
+        [
+          "Ganons Tower - Randomizer Room - Top Right",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Randomizer Room - Bottom Left", false, []],
+        ["Ganons Tower - Randomizer Room - Bottom Left", false, [], ["Hammer"]],
+        [
+          "Ganons Tower - Randomizer Room - Bottom Left",
+          false,
+          [],
+          ["Hookshot"]
+        ],
+        [
+          "Ganons Tower - Randomizer Room - Bottom Left",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Randomizer Room - Bottom Right", false, []],
+        [
+          "Ganons Tower - Randomizer Room - Bottom Right",
+          false,
+          [],
+          ["Hammer"]
+        ],
+        [
+          "Ganons Tower - Randomizer Room - Bottom Right",
+          false,
+          [],
+          ["Hookshot"]
+        ],
+        [
+          "Ganons Tower - Randomizer Room - Bottom Right",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Firesnake Room", false, []],
+        ["Ganons Tower - Firesnake Room", false, [], ["Hammer"]],
+        ["Ganons Tower - Firesnake Room", false, [], ["Hookshot"]],
+        [
+          "Ganons Tower - Firesnake Room",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Map Chest", false, []],
+        ["Ganons Tower - Map Chest", false, [], ["Hammer"]],
+        ["Ganons Tower - Map Chest", false, [], ["Hookshot", "Pegasus Boots"]],
+        [
+          "Ganons Tower - Map Chest",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        [
+          "Ganons Tower - Map Chest",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hammer",
+            "Pegasus Boots"
+          ]
+        ],
+        ["Ganons Tower - Big Chest", false, []],
+        ["Ganons Tower - Big Chest", false, [], ["Big Key (Ganons Tower)"]],
+        [
+          "Ganons Tower - Big Chest",
+          true,
+          [
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Cane of Somaria",
+            "Fire Rod"
+          ]
+        ],
+        [
+          "Ganons Tower - Big Chest",
+          true,
+          [
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Hope Room - Left", true, []],
+        ["Ganons Tower - Hope Room - Right", true, []],
+        ["Ganons Tower - Bob's Chest", false, []],
+        [
+          "Ganons Tower - Bob's Chest",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Cane of Somaria",
+            "Fire Rod"
+          ]
+        ],
+        [
+          "Ganons Tower - Bob's Chest",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Tile Room", false, []],
+        ["Ganons Tower - Tile Room", false, [], ["Cane of Somaria"]],
+        ["Ganons Tower - Tile Room", true, ["Cane of Somaria"]],
+        ["Ganons Tower - Compass Room - Top Left", false, []],
+        [
+          "Ganons Tower - Compass Room - Top Left",
+          false,
+          [],
+          ["Cane of Somaria"]
+        ],
+        ["Ganons Tower - Compass Room - Top Left", false, [], ["Fire Rod"]],
+        [
+          "Ganons Tower - Compass Room - Top Left",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Cane of Somaria"
+          ]
+        ],
+        ["Ganons Tower - Compass Room - Top Right", false, []],
+        [
+          "Ganons Tower - Compass Room - Top Right",
+          false,
+          [],
+          ["Cane of Somaria"]
+        ],
+        ["Ganons Tower - Compass Room - Top Right", false, [], ["Fire Rod"]],
+        [
+          "Ganons Tower - Compass Room - Top Right",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Cane of Somaria"
+          ]
+        ],
+        ["Ganons Tower - Compass Room - Bottom Left", false, []],
+        [
+          "Ganons Tower - Compass Room - Bottom Left",
+          false,
+          [],
+          ["Cane of Somaria"]
+        ],
+        ["Ganons Tower - Compass Room - Bottom Left", false, [], ["Fire Rod"]],
+        [
+          "Ganons Tower - Compass Room - Bottom Left",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Cane of Somaria"
+          ]
+        ],
+        ["Ganons Tower - Compass Room - Bottom Right", false, []],
+        [
+          "Ganons Tower - Compass Room - Bottom Right",
+          false,
+          [],
+          ["Cane of Somaria"]
+        ],
+        ["Ganons Tower - Compass Room - Bottom Right", false, [], ["Fire Rod"]],
+        [
+          "Ganons Tower - Compass Room - Bottom Right",
+          true,
+          [
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Cane of Somaria"
+          ]
+        ],
+        ["Ganons Tower - Big Key Chest", false, []],
+        [
+          "Ganons Tower - Big Key Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Cane of Somaria",
+            "Fire Rod"
+          ]
+        ],
+        [
+          "Ganons Tower - Big Key Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Big Key Room - Left", false, []],
+        [
+          "Ganons Tower - Big Key Room - Left",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Cane of Somaria",
+            "Fire Rod"
+          ]
+        ],
+        [
+          "Ganons Tower - Big Key Room - Left",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Big Key Room - Right", false, []],
+        [
+          "Ganons Tower - Big Key Room - Right",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Cane of Somaria",
+            "Fire Rod"
+          ]
+        ],
+        [
+          "Ganons Tower - Big Key Room - Right",
+          true,
+          [
+            "Progressive Bow",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        ["Ganons Tower - Mini Helmasaur Room - Left", false, []],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Left",
+          false,
+          [],
+          ["Progressive Bow"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Left",
+          false,
+          [],
+          ["Big Key (Ganons Tower)"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Left",
+          false,
+          [],
+          ["Lamp", "Fire Rod"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Left",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Lamp"
+          ]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Left",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod"
+          ]
+        ],
+        ["Ganons Tower - Mini Helmasaur Room - Right", false, []],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Right",
+          false,
+          [],
+          ["Progressive Bow"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Right",
+          false,
+          [],
+          ["Big Key (Ganons Tower)"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Right",
+          false,
+          [],
+          ["Lamp", "Fire Rod"]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Right",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Lamp"
+          ]
+        ],
+        [
+          "Ganons Tower - Mini Helmasaur Room - Right",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod"
+          ]
+        ],
+        ["Ganons Tower - Pre-Moldorm Chest", false, []],
+        ["Ganons Tower - Pre-Moldorm Chest", false, [], ["Progressive Bow"]],
+        [
+          "Ganons Tower - Pre-Moldorm Chest",
+          false,
+          [],
+          ["Big Key (Ganons Tower)"]
+        ],
+        ["Ganons Tower - Pre-Moldorm Chest", false, [], ["Lamp", "Fire Rod"]],
+        [
+          "Ganons Tower - Pre-Moldorm Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Lamp"
+          ]
+        ],
+        [
+          "Ganons Tower - Pre-Moldorm Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod"
+          ]
+        ],
+        ["Ganons Tower - Validation Chest", false, []],
+        ["Ganons Tower - Validation Chest", false, [], ["Hookshot"]],
+        ["Ganons Tower - Validation Chest", false, [], ["Progressive Bow"]],
+        [
+          "Ganons Tower - Validation Chest",
+          false,
+          [],
+          ["Big Key (Ganons Tower)"]
+        ],
+        ["Ganons Tower - Validation Chest", false, [], ["Lamp", "Fire Rod"]],
+        [
+          "Ganons Tower - Validation Chest",
+          false,
+          [],
+          ["Progressive Sword", "Hammer"]
+        ],
+        [
+          "Ganons Tower - Validation Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Lamp",
+            "Hookshot",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ganons Tower - Validation Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Hookshot",
+            "Progressive Sword"
+          ]
+        ],
+        [
+          "Ganons Tower - Validation Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Lamp",
+            "Hookshot",
+            "Hammer"
+          ]
+        ],
+        [
+          "Ganons Tower - Validation Chest",
+          true,
+          [
+            "Progressive Bow",
+            "Big Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Small Key (Ganons Tower)",
+            "Fire Rod",
+            "Hookshot",
+            "Hammer"
+          ]
+        ]
+      ],
+      "kind": "location",
+      "line": 6,
+      "name": "testGanonsTower",
+      "startingRegions": ["GT Lobby"]
+    }
+  ],
+  "upstream": {
+    "commit": "1ada5b542ebbe6cd202208ad204faaf818631e2c",
+    "door": "1.5.7",
+    "license": "MIT, Copyright (c) 2017 LLCoolDave",
+    "repo": "codemann8/ALttPDoorRandomizer",
+    "version": "0.8.0.2"
+  }
+}

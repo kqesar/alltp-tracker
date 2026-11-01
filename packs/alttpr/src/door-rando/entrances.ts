@@ -1,0 +1,787 @@
+// The Door Randomizer's entrance shuffles (source/overworld/
+// EntranceShuffle2.py, read by import-dr.mjs into world/connections.json):
+// which entrances a seed of each shuffle may move, and where each may lead,
+// in the entrance randomizer's ids (src/entrances.ts), so a note of either
+// randomizer is the same note.
+//
+// DR shuffles by pools (`modes`, :1518-1940): each pool a step of its own
+// (dungeons among dungeons, Skull Woods' holes and doors among their own,
+// some caves kept vanilla), then what is left by the mode's `undefined`
+// behaviour (vanilla, shuffled or swapped). Its options decide some steps
+// (skullwoods, linked_drops, shuffle_ganon), which a run does not record:
+// where one could move an entrance, the pool counts it as moved, so an
+// entrance not noted leads nowhere, never to a guess. Which targets each
+// entrance may take is over-approximated the same way: the noter's choice,
+// never the logic's, which reads only the notes.
+import {
+  type DerivedNote,
+  ENTRANCES,
+  type EntrancePool,
+  type EntranceTarget,
+  labelOf,
+  type OverworldEntrance,
+  TARGETS,
+} from "../entrances";
+import { locationId } from "../location";
+import districtData from "./owr/districts.json" with { type: "json" };
+import owrEntranceData from "./owr/entrances.json" with { type: "json" };
+import entranceData from "./world/entrances.json" with { type: "json" };
+
+/**
+ * DR's entrance shuffles (`--shuffle`, args.json) but `vanilla` and OWR's
+ * `district`, whose overworld is its own (`OwrShuffle`).
+ */
+export type DrShuffle =
+  | "simple"
+  | "restricted"
+  | "full"
+  | "crossed"
+  | "insanity"
+  | "swapped"
+  | "lite"
+  | "lean"
+  | "dungeonssimple"
+  | "dungeonsfull";
+
+/** What of a DR run decides which entrances its shuffle may move. */
+export interface DrPoolSettings {
+  readonly mode: "open" | "standard" | "inverted";
+  /** shufflelinks: Link's House among the shuffled doors (:555). */
+  readonly shuffleLinks: boolean;
+  /** shuffletavern: the Tavern's back door shuffled (:211). */
+  readonly shuffleTavern: boolean;
+  /** The settings lite's and lean's kept caves read (do_vanilla_connect). */
+  readonly shopsanity: boolean;
+  /** pottery: none, keys, dungeon, … (args.json). */
+  readonly pottery: string;
+  /** dropshuffle: none, keys, underworld (args.json). */
+  readonly dropShuffle: string;
+  readonly enemyShuffle: boolean;
+  /**
+   * The Overworld fork's shuffle_bonk_drops, which its lite's and lean's
+   * Good Bee Cave reads (`bonk`, owr:EntranceShuffle2.py:1620-1622);
+   * absent, it may be shuffled.
+   */
+  readonly bonkDrops?: boolean;
+  /**
+   * The fork's take_any (none, random, fixed), which its lite's and lean's
+   * fairy caves read (`takeany`, owr:EntranceShuffle2.py:1617-1619);
+   * absent, it may be fixed.
+   */
+  readonly takeAny?: string;
+}
+
+type Table = { readonly line: number; readonly value: unknown };
+
+/** A release's EntranceShuffle2 table reader, from its entrances.json. */
+const tablesOf = (data: unknown) => {
+  const tables = (
+    data as Readonly<Record<string, Readonly<Record<string, Table>>>>
+  )["source/overworld/EntranceShuffle2.py"] as Readonly<Record<string, Table>>;
+  return <T>(name: string): T => {
+    const table = tables[name];
+    if (table === undefined) throw new RangeError(`No table ${name}`);
+    return table.value as T;
+  };
+};
+
+const value = tablesOf(entranceData);
+
+const DROP_MAP = value<Readonly<Record<string, string>>>("drop_map");
+const ENTRANCE_MAP = value<Readonly<Record<string, string>>>("entrance_map");
+const SINGLE_MAP = value<Readonly<Record<string, string>>>(
+  "single_entrance_map",
+);
+const SUB_TABLE = value<Readonly<Record<string, string>>>("inverted_sub_table");
+
+/** A pool of a mode, as `modes` writes it. */
+interface ModePool {
+  readonly special?: string;
+  readonly condition?: string | readonly string[];
+  readonly entrances?: readonly (string | readonly string[])[];
+  readonly connectors?: readonly (readonly string[])[];
+  readonly directional?: readonly (readonly string[])[];
+  readonly directional_inv?: readonly (readonly string[])[];
+  readonly connectors_inv?: readonly (readonly string[])[];
+  readonly options?: readonly (string | readonly string[])[];
+  readonly entrance?: string;
+}
+
+/**
+ * A mode of `modes` (EntranceShuffle2.py:1518-1940; the fork's :2158-2768,
+ * where District's `undefined` is `error`).
+ */
+interface Mode {
+  readonly undefined: "vanilla" | "shuffle" | "swap" | "error";
+  readonly decoupled?: string;
+  readonly pools?: Readonly<Record<string, ModePool>>;
+}
+
+const MODES = value<Readonly<Record<DrShuffle, Mode>>>("modes");
+
+/** DR's names the entrance randomizer spells otherwise, entrances. */
+const ER_ENTRANCE_NAMES: Readonly<Record<string, string>> = {
+  "Dark Death Mountain Shop": "Cave Shop (Dark Death Mountain)",
+  "Dark Lumberjack Shop": "Dark World Lumberjack Shop",
+  "Dark Potion Shop": "Dark World Potion Shop",
+  "Hammer Peg Cave": "Dark World Hammer Peg Cave",
+  "Lake Hylia Shop": "Cave Shop (Lake Hylia)",
+  "Mire Fairy": "Dark Desert Fairy",
+  "Mire Hint": "Dark Desert Hint",
+};
+
+/**
+ * DR's names the entrance randomizer spells otherwise, targets: the same
+ * entrance number in both `exit_ids` (entrances.spec.ts holds it).
+ */
+const ER_TARGET_NAMES: Readonly<Record<string, string>> = {
+  "Dark Death Mountain Shop": "Cave Shop (Dark Death Mountain)",
+  "Dark Lumberjack Shop": "Dark World Lumberjack Shop",
+  "Dark Potion Shop": "Dark World Potion Shop",
+  "Hammer Peg Cave": "Dark World Hammer Peg Cave",
+  "Hookshot Cave Back Exit": "Hookshot Cave Exit (North)",
+  "Hookshot Cave Front Exit": "Hookshot Cave Exit (South)",
+  "Lake Hylia Shop": "Cave Shop (Lake Hylia)",
+  "Light Hype Fairy": "Swamp Healer Fairy",
+  "Mire Healer Fairy": "Dark Desert Healer Fairy",
+  "Mire Hint": "Dark Desert Hint",
+  "Skull Back Drop": "Skull Woods Second Section (Drop)",
+  "Skull Left Drop": "Skull Woods First Section (Left)",
+  "Skull Pinball": "Skull Woods First Section (Right)",
+  "Skull Pot Circle": "Skull Woods First Section (Top)",
+};
+
+/**
+ * The targets DR shuffles that the entrance randomizer's pools never do:
+ * Link's House (shufflelinks) and the Tavern's back (shuffletavern).
+ */
+export const DR_EXTRA_TARGETS: readonly EntranceTarget[] = [
+  {
+    id: locationId("Links House Exit"),
+    kind: "connector",
+    name: "Links House Exit",
+    place: labelOf("Links House"),
+  },
+  { id: locationId("Tavern"), kind: "single", name: "Tavern", place: "Tavern" },
+];
+
+/** Every target a note may name, the entrance randomizer's and DR's own. */
+export const DOOR_TARGETS: readonly EntranceTarget[] = [
+  ...TARGETS,
+  ...DR_EXTRA_TARGETS,
+];
+
+const TARGET_BY_NAME = new Map(DOOR_TARGETS.map((t) => [t.name, t]));
+const ENTRANCE_BY_NAME = new Map(ENTRANCES.map((e) => [e.name, e]));
+
+/** The target a DR name is, in the entrance randomizer's ids. */
+export const drTargetOf = (name: string): EntranceTarget => {
+  const found = TARGET_BY_NAME.get(ER_TARGET_NAMES[name] ?? name);
+  if (found === undefined) throw new RangeError(`No target for DR's ${name}`);
+  return found;
+};
+
+/** The entrance a DR name is, in the entrance randomizer's ids. */
+export const drEntranceOf = (name: string): OverworldEntrance => {
+  const found = ENTRANCE_BY_NAME.get(ER_ENTRANCE_NAMES[name] ?? name);
+  if (found === undefined) throw new RangeError(`No entrance for DR's ${name}`);
+  return found;
+};
+
+/** Where each entrance leads in a vanilla world of a mode. */
+export interface VanillaEntrances {
+  /** Every entrance of the pool, by DR's name (inverted names put in). */
+  readonly pool: readonly string[];
+  /** A cave's or dungeon's door to its exit, both ways. */
+  readonly twoWay: ReadonlyMap<string, string>;
+  /** A hole or a single cave's door to its region, one way. */
+  readonly oneWay: ReadonlyMap<string, string>;
+}
+
+/**
+ * link_entrances_new's pool and vanilla maps (EntranceShuffle2.py:45-80):
+ * every entrance not named Inverted, Inverted's own names substituted, and
+ * the Inverted world's swaps (:64-78).
+ */
+export function vanillaEntrances(inverted: boolean): VanillaEntrances {
+  const pool = [
+    ...[...Object.keys(DROP_MAP), ...Object.keys(ENTRANCE_MAP)].filter(
+      (name) => !name.startsWith("Inverted"),
+    ),
+    ...Object.keys(SINGLE_MAP),
+  ].map((name) => (inverted ? (SUB_TABLE[name] ?? name) : name));
+  const twoWay = new Map(Object.entries(ENTRANCE_MAP));
+  const oneWay = new Map([
+    ...Object.entries(DROP_MAP),
+    ...Object.entries(SINGLE_MAP),
+  ]);
+  if (inverted) {
+    twoWay.set("Ganons Tower", "Agahnims Tower Exit");
+    twoWay.set("Agahnims Tower", "Ganons Tower Exit");
+    twoWay.set("Old Man Cave (West)", "Bumper Cave Exit (Bottom)");
+    twoWay.set("Death Mountain Return Cave (West)", "Bumper Cave Exit (Top)");
+    twoWay.set("Bumper Cave (Bottom)", "Old Man Cave Exit (West)");
+    twoWay.set("Dark Death Mountain Fairy", "Old Man Cave Exit (East)");
+    oneWay.delete("Dark Death Mountain Fairy");
+    twoWay.set("Old Man Cave (East)", "Death Mountain Return Cave Exit (West)");
+    oneWay.set("Bumper Cave (Top)", "Dark Death Mountain Healer Fairy");
+    twoWay.delete("Bumper Cave (Top)");
+    oneWay.delete("Big Bomb Shop");
+    oneWay.set("Links House", "Big Bomb Shop");
+    twoWay.delete("Links House");
+    twoWay.set("Big Bomb Shop", "Links House Exit");
+  }
+  return { oneWay, pool, twoWay };
+}
+
+/** Where an entrance leads in the vanilla world: its exit or region. */
+const vanillaTarget = (
+  maps: VanillaEntrances,
+  entrance: string,
+): string | undefined => maps.twoWay.get(entrance) ?? maps.oneWay.get(entrance);
+
+/** A pool's entrances, its lists flattened. */
+const entrancesOf = (pool: ModePool): string[] =>
+  [
+    ...(pool.entrances ?? []),
+    ...(pool.connectors ?? []),
+    ...(pool.directional ?? []),
+    ...(pool.directional_inv ?? []),
+    ...(pool.connectors_inv ?? []),
+    ...(pool.special === "simple_connector" ? (pool.options ?? []) : []),
+    ...(pool.special === "limited" ? (pool.entrances ?? []) : []),
+  ].flatMap((e) => (typeof e === "string" ? [e] : [...e]));
+
+/**
+ * Whether do_vanilla_connect keeps a pool's entrances vanilla (:1060-1086):
+ * each condition named a setting that leaves the caves as they are.
+ */
+function keptVanilla(pool: ModePool, settings: DrPoolSettings): boolean {
+  // `name in condition`: a substring of a string, a member of a list
+  const condition = pool.condition ?? "";
+  const has = (name: string) =>
+    typeof condition === "string"
+      ? condition.includes(name)
+      : condition.some((c) => c === name);
+  if (has("shopsanity") && settings.shopsanity) return false;
+  if (has("pottery") && !["none", "keys", "dungeon"].includes(settings.pottery))
+    return false;
+  if (has("dropshuffle") && !["none", "keys"].includes(settings.dropShuffle))
+    return false;
+  if (
+    has("enemy_drop") &&
+    !["none", "keys"].includes(settings.dropShuffle) &&
+    settings.enemyShuffle
+  )
+    return false;
+  return true;
+}
+
+/** Skull Woods' doors and holes: options a run does not record move them. */
+const SKULL = /^Skull Woods/;
+
+/**
+ * The entrances a shuffle may move, by DR's names: link_entrances_new's
+ * pool (:45-80) less what it surely connects vanilla. Standard's escape and
+ * Link's House (do_standard_connections, :416-422); Link's House without
+ * shufflelinks and the Tavern's back without shuffletavern (do_links_house,
+ * :551-560; :211-215); the caves a kept pool connects (do_vanilla_connect,
+ * :1060-1086), but Skull Woods', which an earlier pool may have moved
+ * (skullwoods); the Inverted world's fixed Bumper Cave (:1832-1836); and in a
+ * mode that leaves the rest vanilla (`undefined`), every entrance no pool
+ * names.
+ */
+export function drShuffled(
+  shuffle: DrShuffle,
+  settings: DrPoolSettings,
+): ReadonlySet<string> {
+  const inverted = settings.mode === "inverted";
+  const maps = vanillaEntrances(inverted);
+  const mode = MODES[shuffle];
+  const pools = Object.values(mode.pools ?? {});
+  const sub = (name: string) => (inverted ? (SUB_TABLE[name] ?? name) : name);
+  const named = new Set(
+    pools
+      .filter((p) => p.special !== "vanilla")
+      .flatMap(entrancesOf)
+      .map(sub),
+  );
+  const moved = new Set(
+    mode.undefined === "vanilla"
+      ? maps.pool.filter((name) => named.has(name))
+      : maps.pool,
+  );
+  for (const pool of pools) {
+    if (pool.special === "vanilla" && keptVanilla(pool, settings))
+      // The Inverted world trades the Dark Death Mountain fairy for
+      // "Bumper Cave (top)", which no entrance is named (:1076-1079)
+      for (const name of entrancesOf(pool).map(sub))
+        if (
+          !SKULL.test(name) &&
+          !(inverted && name === "Dark Death Mountain Fairy")
+        )
+          moved.delete(name);
+    if (pool.special === "inverted_fixed" && inverted && pool.entrance)
+      moved.delete(pool.entrance);
+  }
+  const linksHouse = inverted ? "Big Bomb Shop" : "Links House";
+  if (settings.mode === "standard")
+    for (const name of [
+      "Hyrule Castle Entrance (South)",
+      "Hyrule Castle Secret Entrance Stairs",
+      "Hyrule Castle Secret Entrance Drop",
+      "Links House",
+    ])
+      moved.delete(name);
+  if (!settings.shuffleLinks) moved.delete(linksHouse);
+  if (!settings.shuffleTavern) moved.delete("Tavern North");
+  return moved;
+}
+
+/**
+ * Whether a shuffle leaves what its pools do not name vanilla (`undefined`
+ * vanilla): do_vanilla_connections then links it (:157-158), the Inverted
+ * save point's exit with it (:171-176).
+ */
+export const drKeepsRest = (shuffle: DrShuffle): boolean =>
+  MODES[shuffle].undefined === "vanilla";
+
+/** Whether a shuffle parts a door from its way back (insanity). */
+export const drDecoupled = (shuffle: DrShuffle): boolean =>
+  MODES[shuffle].decoupled === "on";
+
+/**
+ * The shuffles that place dungeons among dungeons alone, by their pools:
+ * the single- and multi-entrance dungeons (simple, restricted,
+ * dungeonssimple), or the dungeon pool and its connectors (dungeonsfull).
+ */
+function dungeonEntrances(mode: Mode): ReadonlySet<string> {
+  const pools = mode.pools ?? {};
+  const found = new Set<string>();
+  for (const name of [
+    "single_entrance_dungeon",
+    "multi_entrance_dungeon",
+    "dungeon",
+  ]) {
+    const pool = pools[name];
+    if (pool !== undefined) for (const e of entrancesOf(pool)) found.add(e);
+  }
+  return found;
+}
+
+/** A DR pool: the entrance randomizer's shape, and whether it is decoupled. */
+export interface DrEntrancePool extends EntrancePool {
+  /** Insanity: an exit leads back elsewhere than its door, unnoted. */
+  readonly decoupled: boolean;
+}
+
+/**
+ * What a DR shuffle may move, for a run: its entrances (`drShuffled`), each
+ * with the targets it may lead to, among those the moved entrances lead to
+ * in the vanilla world. A hole leads to a hole's drop; where a mode places
+ * dungeons among dungeons, a dungeon's door to a dungeon's exit (Skull
+ * Woods' doors among them) and any other door to the others; elsewhere any
+ * door to any door's target. No note settles another (`partners` is
+ * empty): the run does not record the options that tie a hole to its cave
+ * (linked_drops) or Skull Woods' doors together (skullwoods).
+ */
+export function drEntrancePool(
+  shuffle: DrShuffle,
+  settings: DrPoolSettings,
+): DrEntrancePool {
+  return poolOf(
+    shuffle,
+    settings.mode === "inverted",
+    drShuffled(shuffle, settings),
+    dungeonEntrances(MODES[shuffle]),
+    drDecoupled(shuffle),
+  );
+}
+
+/**
+ * A pool of the moved entrances, each with the targets the moved ones lead
+ * to in the vanilla world: a hole a hole's drop, a dungeon's door a
+ * dungeon's exit where `dungeons` keeps them apart, any other door the
+ * others.
+ */
+function poolOf(
+  shuffle: string,
+  inverted: boolean,
+  moved: ReadonlySet<string>,
+  dungeons: ReadonlySet<string>,
+  decoupled = false,
+): DrEntrancePool {
+  const maps = vanillaEntrances(inverted);
+  const holes = new Set(
+    [...moved].filter(
+      (name) => DROP_MAP[name] !== undefined && maps.oneWay.get(name),
+    ),
+  );
+  const apart = dungeons.size > 0;
+  const groupOf = (name: string) =>
+    holes.has(name)
+      ? "hole"
+      : apart && (dungeons.has(name) || SKULL.test(name))
+        ? "dungeon"
+        : "door";
+  const targetsBy = new Map<string, EntranceTarget[]>();
+  const entrances: OverworldEntrance[] = [];
+  for (const name of maps.pool) {
+    if (!moved.has(name)) continue;
+    const target = vanillaTarget(maps, name);
+    if (target === undefined) continue;
+    entrances.push(drEntranceOf(name));
+    const group = groupOf(name);
+    targetsBy.set(group, [...(targetsBy.get(group) ?? []), drTargetOf(target)]);
+  }
+  // Doors first, then holes, as the entrance randomizer's pool lists them
+  const holeIds = new Set([...holes].map((h) => drEntranceOf(h).id));
+  entrances.sort(
+    (a, b) => Number(holeIds.has(a.id)) - Number(holeIds.has(b.id)),
+  );
+  const nameOf = new Map(
+    [...moved].map((name) => [drEntranceOf(name).id, name]),
+  );
+  const targetsOf = new Map(
+    entrances.map((entrance) => [
+      entrance.id,
+      targetsBy.get(groupOf(nameOf.get(entrance.id) ?? "")) ?? [],
+    ]),
+  );
+  return {
+    decoupled,
+    entrances,
+    holeDoors: new Map(),
+    partners: () => [],
+    shuffle,
+    targetsOf,
+  };
+}
+
+/**
+ * The Overworld Randomizer's entrance shuffles (EntranceShuffle2.py `modes`
+ * at owr 0.8.0.2, :2158-2768): DR's, by the same names, and its own
+ * District (:2566-2726: each entrance among its district's, by the world
+ * its region stands in, every one placed, `undefined: error`). The fork's
+ * pools are its own (`OWR_MODES`): lite's and lean's kept caves add the
+ * take-any and bonk conditions (:2259-2301), simple has no Inverted pools,
+ * District is new. Its entrance tables are DR's of the Open world, name for
+ * name (no Inverted names: its Inverted world flips screens, not names),
+ * which entrances.spec.ts holds.
+ */
+export type OwrShuffle = DrShuffle | "district";
+
+const owrValue = tablesOf(owrEntranceData);
+
+/** The fork's `modes` (EntranceShuffle2.py:2158-2768 at owr 0.8.0.2). */
+const OWR_MODES = owrValue<Readonly<Record<OwrShuffle, Mode>>>("modes");
+
+/** What of an OWR run decides which entrances its shuffle may move. */
+export interface OwrPoolSettings extends DrPoolSettings {
+  /**
+   * is_bombshop_start (BaseClasses.py:350-351, the Big Bomb Shop's screen 0x2c
+   * swapped): Link starts at the Big Bomb Shop, whose door is then the one
+   * shufflelinks keeps; undefined while not known (Mixed's flip not noted).
+   */
+  readonly bombShopStart: boolean | undefined;
+  /**
+   * is_atgt_swapped (BaseClasses.py:347-348): the towers' doors trade
+   * exits (EntranceShuffle2.py:69-71), which Swapped's pairs read;
+   * undefined (or absent) while not known.
+   */
+  readonly towersTraded?: boolean | undefined;
+  /**
+   * is_tile_swapped of every screen, without Mixed (BaseClasses.py:331-
+   * 332): Inverted's true, Open's false; undefined (or absent) under
+   * Mixed, whose flips move regions between the worlds, which District's
+   * pools read (owrDistrictsOf).
+   */
+  readonly tilesSwapped?: boolean | undefined;
+}
+
+/**
+ * Whether the fork's do_vanilla_connect keeps a pool's entrances vanilla
+ * (:1610-1646): DR's conditions, and its own: `takeany` (the fairy caves
+ * move where take_any is fixed), `bonk` (the Good Bee Cave moves where bonk
+ * drops are shuffled) and `skullwoods` (Skull Woods' doors, which a run
+ * does not record: they may move).
+ */
+function owrKeptVanilla(pool: ModePool, settings: OwrPoolSettings): boolean {
+  const condition = pool.condition ?? "";
+  const has = (name: string) =>
+    typeof condition === "string"
+      ? condition.includes(name)
+      : condition.some((c) => c === name);
+  if (has("takeany") && (settings.takeAny ?? "fixed") === "fixed") return false;
+  if (has("bonk") && settings.bonkDrops !== false) return false;
+  if (has("skullwoods")) return false;
+  return keptVanilla(pool, settings);
+}
+
+/**
+ * The entrances an OWR shuffle may move, by the fork's names:
+ * link_entrances_new's pool (:60-61) less what it surely connects as it
+ * stands. In a mode that leaves the rest vanilla (`undefined`: the dungeon
+ * shuffles), every entrance no pool names (do_vanilla_connections, :152-
+ * 153); the caves a kept pool connects (do_vanilla_connect, `owrKeptVanilla`),
+ * but Skull Woods', which an earlier pool may have moved (skullwoods); in
+ * Standard, Link's House and the escape's drop (do_standard_connections,
+ * :479-494: the castle's front door and the drop's stairs only trade exits
+ * where linked_drops parts them, which a run does not record, so they count
+ * as moved); the Tavern's back without shuffletavern (:230-236); without
+ * shufflelinks, the start house's door (do_links_house, :655-660: Links
+ * House, or the Big Bomb Shop where Link starts there; both moved while
+ * that is not known). Ganon's Tower and the pyramid stand only without
+ * shuffle_ganon (:213-228, :525-531), which a run does not record: moved.
+ */
+export function owrShuffled(
+  shuffle: OwrShuffle,
+  settings: OwrPoolSettings,
+): ReadonlySet<string> {
+  const mode = OWR_MODES[shuffle];
+  const pools = Object.values(mode.pools ?? {});
+  const all = vanillaEntrances(false).pool;
+  const named = new Set(
+    pools.filter((p) => p.special !== "vanilla").flatMap(entrancesOf),
+  );
+  const moved = new Set(
+    mode.undefined === "vanilla" ? all.filter((name) => named.has(name)) : all,
+  );
+  for (const pool of pools)
+    if (pool.special === "vanilla" && owrKeptVanilla(pool, settings))
+      for (const name of entrancesOf(pool))
+        if (!SKULL.test(name)) moved.delete(name);
+  if (settings.mode === "standard")
+    for (const name of ["Links House", "Hyrule Castle Secret Entrance Drop"])
+      moved.delete(name);
+  if (!settings.shuffleTavern) moved.delete("Tavern North");
+  if (!settings.shuffleLinks && settings.bombShopStart !== undefined)
+    moved.delete(settings.bombShopStart ? "Big Bomb Shop" : "Links House");
+  return moved;
+}
+
+/** Whether an OWR shuffle parts a door from its way back (insanity). */
+export const owrDecoupled = (shuffle: OwrShuffle): boolean =>
+  OWR_MODES[shuffle].decoupled === "on";
+
+/**
+ * What an OWR shuffle may move, for a run: its entrances (`owrShuffled`),
+ * a hole to any hole's drop (do_holes_and_linked_drops, :502-616), where a
+ * mode places dungeons among dungeons (simple, restricted and the dungeon
+ * shuffles' pools) a dungeon's door to a dungeon's exit and any other door
+ * to the others, elsewhere any door to any door's target. No note settles
+ * another; Swapped's notes tell each one's partner (`derived`,
+ * owrSwapPartners), and District's entrances take their own district's
+ * targets alone where its worlds are known (`districtTargets`).
+ */
+export function owrEntrancePool(
+  shuffle: OwrShuffle,
+  settings: OwrPoolSettings,
+): DrEntrancePool {
+  const moved = owrShuffled(shuffle, settings);
+  const pool = poolOf(
+    shuffle,
+    false,
+    moved,
+    dungeonEntrances(OWR_MODES[shuffle]),
+    owrDecoupled(shuffle),
+  );
+  if (shuffle === "swapped")
+    return {
+      ...pool,
+      derived: (noted) => owrSwapPartners(noted, moved, settings.towersTraded),
+    };
+  const swapped = settings.tilesSwapped;
+  return shuffle !== "district" || swapped === undefined
+    ? pool
+    : { ...pool, targetsOf: districtTargets(moved, swapped) };
+}
+
+/** A District pool of `modes`, as the importer writes it. */
+interface OwrDistrict {
+  readonly name: string;
+  readonly condition: string;
+  readonly entrances: readonly string[];
+  readonly drops: readonly string[];
+}
+
+const DISTRICTS: readonly OwrDistrict[] = districtData.districts;
+const DISTRICT_WORLDS: Readonly<Record<string, string>> = districtData.worlds;
+const LINKED_DROPS: Readonly<Record<string, string>> = districtData.linkedDrops;
+
+/** The pyramid's door, on the castle's ledge once its screen swaps. */
+const PYRAMID_DOOR = "Pyramid Entrance";
+
+/**
+ * Each entrance's District pool, by DR's names, in a world without Mixed:
+ * the `district` pool naming it whose condition is the world it stands in
+ * (special_shuffle 'district', EntranceShuffle2.py:139-146): a door's its
+ * parent region's (LW_Entrances, DW_Entrances, :75-82; Mixed's flips move
+ * regions, update_world_regions, OverworldShuffle.py:1216-1221, so none is
+ * read then), the pyramid's door on the castle's ledge where screen 0x1b
+ * is swapped (relocate_pyramid_entrances, :2034-2055, run by link_overworld
+ * before link_entrances_new, OverworldShuffle.py:181, Main.py:181-190), a
+ * hole its door's (combine_linked_drop_map, :144). The fork's lists name
+ * each entrance in one pool of each world, so the first holding it is its
+ * own.
+ * @param swapped - is_tile_swapped of every screen: Inverted's
+ */
+export function owrDistrictsOf(swapped: boolean): ReadonlyMap<string, string> {
+  const worldOf = (door: string) =>
+    door === PYRAMID_DOOR && swapped ? "lw" : DISTRICT_WORLDS[door];
+  const found = new Map<string, string>();
+  for (const district of DISTRICTS) {
+    const world = district.condition === "lightworld" ? "lw" : "dw";
+    const members = [
+      ...district.entrances.filter((door) => worldOf(door) === world),
+      ...district.drops.filter(
+        (hole) => worldOf(LINKED_DROPS[hole] ?? "") === world,
+      ),
+    ];
+    for (const name of members)
+      if (!found.has(name)) found.set(name, district.name);
+  }
+  return found;
+}
+
+/**
+ * What each entrance a District shuffle moves may lead to: its own
+ * district's targets alone. Each district's pool shuffles its entrances
+ * among their own combine_map targets (find_entrances_and_exits, :1946-
+ * 1955, then do_main_shuffle, :147), and every entrance is placed so
+ * (`undefined: error`, :158-159): a hole one of the district's holes'
+ * drops (keep_drops_together off, do_holes_and_linked_drops :532-540), a
+ * door one of its doors' targets (its start house, blacksmith and bomb
+ * shop among its own entrances, :300-319, :459-475, :655-728).
+ */
+function districtTargets(
+  moved: ReadonlySet<string>,
+  swapped: boolean,
+): ReadonlyMap<string, readonly EntranceTarget[]> {
+  const districtOf = owrDistrictsOf(swapped);
+  const combine = owrCombineMap(swapped);
+  const members = new Map<string, string[]>();
+  for (const name of moved) {
+    const district = districtOf.get(name);
+    if (district === undefined) throw new RangeError(`No district: ${name}`);
+    const key = `${district} ${DROP_MAP[name] !== undefined}`;
+    members.set(key, [...(members.get(key) ?? []), name]);
+  }
+  const targetsOf = new Map<string, readonly EntranceTarget[]>();
+  for (const names of members.values()) {
+    const targets = names.flatMap((name) => {
+      const target = combine.get(name);
+      return target === undefined ? [] : [drTargetOf(target)];
+    });
+    for (const name of names) targetsOf.set(drEntranceOf(name).id, targets);
+  }
+  return targetsOf;
+}
+
+/** The towers' doors, which trade exits once both screens swap. */
+const TOWERS: readonly (readonly [door: string, exit: string])[] = [
+  ["Ganons Tower", "Ganons Tower Exit"],
+  ["Agahnims Tower", "Agahnims Tower Exit"],
+];
+
+/**
+ * Where each entrance leads before the fork's shuffle moves it, by DR's
+ * names: its combine_map (EntranceShuffle2.py:62-73), entrance_map with
+ * the towers' exits traded once is_atgt_swapped, then drop_map and
+ * single_entrance_map; neither tower while that is not known. The fork's
+ * maps are DR's Open ones without the Inverted names (entrances.spec.ts).
+ */
+export function owrCombineMap(
+  towersTraded: boolean | undefined,
+): ReadonlyMap<string, string> {
+  const open = vanillaEntrances(false);
+  const map = new Map<string, string>();
+  for (const name of open.pool) {
+    // {**default_map, **one_way_map}: the one way's wins a name in both
+    const target = open.oneWay.get(name) ?? open.twoWay.get(name);
+    if (target !== undefined) map.set(name, target);
+  }
+  for (const [door, exit] of TOWERS) {
+    if (towersTraded === undefined) map.delete(door);
+    else if (towersTraded) {
+      const [, other] = TOWERS.find(([d]) => d !== door) ?? [];
+      if (other !== undefined) map.set(door, other);
+    } else map.set(door, exit);
+  }
+  return map;
+}
+
+/**
+ * What a Swapped run's notes tell of the entrances not noted: connect_swap
+ * (EntranceShuffle2.py:1986-1995) connects the entrance whose combine_map
+ * target is the one a door took (`swap_entrance`) to that door's own
+ * (`swap_exit`), and every Swapped connection goes through it or through
+ * connect_swapped (:1958-1983), which trades targets two by two: holes
+ * (:504-505, :536, :614, handle_skull_woods_drops :1356-1357), Skull Woods'
+ * doors (:1407-1408), the start's caves (:319, :645, :728), the Old Man
+ * Cave's way out (:428), the blacksmith (:471), the must-exit caves
+ * (connect_cave_swap :1695-1705, :1770, :1782, :1811, :1846) and the rest
+ * (:1340-1341, :389). So A noted to B's target tells B leads to A's. Each
+ * as a note by ids, with the entrance noted that tells it. None for an
+ * entrance noted, one the shuffle keeps, a target noted elsewhere, a
+ * tower's while is_atgt_swapped is not known, or two notes telling the
+ * same entrance (notes that contradict the shuffle tell nothing).
+ * @param moved - The entrances the shuffle moves (`owrShuffled`), by name
+ */
+export function owrSwapPartners(
+  noted: Readonly<Record<string, string>>,
+  moved: ReadonlySet<string>,
+  towersTraded: boolean | undefined,
+): ReadonlyMap<string, DerivedNote> {
+  const combine = owrCombineMap(towersTraded);
+  // Each target's entrance: the first by name, as next() takes it, none
+  // when two share it (the spec holds none do)
+  const entranceOf = new Map<string, string | null>();
+  for (const [entrance, target] of combine)
+    entranceOf.set(target, entranceOf.has(target) ? null : entrance);
+  const taken = new Set(Object.values(noted));
+  const found = new Map<string, DerivedNote>();
+  const twice = new Set<string>();
+  for (const [id, targetId] of Object.entries(noted)) {
+    const entrance = drEntranceName(id);
+    const target = drTargetName(targetId);
+    if (entrance === undefined || target === undefined) continue;
+    const own = combine.get(entrance);
+    if (!moved.has(entrance) || own === undefined || own === target) continue;
+    const partner = entranceOf.get(target);
+    if (partner === undefined || partner === null || !moved.has(partner))
+      continue;
+    const partnerId = drEntranceOf(partner).id;
+    const ownId = drTargetOf(own).id;
+    if (noted[partnerId] !== undefined || taken.has(ownId)) continue;
+    if (found.has(partnerId)) twice.add(partnerId);
+    found.set(partnerId, { from: id, target: ownId });
+  }
+  for (const id of twice) found.delete(id);
+  return found;
+}
+
+/** Each entrance the pools may name, by the entrance randomizer's id. */
+const DR_NAME_OF_ENTRANCE: ReadonlyMap<string, string> = new Map(
+  [...vanillaEntrances(false).pool, ...vanillaEntrances(true).pool].map(
+    (name) => [drEntranceOf(name).id, name],
+  ),
+);
+
+/** Each target the pools may name, by the entrance randomizer's id. */
+const DR_NAME_OF_TARGET: ReadonlyMap<string, string> = new Map(
+  [false, true].flatMap((inverted) => {
+    const maps = vanillaEntrances(inverted);
+    return [...maps.twoWay.values(), ...maps.oneWay.values()].map(
+      (name) => [drTargetOf(name).id, name] as const,
+    );
+  }),
+);
+
+/** DR's name of a noted entrance (an id), if a DR pool holds it. */
+export const drEntranceName = (id: string): string | undefined =>
+  DR_NAME_OF_ENTRANCE.get(id);
+
+/** DR's name of a noted target (an id), if a DR pool holds it. */
+export const drTargetName = (id: string): string | undefined =>
+  DR_NAME_OF_TARGET.get(id);

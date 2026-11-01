@@ -3,8 +3,17 @@ import {
   LEGACY_DUNGEON_ITEMS,
   LEGACY_DUNGEONS,
   MAP_LOCATIONS,
+  OWR_FLIP_SCREENS,
 } from "@alltp/pack-alttpr";
+import type { DoorKindNote as PackDoorKind } from "@alltp/pack-alttpr/door-world";
 import { BOSS_STATES, MEDALLION_VALUES } from "@/games/alttpr/constants";
+import {
+  DOOR_LOCATION_IDS,
+  isDoorSettings,
+  OWR_CROSSINGS,
+  OWR_FLUTE_SCREENS,
+  OWR_WHIRLPOOLS,
+} from "@/games/alttpr/data/doorRando";
 import type { ItemState } from "@/games/alttpr/data/items";
 import {
   items as freshItems,
@@ -35,7 +44,7 @@ import {
   SWORDS_LABELS,
 } from "@/games/alttpr/data/presets";
 import type { TrickPrefs } from "@/games/alttpr/data/tricks";
-import { counterMax, SMALL_KEYS_MAX } from "@/games/alttpr/logic/settings";
+import { counterMax, SMALL_KEYS_CAP } from "@/games/alttpr/logic/settings";
 import { isTimelineKey, type Timeline } from "@/games/alttpr/logic/timeline";
 import type { MapLayout, MapView } from "@/games/alttpr/utils";
 import { isSeedId } from "@/games/seedId";
@@ -72,6 +81,19 @@ export type Progress = {
    * before it was kept, notes none: no version needed.
    */
   entrances: Readonly<Record<string, string>>;
+  /**
+   * A Door Randomizer run's door shuffle as the player noted it
+   * (`DoorNotes`): where each door leads, each portal's lobby, each door's
+   * kind, each dungeon's small keys. A save without it, from before it was
+   * kept, notes none: no version needed.
+   */
+  doors: DoorNotes;
+  /**
+   * An Overworld Randomizer run's shuffled overworld as the player noted it
+   * (`OverworldNotes`): its whirlpools and flute spots. A save without it,
+   * from before it was kept, notes none: no version needed.
+   */
+  overworld: OverworldNotes;
   /**
    * The seed the run is played on: its hash on alttpr.com, as the ROM's
    * header names it, or the one the player started the run from. Null while
@@ -434,7 +456,8 @@ const validateChecked = (
   for (const [id, value] of Object.entries(saved)) {
     if (value !== true) errors.push(`checked["${id}"] must be true`);
     // A location this version does not know: ignore it rather than fail
-    else if (MAP_LOCATIONS.has(id)) valid[id] = true;
+    else if (MAP_LOCATIONS.has(id) || DOOR_LOCATION_IDS.has(id))
+      valid[id] = true;
   }
   return valid;
 };
@@ -546,7 +569,9 @@ const isRunSettings = (value: unknown): value is RunSettings => {
     named(itemPlacement, PLACEMENT_LABELS) &&
     named(accessibility, ACCESSIBILITY_LABELS) &&
     named(itemPool, POOL_LABELS) &&
-    named(itemFunctionality, FUNCTIONALITY_LABELS)
+    named(itemFunctionality, FUNCTIONALITY_LABELS) &&
+    // A Door Randomizer run's own, absent from every other
+    isDoorSettings(value as Record<string, unknown>)
   );
 };
 
@@ -601,14 +626,14 @@ export const validateProgress = (
 
   if (saved.smallKeys !== undefined) {
     if (
-      isArrayOf(saved.smallKeys, SMALL_KEYS_MAX.length, (count, index) =>
-        isIntIn(count, 0, SMALL_KEYS_MAX[index] ?? 0),
+      isArrayOf(saved.smallKeys, SMALL_KEYS_CAP.length, (count, index) =>
+        isIntIn(count, 0, SMALL_KEYS_CAP[index] ?? 0),
       )
     ) {
       value.smallKeys = saved.smallKeys as number[];
     } else
       errors.push(
-        `smallKeys must hold ${SMALL_KEYS_MAX.length} counts within each dungeon's keys`,
+        `smallKeys must hold ${SMALL_KEYS_CAP.length} counts within each dungeon's keys`,
       );
   }
 
@@ -633,6 +658,23 @@ export const validateProgress = (
     } else errors.push("entrances must map entrance ids to target ids");
   }
 
+  if (saved.doors !== undefined) {
+    // Ids only: what they name is the pack's DR world, loaded on demand
+    if (isDoorNotes(saved.doors)) value.doors = saved.doors;
+    else
+      errors.push(
+        "doors must map door ids to door ids, portal ids to door ids, door ids to kinds and dungeons to key counts",
+      );
+  }
+
+  if (saved.overworld !== undefined) {
+    if (isOverworldNotes(saved.overworld)) value.overworld = saved.overworld;
+    else
+      errors.push(
+        "overworld must pair the fork's whirlpools, list its flute screens and say its edges' crossings and screens' flips",
+      );
+  }
+
   if (saved.seed !== undefined) {
     if (saved.seed === null || isSeedId(saved.seed)) value.seed = saved.seed;
     else errors.push("seed must be a seed id or null");
@@ -654,6 +696,143 @@ export const validateProgress = (
 
 /** An entrance's or a target's id: a slug, as the pack makes them. */
 const ENTRANCE_ID = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
+
+/**
+ * A Door Randomizer run's door notes (the pack's `DoorNotes`, its
+ * `door-world` loaded on demand, so its type alone here): where each door
+ * leads (`links`, door id to door id), the door each portal opens on
+ * (`lobbies`, portal id to door id), each door's kind (`kinds`) and each
+ * dungeon's small keys in all (`keys`, by DR's dungeon name).
+ */
+export type DoorKindNote = PackDoorKind;
+
+export type DoorNotes = {
+  readonly links?: Readonly<Record<string, string>>;
+  readonly lobbies?: Readonly<Record<string, string>>;
+  readonly kinds?: Readonly<Record<string, DoorKindNote>>;
+  readonly keys?: Readonly<Record<string, number>>;
+};
+
+/** The kinds a door is noted as (the pack's `DOOR_KIND_NOTES`). */
+export const DOOR_KINDS = [
+  "normal",
+  "small",
+  "big",
+  "bomb",
+  "dash",
+  "trap",
+] as const satisfies readonly DoorKindNote[];
+
+// The pack's kinds and these are the same: a kind added there fails here
+const _kinds: readonly (typeof DOOR_KINDS)[number][] = [] as DoorKindNote[];
+void _kinds;
+
+/** DR's dungeons, as a door note counts their keys. */
+export const DOOR_DUNGEONS: readonly string[] = [
+  "Hyrule Castle",
+  "Eastern Palace",
+  "Desert Palace",
+  "Tower of Hera",
+  "Agahnims Tower",
+  "Palace of Darkness",
+  "Swamp Palace",
+  "Skull Woods",
+  "Thieves Town",
+  "Ice Palace",
+  "Misery Mire",
+  "Turtle Rock",
+  "Ganons Tower",
+];
+
+const isIdMap = (value: unknown): boolean =>
+  isRecord(value) &&
+  Object.entries(value).every(
+    ([from, to]) =>
+      ENTRANCE_ID.test(from) && typeof to === "string" && ENTRANCE_ID.test(to),
+  );
+
+/**
+ * An Overworld Randomizer run's shuffled overworld as noted (the pack's
+ * `OwrNotes`): each noted whirlpool, by the fork's name, the whirlpool it
+ * leads into (`whirlpools`, both ways), the screens a flute spot is
+ * noted on (`flute`, at most eight) and each crossable edge pair of a
+ * crossed overworld, by its first edge (`OWR_CROSSINGS`), whether it
+ * crosses (`crossings`), and each screen Mixed may flip, by its light
+ * world id (`OWR_FLIP_SCREENS`), whether it is flipped (`flips`). Each
+ * absent when nothing is noted.
+ */
+export type OverworldNotes = {
+  readonly whirlpools?: Readonly<Record<string, string>>;
+  readonly flute?: readonly number[];
+  readonly crossings?: Readonly<Record<string, boolean>>;
+  readonly flips?: Readonly<Record<string, boolean>>;
+};
+
+/** The screens Mixed may flip, as a flip note's keys. */
+const FLIP_KEYS: ReadonlySet<string> = new Set(
+  OWR_FLIP_SCREENS.map((screen) => String(screen)),
+);
+
+/** The crossable pairs' first edges: a crossing note's keys. */
+const CROSSING_EDGES: ReadonlySet<string> = new Set(
+  OWR_CROSSINGS.map(([edge]) => edge),
+);
+
+/** Whether a saved value is overworld notes of the shape they hold. */
+export const isOverworldNotes = (value: unknown): value is OverworldNotes =>
+  isRecord(value) &&
+  Object.keys(value).every((key) =>
+    ["whirlpools", "flute", "crossings", "flips"].includes(key),
+  ) &&
+  (value.flips === undefined ||
+    (isRecord(value.flips) &&
+      Object.entries(value.flips).every(
+        ([screen, flipped]) =>
+          FLIP_KEYS.has(screen) && typeof flipped === "boolean",
+      ))) &&
+  (value.crossings === undefined ||
+    (isRecord(value.crossings) &&
+      Object.entries(value.crossings).every(
+        ([edge, crosses]) =>
+          CROSSING_EDGES.has(edge) && typeof crosses === "boolean",
+      ))) &&
+  (value.whirlpools === undefined ||
+    (isRecord(value.whirlpools) &&
+      Object.entries(value.whirlpools).every(
+        ([from, to]) =>
+          from !== to &&
+          (OWR_WHIRLPOOLS as readonly unknown[]).includes(from) &&
+          (OWR_WHIRLPOOLS as readonly unknown[]).includes(to),
+      ))) &&
+  (value.flute === undefined ||
+    (Array.isArray(value.flute) &&
+      value.flute.length <= 8 &&
+      new Set(value.flute).size === value.flute.length &&
+      value.flute.every((screen) =>
+        (OWR_FLUTE_SCREENS as readonly unknown[]).includes(screen),
+      )));
+
+/** Whether a saved value is door notes of the shape `DoorNotes` holds. */
+export const isDoorNotes = (value: unknown): value is DoorNotes =>
+  isRecord(value) &&
+  Object.keys(value).every((key) =>
+    ["links", "lobbies", "kinds", "keys"].includes(key),
+  ) &&
+  (value.links === undefined || isIdMap(value.links)) &&
+  (value.lobbies === undefined || isIdMap(value.lobbies)) &&
+  (value.kinds === undefined ||
+    (isRecord(value.kinds) &&
+      Object.entries(value.kinds).every(
+        ([id, kind]) =>
+          ENTRANCE_ID.test(id) &&
+          (DOOR_KINDS as readonly unknown[]).includes(kind),
+      ))) &&
+  (value.keys === undefined ||
+    (isRecord(value.keys) &&
+      Object.entries(value.keys).every(
+        ([dungeon, count]) =>
+          DOOR_DUNGEONS.includes(dungeon) && isIntIn(count, 0, 30),
+      )));
 
 /** Marks a file written by exportState. */
 export const SAVE_FORMAT = "alltp-tracker-save";

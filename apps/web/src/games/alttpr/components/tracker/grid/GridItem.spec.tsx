@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GridItem } from "@/games/alttpr/components/tracker/grid/GridItem";
 import { getPreset } from "@/games/alttpr/data/presets";
@@ -174,6 +180,27 @@ describe("GridItem", () => {
     );
     expect(screen.getByTestId("small-key-3")).toHaveAccessibleName(
       "Palace of Darkness small keys: 0 of 6",
+    );
+  });
+
+  it("says a DR run's small keys are those from chests where its world counts the drops'", () => {
+    useGameStore.getState().applyPreset("door-randomizer");
+    useGameStore.getState().setBigKeysVisible(true);
+
+    // Hyrule Castle's guards and rat hold keys DR's world counts once
+    // reached: marking them too would count each twice
+    render(<GridItem col={5} item="keys10" row={7} />);
+    expect(screen.getByTestId("small-key-10")).toHaveAccessibleName(
+      /^Hyrule Castle small keys from chests: 0 of \d+$/,
+    );
+    cleanup();
+    // Shuffled, the drops' keys are items the player records
+    useGameStore
+      .getState()
+      .updateDoorSettings({ dropShuffle: "keys", pottery: "keys" });
+    render(<GridItem col={5} item="keys10" row={7} />);
+    expect(screen.getByTestId("small-key-10")).toHaveAccessibleName(
+      /^Hyrule Castle small keys: 0 of \d+$/,
     );
   });
 

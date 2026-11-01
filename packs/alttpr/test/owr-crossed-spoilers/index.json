@@ -1,0 +1,73 @@
+{
+  "generated": "By packs/alttpr/scripts/record-dr-spoilers.mjs (owr-crossed): avianart.games seeds' JSON spoilers of the Overworld Randomizer, its edges crossed. Record again, never edit.",
+  "logs": {
+    "avianart-o4mamwuKZ.json": {
+      "address": "https://avianart.games/perm/o4mamwuKZ",
+      "kept": [
+        "meta",
+        "Entrances",
+        "Light World",
+        "Dark World",
+        "Caves",
+        "Hyrule Castle",
+        "Eastern Palace",
+        "Desert Palace",
+        "Tower of Hera",
+        "Agahnims Tower",
+        "Palace of Darkness",
+        "Thieves Town",
+        "Skull Woods",
+        "Swamp Palace",
+        "Ice Palace",
+        "Misery Mire",
+        "Turtle Rock",
+        "Ganons Tower",
+        "Starting Inventory",
+        "Special",
+        "Shops",
+        "Bosses",
+        "playthrough",
+        "Overworld",
+        "Whirlpools",
+        "Maps"
+      ],
+      "recorded": "2026-10-30",
+      "sha256": "002b155e5cd9f789de13b46c79faf7285b252cf9db3b07f736999b9ad7e92af2",
+      "version": "1.5.7-u"
+    },
+    "avianart-0DsyCwK23.json": {
+      "address": "https://avianart.games/perm/0DsyCwK23",
+      "kept": [
+        "meta",
+        "Entrances",
+        "Light World",
+        "Dark World",
+        "Caves",
+        "Hyrule Castle",
+        "Eastern Palace",
+        "Desert Palace",
+        "Tower of Hera",
+        "Agahnims Tower",
+        "Palace of Darkness",
+        "Thieves Town",
+        "Skull Woods",
+        "Swamp Palace",
+        "Ice Palace",
+        "Misery Mire",
+        "Turtle Rock",
+        "Ganons Tower",
+        "Starting Inventory",
+        "Special",
+        "Shops",
+        "Bosses",
+        "playthrough",
+        "Overworld",
+        "Whirlpools",
+        "Maps"
+      ],
+      "recorded": "2026-10-30",
+      "sha256": "cde3ff7ca48bb4323a6b16da0372ca4dcd8e3fbb4ee7533266671067545e9824",
+      "version": "1.5.7-u"
+    }
+  }
+}

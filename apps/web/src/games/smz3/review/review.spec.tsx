@@ -335,7 +335,7 @@ describe("a log that is refused", () => {
 
   it("another game's", async () => {
     const error = await refused(alttprFile("9MQ9gO1wMD"));
-    expect(error).toHaveTextContent("alttpr.com spoiler log");
+    expect(error).toHaveTextContent("A Link to the Past spoiler log");
   });
 
   it("a ROM or any other file", async () => {

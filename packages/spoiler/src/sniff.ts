@@ -28,6 +28,17 @@ const MAP_RANDO =
 // number and patch.
 const ALTTPR_JSON = /^\{\s*(?:"meta"\s*:|"logic"\s*:\s*\d+\s*,\s*"patch"\s*:)/;
 const ALTTPR_NAME = /^alttpr - /i;
+// The Door Randomizer's text log opens with its meta_to_file line, its
+// Overworld fork's with its own (DR 1.5.8 BaseClasses.py:2761, OWR 0.8.0.0
+// :3335). Its JSON (Spoiler.to_json, :2718) leads with the entrance and door
+// lists, which may run past any head, so a JSON one is told by the keys only
+// DR writes, or by the name a site saves it under: avianart's Download
+// Spoiler (`alttprcustom - DR__<hash>_Spoiler.txt`) or DR's own output
+// (`DR_<seed>_Spoiler.txt`, `OR_…`).
+const DOOR_TEXT =
+  /^ALttP (?:Dungeon Randomizer Version \S+|Overworld Randomizer)\s+-\s+Seed: /;
+const DOOR_JSON_KEYS = /"(?:Doors|Lobbies|DoorTypes|Whirlpools)"\s*:\s*\[/;
+const DOOR_NAME = /^(?:alttprcustom - )?(?:DR|OR)_/i;
 // samus.link's site writes `- <title>` as a YAML sequence, its API `Game: <title>`.
 const SAMUS_LINK_TITLE = /^(?:- |Game: )(SMZ3|SM) \d/;
 const SAMUS_LINK_API = /^\{\s*"seed"\s*:\s*\{/;
@@ -49,6 +60,9 @@ export function sniffSpoiler(head: string, fileName = ""): Sniffed {
     head.startsWith(BYTE_ORDER_MARK) ? head.slice(1) : head
   ).trimStart();
   if (ARCHIPELAGO.test(text)) return { known: false, what: "archipelago" };
+  if (DOOR_TEXT.test(text)) {
+    return { format: "dr", game: "alttpr", known: true };
+  }
   const title = SAMUS_LINK_TITLE.exec(text);
   if (title) {
     return title[1] === "SM"
@@ -60,6 +74,9 @@ export function sniffSpoiler(head: string, fileName = ""): Sniffed {
       return /"gameId"\s*:\s*"sm"/.test(text)
         ? { known: false, what: "smz3-sm" }
         : { format: "smz3-api", game: "smz3", known: true };
+    }
+    if (DOOR_JSON_KEYS.test(text) || DOOR_NAME.test(fileName)) {
+      return { format: "dr", game: "alttpr", known: true };
     }
     if (ALTTPR_JSON.test(text)) {
       return { format: null, game: "alttpr", known: true };

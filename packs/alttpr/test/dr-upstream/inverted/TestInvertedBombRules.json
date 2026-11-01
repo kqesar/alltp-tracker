@@ -1,0 +1,38 @@
+{
+  "code": [
+    {
+      "line": 24,
+      "name": "testInvertedBombRulesAreComplete"
+    },
+    {
+      "line": 31,
+      "name": "testInvalidEntrancesAreNotUsed"
+    },
+    {
+      "line": 35,
+      "name": "testInvalidEntrances"
+    }
+  ],
+  "file": "test/inverted/TestInvertedBombRules.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "inverted",
+    "source": "test/inverted/TestInverted.py:5@5c44da3",
+    "suite": "inverted"
+  },
+  "suite": "inverted",
+  "tests": [],
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "harness": {
+      "branch": "1.5.8",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  }
+}

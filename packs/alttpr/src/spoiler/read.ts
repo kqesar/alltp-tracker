@@ -1,6 +1,7 @@
-// A spoiler document, vt's or the entrance randomizer's, as the @alltp/spoiler
-// model. The two shapes differ in how they write a name, an item, the
-// playthrough and `Special` (vt.ts, er.ts); everything after that is shared.
+// A spoiler document, vt's, the entrance randomizer's or the Door
+// Randomizer's, as the @alltp/spoiler model. The shapes differ in how they
+// write a name, an item, the playthrough, `Special`, the settings and the
+// starting items (vt.ts, er.ts, dr.ts); everything after that is shared.
 
 import {
   accept,
@@ -15,12 +16,21 @@ import { DUNGEONS } from "../dungeons";
 import { fromUpstream } from "../items";
 import { MEDALLIONS, type Medallion } from "../medallions";
 import { metaReading } from "../seed-file";
+import type { DoorSpoilerFacts } from "./dr";
 import { knownLocationIds } from "./known";
 
 /** What the spoiler says of an item it names. */
 export type ItemRead =
-  /** An item of the pack's: its vt class and its English name. */
-  | { readonly kind: "item"; readonly class: string; readonly name: string }
+  /**
+   * An item of the pack's: its vt class and its English name. The class is
+   * null for an item vt has none for (the Door Randomizer's Fairy, Big
+   * Magic…), shown by name only.
+   */
+  | {
+      readonly kind: "item";
+      readonly class: string | null;
+      readonly name: string;
+    }
   /** An event (`Beat Agahnim 1`): no item, skipped. */
   | { readonly kind: "event" }
   /** An item no table of the pack has: a newer randomizer's. */
@@ -30,7 +40,13 @@ export type ItemRead =
 
 /** How one of the two layouts writes what the shared reading needs. */
 export interface Shape {
-  readonly format: "vt" | "er";
+  readonly format: "vt" | "er" | "dr";
+  /** The top-level keys that are no list of locations. */
+  readonly reserved: ReadonlySet<string>;
+  /** Every location id a name of the log may resolve to. */
+  readonly known: () => ReadonlySet<string>;
+  /** A section's key -> `Placement.area`, or null when it means nothing. */
+  readonly area: (section: string) => string | null;
   /** A location as written -> its name; null when it is another world's. */
   readonly name: (written: string) => string | null;
   /** A location's name -> the pack's id. */
@@ -57,6 +73,13 @@ export interface Shape {
     };
     readonly placements: readonly (readonly [string, string])[];
   };
+  /** The settings the document's `meta` states, for the seed id given. */
+  readonly settings: (
+    meta: unknown,
+    seed: string | null,
+  ) => SeedSettingsReading | null;
+  /** The starting items, as written. */
+  readonly start: (doc: Readonly<Record<string, unknown>>) => string[];
 }
 
 /** A shop of the seed and what it sells. */
@@ -86,6 +109,8 @@ export interface AlttprSpoilerExtra {
   /** Each dungeon's boss, when the seed shuffles them; else null. */
   readonly bosses: Readonly<Record<string, string>> | null;
   readonly shops: readonly SpoilerShop[];
+  /** A Door Randomizer log's own facts (dr.ts); absent from alttpr.com's. */
+  readonly door?: DoorSpoilerFacts;
 }
 
 export type AlttprSpoilerLog = SpoilerLog<AlttprSpoilerExtra>;
@@ -115,10 +140,11 @@ const ITEM_KEY = /^item_(\d+)$/;
 /** The sections of locations a document holds, with the key naming each. */
 export function sectionsOf(
   doc: Readonly<Record<string, unknown>>,
+  reserved: ReadonlySet<string> = RESERVED_KEYS,
 ): [string, Record<string, string>][] {
   const sections: [string, Record<string, string>][] = [];
   for (const [key, value] of Object.entries(doc)) {
-    if (RESERVED_KEYS.has(key)) continue;
+    if (reserved.has(key)) continue;
     const parsed = STRINGS.safeParse(value);
     if (parsed.success) sections.push([key, parsed.data]);
   }
@@ -128,7 +154,7 @@ export function sectionsOf(
 const medallionOf = (word: string | null): Medallion | null =>
   MEDALLIONS.find((medallion) => medallion === word) ?? null;
 
-const stringsOf = (value: unknown): Record<string, string> | null => {
+export const stringsOf = (value: unknown): Record<string, string> | null => {
   const parsed = STRINGS.safeParse(value);
   return parsed.success ? parsed.data : null;
 };
@@ -145,9 +171,9 @@ export function readLog(
 ): SpoilerResult<AlttprSpoilerLog> {
   const special = shape.special(stringsOf(doc.Special) ?? {});
   const rows: { area: string | null; item: string; location: string }[] = [
-    ...sectionsOf(doc).flatMap(([area, section]) =>
+    ...sectionsOf(doc, shape.reserved).flatMap(([area, section]) =>
       Object.entries(section).map(([location, item]) => ({
-        area: shape.format === "vt" ? area : null,
+        area: shape.area(area),
         item,
         location,
       })),
@@ -159,7 +185,7 @@ export function readLog(
     })),
   ];
 
-  const known = knownLocationIds();
+  const known = shape.known();
   const placements: Omit<Placement, "sphere">[] = [];
   const skipped: string[] = [];
   const unknown: string[] = [];
@@ -184,7 +210,8 @@ export function readLog(
     seen.add(id);
     placements.push({
       area: row.area,
-      item: fromUpstream(item.class)?.item ?? null,
+      item:
+        item.class === null ? null : (fromUpstream(item.class)?.item ?? null),
       itemName: item.name,
       location: id,
       locationName: name,
@@ -218,7 +245,6 @@ export function readLog(
     if (prize?.item != null) prizes[dungeon.id] = prize.item;
   }
 
-  const equipped = stringsOf(doc.Equipped);
   const bosses = bossShuffle ? stringsOf(doc.Bosses) : null;
   const shops = SHOPS.parse(doc.Shops).flatMap((shop) => {
     const items = Object.entries(shop)
@@ -242,7 +268,7 @@ export function readLog(
         turtleRock: medallionOf(special.medallions.turtleRock),
       },
       prizes,
-      settings: metaReading(doc.meta, seed.id),
+      settings: shape.settings(doc.meta, seed.id),
       shops,
     },
     format: shape.format,
@@ -254,6 +280,17 @@ export function readLog(
     seed,
     skipped,
     spheres,
-    start: Object.values(equipped ?? {}).map(shape.describeItem),
+    start: shape.start(doc).map(shape.describeItem),
   });
 }
+
+/** What vt's and the entrance randomizer's logs share: alttpr.com's own. */
+export const ALTTPR_COM: Pick<
+  Shape,
+  "known" | "reserved" | "settings" | "start"
+> = {
+  known: knownLocationIds,
+  reserved: RESERVED_KEYS,
+  settings: metaReading,
+  start: (doc) => Object.values(stringsOf(doc.Equipped) ?? {}),
+};

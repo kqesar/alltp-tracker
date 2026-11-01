@@ -5,6 +5,11 @@
 // tables.
 
 import {
+  DOOR_TARGETS,
+  type DrEntrancePool,
+  type DrShuffle,
+  drEntrancePool,
+  ENTRANCES,
   type EntranceLink,
   type EntrancePool,
   type EntranceTarget,
@@ -12,9 +17,13 @@ import {
   linksOf,
   type MapMarker,
   type OverworldEntrance,
+  owrEntrancePool,
   PLACE_OF_LOCATION,
-  TARGETS,
 } from "@alltp/pack-alttpr";
+import {
+  doorPoolSettingsOf,
+  doorShuffleOf,
+} from "@/games/alttpr/data/doorRando";
 import {
   entrancesKnown,
   portedShuffleOf,
@@ -24,16 +33,50 @@ import {
 /** The pools made so far, by shuffle and world, each made once. */
 const pools = new Map<string, EntrancePool>();
 
+/** A Door Randomizer run's pool, by what it reads, each made once. */
+const doorPools = new Map<string, DrEntrancePool>();
+
 /**
  * The entrances a run shuffles, or null when the assistant has none for its
  * shuffle or world (`entrancesKnown`): the pack's `entrancePool` of the
  * run's simple, restricted, full or crossed shuffle in the Open, Retro
  * (Open's with its take-any caves) or Standard world. Insanity parts a door
  * from its way out, and Inverted runs tables of its own: not modelled yet.
+ * A Door Randomizer run's is DR's own (the pack's `drEntrancePool`), in
+ * any world; an Overworld Randomizer run's, the fork's (`owrEntrancePool`).
  */
 export const poolOf = (settings: RunSettings): EntrancePool | null => {
+  if (!entrancesKnown(settings)) return null;
+  const door = doorShuffleOf(settings);
+  if (door !== undefined) {
+    const read = doorPoolSettingsOf(settings);
+    // The fork's start house is the Big Bomb Shop where its screen flips
+    // (is_bombshop_start), the towers trade exits where both of theirs do
+    // (is_atgt_swapped, which Swapped's pairs read), and District's pools
+    // read every screen's world: Inverted's, not known once Mixed may flip
+    // them, nor while an OWR run's Mixed is not known
+    const inverted =
+      settings.randomizer === "owr" && settings.owMixed !== false
+        ? undefined
+        : read.mode === "inverted";
+    const key = JSON.stringify([door, read, settings.randomizer, inverted]);
+    let found = doorPools.get(key);
+    if (found === undefined) {
+      found =
+        settings.randomizer === "owr"
+          ? owrEntrancePool(door, {
+              ...read,
+              bombShopStart: inverted,
+              tilesSwapped: inverted,
+              towersTraded: inverted,
+            })
+          : drEntrancePool(door as DrShuffle, read);
+      doorPools.set(key, found);
+    }
+    return found;
+  }
   const shuffle = portedShuffleOf(settings);
-  if (shuffle === undefined || !entrancesKnown(settings)) return null;
+  if (shuffle === undefined) return null;
   const world =
     settings.mode === "standard" || settings.mode === "retro"
       ? settings.mode
@@ -51,14 +94,10 @@ export const poolOf = (settings: RunSettings): EntrancePool | null => {
   return pool;
 };
 
-// Every pool's entrances are among the crossed shuffle's of either world
-const ENTRANCE_BY_ID = new Map(
-  [
-    ...entrancePool("crossed", "open").entrances,
-    ...entrancePool("crossed", "standard").entrances,
-  ].map((e) => [e.id, e]),
-);
-const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
+// Every pool's entrances are among the overworld's, the Inverted world's
+// names too (DR's pools)
+const ENTRANCE_BY_ID = new Map(ENTRANCES.map((e) => [e.id, e]));
+const TARGET_BY_ID = new Map(DOOR_TARGETS.map((t) => [t.id, t]));
 
 /** An entrance of the shuffle by id, or undefined. */
 export const entranceById = (id: string): OverworldEntrance | undefined =>
@@ -73,6 +112,52 @@ export const targetsFor = (
   pool: EntrancePool,
   entrance: OverworldEntrance,
 ): readonly EntranceTarget[] => pool.targetsOf.get(entrance.id) ?? [];
+
+/** The notes a run shows: those made, and those they tell. */
+export interface ShownNotes {
+  /** Each entrance's target known: noted, or told by a note. */
+  readonly notes: Readonly<Record<string, string>>;
+  /** Each entrance a note tells (`derived`), by the noted one telling it. */
+  readonly derived: ReadonlyMap<string, string>;
+}
+
+const NOTHING_DERIVED: ReadonlyMap<string, string> = new Map();
+const shown = new WeakMap<
+  Readonly<Record<string, string>>,
+  { readonly pool: EntrancePool; readonly value: ShownNotes }
+>();
+
+/**
+ * The entrances a run knows: those noted, and those the pool says their
+ * notes tell (the pack's `derived`: the Overworld Randomizer's Swapped,
+ * whose doors trade targets two by two, so a door noted to another's
+ * target tells where that other door leads). Only the notes made are
+ * kept: forgetting or undoing one forgets what it told, and the world
+ * reads the same pairs from them (the pack's `owrSwapPartners`). The same
+ * object for the same notes, so a selector reading it re-renders nothing.
+ */
+export const shownNotes = (
+  pool: EntrancePool,
+  noted: Readonly<Record<string, string>>,
+): ShownNotes => {
+  const found = shown.get(noted);
+  if (found?.pool === pool) return found.value;
+  const derived = pool.derived?.(noted);
+  const value: ShownNotes =
+    derived === undefined || derived.size === 0
+      ? { derived: NOTHING_DERIVED, notes: noted }
+      : {
+          derived: new Map([...derived].map(([id, d]) => [id, d.from])),
+          notes: {
+            ...noted,
+            ...Object.fromEntries(
+              [...derived].map(([id, d]) => [id, d.target]),
+            ),
+          },
+        };
+  shown.set(noted, { pool, value });
+  return value;
+};
 
 /**
  * What noting `target` at `entrance` notes: it, and what the shuffle
@@ -95,7 +180,10 @@ export const notesFor = (
  * Mode): each door or hole to its target, with its partners (`notesFor`),
  * when the shuffle may give it that target. Of targets alike, which the
  * game loads by one entrance, it keeps the one noted there, else takes the
- * first noted nowhere. The game wins over a note it contradicts.
+ * first noted nowhere. The game wins over a note it contradicts. Nothing
+ * in a decoupled shuffle (DR's insanity): Link coming out of a cave's exit
+ * by a door tells where the exit leads, not where that door does, and the
+ * game shows both alike.
  */
 export const gameNotes = (
   pool: EntrancePool,
@@ -103,6 +191,7 @@ export const gameNotes = (
   links: readonly EntranceLink[],
 ): Record<string, string> => {
   const notes: Record<string, string> = {};
+  if (pool.decoupled === true) return notes;
   for (const { entrance, targets } of linksOf(links)) {
     const may = new Set(pool.targetsOf.get(entrance)?.map((t) => t.id));
     const fits = targets.filter((target) => may.has(target));
@@ -266,12 +355,20 @@ export const KIND_HEADINGS: Readonly<Record<EntranceTarget["kind"], string>> = {
 
 /**
  * An entrance's marker in words, for its accessible name and its tooltip:
- * "Kakariko Shop: leads to Elder House (East)", "…: not known yet".
+ * "Kakariko Shop: leads to Elder House (East)", "…: not known yet", and
+ * for a note told by another (`from`), "…, swapped with Library".
  */
 export const entranceText = (
   entrance: OverworldEntrance,
   target: EntranceTarget | undefined,
+  from?: OverworldEntrance,
 ): string =>
   `${entrance.label}${entrance.kind === "hole" ? " (hole)" : ""}: ${
-    target === undefined ? "not known yet" : `leads to ${targetText(target)}`
+    target === undefined
+      ? "not known yet"
+      : `leads to ${targetText(target)}${from === undefined ? "" : `, ${swapText(from)}`}`
   }`;
+
+/** A told note's origin in words: "swapped with Kakariko Shop". */
+export const swapText = (from: OverworldEntrance): string =>
+  `swapped with ${from.label}${from.kind === "hole" ? " (hole)" : ""}`;

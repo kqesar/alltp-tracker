@@ -1,0 +1,1 @@
+https://hyruletownhall.com/seed/DR_78388fdd-435c-4961-8fae-0500424d5bf5.bps, 2026-10-30: the settings decoder's bytes alone, re-encoded (scripts/record-dr-seeds.mjs); checksums zeroed

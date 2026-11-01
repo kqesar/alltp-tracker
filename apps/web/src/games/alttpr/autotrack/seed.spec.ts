@@ -1,3 +1,4 @@
+import { avianartReading } from "@alltp/pack-alttpr";
 import { describe, expect, it } from "vitest";
 import { readingOf, seedMemory } from "@/games/alttpr/autotrack/fixtures";
 import {
@@ -7,7 +8,14 @@ import {
   seedLineText,
   switchedText,
 } from "@/games/alttpr/autotrack/seed";
-import { getPreset, logicModelled } from "@/games/alttpr/data/presets";
+import {
+  getPreset,
+  HIDDEN_ENTRANCES,
+  logicModelled,
+  type RunSettings,
+  unmodelledReasons,
+} from "@/games/alttpr/data/presets";
+import keydrop from "../../../../../../packs/alttpr/test/dr-seeds/avianart-C2BdrZOiV.json?raw";
 import {
   type SeedRom,
   writeSeedSettings,
@@ -443,6 +451,61 @@ describe("checkSeed", () => {
     });
   });
 
+  it("switches a Mystery run to a Door Randomizer's Mystery seed, never revealing into it", () => {
+    const seed = {
+      ...mysterySeed(),
+      logic: { known: true, value: "HybridMajorGlitches" },
+      randomizer: { kind: "door", overworld: false, version: "1.5.6" },
+    } as const;
+
+    expect(checkSeed(seed, run("mystery"))).toMatchObject({
+      kind: "differs",
+      presetId: "mystery",
+      settings: { glitches: "hybrid_major_glitches", randomizer: "dr" },
+    });
+  });
+
+  it("hides the entrances of a DR seed whose shuffle this version does not know", () => {
+    // A recorded DR 1.5.6 meta, its `shuffle` a newer release's word, or
+    // District on a seed of DR itself (OWR alone has it)
+    const reading = (shuffle: string) => {
+      const json = JSON.parse(keydrop);
+      json.response.spoiler.meta.shuffle = shuffle;
+      const seed = avianartReading(json, "C2BdrZOiV");
+      if (seed === null) throw new Error("expected a reading");
+      return seed;
+    };
+    const crosskeys = getPreset("door-crosskeys").settings;
+    const vanilla = { ...crosskeys, entranceShuffle: "none" } as const;
+    for (const shuffle of ["newmode", "district"]) {
+      const check = checkSeed(reading(shuffle), {
+        presetId: "door-crosskeys",
+        settings: vanilla,
+      });
+      if (check.kind !== "differs") throw new Error(`expected differs`);
+      expect(check.settings.hidden).toEqual(["entranceShuffle"]);
+      expect(check.settings.doorEntrances).toBeUndefined();
+      expect(unmodelledReasons(check.settings as RunSettings)).toEqual([
+        HIDDEN_ENTRANCES,
+      ]);
+      // A run that hides them already keeps them so
+      expect(
+        checkSeed(reading(shuffle), {
+          presetId: "door-crosskeys",
+          settings: check.settings,
+        }),
+      ).toMatchObject({ kind: "same" });
+    }
+    // A shuffle it knows hides nothing
+    const known = checkSeed(reading("lite"), {
+      presetId: "door-crosskeys",
+      settings: vanilla,
+    });
+    if (known.kind !== "differs") throw new Error("expected differs");
+    expect(known.settings.hidden).toBeUndefined();
+    expect(known.settings.doorEntrances).toBe("lite");
+  });
+
   it("switches a Mystery run whose glitches are set to another logic's seed", () => {
     const seed = {
       ...mysterySeed(),
@@ -529,6 +592,21 @@ describe("describeRun", () => {
         swordless: false,
       }),
     ).toBe("Swordless (Open, Ganon, 7/7, swords)");
+  });
+
+  it("names a Door Randomizer run's entrances in DR's words", () => {
+    const dr = getPreset("door-randomizer").settings;
+    expect(
+      describeRun("door-randomizer", { ...dr, doorEntrances: "lite" }),
+    ).toBe("Door Randomizer (Open, Ganon, 7/7, Lite entrances)");
+    expect(
+      describeRun("door-crosskeys", {
+        ...getPreset("door-crosskeys").settings,
+        enemyShuffle: "none" as const,
+        entranceShuffle: "none",
+      }),
+    ).toMatch(/vanilla entrances/);
+    expect(describeRun("door-randomizer", dr)).not.toMatch(/entrances/);
   });
 
   it("leaves out what a Mystery run has not found", () => {

@@ -104,7 +104,10 @@ export const stampTimeline = (
 
   if (before.checked !== after.checked) {
     for (const id of Object.keys(after.checked)) {
-      if (!before.checked[id]) edit()[`check:${id}`] = stamp;
+      // A Door Randomizer location is no find the timeline dates (`isTimelineKey`)
+      if (!before.checked[id] && MAP_LOCATIONS.has(id)) {
+        edit()[`check:${id}`] = stamp;
+      }
     }
     for (const id of Object.keys(before.checked)) {
       if (!after.checked[id]) delete edit()[`check:${id}`];
@@ -118,7 +121,9 @@ const ITEM_KEY = /^item:([a-z0-9]+)(?::(\d+))?$/;
 
 /**
  * Whether this version knows a timeline key: an item it dates, at a level
- * it reaches, or a location of the map.
+ * it reaches, or a location of the map. A Door Randomizer location (a pot,
+ * an enemy, a shop item) is none: dating hundreds of them would widen every
+ * find's key in a link (share.ts), for a list no review reads yet.
  */
 export const isTimelineKey = (key: string): boolean => {
   if (key.startsWith("check:")) return MAP_LOCATIONS.has(key.slice(6));

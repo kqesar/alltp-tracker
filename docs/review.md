@@ -85,11 +85,15 @@ follows its rule: **refuse on any contradiction, verified when the seeds are equ
 | Evidence | Run | Log |
 |---|---|---|
 | Seed | `Progress.seed` (the ROM's `VT <hash>`, or the seed the run started from) | the seed file's `hash`, or the `_<hash>` in the file's name (said "matched by its file name") |
+| Seed of a Door Randomizer log | the ROM title's `<team>_<player>_<seed>` autotracking records, or an avianart hash for a run started from an avianart link | the seed the log's first line or `meta` gives in the ROM title's form, or avianart's hash (its file name or permalink): the one of the run's kind, `fileSeed` |
 | Settings | the run type's compared settings, through the seed import's `checkSeed` | the log's `meta`, read as a seed file's |
 | Medallions | the board's two pads, when set | `Special` |
 | Prizes | each dungeon's reward, when set | `<Dungeon> - Prize` |
 
-A mystery run's hidden settings are not compared. A run that knows no seed (tracked by hand) or a
+A Door Randomizer log adds which randomizer wrote it (a DR log on an alttpr.com run, or the reverse,
+is refused) and the settings the game's ROM states exactly: doors shuffled or not, enemy drops,
+pottery or not, shops, take-any caves, enemy shuffle. Which door shuffle or which pottery mode a run
+read from its ROM only approximates, so those refuse nothing. A mystery run's hidden settings are not compared. A run that knows no seed (tracked by hand) or a
 log that names none (a renamed file) opens "Not verified", with how many settings agreed.
 
 ## Memory only
@@ -207,6 +211,9 @@ readings instead:
 | `entrances` | where each entrance led is not stamped, and the final ones would leak |
 | `no-logic` | the run's **Glitches** or the log's `meta.logic` is No Logic: the seed promises no route, so no place is ever "in logic" and nothing waited for the logic. Solving it with the glitches it was played with would time what was reachable, which is no promise the seed made: the waits would read as the logic's when they are not, so they are refused |
 | `not-modelled` | the pack does not model the run's logic: settings hidden (Mystery), bosses shuffled (the log's `Bosses`), a log whose `meta.logic` is not the run's **Glitches** (vt's names, `RandomizerController.php:110-116`). Overworld Glitches, Hybrid Major Glitches and Major Glitches are the pack's: their waits are solved in their own logic, as the map is (`packSettings`), each held by its real seed's playthrough taken in order (`sweep.spec.ts`: nothing in logic before the log's own playthrough has it, and the NoGlitches logic would not have it) |
+| `doors` | the log is a Door Randomizer's whose doors were shuffled: where each led is not stamped |
+| `overworld` | the log is an Overworld Randomizer's whose whirlpools, flute spots, crossed edges or Mixed flips were shuffled: where each led is not stamped, and the sweep, which holds no note, would read them vanilla |
+| `door-logic` (after the causes above) | the log is a Door Randomizer's or its Overworld fork's whose run is not solved in that randomizer's own world (`doorLogic`; a guard: every such run, an OWR seed the fork's world does not hold, shuffled bosses or hidden settings, is `not-modelled` above, since alttpr.com's v31 would say "in logic" from rules the seed was not made with), or an item the seed needed lay at one of DR's places (a key drop, a pot, an enemy drop, a bonk drop, a shop item), which the run keeps no time for |
 | `race-mode` | fewer than half the needed finds are matched by place, and places outside dungeons are stamped but none inside: Race Mode in an earlier version did not read a dungeon's chests (it does now, v2.0's dungeon-locations) |
 | `by-hand` | fewer than half the needed finds are matched by place otherwise: the times are clicks |
 | `no-times` | nothing needed has a time |
@@ -238,6 +245,20 @@ readings instead:
    line, progression and hearts by item, and how many other places held rupees, arrows or the like.
 8. **Details by step**: the playthrough folded (Step, Item, Where, In logic from, Taken, Waited).
 9. The seed's facts (medallions, prizes, starting items, bosses when shuffled).
+
+A Door Randomizer log (DR's own text or JSON, [read by the pack](../packs/alttpr/README.md#the-door-randomizers-logs))
+reads the same way. A run solved in DR's own world (the pack's [Door Randomizer](../packs/alttpr/README.md#the-door-randomizer)
+section, `doorLogic`) is swept through that world: `useSweep.ts` loads its chunk first and hands its solver to
+`sweepRun`, which solves each instant there with the log's keys counted where it put them, as for vt, but under
+the seed's own key holding, never keysanity's: DR's key rules depend on it (strict logic applies only to wild
+keys, `Rules.py:2349-2351`, and its key analysis reads the shuffles), where vt's do not. Its waits
+are hidden (`door-logic`) where that world does not hold the run or a needed item lay at one of DR's places (a bonk drop among them), and while its doors (`doors`) or its fork's overworld (`overworld`) were shuffled;
+a static key logic seed is solved in that world too (its port, `door-world/static.ts`). Its key drops, pots, enemy drops and shop
+items are places of the board when the run's settings shuffle them: one the run took reads "taken, not timed"
+(the timeline never dates them, `isTimelineKey`, which keeps a shared link short), one it did not "never
+taken", and one its settings leave out is not known. The seed's facts add which randomizer and version
+wrote it and the title screen's code. Nothing here reads more than a run in Race Mode already lets the
+review (the review stays closed there): the log is the player's own file, read after the run.
 
 An entrance randomizer log reads the same way, with the waits hidden. The timeline's `check:` rows
 gain "→ the item held".

@@ -1,0 +1,670 @@
+{
+  "code": [
+    {
+      "line": 84,
+      "name": "test_hyrule_castle_open_mode"
+    },
+    {
+      "line": 110,
+      "name": "test_turtle_rock_front_access"
+    },
+    {
+      "line": 126,
+      "name": "test_requires_vanilla_doors"
+    },
+    {
+      "line": 135,
+      "name": "test_requires_forbidden_special_enemies"
+    }
+  ],
+  "file": "test/TestStaticKeyLogic.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "items": [
+      "Beat Agahnim 1",
+      "Beat Agahnim 2",
+      "Big Key (Desert Palace)",
+      "Big Key (Eastern Palace)",
+      "Big Key (Ganons Tower)",
+      "Big Key (Ice Palace)",
+      "Big Key (Misery Mire)",
+      "Big Key (Palace of Darkness)",
+      "Big Key (Skull Woods)",
+      "Big Key (Swamp Palace)",
+      "Big Key (Thieves Town)",
+      "Big Key (Tower of Hera)",
+      "Big Key (Turtle Rock)",
+      "Blue Boomerang",
+      "Blue Pendant",
+      "Bombos",
+      "Book of Mudora",
+      "Bottle",
+      "Bug Catching Net",
+      "Cane of Byrna",
+      "Cane of Somaria",
+      "Cape",
+      "Crystal 1",
+      "Crystal 2",
+      "Crystal 3",
+      "Crystal 4",
+      "Crystal 5",
+      "Crystal 6",
+      "Crystal 7",
+      "Ether",
+      "Fire Rod",
+      "Flippers",
+      "Green Pendant",
+      "Hammer",
+      "Hookshot",
+      "Ice Rod",
+      "Lamp",
+      "Magic Mirror",
+      "Magic Powder",
+      "Magic Upgrade (1/2)",
+      "Moon Pearl",
+      "Mushroom",
+      "Ocarina",
+      "Pegasus Boots",
+      "Progressive Bow",
+      "Progressive Glove",
+      "Progressive Shield",
+      "Progressive Sword",
+      "Quake",
+      "Red Boomerang",
+      "Red Pendant",
+      "Shovel"
+    ],
+    "keyLogic": "static",
+    "keys": {
+      "Ganons Tower": "Small Key (Ganons Tower)",
+      "Hyrule Castle": "Small Key (Escape)",
+      "Ice Palace": "Small Key (Ice Palace)",
+      "Misery Mire": "Small Key (Misery Mire)",
+      "Palace of Darkness": "Small Key (Palace of Darkness)",
+      "Turtle Rock": "Small Key (Turtle Rock)"
+    },
+    "mode": "open",
+    "source": "test/TestStaticKeyLogic.py:14",
+    "starts": [
+      "Ganons Tower Portal",
+      "Hyrule Castle South Portal",
+      "Turtle Rock Main Portal",
+      "Palace of Darkness Portal",
+      "Ice Portal",
+      "Mire Portal"
+    ]
+  },
+  "tests": [
+    {
+      "cases": [
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 4,
+          "line": 43,
+          "location": "Ganons Tower - Map Chest"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 4,
+          "line": 44,
+          "location": "Ganons Tower - Randomizer Room - Top Left"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 4,
+          "line": 45,
+          "location": "Ganons Tower - Compass Room - Top Left"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 46,
+          "location": "Ganons Tower - Firesnake Room"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 47,
+          "location": "Ganons Tower - Bob's Chest"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 48,
+          "location": "Ganons Tower - Big Key Chest"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 0,
+          "line": 49,
+          "location": "Ganons Tower - Mini Helmasaur Room - Left"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 50,
+          "location": "Ganons Tower - Pre-Moldorm Chest"
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 4,
+          "line": 51,
+          "location": "Ganons Tower - Validation Chest"
+        }
+      ],
+      "line": 41,
+      "name": "test_ganons_tower_chest_rules"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 57,
+          "location": "Ganons Tower - Randomizer Room - Top Left",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Bottom Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 2,
+          "line": 58,
+          "location": "Ganons Tower - Firesnake Room",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Bottom Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 4,
+          "line": 59,
+          "location": "Ganons Tower - Compass Room - Top Left",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Bottom Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 64,
+          "location": "Ganons Tower - Map Chest",
+          "placed": {
+            "Ganons Tower - Map Chest": "Big Key (Ganons Tower)"
+          }
+        }
+      ],
+      "line": 53,
+      "name": "test_ganons_tower_big_key_conditionals"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Bob's Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Bob's Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Bob's Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Bob's Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Bob's Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Big Key Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Big Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Big Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Big Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Big Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Big Chest": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Big Key Room - Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Big Key Room - Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Big Key Room - Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Big Key Room - Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Big Key Room - Right": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Randomizer Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Bob's Chest",
+          "placed": {
+            "Ganons Tower - Compass Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Chest",
+          "placed": {
+            "Ganons Tower - Compass Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Chest",
+          "placed": {
+            "Ganons Tower - Compass Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Left",
+          "placed": {
+            "Ganons Tower - Compass Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        },
+        {
+          "dungeon": "Ganons Tower",
+          "keys": 3,
+          "line": 76,
+          "location": "Ganons Tower - Big Key Room - Right",
+          "placed": {
+            "Ganons Tower - Compass Room - Top Left": "Big Key (Ganons Tower)"
+          }
+        }
+      ],
+      "line": 68,
+      "name": "test_ganons_tower_bottom_always_three_keys"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Hyrule Castle",
+          "keys": 1,
+          "line": 81,
+          "location": "Hyrule Castle - Boomerang Chest"
+        },
+        {
+          "dungeon": "Hyrule Castle",
+          "keys": 1,
+          "line": 82,
+          "location": "Hyrule Castle - Zelda's Chest"
+        },
+        {
+          "dungeon": "Hyrule Castle",
+          "keys": 0,
+          "line": 83,
+          "location": "Hyrule Castle - Map Chest"
+        }
+      ],
+      "line": 80,
+      "name": "test_hyrule_castle_open_mode"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Palace of Darkness",
+          "keys": 6,
+          "line": 88,
+          "location": "Palace of Darkness - Big Key Chest"
+        },
+        {
+          "dungeon": "Palace of Darkness",
+          "keys": 4,
+          "line": 89,
+          "location": "Palace of Darkness - Compass Chest"
+        },
+        {
+          "dungeon": "Palace of Darkness",
+          "keys": 3,
+          "line": 92,
+          "location": "Palace of Darkness - Big Key Chest",
+          "placed": {
+            "Palace of Darkness - Big Key Chest": "Small Key (Palace of Darkness)"
+          }
+        }
+      ],
+      "line": 86,
+      "name": "test_palace_of_darkness"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 1,
+          "line": 99,
+          "location": "Turtle Rock - Chain Chomps"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 4,
+          "line": 100,
+          "location": "Turtle Rock - Big Key Chest"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 2,
+          "line": 101,
+          "location": "Turtle Rock - Big Chest"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 2,
+          "line": 102,
+          "location": "Turtle Rock - Crystaroller Room"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 3,
+          "line": 103,
+          "location": "Turtle Rock - Eye Bridge - Top Left"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 4,
+          "line": 104,
+          "location": "Turtle Rock - Boss"
+        },
+        {
+          "dungeon": "Turtle Rock",
+          "keys": 2,
+          "line": 107,
+          "location": "Turtle Rock - Big Key Chest",
+          "placed": {
+            "Turtle Rock - Big Key Chest": "Big Key (Turtle Rock)"
+          }
+        }
+      ],
+      "line": 96,
+      "name": "test_turtle_rock_front_access"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Ice Palace",
+          "keys": 1,
+          "line": 114,
+          "location": "Ice Palace - Boss"
+        },
+        {
+          "dungeon": "Ice Palace",
+          "keys": 2,
+          "line": 115,
+          "location": "Ice Palace - Boss",
+          "without": ["Cane of Somaria"]
+        }
+      ],
+      "line": 112,
+      "name": "test_kholdstare_somaria_alternative"
+    },
+    {
+      "cases": [
+        {
+          "dungeon": "Misery Mire",
+          "keys": 3,
+          "line": 119,
+          "location": "Misery Mire - Compass Chest"
+        },
+        {
+          "dungeon": "Misery Mire",
+          "keys": 2,
+          "line": 122,
+          "location": "Misery Mire - Compass Chest",
+          "placed": {
+            "Misery Mire - Big Key Chest": "Big Key (Misery Mire)"
+          }
+        }
+      ],
+      "line": 117,
+      "name": "test_mire_west_wing"
+    }
+  ],
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  }
+}

@@ -5,9 +5,14 @@
 // room without the Lamp is not yet). The log says where every dungeon key
 // is, so the keys count as held once their place is checked, solved as
 // keysanity solves them: the seed's own key logic, not the board's guess.
+// A Door Randomizer run solved in DR's own world (doorLogic) is replayed
+// through that world (logic/doorWorld.ts, handed in by useSweep.ts once its
+// chunk is loaded), the log's keys counted, but under the seed's own key
+// holding: DR's key rules depend on it, vt's do not.
 // Pure: `sweepRun` is a generator that yields after each solve, so the page
 // runs it in slices (useSweep.ts).
 
+import type { Tri } from "@alltp/engine";
 import {
   type AlttprSettings,
   type AlttprSpoilerLog,
@@ -26,18 +31,32 @@ import {
   toState,
   UNKNOWN_FACT_OF,
 } from "@alltp/pack-alttpr";
+import {
+  DOOR_LOCATION_IDS,
+  doorShuffleOf,
+  doorShuffleSettingsOf,
+  owrNotesOf,
+} from "@/games/alttpr/data/doorRando";
 import { items as freshItems, type ItemState } from "@/games/alttpr/data/items";
 import {
+  doorLogic,
   type Glitches,
   glitchesOf,
   logicModelled,
   noLogicRun,
+  wildItems,
 } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
+import type { DoorSolver } from "@/games/alttpr/logic/doorWorld";
 import { PACK_ITEMS } from "@/games/alttpr/logic/packItems";
 import { findIcon, findName, splitName } from "@/games/alttpr/logic/runLog";
-import { packSettings } from "@/games/alttpr/logic/settings";
-import { fillerOf, trackerInput } from "@/games/alttpr/logic/solution";
+import { drSettingsOf, packSettings } from "@/games/alttpr/logic/settings";
+import {
+  doorAddedOf,
+  doorStateOf,
+  fillerOf,
+  trackerInput,
+} from "@/games/alttpr/logic/solution";
 import type {
   ReviewComparison,
   ReviewedRun,
@@ -69,6 +88,26 @@ export type Hidden =
    */
   | "not-modelled"
   /**
+   * The log is a Door Randomizer's, but its run is not solved in DR's or
+   * its fork's own world (an OWR seed that world does not hold, shuffled
+   * bosses: alttpr.com's v31 would say "in logic" from rules the seed was
+   * not made with), or an item it needed lay at one of DR's places (a key
+   * drop, a pot, an enemy drop, a bonk drop, a shop item), which the run
+   * keeps no time for.
+   */
+  | "door-logic"
+  /**
+   * The log is a Door Randomizer's whose doors were shuffled: the run does
+   * not time where each led.
+   */
+  | "doors"
+  /**
+   * The log is an Overworld Randomizer's whose whirlpools, flute spots,
+   * crossed edges or Mixed flips were shuffled: the run does not time where
+   * each led.
+   */
+  | "overworld"
+  /**
    * The board has finds and the run no timeline at all: opened from a
    * shared link that left it out to stay short, or a save from before the
    * tracker kept one.
@@ -97,6 +136,9 @@ const LOG_LOGIC: Readonly<Record<Glitches | "none", string>> = {
   overworld_glitches: "OverworldGlitches",
 };
 
+/** No overworld notes: what an OWR run's shuffles read before any note. */
+const NO_OVERWORLD_NOTES = {};
+
 const required = (rows: readonly ReviewRow[]) =>
   rows.filter(({ entry }) => entry.placement.sphere !== null);
 
@@ -115,17 +157,36 @@ export const hiddenReason = (
   // First: whatever else holds, the times are to be had where it was played
   if (
     Object.keys(run.timeline).length === 0 &&
-    comparison.rows.some(({ state }) => state === "untimed")
+    comparison.rows.some(
+      ({ entry, state }) =>
+        state === "untimed" && !DOOR_LOCATION_IDS.has(entry.placement.location),
+    )
   ) {
     return "no-timeline";
   }
-  if (settings.dungeonItems === "mcs" || settings.dungeonItems === "full") {
-    return "keysanity";
-  }
+  if (wildItems(settings).keys) return "keysanity";
   if (packSettings(settings).genericKeys) return "generic-keys";
-  if (settings.entranceShuffle !== "none" || log.format === "er") {
+  // DR's own shuffles too (`doorEntrances`: lite, lean, …), which leave
+  // alttpr.com's field at none
+  if (
+    settings.entranceShuffle !== "none" ||
+    doorShuffleOf(settings) !== undefined ||
+    log.format === "er"
+  ) {
     return "entrances";
   }
+  if (doorShuffleSettingsOf(settings) !== undefined) return "doors";
+  // The sweep solves the fork's world without the player's notes, which
+  // hold no time: its shuffled whirlpools, flute spots, crossed edges and
+  // Mixed's flips would read vanilla
+  const overworld = owrNotesOf(settings, NO_OVERWORLD_NOTES);
+  if (
+    overworld?.whirlpools !== undefined ||
+    overworld?.flute !== undefined ||
+    overworld?.crossings !== undefined ||
+    overworld?.flips !== undefined
+  )
+    return "overworld";
   const logic = log.extra.settings?.logic;
   // No route is promised: "in logic from" has no meaning
   if (
@@ -144,6 +205,16 @@ export const hiddenReason = (
     (logic?.known === true && logic.value !== LOG_LOGIC[glitchesOf(settings)])
   ) {
     return "not-modelled";
+  }
+  // After the causes above, which are the more specific
+  if (
+    log.extra.door !== undefined &&
+    (!doorLogic(settings) ||
+      required(comparison.rows).some(({ entry }) =>
+        DOOR_LOCATION_IDS.has(entry.placement.location),
+      ))
+  ) {
+    return "door-logic";
   }
   const found = required(comparison.rows).filter(
     ({ entry, ms }) => entry.find !== null && ms !== null,
@@ -388,12 +459,14 @@ const applyKey = (
  * changed, then each needed item set against those solves. Yields after each
  * solve; returns the sweep.
  * @param endMs - The run timer's reading at the end
+ * @param door - DR's world's solver, for a run solved there (doorLogic)
  */
 export function* sweepRun(
   log: AlttprSpoilerLog,
   run: ReviewedRun,
   comparison: ReviewComparison,
   endMs: number,
+  door?: DoorSolver,
 ): Generator<void, Sweep, void> {
   const settings = packSettings(run.settings);
   // The keys are the log's: solved as wild keys, counted where it put them
@@ -483,8 +556,22 @@ export function* sweepRun(
   const dated = Object.keys(run.timeline).some((key) =>
     key.startsWith("check:"),
   );
-  const solveAt = (input: TrackerInput) =>
-    solveWithKeys(filler, toState(input, seedSettings)).locations();
+  // DR's key rules rest on how the seed holds its keys (strict logic only
+  // with wild keys, Rules.py:2349-2351; the analysis reads the shuffles):
+  // its own settings, the log's keys counted, never keysanity's
+  const doorSettings =
+    door !== undefined && doorLogic(run.settings)
+      ? drSettingsOf(run.settings)
+      : undefined;
+  const solveAt = (input: TrackerInput): Readonly<Record<string, Tri>> => {
+    if (door === undefined || doorSettings === undefined)
+      return solveWithKeys(filler, toState(input, seedSettings)).locations();
+    // DR's dungeons hold more keys than vt's pools: each as the log counts
+    const state = doorStateOf(toState(input, seedSettings), input.keys ?? {});
+    return door
+      .solve(doorSettings, doorAddedOf(run.settings), state)
+      .solution.locations();
+  };
   let solves = 0;
   for (const [index, step] of steps.entries()) {
     if (index > 0) {

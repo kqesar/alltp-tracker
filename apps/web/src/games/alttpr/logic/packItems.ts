@@ -323,6 +323,8 @@ export const RECORDED_LEVELS: ReadonlyMap<string, number> = (() => {
   for (const item of Object.values(PRIZES).flat()) reach(item, 1);
   // A ganonhunt's pieces, which the pieces' cell counts toward its goal
   for (const fact of GOAL_FACTS) reach(fact, 1);
+  // A DR bomb-bag run's bag, which its bombs cell tells (doorStateOf)
+  reach("bombUpgrade", 1);
   return levels;
 })();
 

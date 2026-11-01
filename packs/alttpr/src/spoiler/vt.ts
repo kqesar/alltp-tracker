@@ -20,7 +20,7 @@ import * as z from "zod/mini";
 import { UPSTREAM_ITEMS } from "../items";
 import { locationId } from "../location";
 import ITEM_NAMES from "./item-names.json" with { type: "json" };
-import type { Shape } from "./read";
+import { ALTTPR_COM, type Shape } from "./read";
 
 const WORLD = /^(.+):(\d+)$/;
 
@@ -55,6 +55,9 @@ export const englishName = (itemClass: string): string =>
   itemClass;
 
 export const VT: Shape = {
+  ...ALTTPR_COM,
+  // Its sections are vt's regions
+  area: (section) => section,
   describeItem: (written) => {
     const bare = BARE[written];
     if (bare !== undefined) return bare.name;

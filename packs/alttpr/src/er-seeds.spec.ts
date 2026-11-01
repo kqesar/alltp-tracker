@@ -10,7 +10,7 @@
 // fill may make would lock (`KEY_DOUBTS`). Nor may a location of a later
 // sphere be `yes` yet. Noting more of a seed's doors never takes a `yes`
 // away: what a door not noted hides may only add.
-import { itemValue, type State } from "@alltp/engine";
+import { itemValue, print, type State } from "@alltp/engine";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
@@ -168,6 +168,25 @@ describe("the recordings", () => {
     expect(SEEDS).toHaveLength(10);
     for (const hash of Object.keys(PENDING)) expect(SEEDS).toContain(hash);
   });
+});
+
+describe("a recorded seed's world, entrances all noted", () => {
+  // The bunny's rules are helpers the rules read by name (er-world.ts
+  // addBunnyRules), as the randomizer's paths share each entrance's rule:
+  // written out as text, a crossed seed's paths copied the rules of the
+  // caves before them, up to 10,298 characters in one rule (ry08p2d9y5)
+  // where its longest is now 171
+  for (const hash of SEEDS.filter((h) => !(h in PENDING))) {
+    it(`${hash}: keeps every rule the size of its own path`, () => {
+      const { compiled } = worldOf(erSeed(hash).spoiler);
+      const longest = Math.max(
+        ...[...compiled.exitExprs, ...compiled.locationExprs].map(
+          (e) => print(e).length,
+        ),
+      );
+      expect(longest).toBeLessThan(500);
+    });
+  }
 });
 
 describe("a recorded seed's playthrough, entrances all noted", () => {

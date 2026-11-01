@@ -1,0 +1,419 @@
+{
+  "file": "test/inverted/TestInvertedEntrances.py",
+  "generated": "By packs/alttpr/scripts/import-dr.mjs from the Door Randomizer. Re-import, never edit.",
+  "harness": {
+    "extra": [],
+    "keyLogic": "partial",
+    "logic": "noglitches",
+    "mode": "inverted",
+    "source": "test/inverted/TestInverted.py:5@5c44da3",
+    "suite": "inverted"
+  },
+  "suite": "inverted",
+  "tests": [
+    {
+      "cases": [
+        ["Hyrule Castle Entrance (South)", false, []],
+        [
+          "Hyrule Castle Entrance (South)",
+          false,
+          [],
+          ["Beat Agahnim 1", "Moon Pearl"]
+        ],
+        [
+          "Hyrule Castle Entrance (South)",
+          false,
+          [],
+          ["Beat Agahnim 1", "Progressive Glove"]
+        ],
+        [
+          "Hyrule Castle Entrance (South)",
+          false,
+          ["Progressive Glove"],
+          ["Beat Agahnim 1", "Hammer", "Progressive Glove"]
+        ],
+        ["Hyrule Castle Entrance (South)", true, ["Beat Agahnim 1"]],
+        [
+          "Hyrule Castle Entrance (South)",
+          true,
+          ["Moon Pearl", "Hammer", "Progressive Glove"]
+        ],
+        [
+          "Hyrule Castle Entrance (South)",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Eastern Palace", false, []],
+        ["Eastern Palace", false, [], ["Beat Agahnim 1", "Moon Pearl"]],
+        ["Eastern Palace", false, [], ["Beat Agahnim 1", "Progressive Glove"]],
+        [
+          "Eastern Palace",
+          false,
+          ["Progressive Glove"],
+          ["Beat Agahnim 1", "Hammer", "Progressive Glove"]
+        ],
+        ["Eastern Palace", true, ["Beat Agahnim 1"]],
+        ["Eastern Palace", true, ["Moon Pearl", "Hammer", "Progressive Glove"]],
+        [
+          "Eastern Palace",
+          true,
+          ["Moon Pearl", "Progressive Glove", "Progressive Glove"]
+        ],
+        ["Desert Palace Entrance (South)", false, []],
+        ["Desert Palace Entrance (South)", false, [], ["Book of Mudora"]],
+        [
+          "Desert Palace Entrance (South)",
+          false,
+          [],
+          ["Beat Agahnim 1", "Moon Pearl"]
+        ],
+        [
+          "Desert Palace Entrance (South)",
+          false,
+          [],
+          ["Beat Agahnim 1", "Progressive Glove"]
+        ],
+        [
+          "Desert Palace Entrance (South)",
+          false,
+          ["Progressive Glove"],
+          ["Beat Agahnim 1", "Hammer", "Progressive Glove"]
+        ],
+        [
+          "Desert Palace Entrance (South)",
+          true,
+          ["Book of Mudora", "Beat Agahnim 1"]
+        ],
+        [
+          "Desert Palace Entrance (South)",
+          true,
+          ["Book of Mudora", "Moon Pearl", "Hammer", "Progressive Glove"]
+        ],
+        [
+          "Desert Palace Entrance (South)",
+          true,
+          [
+            "Book of Mudora",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        ["Desert Palace Entrance (North)", false, []],
+        ["Desert Palace Entrance (North)", false, [], ["Book of Mudora"]],
+        ["Desert Palace Entrance (North)", false, [], ["Progressive Glove"]],
+        ["Desert Palace Entrance (North)", false, [], ["Moon Pearl"]],
+        [
+          "Desert Palace Entrance (North)",
+          false,
+          ["Progressive Glove"],
+          ["Beat Agahnim 1", "Hammer", "Progressive Glove"]
+        ],
+        [
+          "Desert Palace Entrance (North)",
+          true,
+          ["Moon Pearl", "Book of Mudora", "Progressive Glove", "Hammer"]
+        ],
+        [
+          "Desert Palace Entrance (North)",
+          true,
+          [
+            "Moon Pearl",
+            "Book of Mudora",
+            "Progressive Glove",
+            "Progressive Glove"
+          ]
+        ],
+        [
+          "Desert Palace Entrance (North)",
+          true,
+          [
+            "Moon Pearl",
+            "Book of Mudora",
+            "Progressive Glove",
+            "Beat Agahnim 1"
+          ]
+        ],
+        ["Tower of Hera", false, []],
+        ["Tower of Hera", false, [], ["Moon Pearl"]],
+        ["Tower of Hera", false, [], ["Hammer"]],
+        [
+          "Tower of Hera",
+          false,
+          ["Progressive Glove"],
+          ["Hookshot", "Progressive Glove"]
+        ],
+        ["Tower of Hera", false, [], ["Ocarina", "Lamp"]],
+        ["Tower of Hera", false, [], ["Ocarina", "Progressive Glove"]],
+        [
+          "Tower of Hera",
+          true,
+          [
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Lamp"
+          ]
+        ],
+        [
+          "Tower of Hera",
+          true,
+          ["Moon Pearl", "Hammer", "Hookshot", "Progressive Glove", "Lamp"]
+        ],
+        [
+          "Tower of Hera",
+          true,
+          ["Moon Pearl", "Hammer", "Hookshot", "Progressive Glove", "Ocarina"]
+        ],
+        [
+          "Tower of Hera",
+          true,
+          ["Moon Pearl", "Hammer", "Beat Agahnim 1", "Ocarina", "Hookshot"]
+        ],
+        ["Agahnims Tower", false, []],
+        ["Agahnims Tower", false, [], ["Ocarina", "Lamp"]],
+        ["Agahnims Tower", false, [], ["Ocarina", "Progressive Glove"]],
+        ["Agahnims Tower", false, [], ["Moon Pearl", "Lamp"]],
+        ["Agahnims Tower", false, [], ["Moon Pearl", "Progressive Glove"]],
+        ["Agahnims Tower", true, ["Lamp", "Progressive Glove"]],
+        ["Agahnims Tower", true, ["Ocarina", "Beat Agahnim 1", "Moon Pearl"]],
+        [
+          "Agahnims Tower",
+          true,
+          ["Ocarina", "Progressive Glove", "Progressive Glove", "Moon Pearl"]
+        ],
+        [
+          "Agahnims Tower",
+          true,
+          ["Ocarina", "Progressive Glove", "Hammer", "Moon Pearl"]
+        ],
+        ["Palace of Darkness", false, []],
+        [
+          "Palace of Darkness",
+          false,
+          [],
+          ["Hammer", "Flippers", "Magic Mirror", "Ocarina"]
+        ],
+        ["Palace of Darkness", true, ["Hammer"]],
+        ["Palace of Darkness", true, ["Flippers"]],
+        [
+          "Palace of Darkness",
+          true,
+          ["Progressive Glove", "Progressive Glove", "Moon Pearl", "Ocarina"]
+        ],
+        [
+          "Palace of Darkness",
+          true,
+          [
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl",
+            "Magic Mirror"
+          ]
+        ],
+        [
+          "Palace of Darkness",
+          true,
+          ["Beat Agahnim 1", "Moon Pearl", "Ocarina"]
+        ],
+        [
+          "Palace of Darkness",
+          true,
+          ["Beat Agahnim 1", "Moon Pearl", "Magic Mirror"]
+        ],
+        ["Swamp Palace", true, []],
+        ["Thieves Town", true, []],
+        ["Skull Woods First Section Door", true, []],
+        ["Skull Woods Final Section", false, []],
+        ["Skull Woods Final Section", false, [], ["Fire Rod"]],
+        ["Skull Woods Final Section", true, ["Fire Rod"]],
+        ["Ice Palace", false, []],
+        ["Ice Palace", false, [], ["Flippers"]],
+        ["Ice Palace", true, ["Flippers"]],
+        ["Misery Mire", false, []],
+        ["Misery Mire", false, [], ["Ocarina", "Magic Mirror"]],
+        ["Misery Mire", false, [], ["Moon Pearl", "Magic Mirror"]],
+        ["Misery Mire", false, [], ["Ether"]],
+        ["Misery Mire", false, [], ["Progressive Sword"]],
+        [
+          "Misery Mire",
+          true,
+          ["Progressive Sword", "Ether", "Beat Agahnim 1", "Magic Mirror"]
+        ],
+        [
+          "Misery Mire",
+          true,
+          [
+            "Progressive Sword",
+            "Ether",
+            "Beat Agahnim 1",
+            "Moon Pearl",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Misery Mire",
+          true,
+          [
+            "Progressive Sword",
+            "Ether",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Magic Mirror"
+          ]
+        ],
+        [
+          "Misery Mire",
+          true,
+          [
+            "Progressive Sword",
+            "Ether",
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Misery Mire",
+          true,
+          [
+            "Progressive Sword",
+            "Ether",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Magic Mirror"
+          ]
+        ],
+        [
+          "Misery Mire",
+          true,
+          [
+            "Progressive Sword",
+            "Ether",
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Ocarina"
+          ]
+        ],
+        ["Turtle Rock", false, []],
+        ["Turtle Rock", false, [], ["Quake"]],
+        ["Turtle Rock", false, [], ["Progressive Sword"]],
+        ["Turtle Rock", false, [], ["Lamp", "Ocarina"]],
+        ["Turtle Rock", false, [], ["Progressive Glove", "Ocarina"]],
+        [
+          "Turtle Rock",
+          true,
+          ["Quake", "Progressive Sword", "Progressive Glove", "Lamp"]
+        ],
+        [
+          "Turtle Rock",
+          true,
+          [
+            "Quake",
+            "Progressive Sword",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Moon Pearl",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Turtle Rock",
+          true,
+          [
+            "Quake",
+            "Progressive Sword",
+            "Progressive Glove",
+            "Hammer",
+            "Moon Pearl",
+            "Ocarina"
+          ]
+        ],
+        [
+          "Turtle Rock",
+          true,
+          [
+            "Quake",
+            "Progressive Sword",
+            "Beat Agahnim 1",
+            "Moon Pearl",
+            "Ocarina"
+          ]
+        ],
+        ["Ganons Tower", false, []],
+        ["Ganons Tower", false, [], ["Crystal 1"]],
+        ["Ganons Tower", false, [], ["Crystal 2"]],
+        ["Ganons Tower", false, [], ["Crystal 3"]],
+        ["Ganons Tower", false, [], ["Crystal 4"]],
+        ["Ganons Tower", false, [], ["Crystal 5"]],
+        ["Ganons Tower", false, [], ["Crystal 6"]],
+        ["Ganons Tower", false, [], ["Crystal 7"]],
+        [
+          "Ganons Tower",
+          true,
+          [
+            "Beat Agahnim 1",
+            "Crystal 1",
+            "Crystal 2",
+            "Crystal 3",
+            "Crystal 4",
+            "Crystal 5",
+            "Crystal 6",
+            "Crystal 7"
+          ]
+        ],
+        [
+          "Ganons Tower",
+          true,
+          [
+            "Moon Pearl",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Crystal 1",
+            "Crystal 2",
+            "Crystal 3",
+            "Crystal 4",
+            "Crystal 5",
+            "Crystal 6",
+            "Crystal 7"
+          ]
+        ],
+        [
+          "Ganons Tower",
+          true,
+          [
+            "Moon Pearl",
+            "Hammer",
+            "Progressive Glove",
+            "Progressive Glove",
+            "Crystal 1",
+            "Crystal 2",
+            "Crystal 3",
+            "Crystal 4",
+            "Crystal 5",
+            "Crystal 6",
+            "Crystal 7"
+          ]
+        ]
+      ],
+      "kind": "entrance",
+      "line": 6,
+      "name": "testDungeonEntrances"
+    }
+  ],
+  "upstream": {
+    "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4",
+    "harness": {
+      "branch": "1.5.8",
+      "commit": "5c44da337d6d4ecbc3e7ba8ebc96315896d0bec4"
+    },
+    "license": "MIT, Copyright (c) 2019 aerinon",
+    "repo": "aerinon/ALttPDoorRandomizer",
+    "version": "1.5.8"
+  }
+}

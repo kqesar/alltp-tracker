@@ -10,6 +10,9 @@ import {
   KIND_HEADINGS,
   notesFor,
   poolOf,
+  shownNotes,
+  swapText,
+  targetById,
   targetsFor,
   targetText,
 } from "@/games/alttpr/logic/entrances";
@@ -32,7 +35,9 @@ const matches = (target: EntranceTarget, words: readonly string[]) => {
 
 /**
  * Where an entrance may lead, searchable and grouped by kind. A target
- * another entrance leads to says which: choosing it moves it here.
+ * another entrance leads to says which: choosing it moves it here. An
+ * entrance another's note tells (Swapped's partner) says so; noting it
+ * here notes it by hand.
  */
 const PickerBody = ({
   entrance,
@@ -42,14 +47,19 @@ const PickerBody = ({
   pool: EntrancePool;
 }) => {
   const close = useEntrancePicker((state) => state.close);
-  const entrances = useGameStore((state) => state.entrances);
+  const noted = useGameStore((state) => state.entrances);
   const noteEntrance = useGameStore((state) => state.noteEntrance);
   const noteEntrances = useGameStore((state) => state.noteEntrances);
   const [query, setQuery] = useState("");
   const searchId = useId();
   const headingId = useId();
 
+  // The notes made and those they tell
+  const { derived, notes: entrances } = shownNotes(pool, noted);
   const current = entrances[entrance.id];
+  const toldBy = derived.get(entrance.id);
+  const from = toldBy === undefined ? undefined : entranceById(toldBy);
+  const told = current === undefined ? undefined : targetById(current);
   // Which entrance each noted target is at, by the entrance's words
   const at = new Map(
     Object.entries(entrances).flatMap(([id, target]) => {
@@ -72,7 +82,7 @@ const PickerBody = ({
     <Modal
       footer={
         <>
-          {current !== undefined && (
+          {noted[entrance.id] !== undefined && (
             <button
               className="button"
               data-testid="entrance-forget"
@@ -93,6 +103,13 @@ const PickerBody = ({
       wide
     >
       <div className="entrance-picker" data-testid="entrance-picker">
+        {from !== undefined && told !== undefined && (
+          <p className="entrance-picker__told" data-testid="entrance-told">
+            Leads to {targetText(told)}, {swapText(from)}: its note tells this
+            one, as the Swapped shuffle trades doors two by two. Note it here to
+            override.
+          </p>
+        )}
         <label className="checks__field" htmlFor={searchId}>
           <span className="checks__field-label">Search</span>
           <input
