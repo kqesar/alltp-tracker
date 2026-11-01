@@ -19,6 +19,7 @@ import {
 import {
   doorCounterExtra,
   doorKeysExtra,
+  doorLocationsOf,
   doorOf,
   doorShuffleOf,
   dungeonPotsAndDropsOf,
@@ -451,3 +452,27 @@ export const counterMax = (index: number, run: RunSettings): number => {
     ? max + doorCounterExtra(dungeonAt(index), run, wildItems(run))
     : max;
 };
+
+/** A dungeon's Door Randomizer locations in a run, by id: none elsewhere. */
+const doorIdsOf = (index: number, run: RunSettings): string =>
+  doorLocationsOf(run)
+    .locations.filter((location) => location.dungeon === dungeonAt(index))
+    .map((location) => location.id)
+    .join();
+
+/**
+ * The counters (`chest3`) a change of settings moves what they hold for:
+ * their top, as the dungeon items left inside set it, or the Door
+ * Randomizer locations of their dungeon. Only these are counted again from
+ * the game (`requestRecount`): another counter keeps its value, one the
+ * player set by hand included.
+ */
+export const countersMoved = (
+  before: RunSettings,
+  after: RunSettings,
+): string[] =>
+  COUNTER_INDICES.filter(
+    (index) =>
+      counterMax(index, before) !== counterMax(index, after) ||
+      doorIdsOf(index, before) !== doorIdsOf(index, after),
+  ).map((index) => `chest${index}`);

@@ -305,11 +305,11 @@ onResync((game) => {
   }
 });
 
-// A setting changed mid-run that moves what the counters hold (the locations
-// a Door Randomizer run shuffles, the dungeon items): the game counts them
+// A setting changed mid-run that moves what some counters hold (the locations
+// a Door Randomizer run shuffles, the dungeon items): the game counts those
 // again at once, not only when it next changes
-onRecount((game) => {
-  if (game === "alttpr") follower?.recount();
+onRecount((game, counters) => {
+  if (game === "alttpr") follower?.recount(counters);
 });
 
 /**

@@ -752,18 +752,26 @@ const lay = (board: Board, view: GameView, how: Lay): Laid | null => {
 };
 
 /**
- * Lay a view's dungeon counters alone on the board, each moved into the range
- * the game bounds it to: a setting that moved what the counters hold (the
+ * Lay some of a view's dungeon counters alone on the board, each moved into
+ * the range the game bounds it to: a setting that moved what they hold (the
  * locations a Door Randomizer run shuffles, the dungeon items), where a merge
- * only lowers them.
+ * only lowers them. Any other counter keeps its value.
+ * @param counters - The counters to lay, by item id (`chest3`)
  * @returns The slices it changes, or null when it changes nothing
  */
-export const recountView = (board: Board, view: GameView): Laid | null =>
+export const recountView = (
+  board: Board,
+  view: GameView,
+  counters: readonly string[],
+): Laid | null =>
   lay(
     board,
     {
       ...view,
       checked: {},
+      counters: Object.fromEntries(
+        Object.entries(view.counters).filter(([id]) => counters.includes(id)),
+      ),
       items: {},
       medallions: {},
       smallKeys: {},
