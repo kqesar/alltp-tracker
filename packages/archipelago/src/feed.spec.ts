@@ -254,6 +254,31 @@ describe("foldFeed, edges", () => {
     expect(involves(state.lines[1] as FeedLine, 1)).toBe(true);
   });
 
+  it("words a collect or release by the followed slot from its own point of view", () => {
+    const text = (events: FeedEvent[], me: number) =>
+      run(events, me).lines.map((line) =>
+        entryText(resolveLine(line, { ...names([]), me })),
+      );
+    const burst = (slot: number) => [
+      { kind: "collect", slot } as FeedEvent,
+      item(1, slot),
+      item(2, slot),
+      { kind: "release", slot } as FeedEvent,
+      item(slot, 1),
+      item(slot, 2),
+    ];
+    // Another slot's burst: what is the followed slot's own
+    expect(text(burst(2), 1)).toEqual([
+      "Samus collected 2 items, 1 from your world",
+      "Samus released 2 items, 1 for you",
+    ]);
+    // The followed slot's own burst: its own world, itself
+    expect(text(burst(2), 2)).toEqual([
+      "Samus collected 2 items, 1 from their own world",
+      "Samus released 2 items, 1 for themselves",
+    ]);
+  });
+
   it("collapses joins and parts in a row, each player as they stand last", () => {
     const state = run([
       { kind: "join", slot: 2 },

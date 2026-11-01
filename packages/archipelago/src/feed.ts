@@ -441,12 +441,14 @@ export function resolveLine(line: FeedLine, names: FeedNames): FeedEntry {
     case "release":
     case "collect": {
       const verb = line.kind === "release" ? " released " : " collected ";
+      // From the followed slot's own point of view: "your" is for others' bursts
+      const own = line.slot === names.me;
       const mine =
         line.mine === 0
           ? ""
           : line.kind === "release"
-            ? `, ${line.mine} for you`
-            : `, ${line.mine} from your world`;
+            ? `, ${line.mine} ${own ? "for themselves" : "for you"}`
+            : `, ${line.mine} from ${own ? "their own" : "your"} world`;
       return {
         ...base,
         parts: [
