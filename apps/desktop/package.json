@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tauri build",
     "dev": "tauri dev",
+    "smoke": "node scripts/smoke.mjs",
     "tauri": "tauri"
   },
   "devDependencies": {
