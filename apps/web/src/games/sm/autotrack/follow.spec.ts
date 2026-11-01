@@ -583,10 +583,15 @@ describe("the run's seed", () => {
     follower.read(reading({ items: MORPH, name: "cHXhTSCB8" }));
     expect(run().items.morph ?? 0).toBe(0);
 
-    // Ignore: the run takes the ROM's seed
-    run().applyGameNews(() => ({ seed: "cHXhTSCB8" }));
+    // Follow this ROM: the run takes its seed, as a step of the player's
+    run().takeSeed("cHXhTSCB8");
     follower.resync(true);
     expect(run().items.morph).toBe(1);
+
+    // Undone, the run is its own seed's again, with nothing of the ROM
+    run().undo();
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.morph ?? 0).toBe(0);
   });
 
   it("gives the run New game replaced back as it was, with nothing of the ROM", () => {

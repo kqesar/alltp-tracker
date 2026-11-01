@@ -40,7 +40,7 @@ import { doorTablesOf } from "@/games/alttpr/data/doorRando";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
-import { type RomSeedCheck, recordSeed } from "@/games/seedId";
+import type { RomSeedCheck } from "@/games/seedId";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
 
@@ -682,15 +682,15 @@ export const startRunFromRom = () => {
 };
 
 /**
- * Ignore that the ROM is of another seed: the run takes that seed as its own,
- * and the board follows the ROM from now on.
+ * Follow the ROM of another seed on this run: the run takes that seed as its
+ * own, one undo step, and the board follows the ROM from now on.
  */
-export const ignoreRomSeed = () => {
+export const followRomSeed = () => {
   const { reading } = useAutotrackStore.getState();
   if (reading === null) return;
   const check = romSeedCheckOf(reading, useGameStore.getState().seed);
   if (check?.kind !== "differs") return;
-  recordSeed(useGameStore, check.rom);
+  useGameStore.getState().takeSeed(check.rom);
   // The follower lays the ROM it held at once, then its run type is held
   // against the board's as a reading's is
   requestResync("alttpr");
@@ -718,7 +718,7 @@ export const keepRunType = () => {
 
 /** The board's notice and the dialog's line of a ROM of another seed. */
 export const alttprRomSeed: RomSeed = {
-  ignore: ignoreRomSeed,
+  follow: followRomSeed,
   startRun: startRunFromRom,
   useCheck: useRomSeedCheck,
 };

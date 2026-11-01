@@ -114,7 +114,7 @@ describe("romSeedText", () => {
     expect(
       romSeedText({ kind: "differs", rom: "0yAObedRMV", run: "9MQ9gO1wMD" }),
     ).toBe(
-      "The game runs seed 0yAObedRMV, not this run's seed 9MQ9gO1wMD: the board does not follow it. Start a new run from this ROM, or ignore this to follow it on this run.",
+      "The game runs seed 0yAObedRMV, not this run's seed 9MQ9gO1wMD: the board does not follow it. Start a new run from this ROM, or follow this ROM on this run.",
     );
   });
 

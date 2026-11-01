@@ -1048,16 +1048,20 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().checked["links-house"]).toBeUndefined();
   });
 
-  it("lays it once the run takes its seed (Ignore)", () => {
+  it("lays it once the run takes its seed (Follow this ROM), which one undo takes back", () => {
     runOf();
     const follower = createFollower();
     follower.read(otherRom());
     expect(store().items.hookshot).toBe(false);
 
-    store().applyGameNews(() => ({ seed: "0yAObedRMV" }));
+    store().takeSeed("0yAObedRMV");
     follower.resync(true);
-
     expect(store().items.hookshot).toBe(true);
+
+    store().undo();
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.hookshot).toBe(false);
+    expect(store().checked["links-house"]).toBeUndefined();
   });
 
   it("starts over on the run's own ROM, whatever the other one showed", () => {

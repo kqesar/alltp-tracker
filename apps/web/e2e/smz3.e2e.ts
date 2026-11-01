@@ -161,7 +161,7 @@ test("follows nothing of an SMZ3 ROM of another seed than the run's, until told 
     // A guid is 32 characters with no break: the notice wraps it at a phone's width
     for (const width of WIDTHS) {
       await page.setViewportSize({ height: 900, width });
-      await expect(page.getByTestId("rom-seed-ignore")).toBeInViewport();
+      await expect(page.getByTestId("rom-seed-follow")).toBeInViewport();
       const box = await notice.boundingBox();
       expect(box && box.x + box.width).toBeLessThanOrEqual(width);
       expect(
@@ -178,7 +178,7 @@ test("follows nothing of an SMZ3 ROM of another seed than the run's, until told 
       }
     }
 
-    await page.getByTestId("rom-seed-ignore").click();
+    await page.getByTestId("rom-seed-follow").click();
     await expect(hookshot).toHaveAccessibleName(/^Hookshot, obtained/);
     await expect(notice).toBeEmpty();
   } finally {

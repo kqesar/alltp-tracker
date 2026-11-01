@@ -106,4 +106,4 @@ export const onRomSeed =
 export const romSeedText = (check: RomSeedCheck): string =>
   check.kind === "race"
     ? "Race Mode: the tracker does not check that the game is this run's seed."
-    : `The game runs seed ${check.rom}, not this run's seed ${check.run}: the board does not follow it. Start a new run from this ROM, or ignore this to follow it on this run.`;
+    : `The game runs seed ${check.rom}, not this run's seed ${check.run}: the board does not follow it. Start a new run from this ROM, or follow this ROM on this run.`;

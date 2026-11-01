@@ -500,6 +500,21 @@ describe("the run's seed", () => {
     expect(run().settings).toEqual(settings);
   });
 
+  it("follows the ROM once the run takes its guid, which one undo takes back", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().takeSeed(OTHER);
+    follower.resync(true);
+    expect(run().items.hookshot).toBe(1);
+
+    run().undo();
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().settings.towerCrystals).not.toBe(3);
+  });
+
   it("checks nothing in Race Mode, which never reads the guid", () => {
     run().applyGameNews(() => ({ seed: GUID }));
     createSmz3Follower().read(other(true));

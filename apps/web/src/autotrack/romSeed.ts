@@ -1,14 +1,15 @@
 // A ROM of another seed than the run's, for a game whose autotracking is the
 // shared session (autotrack/gameSession.ts): the check the board and the
-// dialog show (games/seedId.ts, `checkRomSeed`), and the player's two answers.
-// The follower holds such a ROM's readings unlaid; either answer resyncs it,
-// and it lays the reading it held on the run, now that the run is the ROM's.
+// dialog show (games/seedId.ts, `checkRomSeed`), and the player's two answers,
+// each one undo step. The follower holds such a ROM's readings unlaid; either
+// answer resyncs it, and it lays the reading it held on the run, now that the
+// run is the ROM's.
 
 import { useMemo } from "react";
 import type { StoreApi, UseBoundStore } from "zustand";
 import type { GameAutotrack } from "@/autotrack/gameSession";
 import { requestResync } from "@/autotrack/resync";
-import { type RomSeedCheck, recordSeed } from "@/games/seedId";
+import type { RomSeedCheck } from "@/games/seedId";
 
 /** What the board's notice and the dialog's line need of a game. */
 export type RomSeed = {
@@ -16,16 +17,16 @@ export type RomSeed = {
   useCheck: () => RomSeedCheck | null;
   /** Start a new run, New game's, which takes the ROM's seed. */
   startRun: () => void;
-  /** The run takes the ROM's seed as its own, and follows it. */
-  ignore: () => void;
+  /** The run takes the ROM's seed as its own, and follows it: one undo step. */
+  follow: () => void;
 };
 
 /** A run's store, as far as the ROM's seed goes. */
 type RunStore<Run extends { seed: string | null }> = UseBoundStore<
   StoreApi<
     Run & {
-      applyGameNews: (change: (run: Run) => Partial<Run> | null) => void;
       reset: () => void;
+      takeSeed: (seed: string) => void;
     }
   >
 >;
@@ -55,10 +56,10 @@ export const romSeedOf = <Reading, Run extends { seed: string | null }>({
     return now?.kind === "differs" ? now : null;
   };
   return {
-    ignore: () => {
+    follow: () => {
       const now = differs();
       if (now === null) return;
-      recordSeed(store, now.rom);
+      store.getState().takeSeed(now.rom);
       requestResync(game);
     },
     // New game resyncs the follower, which lays the ROM it held

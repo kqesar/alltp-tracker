@@ -22,7 +22,7 @@ import { MemoryTransport } from "../../../../../packages/autotrack/test/memory-t
 import { writeSeedSettings } from "../../../../../packs/alttpr/test/seed-rom";
 
 const MESSAGE =
-  "The game runs seed 0yAObedRMV, not this run's seed 9MQ9gO1wMD: the board does not follow it. Start a new run from this ROM, or ignore this to follow it on this run.";
+  "The game runs seed 0yAObedRMV, not this run's seed 9MQ9gO1wMD: the board does not follow it. Start a new run from this ROM, or follow this ROM on this run.";
 
 const game = () => useGameStore.getState();
 
@@ -98,8 +98,8 @@ describe("RomSeedNotice", () => {
     expect(screen.getByTestId("rom-seed-new-run")).toHaveAccessibleName(
       "New run",
     );
-    expect(screen.getByTestId("rom-seed-ignore")).toHaveAccessibleName(
-      "Ignore",
+    expect(screen.getByTestId("rom-seed-follow")).toHaveAccessibleName(
+      "Follow this ROM",
     );
   });
 
@@ -138,7 +138,7 @@ describe("RomSeedNotice", () => {
     expect(screen.getByTestId("rom-seed-notice")).toHaveTextContent(MESSAGE);
   });
 
-  it("ignores it: the run takes the ROM's seed, its marks kept", async () => {
+  it("follows this ROM on the run, its marks kept, as a step one undo takes back", async () => {
     const user = userEvent.setup();
     render(
       <>
@@ -148,15 +148,22 @@ describe("RomSeedNotice", () => {
     );
     await readOtherSeed();
 
-    await user.click(screen.getByTestId("rom-seed-ignore"));
+    await user.click(screen.getByTestId("rom-seed-follow"));
 
-    expect(useGameStore.getState().seed).toBe("0yAObedRMV");
-    expect(useGameStore.getState().items.flute).toBe(true);
+    expect(game().seed).toBe("0yAObedRMV");
+    expect(game().items).toMatchObject({ flute: true, hookshot: true });
     expect(screen.getByTestId("rom-seed-notice")).toBeEmptyDOMElement();
     // Its run type is now held against the board's, as any seed's
     expect(screen.getByTestId("seed-prompt")).toHaveTextContent(
       /^This seed is Keysanity/,
     );
+
+    // A misclick is one undo away: the run's seed, nothing of the ROM
+    act(() => game().undo());
+    expect(game().seed).toBe("9MQ9gO1wMD");
+    expect(game().items).toMatchObject({ flute: true, hookshot: false });
+    expect(game().checked["links-house"]).toBeUndefined();
+    expect(screen.getByTestId("rom-seed-notice")).toHaveTextContent(MESSAGE);
   });
 });
 
@@ -167,7 +174,7 @@ describe("RomSeedLine", () => {
     await readOtherSeed();
 
     expect(screen.getByTestId("autotrack-rom-seed")).toHaveTextContent(MESSAGE);
-    await user.click(screen.getByTestId("autotrack-rom-seed-ignore"));
+    await user.click(screen.getByTestId("autotrack-rom-seed-follow"));
     expect(useGameStore.getState().seed).toBe("0yAObedRMV");
     expect(screen.queryByTestId("autotrack-rom-seed")).toBeNull();
   });
@@ -179,7 +186,7 @@ describe("RomSeedLine", () => {
     expect(screen.getByTestId("autotrack-rom-seed")).toHaveTextContent(
       "Race Mode: the tracker does not check that the game is this run's seed.",
     );
-    expect(screen.queryByTestId("autotrack-rom-seed-ignore")).toBeNull();
+    expect(screen.queryByTestId("autotrack-rom-seed-follow")).toBeNull();
   });
 
   it("says nothing for a run that knows no seed", async () => {

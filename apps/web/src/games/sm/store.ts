@@ -121,6 +121,11 @@ type SmState = SmProgress &
     setOption: (option: "wallJump" | "splitSpeed", on: boolean) => void;
     /** A new game: nothing held or done, the seed's objectives and settings kept. */
     reset: () => void;
+    /**
+     * The run takes another seed as its own, the player's answer to a ROM of
+     * that seed (Follow this ROM): one undo step, the run kept.
+     */
+    takeSeed: (seed: string) => void;
     undo: () => void;
     redo: () => void;
     /** Replace the run with a save's: one undo step. */
@@ -212,6 +217,9 @@ export const useSmStore = create<SmState>()(
           const value = get().items[id] ?? 0;
           const next = (value + direction + max + 1) % (max + 1);
           record({ items: { ...get().items, [id]: next } });
+        },
+        takeSeed: (seed) => {
+          if (get().seed !== seed) record({ seed });
         },
         toggleDone: (id) => {
           const { done, objectives } = get();

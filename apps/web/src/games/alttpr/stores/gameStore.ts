@@ -229,6 +229,11 @@ type GameState = Progress &
 
     /** Start a new game of the same run type and settings; display prefs are kept */
     reset: () => void;
+    /**
+     * The run takes another seed as its own, the player's answer to a ROM of
+     * that seed (Follow this ROM): one undo step, the run kept.
+     */
+    takeSeed: (seed: string) => void;
 
     /** Earlier states of the run, most recent last; never persisted */
     past: Progress[];
@@ -947,6 +952,10 @@ export const useGameStore = create<GameState>()(
 
         syncWithGame: (next: Partial<Progress>) =>
           set((state) => record(state, next)),
+        takeSeed: (seed) =>
+          set((state) =>
+            state.seed === seed ? state : record(state, { seed }),
+          ),
         timer: IDLE_TIMER,
 
         toggleChecks: (locations: readonly string[]) =>

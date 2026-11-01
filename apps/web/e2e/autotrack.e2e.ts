@@ -374,7 +374,7 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
     // The notice stays in the viewport, its answers on screen
     const box = await notice.boundingBox();
     expect(box && box.x + box.width).toBeLessThanOrEqual(width);
-    await expect(page.getByTestId("rom-seed-ignore")).toBeInViewport();
+    await expect(page.getByTestId("rom-seed-follow")).toBeInViewport();
     if (process.env.ROM_SEED_SHOTS) {
       await page.screenshot({
         path: `${process.env.ROM_SEED_SHOTS}/alttpr-notice-${width}.png`,
@@ -393,8 +393,8 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
     await page.keyboard.press("Escape");
   }
 
-  // Ignore: the run takes the ROM's seed, and the board follows it at once
-  await page.getByTestId("rom-seed-ignore").click();
+  // Follow this ROM: the run takes the ROM's seed, and the board follows it at once
+  await page.getByTestId("rom-seed-follow").click();
   await expect(hammer).toHaveAccessibleName(cell("Hammer", "obtained"));
   await expect(fairy).toHaveAccessibleName(
     "Light Hype Fairy: leads to Blind's Hideout",

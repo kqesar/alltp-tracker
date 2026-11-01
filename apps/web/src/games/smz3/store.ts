@@ -115,6 +115,11 @@ type Smz3State = Smz3Progress &
     setPad: (which: keyof Smz3Pads, medallion: Smz3Pads["mire"]) => void;
     /** A new game: nothing held or checked, the settings kept, the pads unknown. */
     reset: () => void;
+    /**
+     * The run takes another seed as its own, the player's answer to a ROM of
+     * that seed (Follow this ROM): one undo step, the run kept.
+     */
+    takeSeed: (seed: string) => void;
     undo: () => void;
     redo: () => void;
     /** Replace the run with a save's: one undo step. */
@@ -187,6 +192,9 @@ export const useSmz3Store = create<Smz3State>()(
           const value = get().items[id] ?? 0;
           const next = (value + direction + max + 1) % (max + 1);
           record({ items: { ...get().items, [id]: next } });
+        },
+        takeSeed: (seed) => {
+          if (get().seed !== seed) record({ seed });
         },
         toggleChecks: (ids) => {
           const checked = new Set(get().checked);

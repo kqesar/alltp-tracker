@@ -4,8 +4,8 @@ import { romSeedText } from "@/games/seedId";
 /**
  * The notice that the ROM autotracking reads is of another seed than the
  * run's, which the board then does not follow: New run starts a new run that
- * takes the ROM's seed (New game, one undo step); Ignore makes the ROM's seed
- * the run's, and the board follows it. One of the page's notices, beside
+ * takes the ROM's seed (New game, one undo step); Follow this ROM makes the
+ * ROM's seed the run's (one undo step too), and the board follows it. One of the page's notices, beside
  * UpdatePrompt, and like it a live region that stays in the page, empty, so
  * it is heard the moment it fills.
  * @param romSeed - The game's check and answers
@@ -30,11 +30,11 @@ export const RomSeedNotice = ({ romSeed }: { romSeed: RomSeed }) => {
             </button>
             <button
               className="notice__button"
-              data-testid="rom-seed-ignore"
-              onClick={romSeed.ignore}
+              data-testid="rom-seed-follow"
+              onClick={romSeed.follow}
               type="button"
             >
-              Ignore
+              Follow this ROM
             </button>
           </div>
         </div>
@@ -69,11 +69,11 @@ export const RomSeedLine = ({ romSeed }: { romSeed: RomSeed }) => {
           </button>
           <button
             className="modal-btn modal-btn--ghost"
-            data-testid="autotrack-rom-seed-ignore"
-            onClick={romSeed.ignore}
+            data-testid="autotrack-rom-seed-follow"
+            onClick={romSeed.follow}
             type="button"
           >
-            Ignore
+            Follow this ROM
           </button>
         </div>
       )}
