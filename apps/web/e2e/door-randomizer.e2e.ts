@@ -827,9 +827,15 @@ for (const width of WIDTHS) {
   });
 }
 
-/** An OWR run's crossed door shuffle, its intensity not known, on Doors. */
+/**
+ * An OWR run's crossed door shuffle, its intensity not known, its doors
+ * coupled (not known reads as decoupled: no way back inferred), on Doors.
+ */
 const openOwrDoors = async (page: Page) => {
-  await openOwrEntranceRun(page, { doorShuffle: "crossed" });
+  await openOwrEntranceRun(page, {
+    decoupledDoors: false,
+    doorShuffle: "crossed",
+  });
   await page.getByRole("tab", { name: "Doors" }).click();
   await expect(page.getByTestId("doors-panel")).toBeVisible();
 };
