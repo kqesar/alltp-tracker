@@ -453,7 +453,8 @@ const dungeonLocationsOf = (
  * stay inside (its map, compass, big key and small keys, as the run's
  * dungeon items leave them) are no items to the player: memory tells all
  * four, the small keys by the base patch's count of keys received as items
- * (a key an enemy or a pot drops is no location, and is not counted).
+ * (a key an enemy or a pot drops is no location, and is not counted, but
+ * in a Door Randomizer run that shuffles it: `drKeysAdded`).
  * Generic keys belong to no dungeon, so their count is no dungeon's: the
  * counter then lies between the chests' keys all found and none. Only a
  * hand-made config reaches that case (`rom.genericKeys` with keys kept in
