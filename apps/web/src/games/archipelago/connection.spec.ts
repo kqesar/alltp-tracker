@@ -22,7 +22,12 @@ import {
   freshRun,
   useArchipelagoStore,
 } from "@/games/archipelago/store";
-import { finishTimer, IDLE_TIMER, startTimer } from "@/utils/runTimer";
+import {
+  finishTimer,
+  IDLE_TIMER,
+  pauseTimer,
+  startTimer,
+} from "@/utils/runTimer";
 
 const state = () => useApConnectionStore.getState();
 const run = () => useArchipelagoStore.getState();
@@ -350,6 +355,13 @@ describe("connect", () => {
       "clears a timer running while the last room changed the run",
       startTimer(IDLE_TIMER, 1_000),
       9_000,
+      IDLE_TIMER,
+    ],
+    [
+      // Resumed after the last room's last update: its time is still in it
+      "clears the last room's timer, paused then resumed",
+      startTimer(pauseTimer(startTimer(IDLE_TIMER, 1_000), 3_000), 4_000),
+      500,
       IDLE_TIMER,
     ],
     [

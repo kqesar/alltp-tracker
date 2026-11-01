@@ -312,10 +312,13 @@ export const connect = async () => {
             // The last run's time is not this one's, and this room's
             // countdown starts only an idle timer. Kept only a timer the
             // player started after the last room last changed the run (its
-            // countdown included): one started for this run
+            // countdown included) and that holds no earlier time (a pause
+            // and a resume restart `startedAt` but keep the last room's
+            // time): one started for this run
             const started = before.timer.startedAt;
             const own =
               isRunning(before.timer) &&
+              before.timer.elapsedMs === 0 &&
               started !== null &&
               before.updatedAt !== null &&
               started > before.updatedAt;
