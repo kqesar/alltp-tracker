@@ -310,9 +310,16 @@ export const connect = async () => {
                 "This room holds another run than the board did: the board now shows this one.",
             });
             // The last run's time is not this one's, and this room's
-            // countdown starts only an idle timer; one the player started
-            // and left running is for this run
-            if (!isRunning(before.timer)) before.resetTimer();
+            // countdown starts only an idle timer. Kept only a timer the
+            // player started after the last room last changed the run (its
+            // countdown included): one started for this run
+            const started = before.timer.startedAt;
+            const own =
+              isRunning(before.timer) &&
+              started !== null &&
+              before.updatedAt !== null &&
+              started > before.updatedAt;
+            if (!own) before.resetTimer();
           }
           before.apply({ ...run, updatedAt: Date.now() });
         },

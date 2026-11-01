@@ -281,11 +281,16 @@ export const useArchipelagoStore = create<ApState>()(
         ...freshRun(),
         apply: (run) => set({ ...run, prefs: get().prefs, timer: get().timer }),
         countdownEnded: (at) => {
-          const { prefs, timer } = get();
+          const { prefs, timer, updatedAt } = get();
           // Only a timer that has counted nothing: a countdown mid-run
-          // (another !countdown) never restarts one
+          // (another !countdown) never restarts one. The room changed the
+          // run then: a timer it started is the room's, not one the player
+          // started after (connection.ts, another run)
           if (prefs.countdownTimer && isIdle(timer)) {
-            setTimer(startTimer(timer, at));
+            set({
+              timer: startTimer(timer, at),
+              updatedAt: Math.max(updatedAt ?? at, at),
+            });
           }
         },
         // The run's time, kept (and saved) as the run's own: a reload shows it

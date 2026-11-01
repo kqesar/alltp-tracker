@@ -205,8 +205,11 @@ flowchart LR
   connection reads it stops nothing: it says nothing of when. The stopped
   time is the run's `timer`, saved with it, so a reload shows it. When
   another run replaces the board, its timer goes back to idle (so this
-  room's countdown starts it), unless it is running: one the player started
-  by hand before connecting is this run's.
+  room's countdown starts it), unless it is running and started after the
+  last room last changed the run (`updatedAt`, which a countdown that starts
+  the timer moves too): one the player started by hand before connecting is
+  this run's, one the last room's countdown started (a slot switched
+  mid-run) is not.
 - **Performance.** Feed lines poke the same 250 ms batch as the snapshot: a
   release of 1,000 sends, each its own `PrintJSON` and `ReceivedItems`,
   renders the items and the feed once and writes the run once

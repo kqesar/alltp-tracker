@@ -336,14 +336,29 @@ describe("connect", () => {
     [
       "clears another run's stopped timer",
       finishTimer(startTimer(IDLE_TIMER, 1_000), 14_000),
+      500,
+      IDLE_TIMER,
+    ],
+    [
+      // Switching slot mid-run: the last room's countdown started it
+      "clears the last room's timer, still running",
+      startTimer(IDLE_TIMER, 1_000),
+      1_000,
+      IDLE_TIMER,
+    ],
+    [
+      "clears a timer running while the last room changed the run",
+      startTimer(IDLE_TIMER, 1_000),
+      9_000,
       IDLE_TIMER,
     ],
     [
       "keeps a timer the player started for this run",
       startTimer(IDLE_TIMER, 1_000),
+      500,
       startTimer(IDLE_TIMER, 1_000),
     ],
-  ])("%s", async (_, timer, kept) => {
+  ])("%s", async (_, timer, updatedAt, kept) => {
     // Seen on a real room: the last room's goal time stayed, so this one's
     // countdown, which starts only an idle timer, never started it
     useArchipelagoStore.setState({
@@ -358,6 +373,7 @@ describe("connect", () => {
         team: 0,
       },
       timer,
+      updatedAt,
     });
     startRoom();
     saveRoom({ address: ROOM_ADDRESS, roomLink: null, slot: "Link" });

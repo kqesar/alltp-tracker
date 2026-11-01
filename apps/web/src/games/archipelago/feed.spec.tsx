@@ -293,7 +293,11 @@ describe("hints, players and what was sent", () => {
 describe("the countdown's timer", () => {
   it("starts an idle timer when the room's countdown reaches 0", async () => {
     await playedRoom();
-    expect(run().timer.startedAt).not.toBeNull();
+    const { startedAt } = run().timer;
+    expect(startedAt).not.toBeNull();
+    // The room changed the run then: another run's timer, if the board
+    // goes to one (connection.ts)
+    expect(run().updatedAt).toBeGreaterThanOrEqual(startedAt ?? Infinity);
   });
 
   it("stops at the slot's own goal as the room says it, and a reload shows that time", async () => {
