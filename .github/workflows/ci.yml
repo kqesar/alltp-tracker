@@ -7,7 +7,7 @@ on:
     branches: [master]
     # No job reads Markdown: a docs-only change has nothing to test or deploy
     paths-ignore: &docs-only
-      - '**.md'
+      - "**.md"
       - LICENSE
   pull_request:
     paths-ignore: *docs-only
@@ -17,7 +17,7 @@ on:
   # full run (plan): fresh property-test seeds and the runner's latest Chrome,
   # on trees master deployed without testing again (docs/ci.md).
   schedule:
-    - cron: '17 3 * * *'
+    - cron: "17 3 * * *"
 
 # A new push to a pull request makes its running checks obsolete: cancel them.
 # Pushes to master always run to the end, so deployments never overlap. The
@@ -89,7 +89,7 @@ jobs:
       # pnpm, the Node.js package.json pins (devEngines.runtime), then the
       # dependencies as the lockfile has them, from a cached store
       - name: Setup pnpm, Node.js and dependencies
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           cache: true
           save-cache: ${{ steps.store.outputs.save == 'true' }}
@@ -184,9 +184,9 @@ jobs:
             } else if ('${{ steps.test.outcome }}' === 'success') {
               coverageSection = `
             ## 📊 Test Coverage
-            
+
             ⚠️ Coverage data not available
-            
+
             `;
             }
 
@@ -259,7 +259,7 @@ jobs:
       # dependencies as the lockfile has them, from a cached store (saved by
       # the ci job, not here)
       - name: Setup pnpm, Node.js and dependencies
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           cache: true
           save-cache: false
@@ -368,7 +368,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup pnpm, Node.js and dependencies
-        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           cache: true
           save-cache: false

@@ -4,16 +4,16 @@ name: "CodeQL Advanced"
 # which only runs when .github/ changes.
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
     # Markdown holds no code to scan; the weekly run still covers everything
     paths-ignore: &docs-only
-      - '**.md'
+      - "**.md"
       - LICENSE
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     paths-ignore: *docs-only
   schedule:
-    - cron: '21 13 * * 5'
+    - cron: "21 13 * * 5"
   # Allow manually re-running the analysis from the Actions tab
   workflow_dispatch:
 
@@ -54,12 +54,12 @@ jobs:
 
       # An interpreted language: CodeQL reads the sources, no build
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           languages: javascript-typescript
           build-mode: none
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           category: "/language:javascript-typescript"

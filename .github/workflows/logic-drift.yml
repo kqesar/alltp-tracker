@@ -15,7 +15,7 @@ name: Logic drift
 # holds the logic, with its tests.
 on:
   schedule:
-    - cron: '43 6 * * 1'
+    - cron: "43 6 * * 1"
   workflow_dispatch:
 
 permissions:
