@@ -370,13 +370,19 @@
    Each is a live region that stays in the page; empty, it has no box and
    lets clicks through. The page keeps their room at its end (useNoticesRoom
    measures it), so its last controls scroll clear of them and a control
-   focused under them is scrolled above (WCAG 2.4.11). */
+   focused under them is scrolled above (WCAG 2.4.11). The scrollbar's
+   gutter is kept, so a notice that makes the page scroll never narrows it
+   under a classic scrollbar, and the board never reflows. */
 :root {
   scroll-padding-block-end: var(--notices-room, 0px);
 }
 
+:root:has(.notices) {
+  scrollbar-gutter: stable;
+}
+
 body {
-  padding-block-end: var(--notices-room, 0px);
+  padding-block-end: var(--notices-pad, 0px);
 }
 
 .notices {

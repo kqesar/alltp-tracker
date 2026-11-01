@@ -194,6 +194,29 @@ export const expectLastFocusClear = async (page: Page) => {
 };
 
 /**
+ * The notices' room costs the page no scroll where they cover nothing of the
+ * board, and a classic scrollbar that comes with them narrows nothing: the
+ * gutter is kept.
+ */
+export const expectNoticesRoomFits = async (page: Page) => {
+  const fit = await page.evaluate(() => {
+    const room = Number.parseFloat(
+      document.documentElement.style.getPropertyValue("--notices-room") || "0",
+    );
+    const end =
+      (document.getElementById("main-content")?.getBoundingClientRect()
+        .bottom ?? 0) + scrollY;
+    return {
+      covers: end + room > innerHeight,
+      gutter: getComputedStyle(document.documentElement).scrollbarGutter,
+      scrolls: document.documentElement.scrollHeight > innerHeight,
+    };
+  });
+  expect(fit.gutter).toBe("stable");
+  if (!fit.covers) expect(fit.scrolls).toBe(false);
+};
+
+/**
  * What every page state is held to: no axe violation, no sideways scroll,
  * and every clickable thing reachable by keyboard.
  * @param exclude - A selector axe leaves out, where a WCAG exception applies

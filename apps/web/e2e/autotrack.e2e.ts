@@ -16,6 +16,7 @@ import {
   auditPage,
   clickToolbarAction,
   expectLastFocusClear,
+  expectNoticesRoomFits,
   focusedTestId,
   focusRinged,
   tabTo,
@@ -394,6 +395,22 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
       });
     }
     await page.keyboard.press("Escape");
+  }
+
+  // Laptop and tablet heights: the notices' room scrolls the page only where
+  // they cover the board, and narrows nothing
+  for (const [width, height] of [
+    [1440, 768],
+    [1280, 720],
+    [820, 1180],
+  ]) {
+    await page.setViewportSize({ height, width });
+    await expectNoticesRoomFits(page);
+    if (process.env.ROM_SEED_SHOTS) {
+      await page.screenshot({
+        path: `${process.env.ROM_SEED_SHOTS}/alttpr-notice-${width}x${height}.png`,
+      });
+    }
   }
 
   // New run: one step, a new run of the ROM, which the board follows at once

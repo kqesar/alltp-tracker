@@ -44,8 +44,9 @@ export const GameShell = ({
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const noticesRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   useToolbarFit(toolbarRef);
-  useNoticesRoom(noticesRef);
+  useNoticesRoom(noticesRef, mainRef);
   return (
     <>
       <a className="skip-link" href="#main-content">
@@ -71,7 +72,7 @@ export const GameShell = ({
       <div className="toolbar" data-testid="toolbar" ref={toolbarRef}>
         {toolbar}
       </div>
-      <main className="main-content" id="main-content">
+      <main className="main-content" id="main-content" ref={mainRef}>
         {children}
       </main>
     </>
