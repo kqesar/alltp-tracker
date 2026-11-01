@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.68.1](https://github.com/kqesar/alltp-tracker/compare/v2.68.0...v2.68.1) (2026-11-01)
+
+
+### 🐛 Bug Fixes
+
+* final real-game autotracking pass ([#457](https://github.com/kqesar/alltp-tracker/issues/457)) ([d8977bb](https://github.com/kqesar/alltp-tracker/commit/d8977bbb7b64a35e04d9615ff7880ce89d28b2b6))
+
 ## [2.68.0](https://github.com/kqesar/alltp-tracker/compare/v2.67.2...v2.68.0) (2026-11-01)
 
 
