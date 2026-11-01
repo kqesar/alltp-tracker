@@ -431,6 +431,9 @@ describe("the key model's soundness", () => {
       );
       // Not vacuous: the model said yes where only its keys could
       expect([...seen]).toEqual(["raised"]);
-    });
+      // A property run takes 0.5-1.5 s alone, 3 s under coverage on a loaded
+      // machine, and past the pack's 20 s hung-test timeout where the worktrees'
+      // jobs pile up: slow by design, not hung
+    }, 90_000);
   }
 });

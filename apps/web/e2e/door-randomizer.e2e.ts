@@ -135,9 +135,12 @@ test("a door shuffle is noted by hand, door by door, in DR's world", async ({
 /**
  * A dungeon picked in a crossed shuffle's Doors tab: its first paint, and
  * the options it holds then, which time on a loaded machine cannot blur
- * (about 6,800 when every select showed its targets at once).
+ * (about 6,800 when every select showed its targets at once). The options
+ * are the guard; the time only catches a paint gone grossly long, so its
+ * budget leaves room for a busy machine (90 ms measured at load 30, 440 ms
+ * for the one-render version that the options count already refuses).
  */
-const DOORS_FIRST_PAINT_MS = 300;
+const DOORS_FIRST_PAINT_MS = 1_000;
 const DOORS_FIRST_OPTIONS = 1_500;
 
 test("the Doors tab shows a crossed shuffle's biggest dungeon at once", async ({
