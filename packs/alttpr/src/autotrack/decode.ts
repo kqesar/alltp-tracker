@@ -9,6 +9,8 @@
 // Zelda's rescue. What it cannot tell, it leaves unsettled, with the
 // reason, rather than guessing.
 
+import { locationId } from "@alltp/engine";
+import { DR_LOCATIONS } from "../door-rando/locations";
 import { ITEMS, type ItemId } from "../items";
 import { type HeldPrize, PRIZES } from "../tracker";
 import { CHECK_FLAGS, type CheckFlag } from "./check-flags";
@@ -169,9 +171,33 @@ function dungeonItem(
 const HERA_BASEMENT_DOUBLE_COUNT = 1;
 
 /**
+ * The small keys a dungeon's Door Randomizer key drops hold, by key item:
+ * a DR run that shuffles them adds each to the dungeon's pool
+ * (Regions.py:1188-1199), and the base patch counts the key found there as
+ * any other (AddInventory, drz3:stats.asm:121-148). A reading belongs to no
+ * run, so it counts up to the most any run holds, its pool's and these; the
+ * app caps the count at its own run's (`smallKeysMax`).
+ */
+export const KEY_DROPS: Readonly<Partial<Record<ItemId, number>>> = (() => {
+  const codeOf = new Map<string, DungeonCode>(
+    DUNGEONS.map(({ code, name }) => [locationId(name), code]),
+  );
+  const drops: Partial<Record<ItemId, number>> = {};
+  for (const location of DR_LOCATIONS) {
+    if (location.kind !== "keyDrop" || location.key !== "small") continue;
+    const code = location.dungeon && codeOf.get(location.dungeon);
+    if (!code) continue;
+    const id = `key${code}` as ItemId;
+    drops[id] = (drops[id] ?? 0) + 1;
+  }
+  return drops;
+})();
+
+/**
  * The small keys found for a dungeon, which no door spends: its byte in
  * DungeonCollectedKeys (memory.ts), less Tower of Hera's double count. Any
- * other count above the pool is a defect to notice: decodeItems reports it
+ * other count above the most any run holds (its pool's and its DR key
+ * drops', `KEY_DROPS`) is a defect to notice: decodeItems reports it
  * (`beyond`) before capping it.
  */
 function smallKeys(code: DungeonCode): ItemSource {
@@ -379,7 +405,11 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
 
 /** What memory says of the items. Each pack item is in one of the two. */
 export interface ItemReading {
-  /** Counts memory settles, by pack item id. */
+  /**
+   * Counts memory settles, by pack item id, each capped at its max; a small
+   * key count at the most any run holds, its Door Randomizer key drops'
+   * keys included (`KEY_DROPS`), for the app to cap at its own run's.
+   */
   readonly counts: Partial<Record<ItemId, number>>;
   readonly unsettled: Partial<Record<ItemId, Unsettled>>;
   /**
@@ -413,8 +443,9 @@ export function decodeItems(
     }
     const read = (options.race && source.raceRead) || source.read;
     const value = read(bytes);
-    counts[id] = Math.min(max, value);
-    if (value > max) beyond[id] = source.counted?.(bytes) ?? value;
+    const most = max + (KEY_DROPS[id] ?? 0);
+    counts[id] = Math.min(most, value);
+    if (value > most) beyond[id] = source.counted?.(bytes) ?? value;
   }
   return { beyond, counts, unsettled };
 }

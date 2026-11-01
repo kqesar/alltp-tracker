@@ -343,6 +343,23 @@ describe("gameView", () => {
     expect(view.items).not.toHaveProperty("boss0");
   });
 
+  it("counts the keys a Door Randomizer run's key pots add", () => {
+    // Seen on a real game (2026-11-01, DR 1.5.8, pottery keys): Thieves'
+    // Town's Spike Switch pot key and a chest's, counted 2 of its 3
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 11)] = 2;
+    const reading = readingOf(memory);
+    const board = fresh("door-crosskeys");
+    const run = (pottery: "keys" | "none") => ({
+      ...board,
+      settings: { ...board.settings, pottery },
+    });
+
+    expect(gameView(reading, run("keys")).smallKeys[6]).toBe(2);
+    // Without the key pots, Thieves' Town holds one key
+    expect(gameView(reading, run("none")).smallKeys[6]).toBe(1);
+  });
+
   it("counts small keys with keysanity only, within each dungeon's", () => {
     const memory = seedMemory({ race: false });
     memory[SAVE(0x4e0 + 6)] = 2; // two Palace of Darkness keys found

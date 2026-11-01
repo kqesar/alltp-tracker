@@ -14,6 +14,7 @@ import {
   decodeProgress,
   FRAMES_PER_SECOND,
   ITEM_SOURCES,
+  KEY_DROPS,
   type MemoryView,
   playTimeMs,
   racePermitted,
@@ -329,13 +330,35 @@ describe("decodeItems", () => {
   });
 
   it("reports a key count beyond a dungeon's keys rather than hiding it", () => {
-    // Ice Palace holds two keys: a third counted is a double count the
+    // Ice Palace holds two keys, and four more in a Door Randomizer run
+    // whose key drops are shuffled: a seventh counted is a double count the
     // decoder does not know of. The rules get the cap, the readout the count.
-    const decoded = decodeItems(new Image().set(SAVE(0x4e0 + 9), 3).view(), {
+    const decoded = decodeItems(new Image().set(SAVE(0x4e0 + 9), 7).view(), {
       race: false,
     });
-    expect(decoded.counts.keyD5).toBe(2);
-    expect(decoded.beyond).toEqual({ keyD5: 3 });
+    expect(decoded.counts.keyD5).toBe(6);
+    expect(decoded.beyond).toEqual({ keyD5: 7 });
+  });
+
+  it("counts the keys a Door Randomizer run's key drops add", () => {
+    // Thieves' Town holds one key, and two pots hold one each in a DR run
+    // whose pottery shuffles key pots: seen on a real game (2026-11-01, DR
+    // 1.5.8), the Spike Switch pot's key and a chest's counted 2. The
+    // reading belongs to no run: the app caps it at the run's own pool.
+    const read = (count: number) =>
+      decodeItems(new Image().set(SAVE(0x4e0 + 11), count).view(), {
+        race: false,
+      });
+    expect(read(2).counts.keyD4).toBe(2);
+    expect(read(2).beyond).toEqual({});
+    expect(read(3).counts.keyD4).toBe(3);
+    expect(read(4).counts.keyD4).toBe(3);
+    expect(read(4).beyond).toEqual({ keyD4: 4 });
+    // Palace of Darkness has no key drop: its pool is the most
+    expect(
+      decodeItems(new Image().set(SAVE(0x4e0 + 6), 7).view(), { race: false })
+        .beyond,
+    ).toEqual({ keyD1: 7 });
   });
 
   it("reads Hyrule Castle's keys from the castle or the sewers byte", () => {
@@ -1052,7 +1075,10 @@ describe("the decoders on random bytes", () => {
           const value = items.counts[id];
           if (value !== undefined) {
             expect(value).toBeGreaterThanOrEqual(0);
-            expect(value).toBeLessThanOrEqual(max.get(id) ?? 0);
+            // A small key count goes up to its DR key drops' keys too
+            expect(value).toBeLessThanOrEqual(
+              (max.get(id) ?? 0) + (KEY_DROPS[id] ?? 0),
+            );
             expect(Number.isInteger(value)).toBe(true);
           }
         }

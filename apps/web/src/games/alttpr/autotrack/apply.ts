@@ -499,7 +499,10 @@ const counterRanges = (
       ],
     ] as const) {
       if (wild) continue;
-      const held = item === null ? undefined : counts[item];
+      // The reading counts up to the most any run holds: this run's pool
+      // caps it
+      const read = item === null ? undefined : counts[item];
+      const held = read === undefined ? undefined : Math.min(read, inPool);
       ownLeast += held ?? 0;
       ownMost += held ?? inPool;
     }

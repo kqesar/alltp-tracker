@@ -1626,15 +1626,25 @@ range of their own (`owr-bonks`) behind their switch, of a category the race
 profile forbids (`bonk-drops`): v2.0 names no bonk drop, and the owner
 keeps them out of races, so Race Mode never reads them (the base patch's
 own code was not read: its source is not in the fork's checkout). Never a door, a room or a transition (the
-race admins' June 2026 clarification). Not checked on a real DR ROM yet: a
-sprite's slot being its load order with the overlords left out, and DR's
-item entries taking no slot (`standing_items.asm:403-405`).
+race admins' June 2026 clarification). Checked on a real DR ROM (2026-11-01,
+an avianart.games DR 1.5.8 seed on RetroArch and SNI, played by pad): a pot's
+bit is its index in the room's list (Skull Woods' West Lobby pot key, bit 13 of
+room $56; Thieves' Town's Spike Switch, bit 0 of $AB; Desert's Beamos Hall,
+bit 2 of $53), an enemy's its sprite slot (Castle Tower's Circle of Pots guard,
+slot and bit 10 of $B0, the room's overlords and DR's item entries taking
+none), and a shop slot's the shop's sram index plus the slot (Kakariko Shop's
+left, 21).
 
 **Small keys.** `DungeonCollectedKeys` counts in DR as in vt: a key item
 received through `AddInventory` (`stats.asm:121-148`), so a key found at a
 shuffled pot or drop counts; a vanilla drop's key does not
-(`IncrementSmallKeysNoPrimary`). `DungeonAllCollectedKeys` ($7EF4F1) is not
-read: its `CountAllKey` is marked dead code (`stats.asm:155-156`).
+(`IncrementSmallKeysNoPrimary`). A reading belongs to no run, so
+`decodeItems` counts a dungeon's keys up to the most any run holds, its pool's
+and its key drops' (`KEY_DROPS`), and the app caps the count at its run's own
+(`smallKeysMax`): Thieves' Town's second key in a key pots run is laid on the
+board, and named as a double count in What I read only where the run's pool
+holds one. `DungeonAllCollectedKeys` ($7EF4F1) is not read: its `CountAllKey`
+is marked dead code (`stats.asm:155-156`).
 
 **Settings from where the seed is rolled** (`seed-import.ts`): an avianart
 permalink's JSON (`api.php?action=permlink&hash=`) holds its spoiler's

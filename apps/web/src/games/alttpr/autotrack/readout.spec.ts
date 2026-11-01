@@ -13,6 +13,7 @@ import {
   describeReading,
   locationName,
 } from "@/games/alttpr/autotrack/readout";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { writeSeedSettings } from "../../../../../../packs/alttpr/test/seed-rom";
 
 /** The pack's ranges over a memory image, as a session's snapshot is. */
@@ -337,13 +338,43 @@ describe("describeReading's key counts", () => {
   it("names a key count beyond the dungeon's keys", () => {
     const memory = seedMemory({ race: false });
     memory[SAVE(0x4e0 + 9)] = 3; // Ice Palace holds two keys
-    const readout = describeReading(readMemory(viewOf(memory), false, 0));
+    const readout = describeReading(
+      readMemory(viewOf(memory), false, 0),
+      false,
+      false,
+      new Set(),
+      getPreset("open").settings,
+    );
 
     expect(readout.dungeons).toEqual([
       {
         dungeon: "Ice Palace",
         items: [
           "2 small keys found (the game counts 3, more than the dungeon holds)",
+        ],
+      },
+    ]);
+  });
+
+  it("counts the keys a Door Randomizer run's key pots add", () => {
+    // Thieves' Town holds one key, and two key pots in a DR run whose
+    // pottery shuffles them: seen on a real game (2026-11-01, DR 1.5.8), the
+    // Spike Switch pot's key and a chest's, counted 2
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 11)] = 2;
+    const reading = readMemory(viewOf(memory), false, 0);
+    const dr = getPreset("door-crosskeys").settings;
+    const of = (run: typeof dr) =>
+      describeReading(reading, true, false, new Set(), run).dungeons;
+    expect(of({ ...dr, pottery: "keys" })).toEqual([
+      { dungeon: "Thieves' Town", items: ["2 small keys found"] },
+    ]);
+    // Without the key pots, the second is beyond the dungeon's keys
+    expect(of({ ...dr, pottery: "none" })).toEqual([
+      {
+        dungeon: "Thieves' Town",
+        items: [
+          "1 small key found (the game counts 2, more than the dungeon holds)",
         ],
       },
     ]);
