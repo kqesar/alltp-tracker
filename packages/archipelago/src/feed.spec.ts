@@ -221,6 +221,27 @@ describe("foldFeed, edges", () => {
     expect(state.lines[0]).toMatchObject({ count: 1, mine: 1 });
   });
 
+  it("folds a collect's sends from the collector's own world too", () => {
+    // AP 0.6.8's collect_player sends every location holding the slot's
+    // items, its own world's included, in slot order (seen on a real
+    // server: 81 from slot 1, 141 from the collector, 25 from slot 3)
+    const state = run([
+      { kind: "goal", slot: 2 },
+      { kind: "collect", slot: 2 },
+      item(1, 2),
+      item(2, 2),
+      item(2, 2),
+      item(3, 2),
+      { kind: "release", slot: 2 },
+    ]);
+    expect(state.lines.map((line) => line.kind)).toEqual([
+      "goal",
+      "collect",
+      "release",
+    ]);
+    expect(state.lines[1]).toMatchObject({ count: 4, mine: 1 });
+  });
+
   it("says a release or collect of nothing, and one of one", () => {
     const state = run([
       { kind: "collect", slot: 2 },

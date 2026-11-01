@@ -213,9 +213,11 @@ fields only (never its text, which AP may reword):
   `CommandResult`, `AdminCommandResult`, `TagsChanged`, `ItemCheat` (an
   admin's `!getitem`) and untyped messages.
 - **Folded** (`foldFeed`, by ids): the item sends that follow a `Release`
-  of slot S and come from S's world, or a `Collect` of S and go to S, join
-  its line ("Quester released 4 items, 2 for you"; recorded order at a goal:
-  Goal, Collect and its sends, Release and its sends). Joins and parts in a
+  of slot S and come from S's world, or a `Collect` of S and go to S (from
+  any world, S's own included: on a real 0.6.8 server a collect sent 141 of
+  its 247 items from the collector's world), join its line ("Quester
+  released 4 items, 2 for you"; recorded order at a goal: Goal, Collect and
+  its sends, Release and its sends). Joins and parts in a
   row collapse into one line, each player as they stand last. A countdown
   counts down on one line ("Starting countdown of 2s", 2, 1, then 0, "GO").
   The tail keeps 200 lines.

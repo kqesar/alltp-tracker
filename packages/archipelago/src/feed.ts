@@ -167,11 +167,9 @@ function foldIntoBurst(
       mine: last.mine + (event.receiver === me ? 1 : 0),
     };
   }
-  if (
-    last.kind === "collect" &&
-    event.receiver === last.slot &&
-    event.finder !== last.slot
-  ) {
+  // A collect sends every location holding the slot's items, its own
+  // world's included (AP 0.6.8 MultiServer.py collect_player)
+  if (last.kind === "collect" && event.receiver === last.slot) {
     return {
       ...last,
       count: last.count + 1,
