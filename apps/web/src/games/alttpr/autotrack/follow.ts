@@ -120,6 +120,12 @@ export const createFollower = (): Follower => {
   /** The game's clock the timer was last set on, to hold it if the game stops. */
   let lastClock: GameClock | undefined;
   /**
+   * The seed of the ROM `lastClock` was read from: only a run of that seed
+   * has its timer stopped at that time, never one that replaced it since
+   * (in another tab, before a resync, by an Undo).
+   */
+  let clockSeed: string | null = null;
+  /**
    * The medallions the game has shown, by slot of the board's `medallions`:
    * a reading shows one only while its pad's screen is in view (or its
    * entrance open), so the session keeps what was shown. The game never
@@ -233,7 +239,13 @@ export const createFollower = (): Follower => {
     // A timer set on the game's clock stops at the run's last time: the
     // other ROM's clock is not the run's
     const game = useGameStore.getState();
-    if (game.timerClock === "game" && lastClock?.status === "running") {
+    if (
+      game.timerClock === "game" &&
+      lastClock?.status === "running" &&
+      clockSeed !== null &&
+      game.seed !== null &&
+      sameSeedId(game.seed, clockSeed) !== false
+    ) {
       game.alignTimer({ ms: lastClock.ms, status: "paused" }, reading.at);
     }
     held = reading;
@@ -291,6 +303,7 @@ export const createFollower = (): Follower => {
           ? undefined
           : romStats.playFrames;
       lastClock = typeof clock === "object" ? clock : undefined;
+      clockSeed = reading.seed.seed;
       if (typeof clock === "object") game.alignTimer(clock, reading.at);
       else if (clock === "unloaded") {
         // The title or the file select: the game's time is not there to read
@@ -329,8 +342,10 @@ export const createFollower = (): Follower => {
     },
     resync: (now) => {
       shown = null;
-      // Nothing the session kept belongs to the run replaced
+      // Nothing the session kept belongs to the run replaced, its clock
+      // neither
       forget();
+      lastClock = undefined;
       // A ROM held for another seed: the new run may be its
       if (now && held !== null) {
         beforePlay = heldBeforePlay;

@@ -382,6 +382,25 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("never sets a run replaced in another tab to the held ROM's time", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    const own = { name: "dsjF6gGsH" };
+    follower.read(readingAt(T0, { ...own, state: FILE_SELECT }));
+    follower.read(at(1_000, 100_000, own));
+    follower.read(at(11_000, 100_601, own));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A run of another seed, which this tab's follower is not told of
+    run().load({ ...freshProgress(), seed: "cHXhTSCB8" });
+    follower.read(at(12_000, 100_661, own));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("writes nothing for a reading that agrees with the timer", () => {
     const follower = start();
     follower.read(at(11_000, 100_601));

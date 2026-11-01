@@ -197,6 +197,28 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("never sets a run replaced in another tab to the held ROM's time", () => {
+    const GUID = "8506bbef2c2b4432af378b571c6c9133";
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: GUID, state: ZELDA.FILE_SELECT }));
+    follower.read(at(1_000, { sm: 0, zelda: 600 }, { guid: GUID }));
+    follower.read(at(11_000, { sm: 0, zelda: 1_200 }, { guid: GUID }));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    // A run of another seed, which this tab's follower is not told of
+    run().load({
+      ...freshProgress(run().settings),
+      seed: "c4538986b998477dbef480df8eb6eaec",
+    });
+    follower.read(at(12_000, { sm: 0, zelda: 1_260 }, { guid: GUID }));
+    expect(run().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("is the sum of both games' counters: the running game's live one and the other's saved", () => {
     const follower = start({ sm: 6_000, zelda: 1_500 });
     expect(run().timer).toEqual({

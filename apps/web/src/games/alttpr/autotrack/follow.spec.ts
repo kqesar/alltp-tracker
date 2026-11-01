@@ -250,6 +250,43 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("never sets a run replaced in another tab to the held ROM's time", () => {
+    store().applyGameNews(() => ({ seed: "0yAObedRMV" }));
+    const follower = createFollower();
+    const rom = seedMemory({ name: "0yAObedRMV", race: false });
+    follower.read(at(rom, 0x07, 6_000, 0));
+    expect(store().timer.startedAt).not.toBeNull();
+
+    // A run of another seed, which this tab's follower is not told of
+    store().applyRun("open", store().settings, () => ({ seed: "9MQ9gO1wMD" }));
+    follower.read(at(rom, 0x07, 6_060, 5));
+    expect(store().timer).toEqual({
+      elapsedMs: 0,
+      finished: false,
+      startedAt: null,
+    });
+  });
+
+  it("keeps the time Undo gave back when the ROM followed is held again", () => {
+    store().applyGameNews(() => ({ seed: "9MQ9gO1wMD" }));
+    store().startTimer(1_000);
+    store().pauseTimer(61_000);
+    const own = store().timer;
+    const follower = createFollower();
+    const rom = seedMemory({ name: "0yAObedRMV", race: false });
+    follower.read(at(rom, 0x07, 90_000, 0));
+
+    // Follow this ROM, then Undo: the run's own time again
+    store().takeSeed("0yAObedRMV");
+    follower.resync(true);
+    expect(store().timer.elapsedMs).toBe(playTimeMs(90_000));
+    store().undo();
+    expect(store().timer).toEqual(own);
+
+    follower.read(at(rom, 0x07, 90_060, 5));
+    expect(store().timer).toEqual(own);
+  });
+
   it("leaves a timer alone that real time counts, or the game's clock does not set", () => {
     store().setTimerClock("real");
     const memory = seedMemory({ race: false });
