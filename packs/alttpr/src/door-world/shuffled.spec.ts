@@ -407,4 +407,39 @@ describe("DR's key analysis on a noted door shuffle", () => {
       }).doorKeyLogic?.size,
     ).toBe(0);
   });
+
+  it("keeps strict-safe a dungeon with a prize entered from Ganon's Tower's door among others", () => {
+    // prize_relevance (KeyDoorShuffle.py:1519-1525): that start stays shut
+    // until the dungeon's prize (create_key_counters, :1789-1797), a walk
+    // the port does not make. Crossed: Ganon's Tower's lobby stairs down
+    // into Eastern's dark room, Eastern's attic into the tower's torch
+    // room, so Eastern's layout holds both lobbies, each a start
+    const s = shuffle({ shuffle: "crossed" });
+    const notes = vanillaLayout(s);
+    const link = (pairs: readonly (readonly [string, string])[]) => {
+      const links: Record<string, string> = { ...notes.links };
+      for (const [a, b] of pairs) {
+        links[doorId(a)] = doorId(b);
+        links[doorId(b)] = doorId(a);
+      }
+      return links;
+    };
+    const world = drWorld(settings("open"), {
+      data: DR_DATA,
+      doors: {
+        notes: {
+          ...notes,
+          links: link([
+            ["GT Lobby Left Down Stairs", "Eastern Darkness Up Stairs"],
+            ["GT Torch Up Stairs", "Eastern Attic Start Down Stairs"],
+          ]),
+        },
+        settings: s,
+      },
+    });
+    expect(world.roomDungeons?.get("GT Lobby")).toBe("Eastern Palace");
+    expect(world.roomDungeons?.get("Eastern Lobby")).toBe("Eastern Palace");
+    expect(world.doorKeyLogic?.has("Eastern Palace")).toBe(false);
+    expect(world.doorKeyLogic?.has("Tower of Hera")).toBe(true);
+  });
 });

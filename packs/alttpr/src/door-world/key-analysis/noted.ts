@@ -214,7 +214,7 @@ export function notedDoorKeyLogic(
   }[] = [];
   for (const { dungeon, regions } of told) {
     const starts = startsOf(input, dungeon, walk);
-    if (starts === undefined) continue;
+    if (starts === undefined || prizeRelevant(data, dungeon, starts)) continue;
     const layout = regions.map((region) => [
       region.name,
       region.exits.map((exit) => {
@@ -466,6 +466,27 @@ function startsOf(
     if (shut.length === 0) starts.push(drop);
   }
   return [...new Set(starts)];
+}
+
+/**
+ * prize_relevance (KeyDoorShuffle.py:1519-1525): a dungeon with a prize
+ * that starts from more than one region, one of them entered from Ganon's
+ * Tower's door (vanilla entrances: its portal's lobby), keeps that start
+ * shut until its prize (create_key_counters, :1789-1797; the fork's with
+ * its prizes in place, owr:KeyDoorShuffle.py:1792), a walk the port does
+ * not make: such a dungeon keeps the strict-safe rule.
+ */
+function prizeRelevant(
+  data: DrData,
+  dungeon: string,
+  starts: readonly string[],
+): boolean {
+  if (starts.length < 2) return false;
+  if ((data.dungeons.find((d) => d.name === dungeon)?.prize ?? null) === null)
+    return false;
+  const tower = data.portals.find((p) => p.name === "Ganons Tower");
+  const lobby = tower === undefined ? undefined : data.parent.get(tower.door);
+  return lobby !== undefined && starts.includes(lobby);
 }
 
 /**
