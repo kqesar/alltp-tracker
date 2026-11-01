@@ -1,5 +1,6 @@
 import type { Settings, State } from "@alltp/engine";
 import { describe, expect, it } from "vitest";
+import { vanillaDoorNotes, vanillaLayoutNotes } from "../../test/dr-doors";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
@@ -8,10 +9,7 @@ import {
   type DoorNotes,
   type DoorShuffleSettings,
   doorId,
-  isShuffledDoor,
-  kindShuffled,
   portalId,
-  vanillaKind,
 } from "./doors";
 import { DR_DATA } from "./dr-data";
 import {
@@ -23,11 +21,12 @@ import {
 } from "./index";
 import type { KeyLogic } from "./key-analysis/analysis";
 import { forgetNotedKeyLogic } from "./key-analysis/noted";
-import { ALTERNATIVE_CRYSTAL_DOORS, UGLY_SMALLS } from "./keys";
+import { ALTERNATIVE_CRYSTAL_DOORS } from "./keys";
+import type { OwrNotes } from "./overworld";
 import { OWR_DATA } from "./owr-data";
 import { roomDungeons } from "./shuffle";
 
-type Mode = "open" | "standard";
+type Mode = "open" | "standard" | "inverted";
 
 const settings = (mode: Mode, more: Settings = {}): Settings => ({
   ...DR_DEFAULTS,
@@ -45,36 +44,6 @@ const shuffle = (
   trapMode: "optional",
   ...more,
 });
-
-/**
- * The notes of a player whose seed kept every door where the vanilla
- * world has it (a layout DR may make): each shuffled door's vanilla pair,
- * each kind its room's, each portal on its own door.
- */
-function vanillaNotes(s: DoorShuffleSettings): DoorNotes {
-  const links: Record<string, string> = {};
-  for (const table of [
-    "default_door_connections",
-    "default_one_way_connections",
-    "spiral_staircases",
-    "open_edges",
-    "straight_staircases",
-    "ladders",
-  ])
-    for (const [a, b] of DR_DATA.pairsOf("DoorShuffle.py", table)) {
-      const one = DR_DATA.doors.find((d) => d.name === a);
-      if (one === undefined || !isShuffledDoor(one, s, DR_DATA)) continue;
-      links[doorId(a)] = doorId(b);
-      links[doorId(b)] = doorId(a);
-    }
-  const kinds: Record<string, DoorKindNote> = {};
-  for (const door of DR_DATA.doors)
-    if (kindShuffled(door, s)) kinds[doorId(door.name)] = vanillaKind(door);
-  const lobbies = Object.fromEntries(
-    DR_DATA.portals.map((p) => [portalId(p.name), doorId(p.door)]),
-  );
-  return { kinds, links, lobbies };
-}
 
 /** Each location's answer, by id. */
 function answers(world: ReturnType<typeof drWorld>, state: State) {
@@ -101,7 +70,7 @@ describe("DR's world on noted doors", () => {
       const s = shuffle({ intensity });
       const world = drWorld(settings("open"), {
         data: DR_DATA,
-        doors: { notes: vanillaNotes(s), settings: s },
+        doors: { notes: vanillaDoorNotes(s, DR_DATA), settings: s },
       });
       const vanilla = drWorld(settings("open"), { data: DR_DATA });
       const all = keyed(everything(settingsFromUpstream("open")));
@@ -130,7 +99,7 @@ describe("DR's world on noted doors", () => {
 
   it("reads a kind not noted as maybe, and a noted trap as no way out", () => {
     const s = shuffle();
-    const notes = vanillaNotes(s);
+    const notes = vanillaDoorNotes(s, DR_DATA);
     const all = everything(settingsFromUpstream("open"));
     // Eastern's cannonball room leads on to its courtyard by a plain door
     const bridge = doorId("Eastern Cannonball N");
@@ -152,7 +121,7 @@ describe("DR's world on noted doors", () => {
 
   it("asks a basic dungeon's key doors for all its keys, or maybe", () => {
     const s = shuffle();
-    const notes = vanillaNotes(s);
+    const notes = vanillaDoorNotes(s, DR_DATA);
     const world = drWorld(settings("open", { wildKeys: true }), {
       data: DR_DATA,
       doors: { notes, settings: s },
@@ -169,7 +138,7 @@ describe("DR's world on noted doors", () => {
 
   it("puts a crossed room in the dungeon of the portal it is reached from", () => {
     const s = shuffle({ shuffle: "crossed" });
-    const notes = vanillaNotes(s);
+    const notes = vanillaDoorNotes(s, DR_DATA);
     // Eastern's lobby bridge leads into Ganon's Tower's big chest room
     const bridge = doorId("Eastern Lobby Bridge N");
     const tower = doorId("GT Big Chest SW");
@@ -190,7 +159,7 @@ describe("DR's world on noted doors", () => {
     // pool's key doors are strict-safe: they wait for the dungeon's count
     const all = everything(settingsFromUpstream("open"));
     const s3 = shuffle({ intensity: 3, shuffle: "crossed" });
-    const notes3 = vanillaNotes(s3);
+    const notes3 = vanillaDoorNotes(s3, DR_DATA);
     const counted = drWorld(settings("open"), {
       data: DR_DATA,
       doors: {
@@ -237,7 +206,7 @@ describe("DR's world on noted doors", () => {
 
   it("opens a portal on its noted lobby alone from intensity 3", () => {
     const s = shuffle({ intensity: 3 });
-    const notes = vanillaNotes(s);
+    const notes = vanillaDoorNotes(s, DR_DATA);
     const { [portalId("Eastern")]: _, ...others } = notes.lobbies ?? {};
     const world = drWorld(settings("open"), {
       data: DR_DATA,
@@ -287,41 +256,35 @@ describe("DR's key analysis on a noted door shuffle", () => {
           [rule.smallKeyNum, rule.worstCase, rule.allowSmall, rule.lockNum],
         ]),
     );
-  /** A layout noted where the vanilla world has it, its key doors DR's. */
-  const vanillaLayout = (s: DoorShuffleSettings): DoorNotes => {
-    const notes = vanillaNotes(s);
-    // unmark_ugly_smalls (DoorShuffle.py:476-480): no key doors in DR
-    const kinds = { ...notes.kinds };
-    for (const name of UGLY_SMALLS) kinds[doorId(name)] = "normal";
-    return { ...notes, kinds };
+  /**
+   * vanilla_key_logic's own adjustments (DoorShuffle.py:282-316), for
+   * vanilla doors alone: the escape's three doors, the Palace of
+   * Darkness's front door, Misery Mire's blue barriers.
+   */
+  const ADJUSTED: Readonly<Record<string, readonly string[]>> = {
+    "Hyrule Castle": [
+      "Sewers Secret Room Key Door S",
+      "Hyrule Dungeon Map Room Key Door S",
+      "Sewers Dark Cross Key Door N",
+    ],
+    "Misery Mire": [...ALTERNATIVE_CRYSTAL_DOORS],
+    "Palace of Darkness": ["PoD Middle Cage N"],
   };
 
   it("reads a layout noted as the vanilla one as DR's vanilla analysis, but its hand adjustments", () => {
     const s = shuffle();
     const world = drWorld(settings("open"), {
       data: DR_DATA,
-      doors: { notes: vanillaLayout(s), settings: s },
+      doors: { notes: vanillaLayoutNotes(s, DR_DATA), settings: s },
     });
     const vanilla = drKeyLogic(DR_DATA, settings("open"));
     expect([...(world.doorKeyLogic?.keys() ?? [])]).toEqual([
       ...vanilla.keys(),
     ]);
-    // vanilla_key_logic's own (DoorShuffle.py:282-316), for vanilla doors
-    // alone: the escape's three doors, the Palace of Darkness's front door,
-    // Misery Mire's blue barriers
-    const adjusted: Readonly<Record<string, readonly string[]>> = {
-      "Hyrule Castle": [
-        "Sewers Secret Room Key Door S",
-        "Hyrule Dungeon Map Room Key Door S",
-        "Sewers Dark Cross Key Door N",
-      ],
-      "Misery Mire": [...ALTERNATIVE_CRYSTAL_DOORS],
-      "Palace of Darkness": ["PoD Middle Cage N"],
-    };
     for (const [dungeon, logic] of vanilla) {
       const noted = world.doorKeyLogic?.get(dungeon);
-      expect(rulesOf(noted, adjusted[dungeon]), dungeon).toEqual(
-        rulesOf(logic, adjusted[dungeon]),
+      expect(rulesOf(noted, ADJUSTED[dungeon]), dungeon).toEqual(
+        rulesOf(logic, ADJUSTED[dungeon]),
       );
       expect(noted?.layout.maxChests, dungeon).toBe(logic.layout.maxChests);
     }
@@ -335,7 +298,7 @@ describe("DR's key analysis on a noted door shuffle", () => {
 
   it("leaves a dungeon strict-safe while a door of its layout or a kind is not noted", () => {
     const s = shuffle();
-    const notes = vanillaLayout(s);
+    const notes = vanillaLayoutNotes(s, DR_DATA);
     const build = (more: Partial<DoorNotes>) =>
       drWorld(settings("open"), {
         data: DR_DATA,
@@ -357,7 +320,7 @@ describe("DR's key analysis on a noted door shuffle", () => {
 
   it("works a dungeon's analysis out again only when its own layout's notes change", () => {
     const s = shuffle({ shuffle: "crossed" });
-    const notes = vanillaLayout(s);
+    const notes = vanillaLayoutNotes(s, DR_DATA);
     const build = (kinds: DoorNotes["kinds"]) =>
       drWorld(settings("open"), {
         data: DR_DATA,
@@ -383,11 +346,11 @@ describe("DR's key analysis on a noted door shuffle", () => {
     );
   });
 
-  it("runs no analysis from intensity 3, with decoupled doors, shuffled entrances or the fork's world", () => {
+  it("runs no analysis from intensity 3 or with decoupled doors", () => {
     const run = (s: DoorShuffleSettings, more = {}) =>
       drWorld(settings("open"), {
         data: DR_DATA,
-        doors: { notes: vanillaLayout(s), settings: s },
+        doors: { notes: vanillaLayoutNotes(s, DR_DATA), settings: s },
         ...more,
       }).doorKeyLogic;
     expect(run(shuffle({ intensity: 3 }))?.size).toBe(0);
@@ -397,15 +360,74 @@ describe("DR's key analysis on a noted door shuffle", () => {
     expect(
       drWorld(settings("standard"), {
         data: DR_DATA,
-        doors: { notes: vanillaLayout(shuffle()), settings: shuffle() },
+        doors: {
+          notes: vanillaLayoutNotes(shuffle(), DR_DATA),
+          settings: shuffle(),
+        },
       }).doorKeyLogic?.has("Hyrule Castle"),
     ).toBe(false);
-    expect(
+  });
+
+  it("reads a layout noted as the vanilla one in the fork's world as its vanilla analysis, but its hand adjustments", () => {
+    // The fork's analysis is DR's (owr:KeyDoorShuffle.py), on its own data
+    // and its screens: its walks start where the screens put Link, its
+    // destinations stand by screen (owr:DoorShuffle.py:99-110)
+    for (const mode of ["open", "inverted"] as const) {
+      const s = shuffle();
+      const run = settings(
+        mode,
+        mode === "inverted" ? { invertedMode: true } : {},
+      );
+      const world = drWorld(run, {
+        data: OWR_DATA,
+        doors: { notes: vanillaLayoutNotes(s, OWR_DATA), settings: s },
+      });
+      const vanilla = drKeyLogic(OWR_DATA, run);
+      expect([...(world.doorKeyLogic?.keys() ?? [])], mode).toEqual([
+        ...vanilla.keys(),
+      ]);
+      for (const [dungeon, logic] of vanilla) {
+        const noted = world.doorKeyLogic?.get(dungeon);
+        expect(
+          rulesOf(noted, ADJUSTED[dungeon]),
+          `${mode}: ${dungeon}`,
+        ).toEqual(rulesOf(logic, ADJUSTED[dungeon]));
+        expect(noted?.layout.maxChests, dungeon).toBe(logic.layout.maxChests);
+      }
+    }
+  });
+
+  it("waits for the fork's overworld to be noted whole", () => {
+    const s = shuffle();
+    const build = (overworld: OwrNotes) =>
       drWorld(settings("open"), {
         data: OWR_DATA,
-        doors: { notes: vanillaLayout(shuffle()), settings: shuffle() },
+        doors: { notes: vanillaLayoutNotes(s, OWR_DATA), settings: s },
+        overworld,
+      }).doorKeyLogic?.size;
+    // Whirlpools shuffled, none noted: a way the walks need may be one
+    expect(build({ whirlpools: {} })).toBe(0);
+    // Every one noted, as the vanilla world pairs them
+    const whirlpools: Record<string, string> = {};
+    const pairs = OWR_DATA.tableOf<unknown>(
+      "OverworldShuffle.py",
+      "default_whirlpool_connections",
+    ) as unknown as readonly (readonly [
+      readonly [number, string, string],
+      readonly [number, string, string],
+    ])[];
+    for (const [a, b] of pairs) {
+      whirlpools[a[1]] = b[1];
+      whirlpools[b[1]] = a[1];
+    }
+    expect(build({ whirlpools })).toBe(13);
+    // DR's own world reads no overworld note: analysed as before
+    expect(
+      drWorld(settings("open"), {
+        data: DR_DATA,
+        doors: { notes: vanillaLayoutNotes(s, DR_DATA), settings: s },
       }).doorKeyLogic?.size,
-    ).toBe(0);
+    ).toBe(13);
   });
 
   it("keeps strict-safe a dungeon with a prize entered from Ganon's Tower's door among others", () => {
@@ -415,7 +437,7 @@ describe("DR's key analysis on a noted door shuffle", () => {
     // into Eastern's dark room, Eastern's attic into the tower's torch
     // room, so Eastern's layout holds both lobbies, each a start
     const s = shuffle({ shuffle: "crossed" });
-    const notes = vanillaLayout(s);
+    const notes = vanillaLayoutNotes(s, DR_DATA);
     const link = (pairs: readonly (readonly [string, string])[]) => {
       const links: Record<string, string> = { ...notes.links };
       for (const [a, b] of pairs) {

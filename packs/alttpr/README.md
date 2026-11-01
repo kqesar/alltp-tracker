@@ -1264,7 +1264,22 @@ door, the destinations fixed by `link_doors_prep`, `:100-108`), coupled
 doors, vanilla entrances, every door of the layout linked and of a known
 kind, its drops in its layout, and each lobby the walk reaches or a walk
 that crossed no door not noted; Standard's castle aside (its courtyard
-start, `std_flag`). Anywhere else a key door asks every key of its
+start, `std_flag`), and a dungeon with a prize whose starts include Ganon's
+Tower's lobby among others (`prize_relevance`, `KeyDoorShuffle.py:1519-1525`:
+DR keeps that start shut until the prize, a walk the port does not make; a
+crossed layout only). The Overworld Randomizer runs the same code
+(its `DoorShuffle.py` and `KeyDoorShuffle.py` differ from DR 1.5.8's only
+there) on the world its overworld shuffles linked first, so its layouts
+are analysed too once its overworld is noted whole (`owrNotesComplete`:
+every whirlpool, flute spot, crossing and Mixed flip): its walks start
+where its screens put Link (the Bomb Shop once 0x2c flips, the castle's
+ledge once the pyramid's 0x1b does, `owr:DoorShuffle.py:3405-3456`), its
+destinations stand by screen (`:99-110`), Sanctuary's save point enters
+its dungeon wherever Link does not start at the Dark Chapel (`:3462-3466`),
+and its events are its own `location_events` (`owr:Regions.py:1405-1441`,
+which hold each boss's kill in its `Spoils` room: no chest of the
+walk's). Its prize shuffle and its items placed nearby, which its
+analysis reads apart, are not modelled (the app's `doorReasons`). Anywhere else a key door asks every key of its
 dungeon or `maybe` (strict-safe), the vanilla count in `basic` and the
 count the player noted in a pool (`shuffle_small_key_doors` moves it,
 `DoorShuffle.py:2139-2145`), `maybe` until noted: from intensity 3 DR
@@ -1277,8 +1292,17 @@ with fewer keys (the door contract lists each, all `yes` once every key is
 held), and never `yes` where DR does not. `shuffled.spec.ts` holds the
 plumbing: a layout noted as the vanilla one reads DR's vanilla analysis
 rule for rule, but for `vanilla_key_logic`'s hand adjustments, which DR
-makes for vanilla doors alone; `key-model.spec.ts` holds the analysed
-model of the basic door seeds to every placement its fill may make. The door kinds read the widest of DR's settings, as neither
+makes for vanilla doors alone, and the fork's the same in its Open and
+Inverted worlds (`test/owr-playthrough.spec.ts` under each Mixed seed's
+flips: the two walks to its starts, `determine_entrance_list`'s and
+`filter_start_regions`', meet); `key-model.spec.ts` holds the analysed
+model of the basic door seeds to every placement its fill may make, and
+both door contracts hold each analysed seed's world to the strict-safe
+one of the same notes (`withinStrictSafe`, `test/dr-doors.ts`): over
+random draws of its items, a location the analysis says `yes` to is `yes`
+there with every key held, the analysis raising some (not vacuous), and
+a strict-safe world missing the notes' links found below it (it can fail).
+The door kinds read the widest of DR's settings, as neither
 `door_type_mode` nor `trap_door_mode` is a run setting: `kindShuffled`
 takes every kind any `door_type_mode` may give or take (original, big,
 all, chaos) and the trap mode as `oneway` (`doorShuffleSettingsOf` in the
@@ -1995,13 +2019,21 @@ reads screens for modes (`find_inaccessible_regions`, the portals'
 destinations, `DoorShuffle.py:103-110`, `:3404-3436`), the bosses' own
 `Spoils` rooms (its data) and its prize shuffle: what the door model reads
 (the pools, the doors each intensity shuffles, the lobbies, the kinds) is
-DR's, the rest feeds the key analysis, which door shuffle leaves
-strict-safe. Each link, lobby and kind is one the model offers, each room
-in the log's `@ Dungeon` (which found the drop-landing rooms, above), no
-location `yes` too early; what is not `yes` in time is a strict-safe key
-door, `yes` with every key held, but Standard's escape (`uVQOPwIvs`: its way
-back through a bombable door, whose bombs the fork's `can_farm_bombs` reads
-maybe before her delivery). The app's side
+DR's, the rest feeds the key analysis (above, "The Door Randomizer": the
+fork's on each layout its notes tell whole). Each link, lobby and kind is
+one the model offers, each room in the log's `@ Dungeon` (which found the
+drop-landing rooms, above), no location `yes` too early. The five seeds
+below intensity 3 with vanilla entrances and coupled doors have their
+layouts analysed (61 dungeons, each one's chest keys the log's small keys
+of it): the 22 locations their key doors left `maybe` under strict-safe
+are `yes` in their sphere, and no location `yes` too early. Three dungeons stay
+strict-safe there, a door of each layout leading nowhere in the log
+(`CTRTq1Rhj`'s Mire Bent Bridge SW and GT Beam Dash ES, `uVQOPwIvs`'s GT
+Hidden Star ES), which no note tells. What is not `yes` in time is a
+strict-safe key door of the other four (intensity 3, Crossed entrances,
+decoupled), `yes` with every key held, and Standard's escape (`uVQOPwIvs`:
+its way back through a bombable door, whose bombs the fork's
+`can_farm_bombs` reads maybe before her delivery). The app's side
 (`apps/web/src/games/alttpr/logic/owrSeeds.spec.ts`) reads the same
 permalinks as **Start from a seed** does and holds the run they switch to
 to that world's settings: modelled, the fork's solver, its mode, its bonk

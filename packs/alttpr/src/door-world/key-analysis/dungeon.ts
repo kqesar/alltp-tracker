@@ -186,7 +186,7 @@ export const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
  * OWR's (owr:DoorShuffle.py:99-108) by the screens they stand on, flipped
  * where read so (a screen not known read as standing).
  */
-const destinationPortals = (
+export const destinationPortals = (
   data: DrData,
   mode: DrMode,
   screens: OwrScreens,
@@ -466,16 +466,18 @@ function inaccessibleRegions(
       }
     }
   }
+  // valid_inaccessible_region (:3490-3491; the fork's start house by its
+  // screen, owr:DoorShuffle.py:3498-3499)
+  const home = bombShop === true ? "Big Bomb Shop" : "Links House";
   const found = new Set(
     data.regions
       .filter(
         (r) =>
           r.type !== "dungeon" &&
           !visited.has(r.name) &&
-          // valid_inaccessible_region (:3490-3491)
           (r.type !== "cave" ||
             ((exits.get(r.name)?.length ?? 0) > 0 &&
-              r.name !== "Links House" &&
+              r.name !== home &&
               r.name !== "Chris Houlihan Room")),
       )
       .map((r) => r.name),

@@ -11,16 +11,27 @@
 // :95-108), coupled doors, entrances vanilla (the caller's), every door
 // of its layout linked and of a known kind, and its start regions certain.
 // Any other dungeon keeps the strict-safe rule (shuffle.ts).
+//
+// The Overworld Randomizer runs the same code (owr:DoorShuffle.py and
+// KeyDoorShuffle.py differ from DR 1.5.8's only where noted below) on the
+// world its overworld shuffles linked first (link_overworld, owr:Main.py:
+// 181, before link_doors, :202): its walks start where its screens put
+// Link (is_bombshop_start, is_dark_chapel_start, the pyramid's screen),
+// its destinations stand by screen (owr:DoorShuffle.py:99-110), and its
+// events are its own (dungeon.ts eventsOf). Its overworld is read only
+// once the notes tell it whole: an edge, a whirlpool, a flute spot or a
+// screen's flip not noted may hold a way the walks need.
 import type { DrConnections, DrNotedDoors } from "../connections";
 import { dynamicExits, lobbiesOf } from "../connections";
 import type { DrData, DrMode } from "../data";
 import { doorById, isShuffledDoor } from "../doors";
-import { regionTypeOf, screensOf } from "../overworld";
+import { type OwrScreens, regionTypeOf, screensOf } from "../overworld";
 import { isShut, kindIn } from "../shuffle";
 import { analyzeDungeon, type KeyLogic } from "./analysis";
 import { keyLayout } from "./counters";
 import {
   DR_DUNGEON_ORDER,
+  destinationPortals,
   exitsByRegion,
   type KDoor,
   type KeyAnalysisSettings,
@@ -40,18 +51,12 @@ const DROP_ENTRANCES: Readonly<Record<string, readonly string[]>> = {
 };
 
 /**
- * The portals link_doors_prep marks as destinations below intensity 3 with
- * vanilla entrances (DoorShuffle.py:100-108), which filter_start_regions
- * leaves out.
+ * The screens the fork's walks and destinations read: the Desert's, the
+ * Skull Woods', Turtle Rock's (link_doors_prep, owr:DoorShuffle.py:103-
+ * 110), the pyramid's and the Bomb Shop's (find_inaccessible_regions,
+ * find_accessible_entrances, :3405-3456).
  */
-const destinationsOf = (mode: DrMode): ReadonlySet<string> =>
-  new Set([
-    ...(mode === "standard" ? ["Sanctuary"] : []),
-    "Desert East",
-    ...(mode === "inverted"
-      ? ["Desert West"]
-      : ["Skull 2 West", "Turtle Rock Lazy Eyes", "Turtle Rock Eye Bridge"]),
-  ]);
+const SCREENS_READ = [0x30, 0x00, 0x05, 0x1b, 0x2c];
 
 /**
  * The analyses run, by all that one dungeon's reads (the run's settings,
@@ -79,23 +84,27 @@ export function forgetNotedKeyLogic(dungeon?: string): void {
 }
 
 /**
- * The inaccessible regions (find_inaccessible_regions), by data and mode:
- * their walk crosses no door nor portal (DoorShuffle.py:3402-3437), so the
- * door notes never move them, and the entrances are vanilla here.
+ * The inaccessible regions (find_inaccessible_regions), by data, mode and
+ * an OWR run's overworld: their walk crosses no door nor portal
+ * (DoorShuffle.py:3402-3437), so the door notes never move them, and the
+ * entrances are vanilla here. The last few overworlds kept.
  */
-const INACCESSIBLE = new WeakMap<DrData, Map<DrMode, ReadonlySet<string>>>();
+const INACCESSIBLE = new WeakMap<DrData, Map<string, ReadonlySet<string>>>();
 
 function inaccessibleOf(
   data: DrData,
   mode: DrMode,
   connections: DrConnections,
+  screens: OwrScreens,
+  overworld: string,
 ): ReadonlySet<string> {
   let byMode = INACCESSIBLE.get(data);
   if (byMode === undefined) {
     byMode = new Map();
     INACCESSIBLE.set(data, byMode);
   }
-  let found = byMode.get(mode);
+  const id = JSON.stringify([mode, overworld]);
+  let found = byMode.get(id);
   if (found === undefined) {
     found = keyWorld({
       accessibility: "items",
@@ -112,8 +121,13 @@ function inaccessibleOf(
         kindOf: () => ({ bigKey: false, blocked: false, smallKey: false }),
       },
       mode,
+      screens,
     }).inaccessible;
-    byMode.set(mode, found);
+    byMode.set(id, found);
+    for (const old of byMode.keys()) {
+      if (byMode.size <= 16) break;
+      byMode.delete(old);
+    }
   }
   return found;
 }
@@ -132,6 +146,17 @@ export interface NotedDoorAnalysis {
   readonly doors: DrNotedDoors;
   /** Each dungeon room's dungeon (roomDungeons). */
   readonly dungeons: ReadonlyMap<string, string>;
+  /**
+   * An OWR run's overworld (absent, DR's own world): its screens
+   * (owrScreensOf), what keys all its walks read of it (`key`: its notes
+   * and its entrance shuffle, which the screens' groups read), and whether
+   * its notes tell it whole (owrNotesComplete).
+   */
+  readonly overworld?: {
+    readonly screens: OwrScreens;
+    readonly key: string;
+    readonly complete: boolean;
+  };
 }
 
 /**
@@ -141,14 +166,19 @@ export interface NotedDoorAnalysis {
 export function notedDoorKeyLogic(
   input: NotedDoorAnalysis,
 ): ReadonlyMap<string, KeyLogic> {
-  const { data, doors, dungeons, connections, mode, analysis } = input;
+  const { data, doors, dungeons, connections, mode, analysis, overworld } =
+    input;
   const found = new Map<string, KeyLogic>();
   const { settings } = doors;
+  const screens = overworld?.screens ?? screensOf(mode);
   if (
-    data.flavor !== "dr" ||
     settings.intensity >= 3 ||
     settings.decoupled ||
-    analysis.keyShuffle === "universal"
+    analysis.keyShuffle === "universal" ||
+    // The fork's world: its overworld told whole, each screen read known
+    (data.flavor === "owr" &&
+      (overworld?.complete !== true ||
+        SCREENS_READ.some((s) => screens.swapped(s) === undefined)))
   )
     return found;
   const lobbies = lobbiesOf(data, doors);
@@ -196,7 +226,8 @@ export function notedDoorKeyLogic(
     mode,
     connections,
     settings,
-    inaccessibleOf(data, mode, connections),
+    inaccessibleOf(data, mode, connections, screens, overworld?.key ?? ""),
+    screens,
   );
   // Each dungeon's analysis reads its own layout, its starts and the run's
   // settings alone: a note elsewhere leaves it as it was, kept (ANALYSES)
@@ -205,6 +236,9 @@ export function notedDoorKeyLogic(
     mode,
     { ...analysis, forcedDrops: [...analysis.forcedDrops].sort() },
     settings,
+    // An OWR run's overworld: the regions only a dungeon reaches, and the
+    // ways out of them its analysis walks
+    overworld?.key ?? null,
   ]);
   const wanted: {
     readonly dungeon: string;
@@ -213,7 +247,7 @@ export function notedDoorKeyLogic(
     readonly key: string;
   }[] = [];
   for (const { dungeon, regions } of told) {
-    const starts = startsOf(input, dungeon, walk);
+    const starts = startsOf(input, dungeon, walk, screens);
     if (starts === undefined || prizeRelevant(data, dungeon, starts)) continue;
     const layout = regions.map((region) => [
       region.name,
@@ -244,6 +278,7 @@ export function notedDoorKeyLogic(
       data,
       layout: { dests, dungeons, kindOf },
       mode,
+      screens,
     });
     for (const { dungeon, key, regions, starts } of missed) {
       const startRegions = starts.map((name) => world.regions.get(name));
@@ -336,11 +371,12 @@ interface Walk {
  * find_accessible_entrances (DoorShuffle.py:3439-3479), run at the end of
  * main_dungeon_generation (:1170-1172), before the door types are
  * shuffled: a walk of every exit, rules aside, from Link's House, the
- * Sanctuary and the Pyramid (Inverted's own three), skipping a door its
- * vanilla data shuts, stopping at the dungeon's own entrances. The walk
- * crosses other dungeons' layouts, which the notes may tell in part: a
- * door it reaches that the shuffle relinks and no note names makes what it
- * did not find uncertain.
+ * Sanctuary and the Pyramid (Inverted's own three; the fork's by its
+ * screens, owr:DoorShuffle.py:3453-3455), skipping a door its vanilla data
+ * shuts, stopping at the dungeon's own entrances. The walk crosses other
+ * dungeons' layouts, which the notes may tell in part: a door it reaches
+ * that the shuffle relinks and no note names makes what it did not find
+ * uncertain.
  */
 function accessibleEntrances(
   data: DrData,
@@ -348,8 +384,9 @@ function accessibleEntrances(
   connections: DrConnections,
   settings: DrNotedDoors["settings"],
   inaccessible: ReadonlySet<string>,
+  screens: OwrScreens,
 ): Walk {
-  const screens = screensOf(mode);
+  const owr = data.flavor === "owr";
   const dynamic = new Map(
     dynamicExits(data, mode, regionTypeOf(data, screens)).map((e) => [
       e.name,
@@ -369,10 +406,16 @@ function accessibleEntrances(
     const door = data.doorByName.get(exit);
     return door?.trapped === true && !data.portals.some((p) => p.door === exit);
   };
-  const starts =
-    mode === "inverted"
-      ? ["Links House", "Dark Sanctuary Hint", "Hyrule Castle Ledge"]
-      : ["Links House", "Sanctuary", "Pyramid Area"];
+  // The fork's: the Bomb Shop once its screen flips (is_bombshop_start),
+  // the Dark Chapel in Inverted (is_dark_chapel_start, `allow_flip_sanc`
+  // false outside the customizer, owr:OverworldShuffle.py:746), the
+  // castle's ledge once the pyramid's screen flips
+  const ledge = owr ? screens.swapped(0x1b) === true : mode === "inverted";
+  const starts = [
+    owr && screens.swapped(0x2c) === true ? "Big Bomb Shop" : "Links House",
+    mode === "inverted" ? "Dark Sanctuary Hint" : "Sanctuary",
+    ledge ? "Hyrule Castle Ledge" : "Pyramid Area",
+  ];
   const reached = (
     entrances: ReadonlySet<string>,
     skipped: ReadonlySet<string>,
@@ -382,11 +425,11 @@ function accessibleEntrances(
     const queue = starts.filter((r) => !skipped.has(r));
     const seen = new Set(queue);
     for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
-      // Inverted: Agahnim's tower leads to the castle's ledge (:3465-3468)
+      // Inverted: Agahnim's tower leads to the castle's ledge (:3465-3468;
+      // the fork's once the pyramid's screen flips, owr:DoorShuffle.py:
+      // 3471-3474)
       const more =
-        mode === "inverted" && next === "Tower Agahnim 1"
-          ? ["Hyrule Castle Ledge"]
-          : [];
+        ledge && next === "Tower Agahnim 1" ? ["Hyrule Castle Ledge"] : [];
       for (const to of more)
         if (!seen.has(to)) {
           seen.add(to);
@@ -427,8 +470,9 @@ function startsOf(
   { data, dungeons, mode }: NotedDoorAnalysis,
   dungeon: string,
   walk: Walk,
+  screens: OwrScreens,
 ): string[] | undefined {
-  const destinations = destinationsOf(mode);
+  const destinations = destinationPortals(data, mode, screens);
   const overworld = (name: string) =>
     (walk.parents.get(name) ?? []).filter((parent) => {
       const type = data.regionByName.get(parent)?.type;
@@ -443,9 +487,12 @@ function startsOf(
   const drops = DROP_ENTRANCES[dungeon] ?? [];
   if (drops.some((drop) => dungeons.get(drop) !== dungeon)) return undefined;
   const entrances = new Set([...portals.map((p) => p.lobby), ...drops]);
-  // Open mode: Sanctuary's save point enters its dungeon (:3455-3459)
+  // Open mode: Sanctuary's save point enters its dungeon (:3455-3459; the
+  // fork's wherever Link does not start at the Dark Chapel, owr:
+  // DoorShuffle.py:3462-3466)
+  const save = data.flavor === "owr" ? mode !== "inverted" : mode === "open";
   const sanctuary =
-    mode === "open" && dungeons.get("Sanctuary") === dungeon
+    save && dungeons.get("Sanctuary") === dungeon
       ? new Set(["Sanctuary"])
       : new Set<string>();
   const walked = walk.reached(new Set([...entrances, ...sanctuary]), sanctuary);

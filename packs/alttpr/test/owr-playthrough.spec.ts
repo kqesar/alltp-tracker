@@ -38,12 +38,18 @@ import {
   vanillaEntrances,
 } from "../src/door-rando/entrances";
 import rules from "../src/door-rando/owr/rules.json" with { type: "json" };
-import { notedConnections } from "../src/door-world/connections";
 import {
+  notedConnections,
+  vanillaConnections,
+} from "../src/door-world/connections";
+import {
+  type DoorShuffleSettings,
+  DR_DEFAULTS,
   type DrNotedDoors,
   type DrNotedEntrances,
   doorNotesFromSpoiler,
   doorTargets,
+  drKeyLogic,
   drWorld,
   isShuffledDoor,
   kindShuffled,
@@ -51,11 +57,15 @@ import {
   type OwrNotes,
   owrNotesFromSpoiler,
 } from "../src/door-world/index";
+import type { KeyLogic } from "../src/door-world/key-analysis/analysis";
+import { ALTERNATIVE_CRYSTAL_DOORS } from "../src/door-world/keys";
 import {
   crossingsOf,
   edgePartnersOf,
   factOf,
+  OWR_DEFAULTS,
   owrScreensOf,
+  owrSettings,
   towersTradedOf,
 } from "../src/door-world/overworld";
 import { OWR_DATA } from "../src/door-world/owr-data";
@@ -63,7 +73,10 @@ import {
   doorLog,
   doorNotesOf,
   doorShuffleOf,
+  KEY_NAMES,
   plain,
+  vanillaLayoutNotes,
+  withinStrictSafe,
   withoutDoors,
 } from "./dr-doors";
 import {
@@ -184,10 +197,14 @@ const ESCAPE =
   "Standard's escape: its kill rules read Uncle's item, nothing held in sphere 1";
 
 /**
- * A door-shuffled log's key doors read strict-safe (shuffle.ts): the fork
- * analyses the layout it generated (KeyDoorShuffle.py) and asks fewer keys
- * than all of the dungeon's, which the notes cannot tell; each turns `yes`
- * once every key is held, which the door tests assert.
+ * A door-shuffled log's key doors read strict-safe (shuffle.ts) where the
+ * fork's analysis is not run on the notes (key-analysis/noted.ts: from
+ * intensity 3, decoupled, with entrances shuffled): the fork analyses the
+ * layout it generated (KeyDoorShuffle.py) and asks fewer keys than all of
+ * the dungeon's, from starts its own random portal choices decide; each
+ * turns `yes` once every key is held, which the door tests assert. Below
+ * intensity 3, coupled, entrances vanilla, the notes tell each layout
+ * whole and its analysis runs: nothing waits there.
  */
 const DOOR_KEYS =
   "its key doors strict-safe under door shuffle: every key of the room's dungeon";
@@ -212,13 +229,6 @@ const REVIEWED: Readonly<
     }
   >
 > = {
-  "owr-door-spoilers/avianart-0tUGDpve7.json": {
-    at: {
-      "4:Ice Palace - Prize": "maybe",
-      "4:Tower of Hera - Basement Cage": "maybe",
-    },
-    why: DOOR_KEYS,
-  },
   "owr-door-spoilers/avianart-61u7cpluY.json": {
     at: {
       "3:Desert Palace - Big Key Chest": "maybe",
@@ -232,32 +242,10 @@ const REVIEWED: Readonly<
     },
     why: DOOR_KEYS,
   },
-  "owr-door-spoilers/avianart-CTRTq1Rhj.json": {
-    at: {
-      "3:Desert Palace - Map Chest": "maybe",
-      "4:Agahnim 1": "maybe",
-      "11:Ice Palace - Prize": "maybe",
-      "14:Turtle Rock - Prize": "maybe",
-    },
-    why: DOOR_KEYS,
-  },
   "owr-door-spoilers/avianart-kxnOoGUE9.json": {
     at: {
       "4:Misery Mire - Main Lobby": "maybe",
       "8:Misery Mire - Prize": "maybe",
-    },
-    why: DOOR_KEYS,
-  },
-  "owr-door-spoilers/avianart-nrVetY8I2.json": {
-    at: {
-      "2:Sewers - Secret Room - Left": "maybe",
-      "4:Agahnim 1": "maybe",
-      "5:Skull Woods - Prize": "maybe",
-      "7:Ice Palace - Prize": "maybe",
-      "9:Swamp Drain": "maybe",
-      "10:Trench 1 Switch": "maybe",
-      "11:Swamp Palace - Prize": "maybe",
-      "12:Agahnim 2": "maybe",
     },
     why: DOOR_KEYS,
   },
@@ -270,26 +258,13 @@ const REVIEWED: Readonly<
     },
     why: DOOR_KEYS,
   },
-  "owr-door-spoilers/avianart-tIJDkPsK3.json": {
-    at: {
-      "7:Palace of Darkness - Prize": "maybe",
-      "8:Desert Ledge": "maybe",
-      "9:Ice Palace - Prize": "maybe",
-      "11:Agahnim 2": "maybe",
-    },
-    why: DOOR_KEYS,
-  },
   "owr-door-spoilers/avianart-uVQOPwIvs.json": {
     at: {
       "1:Zelda Pickup": "maybe",
       "2:Zelda Drop Off": "maybe",
-      "5:Skull Woods - Prize": "maybe",
-      "6:Swamp Palace - Prize": "maybe",
-      "7:Ice Palace - Prize": "maybe",
-      "8:Turtle Rock - Prize": "maybe",
     },
     notKeys: ["1:Zelda Pickup", "2:Zelda Drop Off"],
-    why: `${ESCAPE}; her way back runs through a bombable door, whose bombs the fork's can_farm_bombs reads maybe before her delivery; ${DOOR_KEYS}`,
+    why: `${ESCAPE}; her way back runs through a bombable door, whose bombs the fork's can_farm_bombs reads maybe before her delivery`,
   },
   "owr-entrance-spoilers/avianart-1IAKwFudE.json": {
     at: {
@@ -652,6 +627,14 @@ function logOf(name: string): {
   };
 }
 
+/** A log's world's settings: its header's, its mode and bonk drops. */
+const worldSettingsOf = (meta: Log["meta"]) => ({
+  ...settingsFor(meta),
+  ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
+  ...(meta.mode === "standard" ? { standardMode: true } : {}),
+  ...(flag(meta.bonk_drops) ? { bonkDrops: true } : {}),
+});
+
 /**
  * A log's world: the fork's, its mode and its bonk drops as it says, its
  * whirlpools and flute spots as noted.
@@ -668,16 +651,13 @@ const worldOf = (
     readonly entrances?: DrNotedEntrances;
     readonly doors?: DrNotedDoors;
   },
-  options: { readonly sweepEvents?: boolean },
+  options: { readonly sweepEvents?: boolean; readonly strictKeys?: boolean },
 ) => {
   const { meta } = log;
   const bonks = flag(meta.bonk_drops);
   return drWorld(
     {
-      ...settingsFor(meta),
-      ...(meta.mode === "inverted" ? { invertedMode: true } : {}),
-      ...(meta.mode === "standard" ? { standardMode: true } : {}),
-      ...(bonks ? { bonkDrops: true } : {}),
+      ...worldSettingsOf(meta),
       ...(entrances === undefined
         ? {}
         : { [`shuffle_${entrances.shuffle}`]: true }),
@@ -1058,4 +1038,211 @@ describe("the Overworld Randomizer's world against its own seeds' playthroughs",
       if (log.meta.door_shuffle !== "basic")
         expect(checked).toBeGreaterThan(50);
     });
+
+  it("runs the fork's key analysis on each door layout the notes tell whole, below intensity 3 alone", () => {
+    const analysed = Object.fromEntries(
+      doorLogs.map((name) => {
+        const keyLogic = worldOf(logOf(name), {}).doorKeyLogic;
+        return [name, keyLogic === undefined ? -1 : keyLogic.size];
+      }),
+    );
+    // Every dungeon of a seed at intensity 1 or 2, coupled, entrances
+    // vanilla (Standard's escape aside), its overworld noted whole (Mixed's
+    // flips from `Maps`), but where a door of the layout leads nowhere in
+    // the log (CTRTq1Rhj's Mire Bent Bridge SW and GT Beam Dash ES,
+    // uVQOPwIvs's GT Hidden Star ES): no note tells it, so that dungeon
+    // stays strict-safe. None at intensity 3, decoupled or with entrances
+    // shuffled
+    expect(analysed).toEqual({
+      "owr-door-spoilers/avianart-0tUGDpve7.json": 13,
+      "owr-door-spoilers/avianart-61u7cpluY.json": -1,
+      "owr-door-spoilers/avianart-CTRTq1Rhj.json": 11,
+      "owr-door-spoilers/avianart-kxnOoGUE9.json": 0,
+      "owr-door-spoilers/avianart-nrVetY8I2.json": 13,
+      "owr-door-spoilers/avianart-pSf43q0bF.json": 0,
+      "owr-door-spoilers/avianart-tIJDkPsK3.json": 13,
+      "owr-door-spoilers/avianart-uVQOPwIvs.json": 11,
+      "owr-door-spoilers/avianart-x1FHBuUpu.json": 0,
+    });
+  });
+
+  it("reads a vanilla door layout under each Mixed seed's flips as the fork's vanilla analysis of that world", () => {
+    // Two walks of the fork's to the same starts: vanilla_key_logic's
+    // (determine_entrance_list, inverted_aga_check by the towers' screens)
+    // and a noted layout's (filter_start_regions over find_accessible_
+    // entrances by the screens), on a world Mixed flipped
+    const doors: DoorShuffleSettings = {
+      decoupled: false,
+      intensity: 2,
+      shuffle: "basic",
+      trapMode: "optional",
+    };
+    const rules = (logic: KeyLogic | undefined) =>
+      Object.fromEntries(
+        [...(logic?.doorRules ?? [])]
+          // vanilla_key_logic's hand adjustments, for vanilla doors alone
+          // (DoorShuffle.py:282-316)
+          .filter(
+            ([door]) =>
+              !(
+                [
+                  "Sewers Secret Room Key Door S",
+                  "Hyrule Dungeon Map Room Key Door S",
+                  "Sewers Dark Cross Key Door N",
+                  "PoD Middle Cage N",
+                ].includes(door) || ALTERNATIVE_CRYSTAL_DOORS.has(door)
+              ),
+          )
+          .map(([door, rule]) => [
+            door,
+            [rule.smallKeyNum, rule.worstCase, rule.allowSmall, rule.lockNum],
+          ]),
+      );
+    let compared = 0;
+    for (const name of logs.filter((n) =>
+      n.startsWith("owr-mixed-spoilers/"),
+    )) {
+      const read1 = logOf(name);
+      const mode = modeOf(read1.log.meta);
+      const settings = worldSettingsOf(read1.log.meta);
+      const all = { ...DR_DEFAULTS, ...OWR_DEFAULTS, ...settings };
+      const screens = owrScreensOf(OWR_DATA, mode, read1.notes, all);
+      const noted = worldOf(
+        {
+          ...read1,
+          doors: {
+            notes: vanillaLayoutNotes(doors, OWR_DATA),
+            settings: doors,
+          },
+        },
+        {},
+      ).doorKeyLogic;
+      const vanilla = drKeyLogic(
+        OWR_DATA,
+        { ...all, ...owrSettings(mode, screens), ...settings },
+        {
+          connections: vanillaConnections(
+            OWR_DATA,
+            mode,
+            Number(all.drVersion),
+            undefined,
+            read1.notes,
+            screens,
+          ),
+          key: `mixed ${name}`,
+          screens,
+        },
+      );
+      expect(noted?.size, name).toBeGreaterThan(10);
+      for (const [dungeon, logic] of noted ?? []) {
+        expect(rules(logic), `${name}: ${dungeon}`).toEqual(
+          rules(vanilla.get(dungeon)),
+        );
+        compared++;
+      }
+    }
+    expect(compared).toBeGreaterThan(40);
+  });
+
+  it("starts each analysed layout where the fork's screens put its ways in", () => {
+    const startsOf = (name: string, dungeon: string) =>
+      worldOf(logOf(`owr-door-spoilers/${name}`), {})
+        .doorKeyLogic?.get(dungeon)
+        ?.layout.starts.map((r) => r.name);
+    // Skull Woods' west lobby is a destination of link_doors_prep while its
+    // screen stands (owr:DoorShuffle.py:105-106), so no start
+    expect(startsOf("avianart-nrVetY8I2.json", "Skull Woods")).toEqual([
+      "Skull 2 East Lobby",
+      "Skull 1 Lobby",
+      "Skull Pinball",
+      "Skull Left Drop",
+      "Skull Pot Circle",
+    ]);
+    // Mixed flipped it (CTRTq1Rhj's `Maps`: 0x00 swapped): a start where
+    // the walk reaches it, and its back with it
+    expect(startsOf("avianart-CTRTq1Rhj.json", "Skull Woods")).toEqual([
+      "Skull 2 West Lobby",
+      "Skull 2 East Lobby",
+      "Skull 1 Lobby",
+      "Skull 3 Lobby",
+      "Skull Pinball",
+      "Skull Left Drop",
+      "Skull Pot Circle",
+      "Skull Back Drop",
+    ]);
+    // Inverted: Turtle Rock's back doors stand on a flipped screen (0x05),
+    // Desert's west door is a destination (0x30)
+    expect(startsOf("avianart-tIJDkPsK3.json", "Turtle Rock")).toEqual([
+      "TR Lazy Eyes",
+      "TR Eye Bridge",
+      "TR Big Chest Entrance",
+      "TR Main Lobby",
+    ]);
+    expect(startsOf("avianart-tIJDkPsK3.json", "Desert Palace")).toEqual([
+      "Desert Main Lobby",
+    ]);
+  });
+
+  it("counts each analysed door layout's chest keys as the log holds them", () => {
+    // calc_max_chests (KeyDoorShuffle.py:262-265, the fork's the same) over
+    // the noted layout: the small keys the fork's pool held for the dungeon
+    let compared = 0;
+    for (const name of doorLogs) {
+      const read1 = logOf(name);
+      const json = JSON.parse(read(name)) as Json;
+      const placed = Object.values(jsonLog(withoutDoors(json)).Locations);
+      for (const [dungeon, logic] of worldOf(read1, {}).doorKeyLogic ?? []) {
+        const word = KEY_NAMES[dungeon];
+        expect(logic.layout.maxChests, `${name}: ${dungeon}`).toBe(
+          placed.filter((item) => item === `Small Key (${word})`).length,
+        );
+        compared++;
+      }
+    }
+    // The five seeds whose layouts are analysed, every dungeon analysed
+    expect(compared).toBe(61);
+  });
+
+  // The door logs whose layouts the fork's analysis reads (above)
+  for (const name of [
+    "avianart-0tUGDpve7.json",
+    "avianart-CTRTq1Rhj.json",
+    "avianart-nrVetY8I2.json",
+    "avianart-tIJDkPsK3.json",
+    "avianart-uVQOPwIvs.json",
+  ])
+    it(`says yes with the fork's key analysis only where strict-safe does with every key (${name})`, () => {
+      const read1 = logOf(`owr-door-spoilers/${name}`);
+      const analysed = worldOf(read1, {});
+      expect(analysed.doorKeyLogic?.size).toBeGreaterThan(10);
+      const { failure, raised } = withinStrictSafe(
+        read1.log,
+        analysed,
+        worldOf(read1, { strictKeys: true }),
+        { events: EVENTS, runs: 25 },
+      );
+      expect(failure).toBeUndefined();
+      // Not vacuous: the analysis said yes where strict-safe waited
+      expect(raised).toBeGreaterThan(0);
+      // Three solves a draw: past the pack's default timeout under
+      // coverage, not hung
+    }, 120_000);
+
+  it("finds a world saying yes past ways the other's notes leave out", () => {
+    // The property can fail: strict-safe on the notes without their links
+    // reaches no room past a lobby, which the analysed world does
+    const read1 = logOf("owr-door-spoilers/avianart-nrVetY8I2.json");
+    const { doors } = read1;
+    if (doors === undefined) throw new Error("no door notes");
+    const { failure } = withinStrictSafe(
+      read1.log,
+      worldOf(read1, {}),
+      worldOf(
+        { ...read1, doors: { ...doors, notes: { ...doors.notes, links: {} } } },
+        { strictKeys: true },
+      ),
+      { events: EVENTS, runs: 5 },
+    );
+    expect(failure).toBeDefined();
+  }, 120_000);
 });

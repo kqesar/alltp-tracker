@@ -4,14 +4,27 @@
 // without its door sections and its rooms' dungeon tags, the vanilla drops
 // whose keys are the world's facts, the shuffle its header names, and each
 // dungeon's small keys as its counter shows them.
+import fc from "fast-check";
 import { DR_LOCATIONS } from "../src/door-rando/locations";
 import type { DrData } from "../src/door-world/data";
 import {
+  type DoorKindNote,
+  type DoorNotes,
+  doorId,
+  isShuffledDoor,
+  kindShuffled,
+  portalId,
+  vanillaKind,
+} from "../src/door-world/doors";
+import {
   type DoorShuffleSettings,
+  type DrWorld,
   doorNotesFromSpoiler,
 } from "../src/door-world/index";
-import { keyDropsOf } from "../src/door-world/keys";
-import { flag, jsonLog, type Log } from "./dr-playthrough";
+import { keyDropsOf, UGLY_SMALLS } from "../src/door-world/keys";
+import { solveFacts } from "../src/facts";
+import { flag, jsonLog, type Log, type WalkEvents } from "./dr-playthrough";
+import { collect } from "./dr-state";
 
 type Json = Readonly<Record<string, unknown>>;
 
@@ -142,4 +155,109 @@ export function doorNotesOf(
           rooms.get(regionOf.get(d.location) ?? "") === dungeon,
       ).length;
   return { notes: { ...notes, keys }, settings };
+}
+
+/**
+ * The key analysis held to the strict-safe world of the same notes: over
+ * random draws of a log's items (any of its playthrough's, a key among
+ * them or not), each location the analysed world says `yes` to, the
+ * strict-safe one says `yes` to with every key held besides. The analysis
+ * only counts a door's keys, so a `yes` past a way no key opens would be
+ * a walk of its own gone wrong. `failure`: the first location it says
+ * `yes` to where no key path is; `raised`: the answers where it said `yes`
+ * and strict-safe on the same items did not (the property not vacuous).
+ */
+export function withinStrictSafe(
+  log: Log,
+  analysed: DrWorld,
+  strict: DrWorld,
+  options: { readonly events?: WalkEvents; readonly runs: number },
+): { readonly failure: string | undefined; readonly raised: number } {
+  const items = [
+    ...((log.playthrough["0"] as readonly string[]) ?? []),
+    ...Object.keys(log.playthrough)
+      .filter((k) => k !== "0")
+      .flatMap((k) =>
+        Object.values(log.playthrough[k] as Readonly<Record<string, string>>),
+      ),
+  ].filter((item) => item !== "Never in logic" && item !== "Triforce");
+  const ids = [...analysed.locationIds.values()];
+  let raised = 0;
+  let failure: string | undefined;
+  const property = fc.property(
+    fc.subarray(items),
+    fc.subarray(EVERY_KEY, { maxLength: 40 }),
+    (drawn, keys) => {
+      const held = [...drawn, ...keys];
+      const analysedSays = solveFacts(analysed, collect(held, options.events));
+      const strictSays = solveFacts(strict, collect(held, options.events));
+      const keyed = solveFacts(
+        strict,
+        collect([...held, ...EVERY_KEY], options.events),
+      );
+      for (const id of ids) {
+        if (analysedSays.location(id) !== "yes") continue;
+        if (keyed.location(id) !== "yes") {
+          failure = id;
+          return false;
+        }
+        if (strictSays.location(id) !== "yes") raised++;
+      }
+      return true;
+    },
+  );
+  const result = fc.check(property, {
+    endOnFailure: true,
+    numRuns: options.runs,
+    seed: 7,
+  });
+  return {
+    failure: result.failed ? (failure ?? "an error") : undefined,
+    raised,
+  };
+}
+
+/**
+ * The notes of a player whose seed kept every door where the vanilla
+ * world has it (a layout DR may make): each shuffled door's vanilla pair,
+ * each kind its room's, each portal on its own door.
+ */
+export function vanillaDoorNotes(
+  s: DoorShuffleSettings,
+  data: DrData,
+): DoorNotes {
+  const links: Record<string, string> = {};
+  for (const table of [
+    "default_door_connections",
+    "default_one_way_connections",
+    "spiral_staircases",
+    "open_edges",
+    "straight_staircases",
+    "ladders",
+  ])
+    for (const [a, b] of data.pairsOf("DoorShuffle.py", table)) {
+      const one = data.doors.find((d) => d.name === a);
+      if (one === undefined || !isShuffledDoor(one, s, data)) continue;
+      links[doorId(a)] = doorId(b);
+      links[doorId(b)] = doorId(a);
+    }
+  const kinds: Record<string, DoorKindNote> = {};
+  for (const door of data.doors)
+    if (kindShuffled(door, s)) kinds[doorId(door.name)] = vanillaKind(door);
+  const lobbies = Object.fromEntries(
+    data.portals.map((p) => [portalId(p.name), doorId(p.door)]),
+  );
+  return { kinds, links, lobbies };
+}
+
+/** vanillaDoorNotes, its key doors DR's own (no ugly small key door). */
+export function vanillaLayoutNotes(
+  s: DoorShuffleSettings,
+  data: DrData,
+): DoorNotes {
+  const notes = vanillaDoorNotes(s, data);
+  // unmark_ugly_smalls (DoorShuffle.py:476-480): no key doors in DR
+  const kinds = { ...notes.kinds };
+  for (const name of UGLY_SMALLS) kinds[doorId(name)] = "normal";
+  return { ...notes, kinds };
 }
