@@ -453,6 +453,7 @@ function poolOf(
     entrances,
     holeDoors: new Map(),
     partners: () => [],
+    shopsBySram: true,
     shuffle,
     targetsOf,
   };

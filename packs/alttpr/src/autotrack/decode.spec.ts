@@ -1,5 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import shopTables from "../../test/shop-tables.json" with { type: "json" };
 import { ITEM_IDS, ITEMS, type ItemId } from "../items";
 import { CHECK_FLAGS } from "./check-flags";
 import {
@@ -840,47 +841,71 @@ describe("decodeEntrances", () => {
     expect(out(OLD_MAN_WEST, { 64: exit })).toHaveLength(1);
   });
 
-  it("reads the shopkeeper of the shop the table lists behind a door", () => {
-    // Retro crossed seed ry08p2d9y5's table (PC 0x184800, B5 bench,
-    // 2026-11-01): a Dark World shop behind door 16, then Take-Any #1
-    // behind Desert Palace Entrance (North), door 12, the last row
-    const shops = [
-      [0x04, 0x0f, 0x01, 0x10, 0x00, 0x03, 0xc1, 0x0c],
-      [0xff, 0x0f, 0x01, 0x0c, 0x00, 0x82, 0xe3, 0x1d],
-      // Past the last row: never read
-      [0x00, 0x0f, 0x01, 0x22, 0x00, 0x82, 0xe3, 0x1e],
-    ];
-    const through = (slot: number) =>
+  it("reads the row of the shop the table lists behind a door", () => {
+    // Shopsanity seed 2MA4toFay's table (DR 1.5.8, PC 0x184800, B2 bench,
+    // 2026-11-01), cut at its last row: Dark Lake Hylia Shop behind Bonk
+    // Fairy (Light), door 0x77, with the old man's shopkeeper 0xE2
+    const [seed] = shopTables.seeds;
+    const shops = seed.rows.map(({ bytes }) =>
+      bytes.split(" ").map((byte) => Number.parseInt(byte, 16)),
+    );
+    const through = (slot: number, rows = shops) =>
       decodeEntrances(
         game({
           door: slot + 1,
           doors: { [slot]: 0x60 },
           entrance: 0x60,
-          shops,
+          shops: rows,
         }),
         casual,
       );
-    expect(through(11)).toEqual([
-      { entrance: 0x60, kind: "door", shopkeeper: 0xe3, slot: 11 },
+    expect(through(0x76)).toEqual([
+      {
+        entrance: 0x60,
+        kind: "door",
+        shop: { config: 0x03, shopkeeper: 0xe2, sram: 6 },
+        slot: 0x76,
+      },
     ]);
-    expect(through(15)).toEqual([
-      { entrance: 0x60, kind: "door", shopkeeper: 0xc1, slot: 15 },
-    ]);
-    // No row behind it, or only one past the last
-    expect(through(0x21)).toEqual([
+    // No row behind it, or only one past the last (0xFF) row
+    const past = [...shops, [0x00, 0x0f, 0x01, 0x22, 0x00, 0x82, 0xe3, 0x1e]];
+    expect(through(0x21, past)).toEqual([
       { entrance: 0x60, kind: "door", slot: 0x21 },
     ]);
-    expect(through(0x21)[0]).not.toHaveProperty("shopkeeper");
+    expect(through(0x21, past)[0]).not.toHaveProperty("shop");
+    // A 32nd row's SRAM index is past the piece read
+    const full = Array.from({ length: 32 }, (_, i) =>
+      i === 31
+        ? [0xff, 0x0f, 0x01, 0x0c, 0x00, 0x03, 0xc1, 0x00]
+        : [i, 0x0f, 0x01, 0x00, 0x00, 0x43, 0xc1, i],
+    );
+    expect(through(0x0b, full)).toEqual([
+      {
+        entrance: 0x60,
+        kind: "door",
+        shop: { config: 0x03, shopkeeper: 0xc1 },
+        slot: 0x0b,
+      },
+    ]);
   });
 
   it("never reads in Race Mode, and waits for every range", () => {
     expect(
       decodeEntrances(new Image().view({ strict: true }), { race: true }),
     ).toBe("race-mode");
-    for (const range of ["door-table", "shop-table"]) {
-      const view = new Image().view({ read: (id) => id !== range });
-      expect(decodeEntrances(view, casual)).toBe("not-read");
-    }
+    const view = new Image().view({ read: (id) => id !== "door-table" });
+    expect(decodeEntrances(view, casual)).toBe("not-read");
+  });
+
+  it("reads the doors without the shop table, saying it was not read", () => {
+    const view = game({ door: 0x0c, doors: { 11: 0x60 }, entrance: 0x60 });
+    const unread: MemoryView = {
+      bytes: view.bytes,
+      has: (id) => id !== "shop-table" && view.has(id),
+    };
+    expect(decodeEntrances(unread, casual)).toEqual([
+      { entrance: 0x60, kind: "door", shop: "unread", slot: 11 },
+    ]);
   });
 
   it("sizes its tables as the importer found them", () => {

@@ -2143,7 +2143,7 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
     four take-anys, and the caves whose doors it draws for them) join
     every door that may lead to such a cave. The game loads a take-any by
     another place's entrance (a cave shop's); autotracking tells the two
-    apart by the shop table's shopkeeper ([Where Link
+    apart by the shop table's row ([Where Link
     went](#where-link-went-autotracking-the-entrances)).
   - The insanity shuffle parts a door from its way out (`:759-905`) and the
     Inverted world runs tables of its own (`link_inverted_entrances`):
@@ -2296,16 +2296,39 @@ A retro world's take-any cave and the old man's sword cave load a shop's
 entrance and room (`ItemList.py` `set_up_take_anys`: entrance 0x58, 0x60 or
 0x46), so the entrance alone would name that shop. The base patch tells
 them apart by its shop table (`ShopTable`, PC `0x184800`, `tables.asm:1563`),
-which the randomizer fills with each custom shop's room, its door's slot
-plus one and its shopkeeper (`Rom.py:1078-1103`, `BaseClasses.py:895-908`;
-vt's and DR's alike): the decoder hands a door's shopkeeper with its link
-when the table lists a shop behind that door, and `linksOf` reads 0xE3 as
-the four take-anys (alike) and 0xE2 as the sword cave (DR with shopsanity
-writes its take-anys as shops, but keeps their shopkeeper). Seen on retro
-crossed seed `ry08p2d9y5` (2026-11-01): door 12, Desert Palace Entrance
-(North), lists shopkeeper 0xE3 where the spoiler puts Take-Any #1, and each
-of the 15 rows names its spoiler's door. The table is ROM, an `entrances`
-range: Race Mode never reads it.
+which the randomizer fills with a row per custom shop: its room, its door's
+slot plus one, a config byte (its item count, 0x80 for a take-any), its
+shopkeeper and its first SRAM index (`Rom.py:1078-1103`,
+`BaseClasses.py:895-908`; vt's and DR's alike). The decoder hands a door's
+row with its link when the table lists a shop behind that door, and
+`linksOf` reads it by the randomizer that wrote it:
+- **The entrance randomizer** (alttpr.com) keeps each shop's own
+  shopkeeper (`Regions.py:369-381`) and adds the SRAM indexes up row by row
+  (`Rom.py:1083-1094`): a take-any row (config 0x80) with shopkeeper 0xE3 is
+  one of the four take-anys (alike), with 0xE2 the sword cave; any other
+  take-any row tells nothing, and a shop's row is read by its entrance.
+- **DR and its fork** fix each shop's SRAM index (dr158 `Regions.py:1279-1293`,
+  owr802 `:1358-1373`: 0, 3, … 30 for the eleven shops; the sword cave's 32,
+  `ItemList.py:546`; Take-Any #n's 33 + 2(n − 1), `:573`). Their shopsanity
+  draws every shop's shopkeeper among 0xC1, 0xA0, 0xE2 and 0xE3
+  (`customize_shops`, `ItemList.py:744-747`, the take-anys' too when
+  `take_any` is on) and writes a take-any as a plain shop (`:561`): the
+  shopkeeper tells nothing there, so `linksOf` names the shop by its index
+  (`EntrancePool.shopsBySram`, set by DR's pools), which also tells the four
+  alike Dark World shops apart. An index no shop has tells nothing.
+- **vt** (alttpr.com without entrance shuffle) gives the take-anys and the
+  sword cave alike the old man's shopkeeper (`Randomizer.php:715-735`), but
+  shuffles no entrance, so no note reads its table.
+
+A table not read (a failed piece) leaves the links without rows: a door
+that loads a take-any's entrance is then noted nowhere, any other door as
+by its entrance. Seen on two of our seeds (`test/shop-tables.json`, the
+table cut at its last row with each row's door and the spoiler's target):
+retro crossed `ry08p2d9y5` (the entrance randomizer: door 12, Desert Palace
+Entrance (North), a take-any row 0xE3 where the spoiler puts Take-Any #1)
+and DR 1.5.8 Crosskeys shopsanity `2MA4toFay` (six of its nine doors' rows
+carry 0xE2 or 0xE3, every one a shop the index names). The table is ROM, an
+`entrances` range: Race Mode never reads it.
 Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 

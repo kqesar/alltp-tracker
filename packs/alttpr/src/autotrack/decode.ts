@@ -873,6 +873,30 @@ export const FRAMES_PER_SECOND = 21_477_270 / (262 * 1364 - 2);
 export const playTimeMs = (frames: number): number =>
   Math.round((frames * 1000) / FRAMES_PER_SECOND);
 
+/**
+ * A row of the base patch's shop table (tables.asm:1563, written by every
+ * randomizer's `write_custom_shops`): [id][room, 2][door][0][config]
+ * [shopkeeper][sram] (er:BaseClasses.py:895-908, dr:BaseClasses.py:2457-
+ * 2470, vt:Shop.php:59-63).
+ */
+export interface ShopRow {
+  /**
+   * Its item count, with 0x80 for a take-any (`ShopType.TakeAny`), 0x40
+   * for a shop the patch matches by room alone, 0x10 for the upgrade
+   * shop's graphics.
+   */
+  readonly config: number;
+  /** Its shopkeeper's sprite: 0xC1, 0xA0, 0xE2 (old man), 0xE3, 0x04, 0xFF. */
+  readonly shopkeeper: number;
+  /**
+   * Its first slot's SRAM index. Fixed per shop in DR and its fork
+   * (Regions.py `shop_table`, ItemList.py:546, :573); the entrance
+   * randomizer's and vt's add up row by row (er:Rom.py:1083-1094). Absent
+   * on a 32nd row, past the piece read.
+   */
+  readonly sram?: number;
+}
+
 /** An overworld door or hole, and the entrance it loads: where it leads. */
 export interface EntranceLink {
   readonly kind: "door" | "hole";
@@ -881,12 +905,12 @@ export interface EntranceLink {
   /** The entrance it loads, by the game's number for it. */
   readonly entrance: number;
   /**
-   * A door's shop, when the base patch's shop table lists one behind it:
-   * its shopkeeper (ShopTable+6), which tells a retro world's take-any cave
-   * (0xE3) and the old man's sword cave (0xE2) from the shops whose
-   * entrance they load (ItemList.py:251-279).
+   * A door's shop, when the shop table lists one behind it, which tells a
+   * retro world's take-any cave and the old man's sword cave from the
+   * shops whose entrance they load (ItemList.py:251-279): or "unread" when
+   * the table was not read, so it cannot tell.
    */
-  readonly shopkeeper?: number;
+  readonly shop?: ShopRow | "unread";
 }
 
 /**
@@ -896,11 +920,13 @@ export interface EntranceLink {
  */
 export type EntranceReading = readonly EntranceLink[] | Unsettled;
 
-/** The ranges decodeEntrances reads, all outside races but the game mode. */
+/**
+ * The ranges decodeEntrances needs, all outside races but the game mode.
+ * The shop table is read beside them, not waited for (`EntranceLink.shop`).
+ */
 const ENTRANCE_RANGES = [
   "hole-table",
   "door-table",
-  "shop-table",
   "game-mode",
   "room",
   "entrance",
@@ -911,15 +937,20 @@ const ENTRANCE_RANGES = [
 const SHOP_ROW = 8;
 
 /**
- * The shopkeeper of the shop the table lists behind door `slot`, if any:
- * the base patch matches a row's door (its slot plus one) with the door
- * Link last took (shopkeeper.asm:81-94 at z3 dcb0a2b), and its last row's
- * id is 0xFF.
+ * The row of the shop the table lists behind door `slot`, if any: the base
+ * patch matches a row's door (its slot plus one) with the door Link last
+ * took (shopkeeper.asm:81-94 at z3 dcb0a2b), and its last row's id is 0xFF.
  */
-const shopkeeperBehind = (table: readonly number[], slot: number) => {
-  // A row's last byte, its SRAM index, is never read
+const shopBehind = (
+  table: readonly number[],
+  slot: number,
+): ShopRow | undefined => {
   for (let row = 0; row + SHOP_ROW - 1 <= table.length; row += SHOP_ROW) {
-    if (table[row + 3] === slot + 1) return table[row + 6];
+    if (table[row + 3] === slot + 1) {
+      const sram = table[row + 7];
+      const found = { config: table[row + 5], shopkeeper: table[row + 6] };
+      return sram === undefined ? found : { ...found, sram };
+    }
     if (table[row] === 0xff) return undefined;
   }
   return undefined;
@@ -942,8 +973,9 @@ const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
  * - Out by a door: outdoors, the room Link left is the one he came out of;
  *   its exit is an entrance one door loads, unless several do (the fairies
  *   and shops whose rooms are alike).
- * - A door with a custom shop behind it, by the shop table: its shopkeeper,
- *   which tells a take-any cave from the shop whose entrance it loads.
+ * - A door with a custom shop behind it, by the shop table: its row, which
+ *   tells a take-any cave from the shop whose entrance it loads. A table
+ *   not read leaves the doors "unread", the rest decoded all the same.
  *
  * Entrance 0 is none: the tables hold no door or hole that loads it.
  */
@@ -956,20 +988,22 @@ export function decodeEntrances(
   const read = ENTRANCE_RANGES.map((id) => reader.range(id));
   const unsettled = read.find((bytes) => typeof bytes === "string");
   if (unsettled !== undefined) return unsettled as Unsettled;
-  const [holes, doors, shops, mode, room, entrance, overworldDoor] =
-    read as Bytes[];
+  const [holes, doors, mode, room, entrance, overworldDoor] = read as Bytes[];
+  const shops = reader.range("shop-table");
   const table = (bytes: Bytes, id: MemoryRangeId) =>
     Array.from({ length: MEMORY_RANGE[id].size }, (_, i) =>
       bytes.byte(MEMORY_RANGE[id].bus + i),
     );
   const holeTable = table(holes, "hole-table");
   const doorTable = table(doors, "door-table");
-  const shopTable = table(shops, "shop-table");
+  const shopTable =
+    typeof shops === "string" ? undefined : table(shops, "shop-table");
   const door = (entrance: number, slot: number): EntranceLink => {
-    const shopkeeper = shopkeeperBehind(shopTable, slot);
-    return shopkeeper === undefined
+    const shop =
+      shopTable === undefined ? "unread" : shopBehind(shopTable, slot);
+    return shop === undefined
       ? { entrance, kind: "door", slot }
-      : { entrance, kind: "door", shopkeeper, slot };
+      : { entrance, kind: "door", shop, slot };
   };
   const loaded = entrance.byte();
   const links: EntranceLink[] = [];

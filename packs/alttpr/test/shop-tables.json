@@ -1,0 +1,157 @@
+{
+  "description": "The base patch's shop table (PC 0x184800, tables.asm:1563) of two of our own generated, non-race seeds, cut at its 0xFF row: nothing else of the ROM. Each row's door is its byte 3 minus one in the generator's door_addresses (dr158 source/overworld/EntranceData.py, er EntranceShuffle.py:3702), and leadsTo what the seed's spoiler (Entrances) says that door leads to. Written by a script from the ROMs and spoilers on 2026-11-01 (final pass B2 and B5 benches); never edited by hand.",
+  "seeds": [
+    {
+      "generator": "DR 1.5.8-u (avianart)",
+      "rom": "DR158_1_1_761504568",
+      "rows": [
+        {
+          "bytes": "00 12 01 21 00 03 e2 00",
+          "door": "Spectacle Rock Cave (Bottom)",
+          "leadsTo": "Dark Death Mountain Shop"
+        },
+        {
+          "bytes": "01 10 01 57 00 03 a0 03",
+          "door": "Dark Lumberjack Shop",
+          "leadsTo": "Red Shield Shop"
+        },
+        {
+          "bytes": "02 0f 01 77 00 03 e2 06",
+          "door": "Bonk Fairy (Light)",
+          "leadsTo": "Dark Lake Hylia Shop"
+        },
+        {
+          "bytes": "03 0f 01 4c 00 03 c1 09",
+          "door": "Potion Shop",
+          "leadsTo": "Dark Lumberjack Shop"
+        },
+        {
+          "bytes": "04 0f 01 0c 00 03 e3 0c",
+          "door": "Desert Palace Entrance (North)",
+          "leadsTo": "Village of Outcasts Shop"
+        },
+        {
+          "bytes": "05 0f 01 58 00 03 e2 0f",
+          "door": "Lake Hylia Shop",
+          "leadsTo": "Dark Potion Shop"
+        },
+        {
+          "bytes": "06 ff 00 00 00 43 e3 12"
+        },
+        {
+          "bytes": "07 1f 01 43 00 03 c1 15",
+          "door": "Tavern North",
+          "leadsTo": "Kakariko Shop"
+        },
+        {
+          "bytes": "08 12 01 2f 00 03 e2 18",
+          "door": "Death Mountain Return Cave (East)",
+          "leadsTo": "Lake Hylia Shop"
+        },
+        {
+          "bytes": "09 09 01 81 00 03 e2 1b",
+          "door": "Dark Lake Hylia Ledge Fairy",
+          "leadsTo": "Potion Shop"
+        },
+        {
+          "bytes": "ff 15 01 00 00 52 04 1e"
+        }
+      ],
+      "seed": "2MA4toFay",
+      "settings": {
+        "bow_mode": "progressive",
+        "door_shuffle": "vanilla",
+        "logic": "noglitches",
+        "mode": "open",
+        "shopsanity": true,
+        "shuffle": "crossed",
+        "take_any": "none"
+      }
+    },
+    {
+      "generator": "alttpr.com's entrance randomizer",
+      "rom": "VT ry08p2d9y5",
+      "rows": [
+        {
+          "bytes": "00 12 01 1e 00 03 c1 00",
+          "door": "Paradox Cave (Bottom)",
+          "leadsTo": "Cave Shop (Dark Death Mountain)"
+        },
+        {
+          "bytes": "01 10 01 23 00 03 c1 03",
+          "door": "Spectacle Rock Cave Peak",
+          "leadsTo": "Red Shield Shop"
+        },
+        {
+          "bytes": "02 0f 01 44 00 03 c1 06",
+          "door": "Bush Covered House",
+          "leadsTo": "Dark Lake Hylia Shop"
+        },
+        {
+          "bytes": "03 0f 01 3a 00 03 c1 09",
+          "door": "Hookshot Cave",
+          "leadsTo": "Dark World Lumberjack Shop"
+        },
+        {
+          "bytes": "04 0f 01 10 00 03 c1 0c",
+          "door": "Two Brothers House (East)",
+          "leadsTo": "Village of Outcasts Shop"
+        },
+        {
+          "bytes": "05 0f 01 45 00 03 c1 0f",
+          "door": "Sahasrahlas Hut",
+          "leadsTo": "Dark World Potion Shop"
+        },
+        {
+          "bytes": "06 ff 00 00 00 43 a0 12"
+        },
+        {
+          "bytes": "07 1f 01 4a 00 03 a0 15",
+          "door": "Light World Bomb Hut",
+          "leadsTo": "Kakariko Shop"
+        },
+        {
+          "bytes": "08 12 01 0e 00 03 a0 18",
+          "door": "Elder House (East)",
+          "leadsTo": "Cave Shop (Lake Hylia)"
+        },
+        {
+          "bytes": "09 15 01 72 00 11 04 1b",
+          "door": "Desert Fairy",
+          "leadsTo": "Capacity Upgrade"
+        },
+        {
+          "bytes": "0a 12 01 7e 00 81 e2 1c",
+          "door": "Checkerboard Cave",
+          "leadsTo": "Old Man Sword Cave"
+        },
+        {
+          "bytes": "0b 0f 01 0c 00 82 e3 1d",
+          "door": "Desert Palace Entrance (North)",
+          "leadsTo": "Take-Any #1"
+        },
+        {
+          "bytes": "0c 12 01 3e 00 82 e3 1e",
+          "door": "Snitch Lady (East)",
+          "leadsTo": "Take-Any #2"
+        },
+        {
+          "bytes": "0d 1f 01 42 00 82 e3 1f",
+          "door": "Tavern (Front)",
+          "leadsTo": "Take-Any #3"
+        },
+        {
+          "bytes": "ff 0f 01 69 00 82 e3 20",
+          "door": "East Dark World Hint",
+          "leadsTo": "Take-Any #4"
+        }
+      ],
+      "seed": "ry08p2d9y5",
+      "settings": {
+        "logic": "NoGlitches",
+        "mode": "retro",
+        "shuffle": "crossed"
+      }
+    }
+  ]
+}

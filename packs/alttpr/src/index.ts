@@ -76,6 +76,7 @@ export {
   type ProgressReading,
   playTimeMs,
   type RomStats,
+  type ShopRow,
   type Unsettled,
 } from "./autotrack/decode";
 export {

@@ -466,13 +466,13 @@ export const MEMORY_RANGES = [
   ...SEED_SETTINGS_RANGES,
   // The base patch's shop table (tables.asm:1563-1564, PC 0x184800, 32
   // rows of 8 bytes at most), which the randomizer fills with each custom
-  // shop's room, its door's slot plus one and its shopkeeper (er:Rom.py:
-  // 1078-1103, BaseClasses.py:895-908; vt's and DR's alike). The shopkeeper
-  // tells a retro world's take-any cave (0xE3) and the old man's sword cave
-  // (0xE2) from the shops whose room and entrance they load (ItemList.py:
-  // 251-279). A door's slot names the shop behind it: as the door table,
-  // an entrance range. The last row's SRAM index is left out, so the table
-  // is one usb2snes piece (255 bytes at most).
+  // shop's room, its door's slot plus one, its config (0x80 a take-any),
+  // shopkeeper and SRAM index (er:Rom.py:1078-1103, BaseClasses.py:895-908;
+  // vt's and DR's alike). The row tells a retro world's take-any cave and
+  // the old man's sword cave from the shops whose room and entrance they
+  // load (ItemList.py:251-279; linksOf). A door's slot names the shop
+  // behind it: as the door table, an entrance range. The 32nd row's SRAM
+  // index is left out, so the table is one usb2snes piece (255 bytes).
   range({
     at: 0x30_c800,
     category: "entrances",

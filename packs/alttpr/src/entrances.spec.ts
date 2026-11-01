@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { HOLES, holeAt } from "../scripts/import-er.mjs";
 import { pythonLiteral } from "../scripts/python.mjs";
 import { erSeed, erSeedHashes } from "../test/er-seeds";
+import shopTables from "../test/shop-tables.json" with { type: "json" };
 import tables from "./autotrack/entrance-tables.json" with { type: "json" };
+import { drEntranceOf, drTargetOf } from "./door-rando/entrances";
 import {
   crossedPool,
   ENTRANCES,
@@ -642,21 +644,124 @@ describe("where the game shows Link went", () => {
       ).toEqual([target]);
   });
 
-  it("names the take-any cave the shop table puts behind a door", () => {
-    // A take-any loads a shop's entrance (ItemList.py:269-279): 0x60 is the
-    // four Dark World shops' alike; the shopkeeper tells them apart
-    const through = (shopkeeper?: number) =>
-      linksOf([{ entrance: 0x60, kind: "door", shopkeeper, slot: 11 }])[0]
+  /** A row of the shop table, as the decoder hands it. */
+  const row = (hex: string) => {
+    const [, , , door, , config, shopkeeper, sram] = hex
+      .split(" ")
+      .map((byte) => Number.parseInt(byte, 16));
+    // The row's door is its slot plus one (BaseClasses.py:900)
+    return { shop: { config, shopkeeper, sram }, slot: door - 1 };
+  };
+  const seedRows = (seed: string) => {
+    const found = shopTables.seeds.find((s) => s.seed === seed);
+    if (found === undefined) throw new Error(`no table for ${seed}`);
+    return found.rows.flatMap(({ bytes, door, leadsTo }) =>
+      door === undefined || leadsTo === undefined
+        ? []
+        : [{ ...row(bytes), door, leadsTo }],
+    );
+  };
+
+  it("names a DR run's shop by its row's SRAM index, whatever its shopkeeper", () => {
+    // 2MA4toFay (DR 1.5.8, Crosskeys, shopsanity): customize_shops draws
+    // each shop's shopkeeper among 0xC1, 0xA0, 0xE2 and 0xE3 (ItemList.py:
+    // 744-747), so six of its doors' rows carry the take-anys' or the old man's;
+    // the spoiler says where each door leads
+    const rows = seedRows("2MA4toFay");
+    expect(rows).toHaveLength(9);
+    expect(rows.filter(({ shop }) => shop.shopkeeper >= 0xe2)).toHaveLength(6);
+    for (const { door, leadsTo, shop, slot } of rows) {
+      const target = drTargetOf(leadsTo).id;
+      expect(
+        linksOf([{ entrance: 0x60, kind: "door", shop, slot }], true),
+      ).toEqual([{ entrance: drEntranceOf(door).id, targets: [target] }]);
+    }
+  });
+
+  it("names the entrance randomizer's take-any by its row's type and shopkeeper", () => {
+    // ry08p2d9y5 (alttpr.com, retro crossed): its rows keep their shop's
+    // shopkeeper; the take-anys' are of type TakeAny (config 0x80)
+    const rows = seedRows("ry08p2d9y5");
+    expect(rows).toHaveLength(14);
+    const exits = er.exits.value as Readonly<
+      Record<string, { readonly entrance: number | null }>
+    >;
+    for (const { door, leadsTo, shop, slot } of rows) {
+      const takeAny = /^Take-Any/.test(leadsTo);
+      const entrance = exits[leadsTo]?.entrance ?? 0x60;
+      const [found] = linksOf([{ entrance, kind: "door", shop, slot }]);
+      expect(found?.entrance).toBe(entranceNamed(door).id);
+      if (takeAny)
+        expect(found?.targets).toEqual([
+          "take-any-1",
+          "take-any-2",
+          "take-any-3",
+          "take-any-4",
+        ]);
+      else expect(found?.targets).toContain(targetNamed(leadsTo).id);
+    }
+  });
+
+  it("names DR's take-anys under shopsanity, plain shops of a random shopkeeper", () => {
+    // Shopsanity with take_any: a take-any is a plain shop (ItemList.py:
+    // 561), its shopkeeper random; its SRAM index is 33 + 2n (:573), the
+    // old man's 32 (:546). Rows as write_custom_shops lays them
+    const through = (config: number, shopkeeper: number, sram: number) =>
+      linksOf(
+        [
+          {
+            entrance: 0x58,
+            kind: "door",
+            shop: { config, shopkeeper, sram },
+            slot: 11,
+          },
+        ],
+        true,
+      )[0]?.targets;
+    expect(through(0x02, 0xc1, 35)).toEqual(["take-any-2"]);
+    expect(through(0x02, 0xa0, 39)).toEqual(["take-any-4"]);
+    expect(through(0x81, 0xe3, 32)).toEqual(["old-man-sword-cave"]);
+    expect(through(0x03, 0xe2, 12)).toEqual(["village-of-outcasts-shop"]);
+    // An index no shop of DR's has, or a 32nd row past the piece read
+    expect(through(0x03, 0xe2, 18)).toBeUndefined();
+    expect(through(0x03, 0xe2, 34)).toBeUndefined();
+    expect(
+      linksOf(
+        [
+          {
+            entrance: 0x58,
+            kind: "door",
+            shop: { config: 3, shopkeeper: 0xe2 },
+            slot: 11,
+          },
+        ],
+        true,
+      ),
+    ).toEqual([]);
+  });
+
+  it("notes nothing behind a door a take-any may load when the table is unread", () => {
+    const through = (entrance: number) =>
+      linksOf([{ entrance, kind: "door", shop: "unread", slot: 11 }])[0]
         ?.targets;
-    expect(through()).toContain("village-of-outcasts-shop");
-    expect(through(0xc1)).toEqual(through());
-    expect(through(0xe3)).toEqual([
-      "take-any-1",
-      "take-any-2",
-      "take-any-3",
-      "take-any-4",
-    ]);
-    expect(through(0xe2)).toEqual(["old-man-sword-cave"]);
+    for (const entrance of [0x46, 0x58, 0x60])
+      expect(through(entrance)).toBeUndefined();
+    // Any other door is read as without the table
+    expect(through(0x56)).toEqual(
+      linksOf([{ entrance: 0x56, kind: "door", slot: 11 }])[0]?.targets,
+    );
+    expect(through(0x56)).toHaveLength(1);
+    // And an entrance randomizer's TakeAny row of another shopkeeper
+    expect(
+      linksOf([
+        {
+          entrance: 0x60,
+          kind: "door",
+          shop: { config: 0x82, shopkeeper: 0xc1, sram: 29 },
+          slot: 11,
+        },
+      ]),
+    ).toEqual([]);
   });
 
   it("names nothing for a slot or an entrance the tables do not know", () => {
