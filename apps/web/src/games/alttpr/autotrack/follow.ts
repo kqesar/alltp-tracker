@@ -340,11 +340,22 @@ export const createFollower = (): Follower => {
         // the game read last is then held, as any reading of it, and none
         // of its seed or progress reaches the new run. Its clock was the
         // run replaced's
-        if (
-          romSeedCheckOf(last, useGameStore.getState().seed)?.kind === "differs"
-        ) {
+        const run = useGameStore.getState().seed;
+        const rom = last.seed.seed;
+        if (romSeedCheckOf(last, run)?.kind === "differs") {
           lastClock = undefined;
           follower.read(last);
+        } else if (
+          run !== null &&
+          rom !== null &&
+          sameSeedId(run, rom) === false
+        ) {
+          // A race's reading of another seed, which Race Mode would lay: the
+          // run was replaced since, so the next reading decides, never this
+          // one's seed or progress
+          last = null;
+          playing = false;
+          lastClock = undefined;
         } else lay(last);
       }
     },

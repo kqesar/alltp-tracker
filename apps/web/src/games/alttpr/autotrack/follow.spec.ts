@@ -1110,6 +1110,22 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().items.hookshot).toBe(true);
   });
 
+  it("keeps a run started from another seed while a race's ROM is followed", () => {
+    runOf("0yAObedRMV");
+    const follower = createFollower();
+    follower.read(otherRom(true));
+    expect(store().items.hookshot).toBe(true);
+
+    // Start from a seed: the race's last reading is not this run's
+    runOf("9MQ9gO1wMD");
+    follower.resync(true);
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.hookshot).toBe(false);
+
+    follower.read(readingOf(seedMemory({ name: "9MQ9gO1wMD", race: false })));
+    expect(store().items.hookshot).toBe(true);
+  });
+
   it("starts over on the run's own ROM, whatever the other one showed", () => {
     runOf();
     const follower = createFollower();
