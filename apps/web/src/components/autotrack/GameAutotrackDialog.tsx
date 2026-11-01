@@ -2,8 +2,10 @@ import { detectEnvironment, parseUserAgent } from "@alltp/autotrack";
 import { type ReactNode, useEffect } from "react";
 import type { GameAutotrack } from "@/autotrack/gameSession";
 import { isRaceHeldByMemory } from "@/autotrack/raceMode";
+import type { RomSeed } from "@/autotrack/romSeed";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
 import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
+import { RomSeedLine } from "@/components/autotrack/RomSeedNotice";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
@@ -23,6 +25,7 @@ import { Modal } from "@/components/ui/Modal";
  * @param game - The game as the setup guide names it
  * @param follows - What the board follows, in a sentence or two
  * @param children - What was read of the seed
+ * @param romSeed - Whether the ROM is the run's seed, and the answers when not
  * @param onClose - Called to close the dialog
  */
 export const GameAutotrackDialog = <Reading,>({
@@ -30,12 +33,14 @@ export const GameAutotrackDialog = <Reading,>({
   follows,
   game,
   onClose,
+  romSeed,
   session,
 }: {
   children?: ReactNode;
   follows: ReactNode;
   game: string;
   onClose: () => void;
+  romSeed?: RomSeed;
   session: GameAutotrack<Reading>;
 }) => {
   const active = session.useStore((state) => state.active);
@@ -97,6 +102,7 @@ export const GameAutotrackDialog = <Reading,>({
                 : detailOf(shown, active, elsewhere)}
             </p>
             {connected && <RaceLine flag={session.raceFlag} race={race} />}
+            {connected && romSeed && <RomSeedLine romSeed={romSeed} />}
           </div>
         </div>
 

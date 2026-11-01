@@ -443,4 +443,49 @@ describe("the run's seed", () => {
     expect(run().items.hookshot).toBe(1);
     expect(run().seed).toBe(GUID);
   });
+
+  /** Another seed's game in play: the Hookshot, and Ganon's Tower at 3. */
+  const other = (race = false) =>
+    readingAt(
+      T0,
+      { guid: OTHER, towerCrystals: 3, zelda: { 834: 0x01 } },
+      race,
+    );
+
+  it("lays nothing of another seed's ROM, its settings included", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const before = run().settings;
+    createSmz3Follower().read(other());
+
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().settings).toEqual(before);
+  });
+
+  it("holds a guid whatever its case", () => {
+    run().applyGameNews(() => ({ seed: OTHER.toUpperCase() }));
+    createSmz3Follower().read(other());
+
+    expect(run().items.hookshot).toBe(1);
+  });
+
+  it("lays the ROM held once the run is New game's", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().reset();
+    follower.resync(true);
+    expect(run().seed).toBe(OTHER);
+    expect(run().items.hookshot).toBe(1);
+    expect(run().settings.towerCrystals).toBe(3);
+  });
+
+  it("checks nothing in Race Mode, which never reads the guid", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    createSmz3Follower().read(other(true));
+
+    expect(run().items.hookshot).toBe(1);
+    expect(run().seed).toBe(GUID);
+  });
 });

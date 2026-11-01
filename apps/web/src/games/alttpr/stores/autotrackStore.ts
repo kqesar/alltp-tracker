@@ -18,7 +18,8 @@ import {
   onRunReplaced,
   rememberRace,
 } from "@/autotrack/raceMode";
-import { onRecount, onResync } from "@/autotrack/resync";
+import { onRecount, onResync, requestResync } from "@/autotrack/resync";
+import type { RomSeed } from "@/autotrack/romSeed";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -26,6 +27,7 @@ import type { Runtime, RuntimeSink } from "@/games/alttpr/autotrack/runtime";
 import {
   checkSeed,
   revealedText,
+  romSeedCheckOf,
   type SeedCheck,
   switchedText,
 } from "@/games/alttpr/autotrack/seed";
@@ -38,6 +40,7 @@ import { doorTablesOf } from "@/games/alttpr/data/doorRando";
 import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import { useDarkRoomStore } from "@/games/alttpr/stores/darkRoomStore";
 import { isFreshRun, useGameStore } from "@/games/alttpr/stores/gameStore";
+import { type RomSeedCheck, recordSeed } from "@/games/seedId";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isObsView } from "@/utils/view";
 
@@ -365,6 +368,8 @@ const followSeed = (
   reading: AutotrackReading,
   fresh = isFreshRun(useGameStore.getState()),
 ) => {
+  // A ROM of another seed than the run's says nothing of its run type
+  if (romSeedDiffers(reading)) return;
   const check = checkSeed(reading.seed, useGameStore.getState());
   // A Mystery run takes what the seed reveals at once, as the game's news
   if (check.kind === "reveals") {
@@ -382,6 +387,10 @@ const followSeed = (
     set({ news: { repeated: false, text: switchedText(check) } });
   }
 };
+
+/** Whether a reading's ROM names another seed than the run's. */
+const romSeedDiffers = (reading: AutotrackReading): boolean =>
+  romSeedCheckOf(reading, useGameStore.getState().seed)?.kind === "differs";
 
 /** A reading with its seed's file laid on it, once the file is in. */
 const withFile = (reading: AutotrackReading): AutotrackReading => {
@@ -612,21 +621,75 @@ export const syncFromGame = (): number | null => follower?.sync() ?? null;
  * both: null before a reading.
  */
 export const useSeedCheck = (): SeedCheck | null => {
-  const seed = useAutotrackStore((state) => state.reading?.seed ?? null);
+  const reading = useAutotrackStore((state) => state.reading);
   const presetId = useGameStore((state) => state.presetId);
   const settings = useGameStore((state) => state.settings);
+  const runSeed = useGameStore((state) => state.seed);
   return useMemo(
-    () => (seed === null ? null : checkSeed(seed, { presetId, settings })),
-    [seed, presetId, settings],
+    () =>
+      reading === null || romSeedCheckOf(reading, runSeed)?.kind === "differs"
+        ? null
+        : checkSeed(reading.seed, { presetId, settings }),
+    [reading, presetId, settings, runSeed],
   );
 };
 
 /** The seed's check now, for an action. */
 const seedCheckNow = (): SeedCheck | null => {
   const { reading } = useAutotrackStore.getState();
-  return reading === null
+  return reading === null || romSeedDiffers(reading)
     ? null
     : checkSeed(reading.seed, useGameStore.getState());
+};
+
+/**
+ * What the ROM connected says of the run's seed (games/seedId.ts), while the
+ * session is connected: another seed's, which the board does not follow, or
+ * Race Mode keeping the check off. Null when there is nothing to say.
+ */
+export const useRomSeedCheck = (): RomSeedCheck | null => {
+  const reading = useAutotrackStore((state) =>
+    state.status.code === "connected" ? state.reading : null,
+  );
+  const runSeed = useGameStore((state) => state.seed);
+  return useMemo(
+    () => (reading === null ? null : romSeedCheckOf(reading, runSeed)),
+    [reading, runSeed],
+  );
+};
+
+/**
+ * Start a new run from the ROM of another seed, the player's answer to the
+ * notice: New game, one undo step. The new run knows no seed, so the game is
+ * laid on it and names its seed, and its run type is the seed's on the
+ * board left fresh.
+ */
+export const startRunFromRom = () => {
+  const { reading } = useAutotrackStore.getState();
+  if (reading === null || !romSeedDiffers(reading)) return;
+  // New game resyncs the follower, which lays the ROM held
+  useGameStore.getState().reset();
+  if (!awaitsFile(reading)) {
+    followSeed(reading, follower?.holdsGameOnly() ?? true);
+  }
+};
+
+/**
+ * Ignore that the ROM is of another seed: the run takes that seed as its own,
+ * and the board follows the ROM from now on.
+ */
+export const ignoreRomSeed = () => {
+  const { reading } = useAutotrackStore.getState();
+  if (reading === null) return;
+  const check = romSeedCheckOf(reading, useGameStore.getState().seed);
+  if (check?.kind !== "differs") return;
+  recordSeed(useGameStore, check.rom);
+  // The follower lays the ROM it held at once, then its run type is held
+  // against the board's as a reading's is
+  requestResync("alttpr");
+  if (!awaitsFile(reading)) {
+    followSeed(reading, follower?.holdsGameOnly() ?? false);
+  }
 };
 
 /**
@@ -644,4 +707,11 @@ export const switchToSeed = () => {
 export const keepRunType = () => {
   const check = seedCheckNow();
   if (check?.kind === "differs") set({ keptSeed: check.seed });
+};
+
+/** The board's notice and the dialog's line of a ROM of another seed. */
+export const alttprRomSeed: RomSeed = {
+  ignore: ignoreRomSeed,
+  startRun: startRunFromRom,
+  useCheck: useRomSeedCheck,
 };

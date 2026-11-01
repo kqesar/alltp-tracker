@@ -9,7 +9,11 @@
 // select): memory there is not the run's.
 //
 // The seed the game names in its header (race seeds too: the title is on
-// the screen) is recorded as the run's `seed`.
+// the screen) is recorded as the run's `seed`. Outside Race Mode, a ROM that
+// names another seed than the run's is not followed at all (games/seedId.ts,
+// `checkRomSeed`): nothing of it is laid, neither its items nor its notes nor
+// the timer, until the run is replaced or takes that seed, when the reading
+// held is laid as a first one.
 //
 // Outside Race Mode, the doors and holes Link goes through are noted in a run
 // whose shuffled entrances the assistant knows: the entrance tables load on
@@ -28,6 +32,7 @@ import {
   syncView,
 } from "@/games/alttpr/autotrack/apply";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
+import { romSeedCheckOf } from "@/games/alttpr/autotrack/seed";
 import { entrancesKnown, type RunSettings } from "@/games/alttpr/data/presets";
 import { gameClockOf, timerNews } from "@/games/alttpr/logic/timer";
 import {
@@ -139,6 +144,8 @@ export const createFollower = (): Follower => {
   let noted: string | null = null;
   /** The seed the last reading in play named. */
   let seedName: string | null = null;
+  /** The last reading, of a ROM of another seed than the run's: not laid. */
+  let held: AutotrackReading | null = null;
 
   /**
    * Forget what the session kept of the run it followed: the medallions
@@ -202,7 +209,24 @@ export const createFollower = (): Follower => {
     store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
   };
 
-  return {
+  /**
+   * Hold a reading of another seed's ROM: none of it is laid, and what the
+   * session kept of the game is not this run's either, so the next reading
+   * of the run's own seed starts over as at a first one.
+   */
+  const hold = (reading: AutotrackReading) => {
+    held = reading;
+    last = null;
+    shown = null;
+    playing = false;
+    beforePlay = undefined;
+    atGoal = false;
+    frames = undefined;
+    lastClock = undefined;
+    forget();
+  };
+
+  const follower: Follower = {
     holdsGameOnly: () => {
       const store = useGameStore.getState();
       const fresh = createProgress(store.presetId, store.settings);
@@ -220,6 +244,14 @@ export const createFollower = (): Follower => {
       );
     },
     read: (reading) => {
+      if (
+        romSeedCheckOf(reading, useGameStore.getState().seed)?.kind ===
+        "differs"
+      ) {
+        hold(reading);
+        return;
+      }
+      held = null;
       // The run timer follows the game: set on the game's own clock if the
       // player chose that and it can be read, else started and stopped by
       // the game if the player lets it
@@ -270,7 +302,9 @@ export const createFollower = (): Follower => {
       shown = null;
       // Nothing the session kept belongs to the run replaced
       forget();
-      if (now && playing && last !== null) lay(last);
+      // A ROM held for another seed: the new run may be its
+      if (now && held !== null) follower.read(held);
+      else if (now && playing && last !== null) lay(last);
     },
     steady: (at) => {
       const game = useGameStore.getState();
@@ -302,4 +336,5 @@ export const createFollower = (): Follower => {
       return laid?.count ?? 0;
     },
   };
+  return follower;
 };

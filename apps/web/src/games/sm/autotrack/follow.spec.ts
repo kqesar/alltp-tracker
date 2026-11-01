@@ -556,6 +556,57 @@ describe("the run's seed", () => {
     expect(run().items.morph).toBe(1);
     expect(run().seed).toBe("dsjF6gGsH");
   });
+
+  it("lays nothing of another seed's ROM, its objectives and timer included", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().setAutoTimer(true);
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { name: "cHXhTSCB8", state: FILE_SELECT }));
+    follower.read(
+      readingAt(T0 + 1000, {
+        items: MORPH,
+        name: "cHXhTSCB8",
+        objectives: ["kraid"],
+        state: PLAY,
+      }),
+    );
+
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.morph ?? 0).toBe(0);
+    expect(run().objectives).toEqual(useSmStore.getInitialState().objectives);
+    expect(run().timer.startedAt).toBeNull();
+  });
+
+  it("lays the ROM held once the run is New game's or takes its seed", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    follower.read(reading({ items: MORPH, name: "cHXhTSCB8" }));
+    expect(run().items.morph ?? 0).toBe(0);
+
+    // Ignore: the run takes the ROM's seed
+    run().applyGameNews(() => ({ seed: "cHXhTSCB8" }));
+    follower.resync(true);
+    expect(run().items.morph).toBe(1);
+  });
+
+  it("checks nothing in Race Mode, which never reads the seed's name", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const raced = readSm(
+      viewOf(
+        writeMapRando(new Uint8Array(0x100_0000), {
+          items: MORPH,
+          name: "cHXhTSCB8",
+        }),
+        RACE_UNREAD,
+      ),
+      0,
+      true,
+    );
+    createSmFollower().read(raced);
+
+    expect(run().items.morph).toBe(1);
+    expect(run().seed).toBe("dsjF6gGsH");
+  });
 });
 
 /** Bits of the table: Brinstar Reserve Tank Room's middle item, 230 Missile Room's, the Moat's. */

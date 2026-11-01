@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isSeedId, recordSeed } from "@/games/seedId";
+import {
+  checkRomSeed,
+  isSeedId,
+  recordSeed,
+  romSeedText,
+} from "@/games/seedId";
 
 describe("isSeedId", () => {
   it("takes what the three generators write", () => {
@@ -63,5 +68,52 @@ describe("recordSeed", () => {
     recordSeed(store, "A");
 
     expect(calls).toBe(0);
+  });
+});
+
+describe("checkRomSeed", () => {
+  it("says nothing while either seed is unknown, or for the same seed", () => {
+    expect(checkRomSeed(null, "9MQ9gO1wMD", false)).toBeNull();
+    expect(checkRomSeed("9MQ9gO1wMD", null, false)).toBeNull();
+    expect(checkRomSeed("9MQ9gO1wMD", "9MQ9gO1wMD", false)).toBeNull();
+    expect(checkRomSeed(null, "9MQ9gO1wMD", true)).toBeNull();
+  });
+
+  it("names both seeds when they differ", () => {
+    expect(checkRomSeed("9MQ9gO1wMD", "0yAObedRMV", false)).toEqual({
+      kind: "differs",
+      rom: "0yAObedRMV",
+      run: "9MQ9gO1wMD",
+    });
+  });
+
+  it("checks nothing in Race Mode, and says so for a run that knows its seed", () => {
+    expect(checkRomSeed("9MQ9gO1wMD", "0yAObedRMV", true)).toEqual({
+      kind: "race",
+    });
+    expect(checkRomSeed("9MQ9gO1wMD", null, true)).toEqual({ kind: "race" });
+  });
+
+  it("takes the game's own sameness", () => {
+    const anyCase = (a: string, b: string) =>
+      a.toLowerCase() === b.toLowerCase();
+    expect(checkRomSeed("ABC", "abc", false, anyCase)).toBeNull();
+    expect(checkRomSeed("ABC", "abd", false, anyCase)?.kind).toBe("differs");
+  });
+});
+
+describe("romSeedText", () => {
+  it("names the ROM's seed, then the run's, and the answers", () => {
+    expect(
+      romSeedText({ kind: "differs", rom: "0yAObedRMV", run: "9MQ9gO1wMD" }),
+    ).toBe(
+      "The game runs seed 0yAObedRMV, not this run's seed 9MQ9gO1wMD: the board does not follow it. Start a new run from this ROM, or ignore this to follow it on this run.",
+    );
+  });
+
+  it("says the check is off in Race Mode", () => {
+    expect(romSeedText({ kind: "race" })).toBe(
+      "Race Mode: the tracker does not check that the game is this run's seed.",
+    );
   });
 });

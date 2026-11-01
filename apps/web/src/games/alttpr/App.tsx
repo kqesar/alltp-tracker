@@ -1,5 +1,6 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { flushSync } from "react-dom";
+import { RomSeedNotice } from "@/components/autotrack/RomSeedNotice";
 import { GameShell } from "@/components/ui/GameShell";
 import { SeedPrompt } from "@/games/alttpr/components/autotrack/SeedPrompt";
 import { MAP_VIEW_ID, MapPanel } from "@/games/alttpr/components/map/MapPanel";
@@ -15,6 +16,7 @@ import { useItemShortcuts } from "@/games/alttpr/hooks/useItemShortcuts";
 import { useRunAnalysis } from "@/games/alttpr/hooks/useRunAnalysis";
 import { useVoice } from "@/games/alttpr/hooks/useVoice";
 import { useCloseReview } from "@/games/alttpr/review/useReview";
+import { alttprRomSeed } from "@/games/alttpr/stores/autotrackStore";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 import { type MapView, visibleRows } from "@/games/alttpr/utils";
 import { useUndoShortcuts } from "@/games/useUndoShortcuts";
@@ -52,7 +54,12 @@ function App() {
     <>
       <GameShell
         game="alttpr"
-        notices={<SeedPrompt />}
+        notices={
+          <>
+            <RomSeedNotice romSeed={alttprRomSeed} />
+            <SeedPrompt />
+          </>
+        }
         skipLinks={
           <>
             {/* biome-ignore lint/a11y/useValidAnchor: a skip link navigates; its href holds without script */}

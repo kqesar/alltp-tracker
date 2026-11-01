@@ -7,7 +7,10 @@
 //   player marked more: the game never takes back a find.
 // - A location the game says checked is checked; one it does not stays as
 //   the player left it.
-// - The seed's guid, outside races, is recorded as the run's `seed`.
+// - The seed's guid, outside races, is recorded as the run's `seed`. A ROM
+//   whose guid is another seed's than the run's is not followed at all
+//   (games/seedId.ts, `checkRomSeed`), the timer included, until the run is
+//   replaced or takes that seed, when the reading held is laid as a first one.
 // - The settings the ROM states (Super Metroid's logic, keysanity) and,
 //   outside races, its requirements and medallions follow the seed.
 //
@@ -21,6 +24,10 @@ import { type Smz3Settings, smz3Ms } from "@alltp/pack-smz3";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
 import { recordSeed } from "@/games/seedId";
 import type { Smz3Reading } from "@/games/smz3/autotrack/reading";
+import {
+  smz3RomSeedCheck,
+  smz3RomSeedName,
+} from "@/games/smz3/autotrack/romSeed";
 import {
   type Smz3Pads,
   type Smz3Progress,
@@ -96,6 +103,8 @@ export const createSmz3Follower = () => {
   let frames: number | undefined;
   /** The game's clock the timer was last set on, to hold it if the game stops. */
   let lastGame: GameClock | undefined;
+  /** The last reading, of a ROM of another seed than the run's: not laid. */
+  let held: Smz3Reading | null = null;
 
   /**
    * The run timer follows the game: started and stopped by it if the player
@@ -146,10 +155,7 @@ export const createSmz3Follower = () => {
 
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: Smz3Reading) => {
-    recordSeed(
-      useSmz3Store,
-      typeof reading.guid === "string" ? null : reading.guid.guid,
-    );
+    recordSeed(useSmz3Store, smz3RomSeedName(reading));
     const now = viewOf(reading);
     const before = shown;
     shown = now;
@@ -189,15 +195,34 @@ export const createSmz3Follower = () => {
     });
   };
 
+  /** Lay a reading's news on the run. */
+  const read = (reading: Smz3Reading) => {
+    if (
+      smz3RomSeedCheck(reading, useSmz3Store.getState().seed)?.kind ===
+      "differs"
+    ) {
+      // Nothing of another seed's game is the run's: the next reading of
+      // its own starts over, as a first one
+      held = reading;
+      shown = null;
+      last = null;
+      playing = false;
+      armed = false;
+      atGoal = false;
+      frames = undefined;
+      lastGame = undefined;
+      return;
+    }
+    held = null;
+    followTimer(reading);
+    playing = reading.inPlay === true;
+    if (!playing) return;
+    last = reading;
+    lay(reading);
+  };
+
   return {
-    /** Lay a reading's news on the run. */
-    read: (reading: Smz3Reading) => {
-      followTimer(reading);
-      playing = reading.inPlay === true;
-      if (!playing) return;
-      last = reading;
-      lay(reading);
-    },
+    read,
     /**
      * The run was replaced (New game, Import, a shared link): lay all the
      * game says on the new one, now if the game in play was read last, else
@@ -205,7 +230,9 @@ export const createSmz3Follower = () => {
      */
     resync: (now: boolean) => {
       shown = null;
-      if (now && playing && last !== null) lay(last);
+      // A ROM held for another seed: the new run may be its
+      if (now && held !== null) read(held);
+      else if (now && playing && last !== null) lay(last);
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

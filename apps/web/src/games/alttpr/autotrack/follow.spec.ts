@@ -950,15 +950,13 @@ describe("the run's seed", () => {
     expect(store().seed).toBe("9MQ9gO1wMD");
   });
 
-  it("keeps a run started from a seed's hash until the game says another", () => {
+  it("keeps a run started from a seed's hash when the game names it", () => {
     store().applyRun("open", store().settings, () => ({ seed: "9MQ9gO1wMD" }));
     expect(store().seed).toBe("9MQ9gO1wMD");
 
     createFollower().read(seedOf("9MQ9gO1wMD"));
     expect(store().past).toHaveLength(1);
-
-    createFollower().read(seedOf("0yAObedRMV"));
-    expect(store().seed).toBe("0yAObedRMV");
+    expect(store().items.hookshot).toBe(true);
   });
 
   it("is cleared by New game", () => {
@@ -966,6 +964,115 @@ describe("the run's seed", () => {
     store().reset();
 
     expect(store().seed).toBeNull();
+  });
+});
+
+describe("a ROM of another seed than the run's", () => {
+  /** A run started from alttpr.com's 9MQ9gO1wMD. */
+  const runOf = (seed = "9MQ9gO1wMD") =>
+    store().applyRun("open", store().settings, () => ({ seed }));
+  const otherRom = (race = false) =>
+    readingOf(seedMemory({ name: "0yAObedRMV", race }), { race });
+  /** The game at its title, then in play: what starts the timer. */
+  const started = (memory: Uint8Array, race = false) => {
+    const title = new Uint8Array(memory);
+    title[GAME_MODE] = 0x01;
+    return [readingOf(title, { race }), readingOf(memory, { race })] as const;
+  };
+
+  it("lays nothing of it: neither its items, its checks, its seed nor the timer", () => {
+    runOf();
+    const follower = createFollower();
+    const memory = seedMemory({ name: "0yAObedRMV", race: false });
+    for (const reading of started(memory)) follower.read(reading);
+
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.hookshot).toBe(false);
+    expect(store().checked["links-house"]).toBeUndefined();
+    expect(store().timer.startedAt).toBeNull();
+    // Nothing to sync from: the game read is not this run's
+    expect(follower.sync()).toBeNull();
+  });
+
+  it("notes none of its entrances", async () => {
+    store().applyRun("crosskeys", getPreset("crosskeys").settings, () => ({
+      seed: "9MQ9gO1wMD",
+    }));
+    const follower = createFollower();
+    const memory = seedMemory({ name: "0yAObedRMV", race: false });
+    follower.read(
+      readingOf(goIn(memory, "Light Hype Fairy", "Blinds Hideout")),
+    );
+    // Let any table load settle: none was asked for
+    await settle();
+    expect(store().entrances).toEqual({});
+
+    // The run's own ROM back: its door is noted
+    const own = seedMemory({ name: "9MQ9gO1wMD", race: false });
+    follower.read(readingOf(goIn(own, "Light Hype Fairy", "Blinds Hideout")));
+    await vi.waitFor(() =>
+      expect(store().entrances).toEqual({
+        "light-hype-fairy": "blinds-hideout",
+      }),
+    );
+  });
+
+  it("lays the ROM held, as a first reading, once the run is replaced by New game", () => {
+    runOf();
+    const follower = createFollower();
+    follower.read(otherRom());
+    expect(store().items.hookshot).toBe(false);
+
+    // New game resyncs the follower, as the autotracking store does
+    store().reset();
+    follower.resync(true);
+
+    expect(store().seed).toBe("0yAObedRMV");
+    expect(store().items.hookshot).toBe(true);
+  });
+
+  it("lays it once the run takes its seed (Ignore)", () => {
+    runOf();
+    const follower = createFollower();
+    follower.read(otherRom());
+    expect(store().items.hookshot).toBe(false);
+
+    store().applyGameNews(() => ({ seed: "0yAObedRMV" }));
+    follower.resync(true);
+
+    expect(store().items.hookshot).toBe(true);
+  });
+
+  it("starts over on the run's own ROM, whatever the other one showed", () => {
+    runOf();
+    const follower = createFollower();
+    follower.read(otherRom());
+    follower.read(readingOf(seedMemory({ name: "9MQ9gO1wMD", race: false })));
+
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.hookshot).toBe(true);
+  });
+
+  it("is not checked in Race Mode: the board follows the ROM as before", () => {
+    runOf();
+    createFollower().read(otherRom(true));
+
+    expect(store().seed).toBe("0yAObedRMV");
+    expect(store().items.hookshot).toBe(true);
+  });
+
+  it("matches a Door Randomizer run started from an avianart link to its ROM's title", () => {
+    runOf("myYPIp0RY");
+    const memory = seedMemory({ race: false });
+    const title = "ORAVT_1_1_myYPIp0RY".padEnd(21, "\0");
+    for (let i = 0; i < title.length; i++) {
+      memory[0x7fc0 + i] = title.charCodeAt(i);
+    }
+    createFollower().read(readingOf(memory));
+
+    // The ROM's form of the same seed, as before
+    expect(store().seed).toBe("1_1_myYPIp0RY");
+    expect(store().items.hookshot).toBe(true);
   });
 });
 

@@ -1,5 +1,9 @@
+import { RomSeedNotice } from "@/components/autotrack/RomSeedNotice";
 import { GameShell } from "@/components/ui/GameShell";
-import { useSmz3Autotrack } from "@/games/smz3/components/Smz3Autotrack";
+import {
+  smz3RomSeed,
+  useSmz3Autotrack,
+} from "@/games/smz3/components/Smz3Autotrack";
 import { Smz3Controls } from "@/games/smz3/components/Smz3Controls";
 import { Smz3Grid } from "@/games/smz3/components/Smz3Grid";
 import { Smz3Keycards } from "@/games/smz3/components/Smz3Keycards";
@@ -28,7 +32,11 @@ const Smz3App = () => {
   useCloseReview();
   const keysanity = useSmz3Store((state) => state.settings.keysanity);
   return (
-    <GameShell game="smz3" toolbar={<Smz3Controls />}>
+    <GameShell
+      game="smz3"
+      notices={<RomSeedNotice romSeed={smz3RomSeed} />}
+      toolbar={<Smz3Controls />}
+    >
       <div
         className="smz3-layout"
         data-keys={keysanity || undefined}

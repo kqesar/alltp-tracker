@@ -413,6 +413,11 @@
   font-weight: 600;
 }
 
+/* A message that names seeds: an SMZ3 guid is 32 characters with no break */
+.notice__message--ids {
+  overflow-wrap: anywhere;
+}
+
 /* The buttons wrap together, under the message, where it leaves no room */
 .notice__actions {
   display: flex;

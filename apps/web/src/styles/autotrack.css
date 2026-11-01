@@ -196,6 +196,23 @@
   overflow-wrap: anywhere;
 }
 
+/* The ROM of another seed than the run's (RomSeedNotice.tsx), its answers under it */
+.autotrack-rom-seed {
+  display: grid;
+  gap: var(--spacing-sm);
+  justify-items: start;
+}
+
+.autotrack-rom-seed__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.autotrack-rom-seed__actions .modal-btn {
+  min-height: 2.5rem;
+}
+
 .autotrack-actions {
   display: flex;
   flex-wrap: wrap;

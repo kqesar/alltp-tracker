@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { isRaceHeldByMemory } from "@/autotrack/raceMode";
 import { detailOf, headlineOf, phaseOf } from "@/autotrack/status";
 import { RaceModeOption } from "@/components/autotrack/RaceModeOption";
+import { RomSeedLine } from "@/components/autotrack/RomSeedNotice";
 import { SetupGuide } from "@/components/autotrack/SetupGuide";
 import {
   RaceBadge,
@@ -19,6 +20,7 @@ import { seedLineText } from "@/games/alttpr/autotrack/seed";
 import { Readout } from "@/games/alttpr/components/autotrack/Readout";
 import { entrancesShuffled } from "@/games/alttpr/data/presets";
 import {
+  alttprRomSeed,
   connectAutotrack,
   type DarkRoomStyle,
   disconnectAutotrack,
@@ -105,6 +107,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
   const shuffled = useGameStore((state) => entrancesShuffled(state.settings));
   const canRetry = active && "retryInMs" in shown;
   const seedCheck = useSeedCheck();
+  const romSeed = alttprRomSeed.useCheck();
   const keptSeed = useAutotrackStore((state) => state.keptSeed);
 
   const copyReport = async () => {
@@ -160,6 +163,7 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 : detailOf(shown, active, elsewhere)}
             </p>
             {connected && <RaceLine race={race} />}
+            {connected && <RomSeedLine romSeed={alttprRomSeed} />}
             {connected && seedCheck && (
               <p
                 className="autotrack-status__detail"
@@ -257,7 +261,13 @@ export const AutotrackDialog = ({ onClose }: { onClose: () => void }) => {
                 aria-describedby={followId}
                 className="modal-btn modal-btn--ghost"
                 data-testid="autotrack-sync"
-                onClick={() => setSynced(syncedText(syncFromGame()))}
+                onClick={() =>
+                  setSynced(
+                    romSeed?.kind === "differs"
+                      ? "The game runs another seed than this run's: nothing set."
+                      : syncedText(syncFromGame()),
+                  )
+                }
                 type="button"
               >
                 Sync from game
