@@ -39,6 +39,8 @@ describe("describeReading", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);
@@ -57,6 +59,17 @@ describe("describeReading", () => {
       { label: "Triforce reached", value: false },
     ]);
     expect(readout.withheld).toEqual([]);
+  });
+
+  it("tells the hearts Race Mode reads", () => {
+    for (const race of [false, true]) {
+      const memory = seedMemory({ race });
+      memory[SAVE(0x36b)] = 0x03; // three pieces toward the next heart
+      memory[SAVE(0x36c)] = 0x58; // 11 hearts
+      const items = describeSeed(memory, race).items;
+      expect(items, `race ${race}`).toContain("Hearts 11");
+      expect(items, `race ${race}`).toContain("Heart pieces 3 of 4");
+    }
   });
 
   it("names what the board has no cell for, which it leaves alone", () => {
@@ -94,6 +107,8 @@ describe("describeReading", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
     ]);
     expect(readout.prizes).toEqual(["Pendant of Courage", "Crystals ×2"]);
     expect(readout.prizesUnread).toBeNull();
@@ -107,7 +122,7 @@ describe("describeReading", () => {
     expect(readout.withheld.map(({ label }) => label)).toEqual([
       "Bomb and arrow capacity",
       "Which crystals are 5 and 6",
-      "Heart containers and pieces",
+      "Heart containers and pieces collected",
       "Zelda's rescue",
     ]);
     expect(readout.withheld.every(({ why }) => why === "race-mode")).toBe(true);
@@ -402,6 +417,8 @@ describe("describeReading's unknowns", () => {
 
     expect(readout.items).toEqual([
       "newItem",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);

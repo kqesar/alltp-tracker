@@ -51,6 +51,7 @@ export const seedMemory = ({
   memory[SAVE(0x35c)] = 0x02; // one empty bottle
   memory[SAVE(0x370)] = 10; // the bombs a fresh run holds at most
   memory[SAVE(0x371)] = 30; // the arrows
+  memory[SAVE(0x36c)] = 0x18; // the 3 hearts a fresh run holds (MaximumHealth)
   memory[SAVE(0x374)] = 0x04; // the Pendant of Courage
   memory[SAVE(0x3c5)] = 0x02; // Zelda rescued
   memory[SAVE(0x208)] = 0x10; // Link's House chest (room $104)

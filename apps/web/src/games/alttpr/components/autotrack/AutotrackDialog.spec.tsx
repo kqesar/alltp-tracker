@@ -655,6 +655,8 @@ describe("AutotrackDialog's readout", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);

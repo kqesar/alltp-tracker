@@ -447,8 +447,9 @@ describe("mergeView", () => {
       "links-house": true,
     });
     // Hookshot, sword, bottle, Armos Knights, the counter, the bombs, the
-    // escape, the green pendant, the flute not activated, three checks
-    expect(laid?.count).toBe(12);
+    // escape, the green pendant, the flute not activated, the hearts, three
+    // checks
+    expect(laid?.count).toBe(13);
   });
 
   it("never undoes what the player marked beyond the game", () => {

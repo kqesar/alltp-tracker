@@ -178,7 +178,9 @@ const ZELDA = "zelda";
 /** Items not listed one by one when withheld, named once as a group. */
 const GROUPS: readonly (readonly [RegExp, string])[] = [
   [/^(pendant|crystal)/, "Pendants and crystals"],
-  [/^(heartContainer|pieceOfHeart)$/, "Heart containers and pieces"],
+  // The stats' counters of the hearts found: the hearts on screen and the
+  // pieces toward the next are read apart (`health`), Race Mode too
+  [/^(heartContainer|pieceOfHeart)$/, "Heart containers and pieces collected"],
   [/^bottle$/, "Bottles"],
 ];
 
@@ -656,6 +658,16 @@ export const describeReading = (
     else if (id === "bottle") {
       items.push(bottlesWithContents(itemName(id, count), reading.bottles));
     } else items.push(itemName(id, count));
+  }
+  // The hearts on screen and the pieces toward the next, as the pause menu
+  // shows them, Race Mode too (v2.0: "heart count, heart piece count")
+  const { health } = reading;
+  if (typeof health === "string") withheld.set("Hearts", health);
+  else {
+    items.push(
+      `Hearts ${health.hearts}`,
+      `Heart pieces ${health.quarters} of 4`,
+    );
   }
   // How many bombs and arrows Link can hold, outside Race Mode: v2.0 does
   // not name the capacity upgrades
