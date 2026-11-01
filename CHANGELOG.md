@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.68.0](https://github.com/kqesar/alltp-tracker/compare/v2.67.2...v2.68.0) (2026-11-01)
+
+
+### ✨ Features
+
+* integrate the Door Randomizer (DR and OWR) ([#446](https://github.com/kqesar/alltp-tracker/issues/446)) ([b74c344](https://github.com/kqesar/alltp-tracker/commit/b74c3445640e8aed654e736ff5380acce1c2492d))
+
 ## [2.67.2](https://github.com/kqesar/alltp-tracker/compare/v2.67.1...v2.67.2) (2026-10-30)
 
 
