@@ -186,7 +186,7 @@ export const DUNGEON_DROPS: Readonly<Record<string, readonly string[]>> = {
  * OWR's (owr:DoorShuffle.py:99-108) by the screens they stand on, flipped
  * where read so (a screen not known read as standing).
  */
-const destinationPortals = (
+export const destinationPortals = (
   data: DrData,
   mode: DrMode,
   screens: OwrScreens,
@@ -224,6 +224,55 @@ export const DUNGEON_EVENTS: ReadonlySet<string> = new Set([
   "Zelda Pickup",
   "Zelda Drop Off",
 ]);
+
+/**
+ * The fork's location_events (owr:Regions.py:1405-1441), which its key
+ * analysis reads where DR's reads dungeon_events (owr:KeyDoorShuffle.py:6,
+ * :1885; DungeonGenerator.py:14, :888-894, :1100): DR's, each boss's kill
+ * its Spoils region holds beside the boss's item, Agahnim's, and the
+ * overworld's quests, which no dungeon room holds.
+ */
+const LOCATION_EVENTS: ReadonlySet<string> = new Set([
+  "Agahnim 1",
+  "Agahnim 2",
+  "Eastern Palace - Boss Kill",
+  "Desert Palace - Boss Kill",
+  "Tower of Hera - Boss Kill",
+  "Palace of Darkness - Boss Kill",
+  "Swamp Palace - Boss Kill",
+  "Skull Woods - Boss Kill",
+  "Thieves' Town - Boss Kill",
+  "Ice Palace - Boss Kill",
+  "Misery Mire - Boss Kill",
+  "Turtle Rock - Boss Kill",
+  "Locksmith",
+  "Lost Old Man",
+  "Old Man Drop Off",
+  "Floodgate",
+  "Kiki",
+  "Kiki Assistance",
+  "Big Bomb",
+  "Pyramid Crack",
+  "Frog",
+  "Missing Smith",
+  "Dark Blacksmith Ruins",
+  "Middle Aged Man",
+  "Trench 1 Switch",
+  "Trench 2 Switch",
+  "Swamp Drain",
+  "Turtle Medallion Pad",
+  "Attic Cracked Floor",
+  "Suspicious Maiden",
+  "Revealing Light",
+  "Ice Block Drop",
+  "Skull Star Tile",
+  "Zelda Pickup",
+  "Zelda Drop Off",
+]);
+
+/** The events a release's key analysis reads: DR's, or the fork's own. */
+export const eventsOf = (data: DrData): ReadonlySet<string> =>
+  data.flavor === "owr" ? LOCATION_EVENTS : DUNGEON_EVENTS;
 
 /** How the run sets what the analysis reads. */
 export interface KeyAnalysisSettings {
@@ -310,6 +359,8 @@ export interface KLocation {
   readonly forced: { readonly big: boolean; readonly dungeon: string } | null;
   /** Its region's dungeon, if any. */
   readonly dungeon: string | null;
+  /** An event of its release's (eventsOf): never a chest the walk counts. */
+  readonly event: boolean;
 }
 
 /** A region as the walk reads it. */
@@ -415,16 +466,18 @@ function inaccessibleRegions(
       }
     }
   }
+  // valid_inaccessible_region (:3490-3491; the fork's start house by its
+  // screen, owr:DoorShuffle.py:3498-3499)
+  const home = bombShop === true ? "Big Bomb Shop" : "Links House";
   const found = new Set(
     data.regions
       .filter(
         (r) =>
           r.type !== "dungeon" &&
           !visited.has(r.name) &&
-          // valid_inaccessible_region (:3490-3491)
           (r.type !== "cave" ||
             ((exits.get(r.name)?.length ?? 0) > 0 &&
-              r.name !== "Links House" &&
+              r.name !== home &&
               r.name !== "Chris Houlihan Room")),
       )
       .map((r) => r.name),
@@ -615,6 +668,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
         { big: d.big, dungeon: dungeonOf(d.region, d.dungeon) ?? d.dungeon },
       ]),
   );
+  const events = eventsOf(data);
   const regions = new Map<string, KRegion>();
   for (const r of data.regions) {
     const dungeon = dungeonOf(r.name, r.dungeon);
@@ -626,6 +680,7 @@ export function keyWorld(settings: KeyAnalysisSettings): KeyWorld {
         .filter((name) => r.locationModes?.[name]?.includes(mode) ?? true)
         .map((name) => ({
           dungeon,
+          event: events.has(name),
           forced: forcedOf.get(name) ?? null,
           name,
         })),

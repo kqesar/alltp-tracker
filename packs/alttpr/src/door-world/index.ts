@@ -212,6 +212,11 @@ export interface DrWorldOptions {
   /** Test only: items the `doorRule` reads beside the pack's. */
   readonly items?: readonly string[];
   /**
+   * Test only: every key door of a door shuffle strict-safe, no layout
+   * analysed (key-analysis/noted.ts): the baseline the analysis is held to.
+   */
+  readonly strictKeys?: boolean;
+  /**
    * Regions to answer as locations: each a location `region:<name>` in it
    * with no rule, reached with the region (Region.can_reach): what the
    * static key logic's Turtle Rock probe asks.
@@ -1313,12 +1318,13 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
     : null;
   // DR's analysis of each layout the notes tell whole (noted.ts), its
   // entrances vanilla; pots and drops beyond the keys and the static key
-  // logic as for vanilla doors: none
+  // logic as for vanilla doors: none. The fork's reads its overworld too
   const doorKeyLogic =
     doors === undefined ||
     dungeonOfRoom === undefined ||
     options.entrances !== undefined ||
     options.connections !== undefined ||
+    options.strictKeys === true ||
     all.dungeonPotsAndDrops === true ||
     all.staticKeyLogic === true
       ? undefined
@@ -1329,6 +1335,22 @@ export function drWorld(settings: Settings, options: DrWorldOptions): DrWorld {
           doors,
           dungeons: dungeonOfRoom,
           mode,
+          ...(owr
+            ? {
+                overworld: {
+                  complete: owrNotesComplete(
+                    data,
+                    options.overworld ?? {},
+                    screens,
+                  ),
+                  key: JSON.stringify([
+                    options.overworld ?? {},
+                    owrShuffleOf(all),
+                  ]),
+                  screens,
+                },
+              }
+            : {}),
         });
   const ruledKeys: WorldKeys =
     doorRule === undefined

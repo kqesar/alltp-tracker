@@ -8,7 +8,6 @@ import { perData } from "../data";
 import { keyDropsOf, specialBigKeyDoors } from "../keys";
 import {
   DEFAULT_SMALL_KEY_DOORS,
-  DUNGEON_EVENTS,
   type KDoor,
   type KeyWorld,
   type KLocation,
@@ -81,9 +80,12 @@ export function isImportant(layout: KeyLayout, loc: KLocation): boolean {
 export const isForcedBigKey = (loc: KLocation): boolean =>
   loc.forced?.big === true && loc.forced.dungeon === loc.dungeon;
 
-/** prize_or_event (DungeonGenerator.py:1098-1099). */
+/**
+ * prize_or_event (DungeonGenerator.py:1098-1099; the fork's events its
+ * own, owr:DungeonGenerator.py:1099-1100).
+ */
 const isPrizeOrEvent = (loc: KLocation): boolean =>
-  DUNGEON_EVENTS.has(loc.name) ||
+  loc.event ||
   loc.name.includes("- Prize") ||
   loc.name === "Agahnim 1" ||
   loc.name === "Agahnim 2";
@@ -168,7 +170,7 @@ function createKeyCounter(
     } else if (isForcedSmall(loc, layout.dungeon)) keyOnly.add(loc);
     else if (loc.forced?.big === true && loc.forced.dungeon === layout.dungeon)
       other.add(loc);
-    else if (!DUNGEON_EVENTS.has(loc.name)) free.add(loc);
+    else if (!loc.event) free.add(loc);
     else other.add(loc);
   }
   return {

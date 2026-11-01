@@ -73,8 +73,8 @@ export interface KeyLogic {
  * A dungeon's key logic without the world it was walked on: its door
  * rules, chest counting and big key sets as KeyLogic holds them (their
  * locations are leaves), its big key doors by name, and of its layout the
- * keys its chests hold and its key doors' names, all the key rules read
- * (keys.ts). A KeyLogic is one; `keyRulesOf` keeps only these, since a
+ * keys its chests hold, its key doors' and its starts' names, all the key
+ * rules read (keys.ts) and what its specs check. A KeyLogic is one; `keyRulesOf` keeps only these, since a
  * KDoor reaches the whole key world built for the analysis.
  */
 export interface KeyRules {
@@ -87,6 +87,7 @@ export interface KeyRules {
   readonly layout: {
     readonly maxChests: number;
     readonly flatProposal: readonly { readonly name: string }[];
+    readonly starts: readonly { readonly name: string }[];
   };
 }
 
@@ -105,6 +106,7 @@ export function keyRulesOf(logic: KeyLogic): KeyRules {
     layout: {
       flatProposal: logic.layout.flatProposal.map(named),
       maxChests: logic.layout.maxChests,
+      starts: logic.layout.starts.map(named),
     },
   };
 }

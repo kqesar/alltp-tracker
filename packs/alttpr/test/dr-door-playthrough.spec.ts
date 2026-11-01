@@ -33,6 +33,7 @@ import {
   doorShuffleOf,
   KEY_NAMES,
   plain,
+  withinStrictSafe,
   withoutDoors,
 } from "./dr-doors";
 import {
@@ -88,7 +89,10 @@ const settingsOf = (meta: Log["meta"]) => ({
 const worldOf = (
   json: Json,
   log: Log,
-  options: { readonly sweepEvents?: boolean } = {},
+  options: {
+    readonly sweepEvents?: boolean;
+    readonly strictKeys?: boolean;
+  } = {},
 ) =>
   drWorld(settingsOf(log.meta), {
     data: DR_DATA,
@@ -324,4 +328,31 @@ describe("DR's world on shuffled doors against real seeds", () => {
       const world = worldOf(json, log, { sweepEvents: false });
       expect(early(log, world)).toEqual([]);
     });
+
+  // The logs whose layouts DR's analysis reads (above)
+  for (const name of [
+    "avianart-7SFJ6YE0k.json",
+    "avianart-D14rBE1uq.json",
+    "avianart-giw5Y13cP.json",
+    "avianart-uMJQnKFrH.json",
+    "avianart-w6Jx8UcW6.json",
+    "avianart-xd8m0E50c.json",
+  ])
+    it(`says yes with DR's key analysis only where strict-safe does with every key (${name})`, () => {
+      const json = JSON.parse(read(name)) as Json;
+      const log = logOf(json);
+      const analysed = worldOf(json, log);
+      expect(analysed.doorKeyLogic?.size).toBeGreaterThan(10);
+      const { failure, raised } = withinStrictSafe(
+        log,
+        analysed,
+        worldOf(json, log, { strictKeys: true }),
+        { runs: 25 },
+      );
+      expect(failure).toBeUndefined();
+      // Not vacuous: the analysis said yes where strict-safe waited
+      expect(raised).toBeGreaterThan(0);
+      // Three solves a draw: past the pack's default timeout under
+      // coverage, not hung
+    }, 120_000);
 });

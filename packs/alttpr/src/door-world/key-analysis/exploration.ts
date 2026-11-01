@@ -7,13 +7,7 @@
 // state rides each door as DR's does. Lists keep DR's order, which its
 // best-counter choice depends on.
 import { specialBigKeyDoors } from "../keys";
-import {
-  type Crystal,
-  DUNGEON_EVENTS,
-  type KDoor,
-  type KLocation,
-  type KRegion,
-} from "./dungeon";
+import type { Crystal, KDoor, KLocation, KRegion } from "./dungeon";
 
 /** A door waiting to be walked, in the state it is reached in (ExplorableDoor). */
 export interface ExplorableDoor {
@@ -97,7 +91,7 @@ export class ExplorationState {
         this.found.push(location);
       }
       if (
-        DUNGEON_EVENTS.has(location.name) &&
+        location.event &&
         !this.events.has(location.name) &&
         this.floodedKeyCheck(location.name)
       )
