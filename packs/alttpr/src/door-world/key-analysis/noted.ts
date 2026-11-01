@@ -335,17 +335,22 @@ interface Walk {
   readonly inaccessible: ReadonlySet<string>;
 }
 
+/** The one trap DR may open as it lays a layout (DungeonGenerator.py:171). */
+const PINBALL_TRAP = "Skull Pinball WS";
+
 /**
  * find_accessible_entrances (DoorShuffle.py:3439-3479), run at the end of
  * main_dungeon_generation (:1170-1172), before the door types are
  * shuffled: a walk of every exit, rules aside, from Link's House, the
  * Sanctuary and the Pyramid (Inverted's own three), skipping a door its
- * vanilla data shuts, stopping at the dungeon's own entrances. The walk
+ * vanilla data shuts (Skull Pinball's trap, which DR may open: an entrance
+ * found only past it is uncertain), stopping at the dungeon's own
+ * entrances. The walk
  * crosses other dungeons' layouts, which the notes may tell in part: a
  * door it reaches that the shuffle relinks and no note names makes what it
- * did not find uncertain.
+ * did not find uncertain. Exported for its spec.
  */
-function accessibleEntrances(
+export function accessibleEntrances(
   data: DrData,
   mode: DrMode,
   connections: DrConnections,
@@ -376,9 +381,10 @@ function accessibleEntrances(
     mode === "inverted"
       ? ["Links House", "Dark Sanctuary Hint", "Hyrule Castle Ledge"]
       : ["Links House", "Sanctuary", "Pyramid Area"];
-  const reached = (
+  const walk = (
     entrances: ReadonlySet<string>,
     skipped: ReadonlySet<string>,
+    pinballOpen: boolean,
   ) => {
     const found = new Set<string>();
     let certain = true;
@@ -403,7 +409,7 @@ function accessibleEntrances(
             certain = false;
           continue;
         }
-        if (blocked(exit)) continue;
+        if (blocked(exit) && !(pinballOpen && exit === PINBALL_TRAP)) continue;
         if (entrances.has(to)) found.add(to);
         else if (!seen.has(to)) {
           seen.add(to);
@@ -412,6 +418,21 @@ function accessibleEntrances(
       }
     }
     return { certain, found };
+  };
+  // DR opens Skull Pinball's trap once its generator has used the pinball
+  // room (DungeonGenerator.py:170-178), which no note tells: an entrance
+  // found only past it may or may not be reached
+  const reached = (
+    entrances: ReadonlySet<string>,
+    skipped: ReadonlySet<string>,
+  ) => {
+    const shut = walk(entrances, skipped, false);
+    const open = walk(entrances, skipped, true);
+    return {
+      certain:
+        shut.certain && open.certain && open.found.size === shut.found.size,
+      found: shut.found,
+    };
   };
   return { inaccessible, parents, reached };
 }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { solveFacts } from "../facts";
 import { everything } from "../keys";
 import { settingsFromUpstream } from "../settings";
+import { vanillaConnections } from "./connections";
 import {
   type DoorKindNote,
   type DoorNotes,
@@ -22,7 +23,7 @@ import {
   KEY_ITEMS,
 } from "./index";
 import type { KeyRules } from "./key-analysis/analysis";
-import { forgetNotedKeyLogic } from "./key-analysis/noted";
+import { accessibleEntrances, forgetNotedKeyLogic } from "./key-analysis/noted";
 import { ALTERNATIVE_CRYSTAL_DOORS, UGLY_SMALLS } from "./keys";
 import { OWR_DATA } from "./owr-data";
 import { roomDungeons } from "./shuffle";
@@ -362,6 +363,29 @@ describe("DR's key analysis on a noted door shuffle", () => {
     // A few thousand small objects in all, against the world's tens of
     // thousands
     expect(seen.size).toBeLessThan(5_000);
+  });
+
+  it("tells a lobby the start walk finds only past Skull Pinball's trap as uncertain", () => {
+    const s = shuffle();
+    const vanilla = vanillaConnections(DR_DATA, "open", 156, {
+      notes: vanillaLayout(s),
+      settings: s,
+    });
+    const walkOf = (connections: ReadonlyMap<string, string>) =>
+      accessibleEntrances(DR_DATA, "open", connections, s, new Set()).reached(
+        new Set([lobby]),
+        new Set(),
+      );
+    const lobby = vanilla.get("Eastern Palace") ?? "";
+    expect(walkOf(vanilla)).toEqual({ certain: true, found: new Set([lobby]) });
+    // Eastern's door from outside leads back out: the walk misses its
+    // lobby, and knows it
+    const shut = new Map(vanilla).set("Eastern Palace", "Eastern Palace Area");
+    expect(walkOf(shut)).toEqual({ certain: true, found: new Set() });
+    // The lobby only past the trap DR opens once its generator used the
+    // pinball room (DungeonGenerator.py:170-178), which no note tells
+    const past = new Map(shut).set("Skull Pinball WS", lobby);
+    expect(walkOf(past)).toEqual({ certain: false, found: new Set() });
   });
 
   it("leaves a dungeon strict-safe while a door of its layout or a kind is not noted", () => {

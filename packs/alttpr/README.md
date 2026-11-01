@@ -1265,7 +1265,9 @@ strict-safe one). Told means: intensity 1 or 2 (each portal on its own
 door, the destinations fixed by `link_doors_prep`, `:100-108`), coupled
 doors, vanilla entrances, every door of the layout linked and of a known
 kind, its drops in its layout, and each lobby the walk reaches or a walk
-that crossed no door not noted; Standard's castle aside (its courtyard
+that crossed no door not noted (nor found a lobby only past Skull Pinball's
+trap, which DR opens once its generator used the room,
+`DungeonGenerator.py:170-178`); Standard's castle aside (its courtyard
 start, `std_flag`). Anywhere else a key door asks every key of its
 dungeon or `maybe` (strict-safe), the vanilla count in `basic` and the
 count the player noted in a pool (`shuffle_small_key_doors` moves it,
