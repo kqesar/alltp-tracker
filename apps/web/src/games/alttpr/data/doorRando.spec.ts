@@ -512,11 +512,19 @@ describe("a Door Randomizer run's logic", () => {
       expect(
         doorNotes(with_(run, { ...coupled, doorEntrances: "lite" }))[1],
       ).toMatch(/asks every key of its dungeon\.$/);
-      // DR's analysis reads DR's data alone: an OWR door shuffle's key doors
-      // stay strict-safe
-      expect(doorNotes(with_(run, { ...OWR, ...coupled }))[1]).toMatch(
-        /asks every key of its dungeon\.$/,
+      // The fork's own analysis on its world, once its overworld is noted
+      // whole too where a shuffle moves it
+      expect(doorNotes(with_(run, { ...OWR, ...coupled }))[1]).toBe(
+        "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when the fork's own key analysis counts them.",
       );
+      expect(
+        doorNotes(with_(run, { ...OWR, ...coupled, owWhirlpool: true }))[1],
+      ).toBe(
+        "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted and the whole overworld too, when the fork's own key analysis counts them.",
+      );
+      expect(
+        doorNotes(with_(run, { ...OWR, ...coupled, doorEntrances: "lite" }))[1],
+      ).toMatch(/asks every key of its dungeon\.$/);
     }
     // A boss room never leaves its dungeon (dungeon_boss_sectors): its
     // restricted items stay its dungeon's in a pool too

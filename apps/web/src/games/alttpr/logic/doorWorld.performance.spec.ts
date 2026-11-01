@@ -16,6 +16,7 @@ import {
   shuffledDoors,
 } from "@alltp/pack-alttpr/door-world";
 import { DR_DATA } from "@alltp/pack-alttpr/door-world/dr";
+import { OWR_DATA } from "@alltp/pack-alttpr/door-world/owr";
 import { beforeAll, describe, expect, it } from "vitest";
 import { doorShuffleSettingsOf } from "@/games/alttpr/data/doorRando";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
@@ -32,6 +33,7 @@ import {
 } from "@/games/alttpr/logic/solution";
 import basic from "../../../../../../packs/alttpr/test/dr-door-spoilers/avianart-giw5Y13cP.json?raw";
 import crossed from "../../../../../../packs/alttpr/test/dr-door-spoilers/avianart-uMJQnKFrH.json?raw";
+import forkCrossed from "../../../../../../packs/alttpr/test/owr-door-spoilers/avianart-0tUGDpve7.json?raw";
 
 /** A click's budget in DR's world (dr-logic-design §2.8). */
 const BUDGET_MS = 5;
@@ -102,14 +104,16 @@ const KEPT_NOTE_BUDGET_MS = 80;
 
 describe("a door shuffle's world after a note", () => {
   // Basic and crossed at intensity 2, every door noted (DR's analysis of
-  // each dungeon, the pack's key-analysis/noted.ts): a note moves one
-  // dungeon, whose analysis alone is worked out again
+  // each dungeon, the pack's key-analysis/noted.ts), and the fork's crossed
+  // in its own world: a note moves one dungeon, whose analysis alone is
+  // worked out again
   it.each([
-    ["basic", basic],
-    ["crossed", crossed],
+    ["basic", basic, DR_DATA],
+    ["crossed", crossed, DR_DATA],
+    ["the fork's crossed", forkCrossed, OWR_DATA],
   ])(
     "rebuilds within the budget, the other dungeons' analyses kept: %s",
-    (name, raw) => {
+    (name, raw, data) => {
       const json = JSON.parse(raw) as Parameters<
         typeof doorNotesFromSpoiler
       >[0] & { meta: Record<string, string> };
@@ -119,7 +123,7 @@ describe("a door shuffle's world after a note", () => {
         shuffle: json.meta.door_shuffle as DoorShuffleSettings["shuffle"],
         trapMode: "optional",
       };
-      const notes = doorNotesFromSpoiler(json, settings, DR_DATA);
+      const notes = doorNotesFromSpoiler(json, settings, data);
       const mode = json.meta.mode === "inverted" ? "inverted" : "open";
       const world = {
         ...DR_DEFAULTS,
@@ -132,7 +136,7 @@ describe("a door shuffle's world after a note", () => {
       // A new notes object each time, as the store makes on a note
       const build = () =>
         drWorld(world, {
-          data: DR_DATA,
+          data,
           doors: { notes: { ...notes }, settings },
         });
       expect(build().doorKeyLogic?.size).toBe(13);
@@ -150,7 +154,7 @@ describe("a door shuffle's world after a note", () => {
       expect(note).toBeLessThan(budgetOf(KEPT_NOTE_BUDGET_MS));
       // Crossed, whose thirteen analyses weigh most, rebuilds in a fraction
       // of a world built afresh (basic's gap is within a busy run's noise)
-      if (name === "crossed") expect(note).toBeLessThan(cold * 0.6);
+      if (name !== "basic") expect(note).toBeLessThan(cold * 0.6);
     },
     120_000,
   );

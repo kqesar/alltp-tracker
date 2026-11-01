@@ -954,13 +954,13 @@ export const doorNotes = (settings: DoorRunSettings): string[] => {
       ? []
       : [
           // DR's own key analysis runs on a layout the notes tell whole at
-          // intensity 1 or 2, coupled, entrances vanilla, on DR's data (the
-          // pack's key-analysis/noted.ts); elsewhere strict-safe
-          door.randomizer !== "owr" &&
+          // intensity 1 or 2, coupled, entrances vanilla, the fork's once
+          // its overworld is noted whole too (the pack's key-analysis/
+          // noted.ts); elsewhere strict-safe
           (door.doorIntensity ?? "3") !== "3" &&
           door.decoupledDoors === false &&
           doorShuffleOf(settings) === undefined
-            ? "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted, when DR's own key analysis counts them."
+            ? `Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon until every door of the dungeon is noted${moved.length === 0 ? "" : " and the whole overworld too"}, when ${door.randomizer === "owr" ? "the fork's" : "DR's"} own key analysis counts them.`
             : "Its doors are shuffled: the logic follows the doors you note in the Doors tab, a door not noted leads nowhere, and a key door asks every key of its dungeon.",
         ]),
     // Nothing on the map says why an unnoted overworld reads out of logic
