@@ -1,6 +1,31 @@
 {
-  "provenance": "https://avianart.games/api.php?action=permlink&hash=u6BKiwo1E, 2026-10-29: response.type and response.spoiler.meta kept, nothing else (scripts/record-dr-seeds.mjs)",
+  "provenance": "https://avianart.games/api.php?action=permlink&hash=u6BKiwo1E, 2026-11-01: response.type, response.spoiler.meta and the title of response.patch kept, nothing else (scripts/record-dr-seeds.mjs)",
   "response": {
+    "patch": {
+      "32704": [
+        79,
+        82,
+        65,
+        86,
+        84,
+        95,
+        49,
+        95,
+        49,
+        95,
+        117,
+        54,
+        66,
+        75,
+        105,
+        119,
+        111,
+        49,
+        69,
+        0,
+        0
+      ]
+    },
     "spoiler": {
       "meta": {
         "version": "1.5.6-u",

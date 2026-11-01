@@ -67,17 +67,19 @@ const equalIds = (a: string, b: string) => a === b;
  * @param rom - The seed the ROM names, null when it names none or was not read
  * @param race - Whether the reading was in Race Mode: the check is then off
  * @param same - Whether two ids name the same seed, for a game whose ids
- * take more than one form (a Door Randomizer seed's)
+ * take more than one form (a Door Randomizer seed's): null when their forms
+ * cannot be held to each other
  */
 export const checkRomSeed = (
   run: string | null,
   rom: string | null,
   race: boolean,
-  same: (run: string, rom: string) => boolean = equalIds,
+  same: (run: string, rom: string) => boolean | null = equalIds,
 ): RomSeedCheck | null => {
   if (run === null) return null;
   if (race) return { kind: "race" };
-  if (rom === null || same(run, rom)) return null;
+  // Ids that cannot be held to each other (null) are no mismatch either
+  if (rom === null || same(run, rom) !== false) return null;
   return { kind: "differs", rom, run };
 };
 

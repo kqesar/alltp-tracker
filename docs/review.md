@@ -85,7 +85,7 @@ follows its rule: **refuse on any contradiction, verified when the seeds are equ
 | Evidence | Run | Log |
 |---|---|---|
 | Seed | `Progress.seed` (the ROM's `VT <hash>`, or the seed the run started from) | the seed file's `hash`, or the `_<hash>` in the file's name (said "matched by its file name") |
-| Seed of a Door Randomizer log | the ROM title's `<team>_<player>_<seed>` autotracking records, or an avianart hash for a run started from an avianart link | the seed the log's first line or `meta` gives in the ROM title's form, or avianart's hash (its file name or permalink): the one of the run's kind, `fileSeed` |
+| Seed of a Door Randomizer log | the ROM title's `<team>_<player>_<seed>` autotracking records, which a run started from an avianart link holds too, or the link's hash for one saved before | the seed the log's first line or `meta` gives in the ROM title's form, and avianart's hash (its file name or permalink): either that names the run's seed binds it, one that names another refuses, one whose form cannot be compared to the run's proves nothing (the pack's `sameSeedId`, `fileSeed`) |
 | Settings | the run type's compared settings, through the seed import's `checkSeed` | the log's `meta`, read as a seed file's |
 | Medallions | the board's two pads, when set | `Special` |
 | Prizes | each dungeon's reward, when set | `<Dungeon> - Prize` |

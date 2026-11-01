@@ -117,6 +117,25 @@ describe("binding a Door Randomizer log", () => {
     });
   });
 
+  it("verifies an avianart Overworld run whose ROM named the hash, not the number", () => {
+    // avianart's OWR ROMs write the hash's 9 characters (OWR Rom.py:1847):
+    // the run holds "1_1_<hash>", the log the number meta names
+    const linked = {
+      ...vanilla,
+      extra: {
+        ...vanilla.extra,
+        door: { ...vanilla.extra.door, avianart: "4kxBlrWuP2" },
+      },
+    } as typeof vanilla;
+    play(vanilla);
+    useGameStore.setState({ seed: "1_1_4kxBlrWuP" });
+    expect(bindRun(linked, run())).toMatchObject({ verdict: "verified" });
+    useGameStore.setState({ seed: "1_1_4kxBlrWuQ" });
+    expect(bindRun(linked, run())).toMatchObject({
+      refusal: { error: "seed-differs" },
+    });
+  });
+
   it("refuses a DR log on an alttpr.com run of the same world", () => {
     play(vanilla);
     const settings = { ...store().settings };

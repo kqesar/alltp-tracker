@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { KEPT } from "../../scripts/record-dr-seeds.mjs";
 import { MEMORY_RANGE } from "../autotrack/memory";
+import { sameSeedId, seedRomOf } from "../autotrack/probes";
 import { SEED_SETTINGS_RANGES } from "../autotrack/seed-settings";
 import {
   avianartReading,
@@ -55,6 +56,45 @@ describe("doorSeedLinkOf", () => {
 });
 
 describe("avianartReading", () => {
+  /** The ROM's title in a recorded permalink (ROM 0x7FC0). */
+  const titleOf = (hash: string) => {
+    const json = avianart(hash) as {
+      response: { patch: Record<string, number[]> };
+    };
+    return String.fromCharCode(...json.response.patch[String(0x7fc0)]);
+  };
+
+  it("names the seed as each permalink's ROM does", () => {
+    const ids = Object.fromEntries(
+      ["toInhuUYy", "4kxBlrWuP", "u6BKiwo1E", "C2BdrZOiV", "uv7P2Luey"].map(
+        (hash) => {
+          const id = avianartReading(avianart(hash), hash)?.seed ?? "";
+          const rom = seedRomOf(titleOf(hash))?.seed ?? "";
+          return [hash, { id, rom, same: sameSeedId(id, rom) }];
+        },
+      ),
+    );
+    expect(ids).toEqual({
+      // OWR on avianart: the hash, as the ROM header avianart gives it
+      "4kxBlrWuP": { id: "1_1_4kxBlrWuP", rom: "1_1_4kxBlrWuP", same: true },
+      // DR 1.5.6: no number in meta, so nothing to hold the hash to
+      C2BdrZOiV: { id: "C2BdrZOiV", rom: "1_1_130792470", same: null },
+      // DR 1.5.8: the seed's number, as meta names it
+      toInhuUYy: { id: "1_1_840319254", rom: "1_1_840319254", same: true },
+      u6BKiwo1E: { id: "1_1_u6BKiwo1E", rom: "1_1_u6BKiwo1E", same: true },
+      uv7P2Luey: { id: "uv7P2Luey", rom: "1_1_657157563", same: null },
+    });
+    // Another seed's ROM is another seed
+    expect(sameSeedId(ids.toInhuUYy.id, ids["4kxBlrWuP"].rom)).toBe(false);
+    expect(sameSeedId(ids["4kxBlrWuP"].id, ids.toInhuUYy.rom)).toBe(false);
+  });
+
+  it("cuts an Overworld permalink's longer hash to the ROM's 9 characters", () => {
+    expect(avianartReading(avianart("4kxBlrWuP"), "4kxBlrWuP2")?.seed).toBe(
+      "1_1_4kxBlrWuP",
+    );
+  });
+
   it("reads Crosskeys keydrop's settings from a race seed's meta", () => {
     const reading = avianartReading(avianart("C2BdrZOiV"), "C2BdrZOiV");
     expect(reading).not.toBeNull();
@@ -69,6 +109,7 @@ describe("avianartReading", () => {
       goal: "dungeons",
       logic: "NoGlitches",
       mode: "standard",
+      // 1.5.6's meta names no seed: the hash, which its title cannot match
       seed: "C2BdrZOiV",
       wildKeys: true,
     });
@@ -373,6 +414,10 @@ describe("bpsReading", () => {
   it("reads a Hyrule Town Hall patch's settings as the ROM decoder does", () => {
     const reading = bpsReading(hth());
     expect(reading?.seed).toBe("1_1_367825107");
+    // The title's own form: the ROM's, another player's of the seed alike
+    expect(sameSeedId(reading?.seed ?? "", "1_1_367825107")).toBe(true);
+    expect(sameSeedId(reading?.seed ?? "", "1_2_367825107")).toBe(true);
+    expect(sameSeedId(reading?.seed ?? "", "1_1_367825108")).toBe(false);
     expect(reading?.randomizer).toEqual({
       kind: "door",
       overworld: false,

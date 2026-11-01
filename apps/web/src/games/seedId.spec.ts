@@ -100,6 +100,13 @@ describe("checkRomSeed", () => {
     expect(checkRomSeed("ABC", "abc", false, anyCase)).toBeNull();
     expect(checkRomSeed("ABC", "abd", false, anyCase)?.kind).toBe("differs");
   });
+
+  it("says nothing of ids whose forms cannot be compared", () => {
+    const cannot = () => null;
+    expect(checkRomSeed("toInhuUYy", "1_1_840319254", false, cannot)).toBe(
+      null,
+    );
+  });
 });
 
 describe("romSeedText", () => {

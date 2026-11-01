@@ -12,6 +12,7 @@ import {
   MEDALLIONS,
   PRIZES,
   type Prize,
+  sameSeedId,
 } from "@alltp/pack-alttpr";
 import {
   type Binding,
@@ -181,21 +182,25 @@ const factsOf = (log: AlttprSpoilerLog, run: ReviewedRun): Fact[] => {
   return facts;
 };
 
-/** A DR ROM title's seed, `<team>_<player>_<seed>` (the pack's `seedRomOf`). */
-const TITLE_SEED = /^\d+_\d+_/;
-
 /**
  * The log's seed id to set against the run's. A Door Randomizer log may
- * state two (`extra.door`): the seed as the ROM's title names it, which
- * autotracking records as the run's, and avianart's hash, which a run
- * started from an avianart link keeps until autotracking reads the ROM. The
- * one of the run's kind is compared; a log without it proves nothing.
+ * state two (`extra.door`): the seed as DR's title names it, from its
+ * number, and avianart's hash. The run holds its ROM's form (an OWR seed of
+ * avianart's names the hash there, DR's the number) or, saved before, the
+ * hash. Either of the log's that names the run's seed (the pack's
+ * `sameSeedId`) is the run's; else one that names another refuses; a log
+ * whose ids cannot be held to the run's, or that states none, proves
+ * nothing.
  */
 const fileSeed = (log: AlttprSpoilerLog, run: ReviewedRun): string | null => {
   const { door } = log.extra;
   if (door === undefined) return log.seed.id;
-  if (run.seed === null) return door.title ?? door.avianart;
-  return TITLE_SEED.test(run.seed) ? door.title : door.avianart;
+  const ids = [door.title, door.avianart].filter((id) => id !== null);
+  const { seed } = run;
+  if (seed === null) return ids[0] ?? null;
+  const same = ids.map((id) => sameSeedId(seed, id));
+  if (same.includes(true)) return seed;
+  return ids[same.indexOf(false)] ?? null;
 };
 
 /**

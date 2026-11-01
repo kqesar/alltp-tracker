@@ -1061,14 +1061,44 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().items.hookshot).toBe(true);
   });
 
+  /** A reading of a ROM whose header titles it `title`. */
+  const titled = (title: string) => {
+    const memory = seedMemory({ race: false });
+    const bytes = title.padEnd(21, "\0");
+    for (let i = 0; i < bytes.length; i++) {
+      memory[0x7fc0 + i] = bytes.charCodeAt(i);
+    }
+    return readingOf(memory);
+  };
+
+  it("follows DR's own ROM on a run that holds its avianart hash: the forms do not compare", () => {
+    // perm/toInhuUYy's ROM names the seed's number (DR 1.5.8 Rom.py:1504),
+    // which a run saved before keeps as the permalink's hash
+    runOf("toInhuUYy");
+    createFollower().read(titled("DR158_1_1_840319254"));
+
+    expect(store().items.hookshot).toBe(true);
+    expect(store().seed).toBe("1_1_840319254");
+  });
+
+  it("follows an Overworld ROM's 9 characters of a 10-character hash", () => {
+    runOf("Lyq3KAkAM2");
+    createFollower().read(titled("ORAVT_1_1_Lyq3KAkAM"));
+
+    expect(store().items.hookshot).toBe(true);
+  });
+
+  it("does not follow a DR ROM of another number than the run's", () => {
+    runOf("1_1_840319254");
+    createFollower().read(titled("DR158_1_1_840319255"));
+
+    expect(store().items.hookshot).toBe(false);
+    expect(store().seed).toBe("1_1_840319254");
+  });
+
   it("matches a Door Randomizer run started from an avianart link to its ROM's title", () => {
     runOf("myYPIp0RY");
-    const memory = seedMemory({ race: false });
-    const title = "ORAVT_1_1_myYPIp0RY".padEnd(21, "\0");
-    for (let i = 0; i < title.length; i++) {
-      memory[0x7fc0 + i] = title.charCodeAt(i);
-    }
-    createFollower().read(readingOf(memory));
+    createFollower().read(titled("ORAVT_1_1_myYPIp0RY"));
 
     // The ROM's form of the same seed, as before
     expect(store().seed).toBe("1_1_myYPIp0RY");
