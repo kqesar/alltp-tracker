@@ -456,7 +456,7 @@ const openOverworldRun = async (
       saved.state.settings = {
         ...saved.state.settings,
         customGoals: false,
-        doorEntrances: entrances ? "district" : "vanilla",
+        ...(entrances ? { doorEntrances: "district" } : {}),
         nearbyItems: false,
         owCrossed: crossed ? "grouped" : "none",
         owFluteShuffle: "random",
