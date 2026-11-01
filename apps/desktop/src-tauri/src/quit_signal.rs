@@ -19,7 +19,15 @@ const FORCED_EXIT: i32 = 130;
 /// task, where tokio's reactor is entered. Tauri calls `setup` on the main
 /// thread, outside any runtime, where `tokio::signal` panics.
 pub fn listen(on_quit: impl FnOnce() + Send + 'static) {
-    spawn_listener(|| {}, on_quit);
+    // THROWAWAY: the H1 bug, handlers installed on the caller's thread
+    let signals = QuitSignals::install().expect("install");
+    tauri::async_runtime::spawn(async move {
+        let mut signals = signals;
+        signals.wait().await;
+        on_quit();
+        signals.wait().await;
+        std::process::exit(FORCED_EXIT);
+    });
 }
 
 fn spawn_listener(
