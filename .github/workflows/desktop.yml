@@ -82,9 +82,11 @@ jobs:
       # `tauri build` adds: without it a debug binary loads the dev server's
       # address instead of the embedded pages.
       - name: Build the app
+        if: ${{ !cancelled() }}
         run: cargo build --locked --features tauri/custom-protocol
 
       - name: Smoke test
+        if: ${{ !cancelled() }}
         working-directory: apps/desktop
         run: xvfb-run -a pnpm smoke
 

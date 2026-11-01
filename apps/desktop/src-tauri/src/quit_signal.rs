@@ -30,6 +30,7 @@ pub fn listen(on_quit: impl FnOnce() + Send + 'static) {
     });
 }
 
+#[allow(dead_code)]
 fn spawn_listener(
     on_ready: impl FnOnce() + Send + 'static,
     on_quit: impl FnOnce() + Send + 'static,
