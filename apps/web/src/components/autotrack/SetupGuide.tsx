@@ -260,13 +260,16 @@ export const SetupGuide = ({
                     <FixNote fix={fix} headline={headlineOf(status, true)} />
                   )}
                   {step.id === "get-bridge" && <SniFiles env={shownEnv} />}
-                  {variants.map((variant) => (
-                    <Variant
-                      key={variant.title}
-                      titled={variants.length > 1}
-                      variant={variant}
-                    />
-                  ))}
+                  {/* An Archipelago ROM has the board's button, not the
+                      step's advice for a seed this board tracks */}
+                  {!(state === "failing" && fix?.board) &&
+                    variants.map((variant) => (
+                      <Variant
+                        key={variant.title}
+                        titled={variants.length > 1}
+                        variant={variant}
+                      />
+                    ))}
                 </div>
               </li>
             );
