@@ -1,4 +1,10 @@
-import { type ApSnapshot, EMPTY_SNAPSHOT } from "@alltp/archipelago";
+import {
+  type ApSnapshot,
+  EMPTY_SNAPSHOT,
+  nameData,
+  SERVER_GAME,
+  SERVER_SLOT,
+} from "@alltp/archipelago";
 import { describe, expect, it } from "vitest";
 import { alttpNames } from "@/games/archipelago/fixtures";
 import {
@@ -185,6 +191,29 @@ describe("projectRun", () => {
       "Super Metroid",
       "A Link to the Past",
     ]);
+  });
+
+  it("names the server as the sender of an item it gave, and its location", () => {
+    // A host's /send arrives from slot 0 at location -1 (AP 0.6.8: the
+    // "Archipelago" world's "Cheat Console"; CommonClient names slot 0)
+    const server = nameData(SERVER_GAME, {
+      checksum: "ac9141e9ad0318df2fa27da5f20c50a842afeecb",
+      item_name_to_id: { Nothing: -1 },
+      location_name_to_id: { "Cheat Console": -1, Server: -2 },
+    });
+    const both: NameLookup = (game) =>
+      game === SERVER_GAME ? server : alttp(game);
+    const sent = { flags: 0, item: 23, location: -1, player: SERVER_SLOT };
+    expect(awayItems(SNAPSHOT, [sent], both)).toEqual([
+      {
+        flags: 0,
+        item: "Piece of Heart",
+        location: "Cheat Console",
+        sender: "the server",
+      },
+    ]);
+    // Its names load like any other game's
+    expect(neededForRun(SNAPSHOT, [sent])).toEqual([SERVER_GAME]);
   });
 
   it("says nothing between connections", () => {

@@ -9,6 +9,8 @@ import {
   hintStatus,
   type NameData,
   type NetworkItem,
+  SERVER_GAME,
+  SERVER_SLOT,
   splitHints,
 } from "@alltp/archipelago";
 import type {
@@ -58,12 +60,18 @@ export const namesOf = (snapshot: ApSnapshot, names: NameLookup): FeedNames => {
       .filter((player) => player.team === team)
       .map((player) => [player.slot, player]),
   );
+  // Slot 0 is the server, never in the room's players: its world's names
+  // (where a host's /send comes from) load like any game's
   return {
-    game: (slot) => players.get(slot)?.game,
+    game: (slot) =>
+      slot === SERVER_SLOT ? SERVER_GAME : players.get(slot)?.game,
     item: (game, id) => names(game)?.items.get(id),
     location: (game, id) => names(game)?.locations.get(id),
     me: snapshot.identity?.slot ?? -1,
-    player: (slot) => players.get(slot)?.alias ?? `Player ${slot}`,
+    player: (slot) =>
+      slot === SERVER_SLOT
+        ? "the server"
+        : (players.get(slot)?.alias ?? `Player ${slot}`),
   };
 };
 

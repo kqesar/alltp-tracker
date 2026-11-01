@@ -71,6 +71,8 @@ export {
   involves,
   lineGames,
   resolveLine,
+  SERVER_GAME,
+  SERVER_SLOT,
 } from "./feed";
 export {
   ALLOWED_COMMANDS,

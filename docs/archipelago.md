@@ -192,7 +192,9 @@ flowchart LR
   when a connection's Connected brings the list again (in its own frame,
   before the session says "connected") and it holds more items for the same
   run, the items past that count go to `away`, named with their sender and
-  where they were found. A slot's first item ever, which comes at index 0 in
+  where they were found. An item the server itself gave (a host's `/send`,
+  slot 0) reads "from the server (Cheat Console)": slot 0's places are the
+  room's `Archipelago` data package, loaded like any other game's. A slot's first item ever, which comes at index 0 in
   a later frame, is not "away".
 - **Run timer**: the shared `RunTimer` (`components/ui/RunTimer.tsx`) over
   `run.timer`. While `prefs.countdownTimer` (on by default, "Start at the
