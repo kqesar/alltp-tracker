@@ -13,6 +13,7 @@ import {
   describeReading,
   locationName,
 } from "@/games/alttpr/autotrack/readout";
+import { getPreset } from "@/games/alttpr/data/presets";
 import { writeSeedSettings } from "../../../../../../packs/alttpr/test/seed-rom";
 
 /** The pack's ranges over a memory image, as a session's snapshot is. */
@@ -39,6 +40,8 @@ describe("describeReading", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);
@@ -57,6 +60,31 @@ describe("describeReading", () => {
       { label: "Triforce reached", value: false },
     ]);
     expect(readout.withheld).toEqual([]);
+  });
+
+  it("tells the hearts Race Mode reads", () => {
+    for (const race of [false, true]) {
+      const memory = seedMemory({ race });
+      memory[SAVE(0x36b)] = 0x03; // three pieces toward the next heart
+      memory[SAVE(0x36c)] = 0x58; // 11 hearts
+      const items = describeSeed(memory, race).items;
+      expect(items, `race ${race}`).toContain("Hearts 11");
+      expect(items, `race ${race}`).toContain("Heart pieces 3 of 4");
+    }
+  });
+
+  it("tells the Triforce pieces of a hunt, Race Mode too", () => {
+    for (const race of [false, true]) {
+      const memory = seedMemory({ race });
+      // No hunt, no pieces to list
+      expect(describeSeed(memory, race).items.join(" ")).not.toContain(
+        "Triforce",
+      );
+      memory[SAVE(0x418)] = 12; // GoalCounter: the pieces found
+      expect(describeSeed(memory, race).items, `race ${race}`).toContain(
+        "Triforce pieces ×12",
+      );
+    }
   });
 
   it("names what the board has no cell for, which it leaves alone", () => {
@@ -94,6 +122,8 @@ describe("describeReading", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
     ]);
     expect(readout.prizes).toEqual(["Pendant of Courage", "Crystals ×2"]);
     expect(readout.prizesUnread).toBeNull();
@@ -107,7 +137,7 @@ describe("describeReading", () => {
     expect(readout.withheld.map(({ label }) => label)).toEqual([
       "Bomb and arrow capacity",
       "Which crystals are 5 and 6",
-      "Heart containers and pieces",
+      "Heart containers and pieces collected",
       "Zelda's rescue",
     ]);
     expect(readout.withheld.every(({ why }) => why === "race-mode")).toBe(true);
@@ -308,13 +338,43 @@ describe("describeReading's key counts", () => {
   it("names a key count beyond the dungeon's keys", () => {
     const memory = seedMemory({ race: false });
     memory[SAVE(0x4e0 + 9)] = 3; // Ice Palace holds two keys
-    const readout = describeReading(readMemory(viewOf(memory), false, 0));
+    const readout = describeReading(
+      readMemory(viewOf(memory), false, 0),
+      false,
+      false,
+      new Set(),
+      getPreset("open").settings,
+    );
 
     expect(readout.dungeons).toEqual([
       {
         dungeon: "Ice Palace",
         items: [
           "2 small keys found (the game counts 3, more than the dungeon holds)",
+        ],
+      },
+    ]);
+  });
+
+  it("counts the keys a Door Randomizer run's key pots add", () => {
+    // Thieves' Town holds one key, and two key pots in a DR run whose
+    // pottery shuffles them: seen on a real game (2026-11-01, DR 1.5.8), the
+    // Spike Switch pot's key and a chest's, counted 2
+    const memory = seedMemory({ race: false });
+    memory[SAVE(0x4e0 + 11)] = 2;
+    const reading = readMemory(viewOf(memory), false, 0);
+    const dr = getPreset("door-crosskeys").settings;
+    const of = (run: typeof dr) =>
+      describeReading(reading, true, false, new Set(), run).dungeons;
+    expect(of({ ...dr, pottery: "keys" })).toEqual([
+      { dungeon: "Thieves' Town", items: ["2 small keys found"] },
+    ]);
+    // Without the key pots, the second is beyond the dungeon's keys
+    expect(of({ ...dr, pottery: "none" })).toEqual([
+      {
+        dungeon: "Thieves' Town",
+        items: [
+          "1 small key found (the game counts 2, more than the dungeon holds)",
         ],
       },
     ]);
@@ -402,6 +462,8 @@ describe("describeReading's unknowns", () => {
 
     expect(readout.items).toEqual([
       "newItem",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);

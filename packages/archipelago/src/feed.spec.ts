@@ -221,6 +221,27 @@ describe("foldFeed, edges", () => {
     expect(state.lines[0]).toMatchObject({ count: 1, mine: 1 });
   });
 
+  it("folds a collect's sends from the collector's own world too", () => {
+    // AP 0.6.8's collect_player sends every location holding the slot's
+    // items, its own world's included, in slot order (seen on a real
+    // server: 81 from slot 1, 141 from the collector, 25 from slot 3)
+    const state = run([
+      { kind: "goal", slot: 2 },
+      { kind: "collect", slot: 2 },
+      item(1, 2),
+      item(2, 2),
+      item(2, 2),
+      item(3, 2),
+      { kind: "release", slot: 2 },
+    ]);
+    expect(state.lines.map((line) => line.kind)).toEqual([
+      "goal",
+      "collect",
+      "release",
+    ]);
+    expect(state.lines[1]).toMatchObject({ count: 4, mine: 1 });
+  });
+
   it("says a release or collect of nothing, and one of one", () => {
     const state = run([
       { kind: "collect", slot: 2 },
@@ -231,6 +252,31 @@ describe("foldFeed, edges", () => {
       state.lines.map((line) => entryText(resolveLine(line, names([])))),
     ).toEqual(["Samus collected 0 items", "Link released 1 item"]);
     expect(involves(state.lines[1] as FeedLine, 1)).toBe(true);
+  });
+
+  it("words a collect or release by the followed slot from its own point of view", () => {
+    const text = (events: FeedEvent[], me: number) =>
+      run(events, me).lines.map((line) =>
+        entryText(resolveLine(line, { ...names([]), me })),
+      );
+    const burst = (slot: number) => [
+      { kind: "collect", slot } as FeedEvent,
+      item(1, slot),
+      item(2, slot),
+      { kind: "release", slot } as FeedEvent,
+      item(slot, 1),
+      item(slot, 2),
+    ];
+    // Another slot's burst: what is the followed slot's own
+    expect(text(burst(2), 1)).toEqual([
+      "Samus collected 2 items, 1 from your world",
+      "Samus released 2 items, 1 for you",
+    ]);
+    // The followed slot's own burst: its own world, itself
+    expect(text(burst(2), 2)).toEqual([
+      "Samus collected 2 items, 1 from their own world",
+      "Samus released 2 items, 1 for themselves",
+    ]);
   });
 
   it("collapses joins and parts in a row, each player as they stand last", () => {

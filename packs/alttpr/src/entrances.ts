@@ -332,14 +332,98 @@ export interface GameLink {
 }
 
 /**
- * Where the game shows Link went (the autotracker's `decodeEntrances`), in
- * the shuffle's ids. A slot or an entrance the tables do not know gives
- * nothing.
+ * The entrance randomizer's take-any rows by shopkeeper, a row of type
+ * TakeAny (config 0x80, BaseClasses.py:904-905): the old man's sword cave
+ * 0xE2, the four take-anys 0xE3, alike (ItemList.py:251-256, :269-280).
+ * Its shops keep their own shopkeeper (Regions.py:369-381), never these.
  */
-export const linksOf = (links: readonly EntranceLink[]): GameLink[] =>
-  links.flatMap(({ entrance, kind, slot }) => {
+const TAKE_ANYS_OF_SHOPKEEPER: ReadonlyMap<number, readonly string[]> = new Map(
+  [
+    [0xe2, ["old-man-sword-cave"]],
+    [0xe3, [...TAKE_ANYS].filter((id) => id !== "old-man-sword-cave")],
+  ],
+);
+
+/** A shop table row's config bit for a take-any (BaseClasses.py:904-905). */
+const TAKE_ANY_ROW = 0x80;
+
+/**
+ * DR's and its fork's shops by the SRAM index of their row, fixed per shop
+ * (dr158:Regions.py:1279-1293, owr802:Regions.py:1358-1373; the old man's
+ * ItemList.py:546, Take-Any #n's 33 + 2(n − 1) at :573), in the entrance
+ * randomizer's names. Under shopsanity their shopkeeper is drawn at random
+ * from 0xC1, 0xA0, 0xE2 and 0xE3 (ItemList.py:744-747), and a take-any is a
+ * plain shop (:561): only the index tells them. Paradox Shop (18) is no
+ * door's target.
+ */
+const DR_SHOP_OF_SRAM: ReadonlyMap<number, readonly string[]> = new Map(
+  (
+    [
+      [0, "Cave Shop (Dark Death Mountain)"],
+      [3, "Red Shield Shop"],
+      [6, "Dark Lake Hylia Shop"],
+      [9, "Dark World Lumberjack Shop"],
+      [12, "Village of Outcasts Shop"],
+      [15, "Dark World Potion Shop"],
+      [21, "Kakariko Shop"],
+      [24, "Cave Shop (Lake Hylia)"],
+      [27, "Potion Shop"],
+      [30, "Capacity Upgrade"],
+      [32, "Old Man Sword Cave"],
+      [33, "Take-Any #1"],
+      [35, "Take-Any #2"],
+      [37, "Take-Any #3"],
+      [39, "Take-Any #4"],
+    ] as const
+  ).map(([sram, name]) => [sram, [targetNamed(name).id]]),
+);
+
+/**
+ * The entrances a take-any or the sword cave loads, a shop's (ItemList.py:
+ * 251-256, :269-280; DR's :545, :566-572): behind such a door, a shop table
+ * not read cannot tell which.
+ */
+const TAKE_ANY_LOADS: ReadonlySet<number> = new Set([0x46, 0x58, 0x60]);
+
+/**
+ * What a door with a shop row behind it leads to, or nothing when the row
+ * cannot tell. In a DR run, by its SRAM index; elsewhere a take-any row by
+ * its shopkeeper, any other shop by its entrance.
+ */
+const shopTargets = (
+  entrance: number,
+  shop: EntranceLink["shop"],
+  bySram: boolean,
+): readonly string[] | undefined => {
+  if (shop === undefined) return TARGETS_OF_ENTRANCE.get(entrance);
+  if (shop === "unread")
+    return TAKE_ANY_LOADS.has(entrance)
+      ? undefined
+      : TARGETS_OF_ENTRANCE.get(entrance);
+  if (bySram)
+    return shop.sram === undefined ? undefined : DR_SHOP_OF_SRAM.get(shop.sram);
+  return (shop.config & TAKE_ANY_ROW) === 0
+    ? TARGETS_OF_ENTRANCE.get(entrance)
+    : TAKE_ANYS_OF_SHOPKEEPER.get(shop.shopkeeper);
+};
+
+/**
+ * Where the game shows Link went (the autotracker's `decodeEntrances`), in
+ * the shuffle's ids: what the entrance loaded is, or the shop the shop
+ * table names behind the door. `bySram` reads that table as DR and its
+ * fork write it (`EntrancePool.shopsBySram`). A slot or an entrance the
+ * tables do not know gives nothing, as does a shop row that cannot tell.
+ */
+export const linksOf = (
+  links: readonly EntranceLink[],
+  bySram = false,
+): GameLink[] =>
+  links.flatMap(({ entrance, kind, shop, slot }) => {
     const id = (kind === "door" ? DOOR_OF_SLOT : HOLE_OF_SLOT).get(slot);
-    const targets = TARGETS_OF_ENTRANCE.get(entrance);
+    const targets =
+      kind === "door"
+        ? shopTargets(entrance, shop, bySram)
+        : TARGETS_OF_ENTRANCE.get(entrance);
     return id === undefined || targets === undefined
       ? []
       : [{ entrance: id, targets }];
@@ -369,6 +453,12 @@ export type ErShuffle = "simple" | "restricted" | "full" | "crossed";
 export interface EntrancePool {
   /** The shuffle's name: the entrance randomizer's or the Door Randomizer's. */
   readonly shuffle: string;
+  /**
+   * Whether the shop table names a door's shop by its SRAM index, fixed
+   * per shop: DR's and its fork's runs, whose shopsanity draws shopkeepers
+   * at random (`linksOf`).
+   */
+  readonly shopsBySram?: boolean;
   /**
    * Whether an exit leads back elsewhere than its door (DR's insanity):
    * coming out of a cave then tells nothing of where its door leads.

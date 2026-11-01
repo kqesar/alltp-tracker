@@ -17,7 +17,8 @@
 //   starting items as a list, then `{ location: item }` by sphere, Main.py:
 //   797-799), `paths`, `Bosses` and `meta`, each setting of which is keyed by
 //   player (`{ "1": "open" }`). avianart's Download Spoiler saves
-//   `JSON.stringify(spoiler, null, 4)` of the same with a flat `meta`, as
+//   `JSON.stringify(spoiler, null, 4)` of the same with a flat `meta` and
+//   the playthrough as a list (sphere k at index k), as
 //   `alttprcustom - DR__<hash>_Spoiler.txt` (its PermlinkView chunk); its
 //   permalink API wraps it in `{ response: { spoiler, hash } }`.
 // The Overworld fork adds `Overworld`, `Whirlpools` and `Maps` first (OWR
@@ -187,7 +188,11 @@ export const DR: Shape = {
   known: knownIds,
   name: nameOf,
   playthrough: (value) => {
-    const parsed = PLAYTHROUGH.safeParse(value);
+    // avianart.games serves the spheres as a list, sphere k at index k (its
+    // permalink answer and Download Spoiler: test/dr-door-spoilers/)
+    const parsed = PLAYTHROUGH.safeParse(
+      Array.isArray(value) ? { ...value } : value,
+    );
     if (!parsed.success) return null;
     const entries: [number, string][] = [];
     for (const [key, locations] of Object.entries(parsed.data)) {

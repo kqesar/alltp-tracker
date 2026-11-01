@@ -83,7 +83,8 @@ export const Readout = ({
     () => new Set(door.map((location) => location.id)),
     [door],
   );
-  const readout = describeReading(reading, wildKeys, genericKeys, doorIds);
+  const run = useGameStore((state) => state.settings);
+  const readout = describeReading(reading, wildKeys, genericKeys, doorIds, run);
   // What the ROM does not state comes from the seed's file once it is in,
   // outside Race Mode only
   const fileIn = useAutotrackStore(

@@ -9,6 +9,8 @@
 // Zelda's rescue. What it cannot tell, it leaves unsettled, with the
 // reason, rather than guessing.
 
+import { locationId } from "@alltp/engine";
+import { DR_LOCATIONS } from "../door-rando/locations";
 import { ITEMS, type ItemId } from "../items";
 import { type HeldPrize, PRIZES } from "../tracker";
 import { CHECK_FLAGS, type CheckFlag } from "./check-flags";
@@ -169,9 +171,33 @@ function dungeonItem(
 const HERA_BASEMENT_DOUBLE_COUNT = 1;
 
 /**
+ * The small keys a dungeon's Door Randomizer key drops hold, by key item:
+ * a DR run that shuffles them adds each to the dungeon's pool
+ * (Regions.py:1188-1199), and the base patch counts the key found there as
+ * any other (AddInventory, drz3:stats.asm:121-148). A reading belongs to no
+ * run, so it counts up to the most any run holds, its pool's and these; the
+ * app caps the count at its own run's (`smallKeysMax`).
+ */
+export const KEY_DROPS: Readonly<Partial<Record<ItemId, number>>> = (() => {
+  const codeOf = new Map<string, DungeonCode>(
+    DUNGEONS.map(({ code, name }) => [locationId(name), code]),
+  );
+  const drops: Partial<Record<ItemId, number>> = {};
+  for (const location of DR_LOCATIONS) {
+    if (location.kind !== "keyDrop" || location.key !== "small") continue;
+    const code = location.dungeon && codeOf.get(location.dungeon);
+    if (!code) continue;
+    const id = `key${code}` as ItemId;
+    drops[id] = (drops[id] ?? 0) + 1;
+  }
+  return drops;
+})();
+
+/**
  * The small keys found for a dungeon, which no door spends: its byte in
  * DungeonCollectedKeys (memory.ts), less Tower of Hera's double count. Any
- * other count above the pool is a defect to notice: decodeItems reports it
+ * other count above the most any run holds (its pool's and its DR key
+ * drops', `KEY_DROPS`) is a defect to notice: decodeItems reports it
  * (`beyond`) before capping it.
  */
 function smallKeys(code: DungeonCode): ItemSource {
@@ -379,7 +405,11 @@ export const ITEM_SOURCES: Readonly<Record<ItemId, ItemSource | null>> = {
 
 /** What memory says of the items. Each pack item is in one of the two. */
 export interface ItemReading {
-  /** Counts memory settles, by pack item id. */
+  /**
+   * Counts memory settles, by pack item id, each capped at its max; a small
+   * key count at the most any run holds, its Door Randomizer key drops'
+   * keys included (`KEY_DROPS`), for the app to cap at its own run's.
+   */
   readonly counts: Partial<Record<ItemId, number>>;
   readonly unsettled: Partial<Record<ItemId, Unsettled>>;
   /**
@@ -413,8 +443,9 @@ export function decodeItems(
     }
     const read = (options.race && source.raceRead) || source.read;
     const value = read(bytes);
-    counts[id] = Math.min(max, value);
-    if (value > max) beyond[id] = source.counted?.(bytes) ?? value;
+    const most = max + (KEY_DROPS[id] ?? 0);
+    counts[id] = Math.min(most, value);
+    if (value > most) beyond[id] = source.counted?.(bytes) ?? value;
   }
   return { beyond, counts, unsettled };
 }
@@ -842,6 +873,30 @@ export const FRAMES_PER_SECOND = 21_477_270 / (262 * 1364 - 2);
 export const playTimeMs = (frames: number): number =>
   Math.round((frames * 1000) / FRAMES_PER_SECOND);
 
+/**
+ * A row of the base patch's shop table (tables.asm:1563, written by every
+ * randomizer's `write_custom_shops`): [id][room, 2][door][0][config]
+ * [shopkeeper][sram] (er:BaseClasses.py:895-908, dr:BaseClasses.py:2457-
+ * 2470, vt:Shop.php:59-63).
+ */
+export interface ShopRow {
+  /**
+   * Its item count, with 0x80 for a take-any (`ShopType.TakeAny`), 0x40
+   * for a shop the patch matches by room alone, 0x10 for the upgrade
+   * shop's graphics.
+   */
+  readonly config: number;
+  /** Its shopkeeper's sprite: 0xC1, 0xA0, 0xE2 (old man), 0xE3, 0x04, 0xFF. */
+  readonly shopkeeper: number;
+  /**
+   * Its first slot's SRAM index. Fixed per shop in DR and its fork
+   * (Regions.py `shop_table`, ItemList.py:546, :573); the entrance
+   * randomizer's and vt's add up row by row (er:Rom.py:1083-1094). Absent
+   * on a 32nd row, past the piece read.
+   */
+  readonly sram?: number;
+}
+
 /** An overworld door or hole, and the entrance it loads: where it leads. */
 export interface EntranceLink {
   readonly kind: "door" | "hole";
@@ -849,6 +904,13 @@ export interface EntranceLink {
   readonly slot: number;
   /** The entrance it loads, by the game's number for it. */
   readonly entrance: number;
+  /**
+   * A door's shop, when the shop table lists one behind it, which tells a
+   * retro world's take-any cave and the old man's sword cave from the
+   * shops whose entrance they load (ItemList.py:251-279): or "unread" when
+   * the table was not read, so it cannot tell.
+   */
+  readonly shop?: ShopRow | "unread";
 }
 
 /**
@@ -858,7 +920,10 @@ export interface EntranceLink {
  */
 export type EntranceReading = readonly EntranceLink[] | Unsettled;
 
-/** The ranges decodeEntrances reads, all outside races but the game mode. */
+/**
+ * The ranges decodeEntrances needs, all outside races but the game mode.
+ * The shop table is read beside them, not waited for (`EntranceLink.shop`).
+ */
 const ENTRANCE_RANGES = [
   "hole-table",
   "door-table",
@@ -867,6 +932,29 @@ const ENTRANCE_RANGES = [
   "entrance",
   "overworld-door",
 ] as const satisfies readonly MemoryRangeId[];
+
+/** A row of the shop table: [id][room, 2][door][0][config][shopkeeper][sram]. */
+const SHOP_ROW = 8;
+
+/**
+ * The row of the shop the table lists behind door `slot`, if any: the base
+ * patch matches a row's door (its slot plus one) with the door Link last
+ * took (shopkeeper.asm:81-94 at z3 dcb0a2b), and its last row's id is 0xFF.
+ */
+const shopBehind = (
+  table: readonly number[],
+  slot: number,
+): ShopRow | undefined => {
+  for (let row = 0; row + SHOP_ROW - 1 <= table.length; row += SHOP_ROW) {
+    if (table[row + 3] === slot + 1) {
+      const sram = table[row + 7];
+      const found = { config: table[row + 5], shopkeeper: table[row + 6] };
+      return sram === undefined ? found : { ...found, sram };
+    }
+    if (table[row] === 0xff) return undefined;
+  }
+  return undefined;
+};
 
 /** The overworld's game modes, plain and special (ram.asm:41). */
 const OUTDOORS: readonly number[] = [0x09, 0x0b];
@@ -885,6 +973,9 @@ const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
  * - Out by a door: outdoors, the room Link left is the one he came out of;
  *   its exit is an entrance one door loads, unless several do (the fairies
  *   and shops whose rooms are alike).
+ * - A door with a custom shop behind it, by the shop table: its row, which
+ *   tells a take-any cave from the shop whose entrance it loads. A table
+ *   not read leaves the doors "unread", the rest decoded all the same.
  *
  * Entrance 0 is none: the tables hold no door or hole that loads it.
  */
@@ -898,18 +989,28 @@ export function decodeEntrances(
   const unsettled = read.find((bytes) => typeof bytes === "string");
   if (unsettled !== undefined) return unsettled as Unsettled;
   const [holes, doors, mode, room, entrance, overworldDoor] = read as Bytes[];
+  const shops = reader.range("shop-table");
   const table = (bytes: Bytes, id: MemoryRangeId) =>
     Array.from({ length: MEMORY_RANGE[id].size }, (_, i) =>
       bytes.byte(MEMORY_RANGE[id].bus + i),
     );
   const holeTable = table(holes, "hole-table");
   const doorTable = table(doors, "door-table");
+  const shopTable =
+    typeof shops === "string" ? undefined : table(shops, "shop-table");
+  const door = (entrance: number, slot: number): EntranceLink => {
+    const shop =
+      shopTable === undefined ? "unread" : shopBehind(shopTable, slot);
+    return shop === undefined
+      ? { entrance, kind: "door", slot }
+      : { entrance, kind: "door", shop, slot };
+  };
   const loaded = entrance.byte();
   const links: EntranceLink[] = [];
-  const door = overworldDoor.byte() - 1;
+  const last = overworldDoor.byte() - 1;
   const hole = holeTable.indexOf(loaded);
-  if (loaded !== 0 && door >= 0 && doorTable[door] === loaded) {
-    links.push({ entrance: loaded, kind: "door", slot: door });
+  if (loaded !== 0 && last >= 0 && doorTable[last] === loaded) {
+    links.push(door(loaded, last));
   } else if (loaded !== 0 && hole >= 0) {
     links.push({ entrance: loaded, kind: "hole", slot: hole });
   }
@@ -925,7 +1026,7 @@ export function decodeEntrances(
       slots.length === 1 &&
       !links.some((link) => link.kind === "door" && link.slot === out)
     ) {
-      links.push({ entrance: exit, kind: "door", slot: out });
+      links.push(door(exit, out));
     }
   }
   return links;

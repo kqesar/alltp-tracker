@@ -192,7 +192,7 @@ export const gameNotes = (
 ): Record<string, string> => {
   const notes: Record<string, string> = {};
   if (pool.decoupled === true) return notes;
-  for (const { entrance, targets } of linksOf(links)) {
+  for (const { entrance, targets } of linksOf(links, pool.shopsBySram)) {
     const may = new Set(pool.targetsOf.get(entrance)?.map((t) => t.id));
     const fits = targets.filter((target) => may.has(target));
     const elsewhere = new Set(

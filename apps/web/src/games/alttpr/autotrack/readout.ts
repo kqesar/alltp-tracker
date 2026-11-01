@@ -39,8 +39,10 @@ import {
   MODE_LABELS,
   PLACEMENT_LABELS,
   POOL_LABELS,
+  type RunSettings,
 } from "@/games/alttpr/data/presets";
 import { withCost } from "@/games/alttpr/logic/costs";
+import { KEY_DUNGEONS, smallKeysMax } from "@/games/alttpr/logic/settings";
 
 /** The dungeons, by the pack's codes. */
 const DUNGEON_NAMES = {
@@ -178,7 +180,9 @@ const ZELDA = "zelda";
 /** Items not listed one by one when withheld, named once as a group. */
 const GROUPS: readonly (readonly [RegExp, string])[] = [
   [/^(pendant|crystal)/, "Pendants and crystals"],
-  [/^(heartContainer|pieceOfHeart)$/, "Heart containers and pieces"],
+  // The stats' counters of the hearts found: the hearts on screen and the
+  // pieces toward the next are read apart (`health`), Race Mode too
+  [/^(heartContainer|pieceOfHeart)$/, "Heart containers and pieces collected"],
   [/^bottle$/, "Bottles"],
 ];
 
@@ -601,6 +605,11 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
   else map.set(key, [entry]);
 };
 
+/** The key dungeon index (0-12) of each dungeon code. */
+const KEY_INDEX = new Map(
+  KEY_DUNGEONS.map((id, index) => [dungeon(id).code, index]),
+);
+
 /**
  * The reading as the panel lists it.
  * @param reading - What the session decoded last
@@ -610,12 +619,16 @@ const add = <K>(map: Map<K, string[]>, key: K, entry: string) => {
  * count is then listed, since a dungeon's would say where a key was taken
  * @param doorLocations - A Door Randomizer run's locations, by id: a bit of
  * its tables for any other location is not listed
+ * @param run - The run's settings, whose pool caps each dungeon's key count
+ * (a Door Randomizer run's key drops included); without it, the reading's
+ * own cap, the most any run holds
  */
 export const describeReading = (
   reading: AutotrackReading,
   wildKeys = false,
   genericKeys = false,
   doorLocations: ReadonlySet<string> = new Set(),
+  run?: RunSettings,
 ): Readout => {
   const { beyond, counts, unsettled } = reading.items;
   const items: string[] = [];
@@ -639,10 +652,16 @@ export const describeReading = (
     if (count === 0 || EVENTS.has(id)) continue;
     if (own?.[1] === "key") {
       // The base patch's count of keys found, which no door spends; a count
-      // above the dungeon's keys is a double count the decoder does not
-      // know, named so it is noticed
-      const keys = `${count} small key${count > 1 ? "s" : ""} found`;
-      const over = beyond[id];
+      // above the dungeon's keys in this run is a double count the decoder
+      // does not know, named so it is noticed
+      const index = KEY_INDEX.get(own[2]);
+      const most =
+        run === undefined || index === undefined
+          ? count
+          : smallKeysMax(index, run);
+      const found = Math.min(count, most);
+      const keys = `${found} small key${found > 1 ? "s" : ""} found`;
+      const over = beyond[id] ?? (count > most ? count : undefined);
       add(
         byDungeon,
         own[2] as DungeonCode,
@@ -656,6 +675,20 @@ export const describeReading = (
     else if (id === "bottle") {
       items.push(bottlesWithContents(itemName(id, count), reading.bottles));
     } else items.push(itemName(id, count));
+  }
+  // The hearts on screen and the pieces toward the next, as the pause menu
+  // shows them, Race Mode too (v2.0: "heart count, heart piece count"); the
+  // Triforce pieces of a hunt, likewise (v2.0 lists them among the items)
+  const { health, pieces } = reading;
+  if (typeof health === "string") withheld.set("Hearts", health);
+  else {
+    items.push(
+      `Hearts ${health.hearts}`,
+      `Heart pieces ${health.quarters} of 4`,
+    );
+  }
+  if (typeof pieces === "number" && pieces > 0) {
+    items.push(`Triforce pieces ×${pieces}`);
   }
   // How many bombs and arrows Link can hold, outside Race Mode: v2.0 does
   // not name the capacity upgrades

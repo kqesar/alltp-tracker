@@ -14,6 +14,15 @@
 //    name) through the name data of the games it needs (`lineGames`), which
 //    the app loads lazily, only for lines that need them.
 
+/**
+ * The server's own slot and world: what a host's `/send` or `!getitem`
+ * (location -1, "Cheat Console") and a start inventory (-2, "Server") come
+ * from. AP 0.6.8 names them in its "Archipelago" data package
+ * (worlds/generic), and its CommonClient calls slot 0 "Archipelago".
+ */
+export const SERVER_SLOT = 0;
+export const SERVER_GAME = "Archipelago";
+
 /** One event of the room, by ids, as a PrintJSON states it. */
 export type FeedEvent =
   | {
@@ -167,11 +176,9 @@ function foldIntoBurst(
       mine: last.mine + (event.receiver === me ? 1 : 0),
     };
   }
-  if (
-    last.kind === "collect" &&
-    event.receiver === last.slot &&
-    event.finder !== last.slot
-  ) {
+  // A collect sends every location holding the slot's items, its own
+  // world's included (AP 0.6.8 MultiServer.py collect_player)
+  if (last.kind === "collect" && event.receiver === last.slot) {
     return {
       ...last,
       count: last.count + 1,
@@ -356,7 +363,7 @@ export function resolveLine(line: FeedLine, names: FeedNames): FeedEntry {
   const player = (slot: number): FeedPart => ({
     kind: "player",
     me: slot === names.me,
-    text: slot === 0 ? "the server" : names.player(slot),
+    text: slot === SERVER_SLOT ? "the server" : names.player(slot),
   });
   const base = {
     flags: 0,
@@ -434,12 +441,14 @@ export function resolveLine(line: FeedLine, names: FeedNames): FeedEntry {
     case "release":
     case "collect": {
       const verb = line.kind === "release" ? " released " : " collected ";
+      // From the followed slot's own point of view: "your" is for others' bursts
+      const own = line.slot === names.me;
       const mine =
         line.mine === 0
           ? ""
           : line.kind === "release"
-            ? `, ${line.mine} for you`
-            : `, ${line.mine} from your world`;
+            ? `, ${line.mine} ${own ? "for themselves" : "for you"}`
+            : `, ${line.mine} from ${own ? "their own" : "your"} world`;
       return {
         ...base,
         parts: [

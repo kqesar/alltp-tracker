@@ -464,6 +464,41 @@ describe("DR's JSON log", () => {
     expect(avianartHashInName("alttpr - x_C2BdrZOiV.txt")).toBeNull();
   });
 
+  it("reads avianart's playthrough, a list with sphere k at index k", () => {
+    // A real avianart answer's spoiler (record-dr-spoilers), as its
+    // Download Spoiler saves it
+    const recorded = readFileSync(
+      new URL("dr-door-spoilers/avianart-D14rBE1uq.json", import.meta.url),
+      "utf8",
+    );
+    const spheres = JSON.parse(recorded).playthrough as unknown[];
+    expect(Array.isArray(spheres)).toBe(true);
+    const name = "alttprcustom - DR__D14rBE1uq_Spoiler.txt";
+    const log = logOf(parseSpoiler(recorded, name));
+    expect(log.spheres).toBe(spheres.length - 1);
+    expect(logOf(parseSpoiler(recorded, "D14rBE1uq.json")).spheres).toBe(
+      spheres.length - 1,
+    );
+    // The same spheres keyed as DR's --jsonout writes them read the same
+    const doc = jsonOf(KEYSANITY);
+    const keyed = logOf(parseSpoiler(JSON.stringify(doc)));
+    const listed = logOf(
+      parseSpoiler(
+        JSON.stringify({ ...doc, playthrough: Object.values(doc.playthrough) }),
+      ),
+    );
+    expect(listed.spheres).toBe(keyed.spheres);
+    expect(listed.placements).toEqual(keyed.placements);
+    // A list past index 0 is still no sphere
+    expect(
+      refused(
+        parseSpoiler(
+          JSON.stringify({ ...doc, playthrough: [[], ["Hookshot"]] }),
+        ),
+      ),
+    ).toEqual(["not-a-spoiler", "playthrough"]);
+  });
+
   it("refuses a race seed's permalink, which keeps its meta alone", () => {
     // The real answer avianart gives for a race seed (record-dr-seeds)
     const permalink = readFileSync(

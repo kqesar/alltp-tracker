@@ -23,3 +23,26 @@ export const onResync = (listener: Listener) => {
   listeners.add(listener);
   return () => listeners.delete(listener);
 };
+
+/** A game, and the counters of its run to count again. */
+type RecountListener = (game: string, counters: readonly string[]) => void;
+
+const recountListeners = new Set<RecountListener>();
+
+/**
+ * A game's run kept its progress but changed settings that move what some
+ * of its counters hold (a Door Randomizer location setting, the dungeon
+ * items): its autotracking, if connected, counts those again from what the
+ * game holds, and leaves the others. The game's store calls it after the
+ * change is set, with the counters it moved (none: no call).
+ */
+export const requestRecount = (game: string, counters: readonly string[]) => {
+  if (counters.length === 0) return;
+  for (const listener of recountListeners) listener(game, counters);
+};
+
+/** Call `listener` with the game's id and counters whenever they moved mid-run. */
+export const onRecount = (listener: RecountListener) => {
+  recountListeners.add(listener);
+  return () => recountListeners.delete(listener);
+};

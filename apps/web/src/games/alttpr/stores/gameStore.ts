@@ -2,7 +2,7 @@ import { GANONHUNT } from "@alltp/pack-alttpr";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { boardRestored, runReplaced } from "@/autotrack/raceMode";
-import { requestResync } from "@/autotrack/resync";
+import { requestRecount, requestResync } from "@/autotrack/resync";
 import { MEDALLION_VALUES } from "@/games/alttpr/constants";
 import {
   DOOR_OPTIONS,
@@ -62,6 +62,7 @@ import { withoutEscape } from "@/games/alttpr/logic/packItems";
 import {
   COUNTER_INDICES,
   counterMax,
+  countersMoved,
   SMALL_KEYS_MAX,
   smallKeysMax,
 } from "@/games/alttpr/logic/settings";
@@ -868,9 +869,11 @@ export const useGameStore = create<GameState>()(
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         revealSettings: (change) => {
+          const before = get().settings;
           const settings = retune(progressOf(get()), change)?.settings;
           get().applyGameNews((progress) => retune(progress, change));
           if (settings) set((state) => keyCellsFor(state, settings));
+          requestRecount("alttpr", countersMoved(before, get().settings));
         },
         setAutoTimer: (on: boolean) => set({ autoTimer: on }),
 
@@ -963,13 +966,17 @@ export const useGameStore = create<GameState>()(
           boardRestored("alttpr", previous);
         },
 
-        updateDoorSettings: (change) =>
+        updateDoorSettings: (change) => {
+          const before = get().settings;
           set((state) => {
             const next = retune(progressOf(state), change);
             return next === null ? state : record(state, next);
-          }),
+          });
+          requestRecount("alttpr", countersMoved(before, get().settings));
+        },
 
-        updateSettings: (change) =>
+        updateSettings: (change) => {
+          const before = get().settings;
           set((state) => {
             const next = retune(progressOf(state), change);
             if (next === null) return state;
@@ -977,7 +984,9 @@ export const useGameStore = create<GameState>()(
               ...record(state, next),
               ...keyCellsFor(state, next.settings),
             };
-          }),
+          });
+          requestRecount("alttpr", countersMoved(before, get().settings));
+        },
       }),
       {
         merge: (persisted, current) => {

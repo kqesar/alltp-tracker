@@ -1,5 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
+import shopTables from "../../test/shop-tables.json" with { type: "json" };
 import { ITEM_IDS, ITEMS, type ItemId } from "../items";
 import { CHECK_FLAGS } from "./check-flags";
 import {
@@ -14,6 +15,7 @@ import {
   decodeProgress,
   FRAMES_PER_SECOND,
   ITEM_SOURCES,
+  KEY_DROPS,
   type MemoryView,
   playTimeMs,
   racePermitted,
@@ -329,13 +331,35 @@ describe("decodeItems", () => {
   });
 
   it("reports a key count beyond a dungeon's keys rather than hiding it", () => {
-    // Ice Palace holds two keys: a third counted is a double count the
+    // Ice Palace holds two keys, and four more in a Door Randomizer run
+    // whose key drops are shuffled: a seventh counted is a double count the
     // decoder does not know of. The rules get the cap, the readout the count.
-    const decoded = decodeItems(new Image().set(SAVE(0x4e0 + 9), 3).view(), {
+    const decoded = decodeItems(new Image().set(SAVE(0x4e0 + 9), 7).view(), {
       race: false,
     });
-    expect(decoded.counts.keyD5).toBe(2);
-    expect(decoded.beyond).toEqual({ keyD5: 3 });
+    expect(decoded.counts.keyD5).toBe(6);
+    expect(decoded.beyond).toEqual({ keyD5: 7 });
+  });
+
+  it("counts the keys a Door Randomizer run's key drops add", () => {
+    // Thieves' Town holds one key, and two pots hold one each in a DR run
+    // whose pottery shuffles key pots: seen on a real game (2026-11-01, DR
+    // 1.5.8), the Spike Switch pot's key and a chest's counted 2. The
+    // reading belongs to no run: the app caps it at the run's own pool.
+    const read = (count: number) =>
+      decodeItems(new Image().set(SAVE(0x4e0 + 11), count).view(), {
+        race: false,
+      });
+    expect(read(2).counts.keyD4).toBe(2);
+    expect(read(2).beyond).toEqual({});
+    expect(read(3).counts.keyD4).toBe(3);
+    expect(read(4).counts.keyD4).toBe(3);
+    expect(read(4).beyond).toEqual({ keyD4: 4 });
+    // Palace of Darkness has no key drop: its pool is the most
+    expect(
+      decodeItems(new Image().set(SAVE(0x4e0 + 6), 7).view(), { race: false })
+        .beyond,
+    ).toEqual({ keyD1: 7 });
   });
 
   it("reads Hyrule Castle's keys from the castle or the sewers byte", () => {
@@ -704,9 +728,12 @@ describe("decodeEntrances", () => {
     room = 0,
     entrance = 0,
     door = 0,
+    shops = [],
   }: {
     doors?: Record<number, number>;
     holes?: Record<number, number>;
+    /** The shop table's rows, as the randomizer writes them. */
+    shops?: readonly (readonly number[])[];
     mode?: number;
     room?: number;
     entrance?: number;
@@ -724,6 +751,7 @@ describe("decodeEntrances", () => {
       "hole-table": table("hole-table", holes),
       "overworld-door": Uint8Array.of(door),
       room: Uint8Array.of(room & 0xff, room >> 8),
+      "shop-table": table("shop-table", { ...shops.flat() }),
     };
     return {
       bytes: (id) => ranges[id as MemoryRangeId] ?? new Uint8Array(0),
@@ -813,12 +841,71 @@ describe("decodeEntrances", () => {
     expect(out(OLD_MAN_WEST, { 64: exit })).toHaveLength(1);
   });
 
+  it("reads the row of the shop the table lists behind a door", () => {
+    // Shopsanity seed 2MA4toFay's table (DR 1.5.8, PC 0x184800, B2 bench,
+    // 2026-11-01), cut at its last row: Dark Lake Hylia Shop behind Bonk
+    // Fairy (Light), door 0x77, with the old man's shopkeeper 0xE2
+    const [seed] = shopTables.seeds;
+    const shops = seed.rows.map(({ bytes }) =>
+      bytes.split(" ").map((byte) => Number.parseInt(byte, 16)),
+    );
+    const through = (slot: number, rows = shops) =>
+      decodeEntrances(
+        game({
+          door: slot + 1,
+          doors: { [slot]: 0x60 },
+          entrance: 0x60,
+          shops: rows,
+        }),
+        casual,
+      );
+    expect(through(0x76)).toEqual([
+      {
+        entrance: 0x60,
+        kind: "door",
+        shop: { config: 0x03, shopkeeper: 0xe2, sram: 6 },
+        slot: 0x76,
+      },
+    ]);
+    // No row behind it, or only one past the last (0xFF) row
+    const past = [...shops, [0x00, 0x0f, 0x01, 0x22, 0x00, 0x82, 0xe3, 0x1e]];
+    expect(through(0x21, past)).toEqual([
+      { entrance: 0x60, kind: "door", slot: 0x21 },
+    ]);
+    expect(through(0x21, past)[0]).not.toHaveProperty("shop");
+    // A 32nd row's SRAM index is past the piece read
+    const full = Array.from({ length: 32 }, (_, i) =>
+      i === 31
+        ? [0xff, 0x0f, 0x01, 0x0c, 0x00, 0x03, 0xc1, 0x00]
+        : [i, 0x0f, 0x01, 0x00, 0x00, 0x43, 0xc1, i],
+    );
+    expect(through(0x0b, full)).toEqual([
+      {
+        entrance: 0x60,
+        kind: "door",
+        shop: { config: 0x03, shopkeeper: 0xc1 },
+        slot: 0x0b,
+      },
+    ]);
+  });
+
   it("never reads in Race Mode, and waits for every range", () => {
     expect(
       decodeEntrances(new Image().view({ strict: true }), { race: true }),
     ).toBe("race-mode");
     const view = new Image().view({ read: (id) => id !== "door-table" });
     expect(decodeEntrances(view, casual)).toBe("not-read");
+  });
+
+  it("reads the doors without the shop table, saying it was not read", () => {
+    const view = game({ door: 0x0c, doors: { 11: 0x60 }, entrance: 0x60 });
+    const unread: MemoryView = {
+      bytes: view.bytes,
+      has: (id) => id !== "shop-table" && view.has(id),
+    };
+    expect(decodeEntrances(unread, casual)).toEqual([
+      { entrance: 0x60, kind: "door", shop: "unread", slot: 11 },
+    ]);
   });
 
   it("sizes its tables as the importer found them", () => {
@@ -1052,7 +1139,10 @@ describe("the decoders on random bytes", () => {
           const value = items.counts[id];
           if (value !== undefined) {
             expect(value).toBeGreaterThanOrEqual(0);
-            expect(value).toBeLessThanOrEqual(max.get(id) ?? 0);
+            // A small key count goes up to its DR key drops' keys too
+            expect(value).toBeLessThanOrEqual(
+              (max.get(id) ?? 0) + (KEY_DROPS[id] ?? 0),
+            );
             expect(Number.isInteger(value)).toBe(true);
           }
         }

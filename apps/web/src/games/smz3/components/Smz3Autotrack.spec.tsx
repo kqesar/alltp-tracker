@@ -130,6 +130,20 @@ describe("SMZ3's autotracking dialog", () => {
     );
   });
 
+  it("says Race Mode is off while connected outside a race, as ALttPR's does", async () => {
+    const dialog = await openDialog();
+    act(() =>
+      smz3Autotrack.useStore.setState({
+        active: true,
+        shown: STATUSES.connected,
+      }),
+    );
+    expect(within(dialog).getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is off: this seed is not a race seed.",
+    );
+    expect(within(dialog).queryByTestId("race-badge")).toBeNull();
+  });
+
   it("says when the emulator does not serve the requirements", async () => {
     const memory = writeSmz3(new Uint8Array(0x100_0000));
     // Another part of the ROM in place of Zelda's config (bsnes-mercury)

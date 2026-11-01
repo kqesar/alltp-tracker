@@ -147,6 +147,9 @@ describe("AutotrackDialog's setup guide", () => {
     expect(fix).toHaveTextContent("This is an Archipelago seed");
     const board = within(fix).getByTestId("setup-fix-archipelago");
     expect(board).toHaveAccessibleName("Open the Archipelago board");
+    // The step's own advice (start the ROM from the playlist) is for a
+    // seed this board tracks, not for an Archipelago ROM
+    expect(step("game")).not.toHaveTextContent("playlist");
     await user.click(board);
     expect(switchGame).toHaveBeenCalledWith("archipelago");
   });
@@ -655,6 +658,8 @@ describe("AutotrackDialog's readout", () => {
       "Master Sword",
       "Bottle ×1 (empty)",
       "Hookshot",
+      "Hearts 3",
+      "Heart pieces 0 of 4",
       "Bomb capacity 10",
       "Arrow capacity 30",
     ]);

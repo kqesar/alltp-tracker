@@ -653,6 +653,8 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
   page,
 }) => {
   bootSeed(bridge, { race: true });
+  bridge.memory[SAVE(0x36c)] = 0x58; // 11 hearts on screen (MaximumHealth)
+  bridge.memory[SAVE(0x36b)] = 0x02; // two pieces toward the next
   writePrizeTables(bridge);
   standOnMirePad(bridge);
   await openTracker(page);
@@ -672,6 +674,11 @@ test("a race seed shows the race-legal badge and is never read where Race Mode f
     "Pendant of Courage",
   );
   await expect(shown.getByTestId("readout-items")).toContainText("Bottle");
+  // v2.0's heart count and heart piece count are read, in a race too
+  await expect(shown.getByTestId("readout-items")).toContainText("Hearts 11");
+  await expect(shown.getByTestId("readout-items")).toContainText(
+    "Heart pieces 2 of 4",
+  );
   await expect(shown.getByTestId("readout-race-mode")).toContainText(
     "Which crystals are 5 and 6",
   );

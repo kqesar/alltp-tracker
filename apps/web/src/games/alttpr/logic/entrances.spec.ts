@@ -145,6 +145,50 @@ describe("the entrance assistant's model", () => {
     });
   });
 
+  it("notes a take-any cave the shop table names, never the shop whose room it loads", () => {
+    // Retro crossed seed ry08p2d9y5 (B5 bench, 2026-11-01): Desert Palace
+    // Entrance (North), slot 11, leads to Take-Any #1, which loads the
+    // Dark World shops' entrance 0x60; the ROM's shop table lists door 12
+    // in a TakeAny row (config 0x80) with shopkeeper 0xE3 (ItemList.py:
+    // 269-280)
+    const retro = poolOf({ ...crosskeys, mode: "retro" });
+    if (retro === null) throw new Error("no pool");
+    const door = (config: number, shopkeeper: number) =>
+      gameNotes(retro, {}, [
+        {
+          entrance: 0x60,
+          kind: "door",
+          shop: { config, shopkeeper, sram: 29 },
+          slot: 11,
+        },
+      ])["desert-palace-entrance-north"];
+    expect(door(0x82, 0xe3)).toBe("take-any-1");
+    // The old man's sword cave has its own shopkeeper, 0xE2 (:251-256)
+    expect(door(0x81, 0xe2)).toBe("old-man-sword-cave");
+    // A shop of the table: one of the four alike
+    expect(door(0x03, 0xc1)).toBe("village-of-outcasts-shop");
+  });
+
+  it("notes a DR shopsanity run's shop by its SRAM index, not its random shopkeeper", () => {
+    // 2MA4toFay (DR 1.5.8, Crosskeys, shopsanity; B2 bench): Bonk Fairy
+    // (Light), slot 0x76, leads to Dark Lake Hylia Shop (spoiler), whose
+    // row carries the old man's shopkeeper 0xE2 (ItemList.py:744-747) and
+    // its own SRAM index, 6 (Regions.py:1283)
+    const pool = poolOf(getPreset("door-crosskeys").settings);
+    if (pool === null) throw new Error("no pool");
+    expect(pool.shopsBySram).toBe(true);
+    expect(
+      gameNotes(pool, {}, [
+        {
+          entrance: 0x60,
+          kind: "door",
+          shop: { config: 0x03, shopkeeper: 0xe2, sram: 6 },
+          slot: 0x76,
+        },
+      ]),
+    ).toEqual({ "bonk-fairy-light": "dark-lake-hylia-shop" });
+  });
+
   it("has DR's own pool for a Door Randomizer run, in any world", () => {
     const dr = getPreset("door-crosskeys").settings;
     const pool = poolOf(dr);

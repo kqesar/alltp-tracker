@@ -1626,15 +1626,25 @@ range of their own (`owr-bonks`) behind their switch, of a category the race
 profile forbids (`bonk-drops`): v2.0 names no bonk drop, and the owner
 keeps them out of races, so Race Mode never reads them (the base patch's
 own code was not read: its source is not in the fork's checkout). Never a door, a room or a transition (the
-race admins' June 2026 clarification). Not checked on a real DR ROM yet: a
-sprite's slot being its load order with the overlords left out, and DR's
-item entries taking no slot (`standing_items.asm:403-405`).
+race admins' June 2026 clarification). Checked on a real DR ROM (2026-11-01,
+an avianart.games DR 1.5.8 seed on RetroArch and SNI, played by pad): a pot's
+bit is its index in the room's list (Skull Woods' West Lobby pot key, bit 13 of
+room $56; Thieves' Town's Spike Switch, bit 0 of $AB; Desert's Beamos Hall,
+bit 2 of $53), an enemy's its sprite slot (Castle Tower's Circle of Pots guard,
+slot and bit 10 of $B0, the room's overlords and DR's item entries taking
+none), and a shop slot's the shop's sram index plus the slot (Kakariko Shop's
+left, 21).
 
 **Small keys.** `DungeonCollectedKeys` counts in DR as in vt: a key item
 received through `AddInventory` (`stats.asm:121-148`), so a key found at a
 shuffled pot or drop counts; a vanilla drop's key does not
-(`IncrementSmallKeysNoPrimary`). `DungeonAllCollectedKeys` ($7EF4F1) is not
-read: its `CountAllKey` is marked dead code (`stats.asm:155-156`).
+(`IncrementSmallKeysNoPrimary`). A reading belongs to no run, so
+`decodeItems` counts a dungeon's keys up to the most any run holds, its pool's
+and its key drops' (`KEY_DROPS`), and the app caps the count at its run's own
+(`smallKeysMax`): Thieves' Town's second key in a key pots run is laid on the
+board, and named as a double count in What I read only where the run's pool
+holds one. `DungeonAllCollectedKeys` ($7EF4F1) is not read: its `CountAllKey`
+is marked dead code (`stats.asm:155-156`).
 
 **Settings from where the seed is rolled** (`seed-import.ts`): an avianart
 permalink's JSON (`api.php?action=permlink&hash=`) holds its spoiler's
@@ -2132,8 +2142,9 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
     from `ItemList.py`'s `set_up_take_anys`: the old man's sword cave and
     four take-anys, and the caves whose doors it draws for them) join
     every door that may lead to such a cave. The game loads a take-any by
-    another place's entrance (a cave shop's), so autotracking cannot tell
-    one from that shop: noting it is left to the player.
+    another place's entrance (a cave shop's); autotracking tells the two
+    apart by the shop table's row ([Where Link
+    went](#where-link-went-autotracking-the-entrances)).
   - The insanity shuffle parts a door from its way out (`:759-905`) and the
     Inverted world runs tables of its own (`link_inverted_entrances`):
     neither is ported.
@@ -2281,6 +2292,43 @@ facts: the entrance's id, and its target's, or a few alike that the game
 loads by one entrance (the healer fairies, some shops, the fortune
 tellers), and Link's House and the Tavern's back, which only DR's and
 its fork's pools shuffle (entrances 1 and 0x43; another pool drops them).
+A retro world's take-any cave and the old man's sword cave load a shop's
+entrance and room (`ItemList.py` `set_up_take_anys`: entrance 0x58, 0x60 or
+0x46), so the entrance alone would name that shop. The base patch tells
+them apart by its shop table (`ShopTable`, PC `0x184800`, `tables.asm:1563`),
+which the randomizer fills with a row per custom shop: its room, its door's
+slot plus one, a config byte (its item count, 0x80 for a take-any), its
+shopkeeper and its first SRAM index (`Rom.py:1078-1103`,
+`BaseClasses.py:895-908`; vt's and DR's alike). The decoder hands a door's
+row with its link when the table lists a shop behind that door, and
+`linksOf` reads it by the randomizer that wrote it:
+- **The entrance randomizer** (alttpr.com) keeps each shop's own
+  shopkeeper (`Regions.py:369-381`) and adds the SRAM indexes up row by row
+  (`Rom.py:1083-1094`): a take-any row (config 0x80) with shopkeeper 0xE3 is
+  one of the four take-anys (alike), with 0xE2 the sword cave; any other
+  take-any row tells nothing, and a shop's row is read by its entrance.
+- **DR and its fork** fix each shop's SRAM index (dr158 `Regions.py:1279-1293`,
+  owr802 `:1358-1373`: 0, 3, … 30 for the eleven shops; the sword cave's 32,
+  `ItemList.py:546`; Take-Any #n's 33 + 2(n − 1), `:573`). Their shopsanity
+  draws every shop's shopkeeper among 0xC1, 0xA0, 0xE2 and 0xE3
+  (`customize_shops`, `ItemList.py:744-747`, the take-anys' too when
+  `take_any` is on) and writes a take-any as a plain shop (`:561`): the
+  shopkeeper tells nothing there, so `linksOf` names the shop by its index
+  (`EntrancePool.shopsBySram`, set by DR's pools), which also tells the four
+  alike Dark World shops apart. An index no shop has tells nothing.
+- **vt** (alttpr.com without entrance shuffle) gives the take-anys and the
+  sword cave alike the old man's shopkeeper (`Randomizer.php:715-735`), but
+  shuffles no entrance, so no note reads its table.
+
+A table not read (a failed piece) leaves the links without rows: a door
+that loads a take-any's entrance is then noted nowhere, any other door as
+by its entrance. Seen on two of our seeds (`test/shop-tables.json`, the
+table cut at its last row with each row's door and the spoiler's target):
+retro crossed `ry08p2d9y5` (the entrance randomizer: door 12, Desert Palace
+Entrance (North), a take-any row 0xE3 where the spoiler puts Take-Any #1)
+and DR 1.5.8 Crosskeys shopsanity `2MA4toFay` (six of its nine doors' rows
+carry 0xE2 or 0xE3, every one a shop the index names). The table is ROM, an
+`entrances` range: Race Mode never reads it.
 Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 
@@ -3289,7 +3337,7 @@ are made in the specs by editing a fixture's parsed document, never stored.
 | Told by | its first line, `ALttP Dungeon Randomizer Version <v>  -  Seed: <n>` (`ALttP Overworld Randomizer  -  Seed:` for the fork) | a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`), its file name, or a `meta` with `door_shuffle` or `versions` |
 | Settings | one `Label:   value` line each (`meta_to_file`, `:2754-2848`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
 | Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2627-2716`), kept as `area` |
-| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`) |
+| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`); avianart's is a list, sphere k at index k |
 
 Both are turned into the JSON's shape (`textDocument` for the text) and read by
 `readLog` with the `DR` shape:

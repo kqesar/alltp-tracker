@@ -165,6 +165,22 @@ describe("Super Metroid's autotracking control", () => {
     );
   });
 
+  it("says Race Mode is off while connected with it turned off", async () => {
+    render(<SmAutotrack />);
+    const dialog = await openDialog();
+    expect(within(dialog).queryByTestId("race-mode")).toBeNull();
+    act(() =>
+      useSmAutotrackStore.setState({
+        active: true,
+        shown: statusOf("connected"),
+      }),
+    );
+    expect(within(dialog).getByTestId("race-mode")).toHaveTextContent(
+      "Race Mode is off, as you set it.",
+    );
+    expect(within(dialog).queryByTestId("race-badge")).toBeNull();
+  });
+
   it("says a seed without a name, and nothing before a reading", async () => {
     act(() => useSmAutotrackStore.setState({ reading: readingOf("") }));
     render(<SmAutotrack />);

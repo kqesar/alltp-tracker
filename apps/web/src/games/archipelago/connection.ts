@@ -34,6 +34,7 @@ import type { Runtime } from "@/games/archipelago/runtime";
 import { sameRun, useArchipelagoStore } from "@/games/archipelago/store";
 import { syncAcrossTabs } from "@/games/syncAcrossTabs";
 import { isDesktopApp } from "@/utils/platform";
+import { isRunning } from "@/utils/runTimer";
 import { isObsView } from "@/utils/view";
 
 /** Where the connection's settings are saved: device-only. */
@@ -308,6 +309,20 @@ export const connect = async () => {
               notice:
                 "This room holds another run than the board did: the board now shows this one.",
             });
+            // The last run's time is not this one's, and this room's
+            // countdown starts only an idle timer. Kept only a timer the
+            // player started after the last room last changed the run (its
+            // countdown included) and that holds no earlier time (a pause
+            // and a resume restart `startedAt` but keep the last room's
+            // time): one started for this run
+            const started = before.timer.startedAt;
+            const own =
+              isRunning(before.timer) &&
+              before.timer.elapsedMs === 0 &&
+              started !== null &&
+              before.updatedAt !== null &&
+              started > before.updatedAt;
+            if (!own) before.resetTimer();
           }
           before.apply({ ...run, updatedAt: Date.now() });
         },

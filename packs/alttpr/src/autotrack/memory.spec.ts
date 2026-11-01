@@ -200,6 +200,8 @@ describe("MEMORY_RANGES", () => {
       "initial-pyramid:other",
       "initial-progress:other",
       "item-substitutions:other",
+      // The custom shops' table, which tells a take-any cave from a shop
+      "shop-table:entrances",
       // The dark room map (dark-room.ts): navigation, which no race permits
       "dark-room-mode:navigation",
       "dark-room-indoors:navigation",
@@ -428,7 +430,9 @@ describe("MEMORY_RANGES", () => {
     // again, in a piece of their own. The fork's prize and follower bytes
     // (seed-settings.ts) are three ranges more, in pieces the settings
     // already span: no byte or piece more. The item substitutions' bomb
-    // upgrade entry (the bomb bag) is 4 bytes in a piece of their own.
+    // upgrade entry (the bomb bag) is 4 bytes in a piece of their own. The
+    // shop table (a take-any cave or a shop behind a door) is 255 bytes in
+    // a piece of its own, every 10 s.
     const race = phasePlan(true);
     const casual = phasePlan(false);
     expect({
@@ -439,9 +443,9 @@ describe("MEMORY_RANGES", () => {
       race: { bytes: race.plan.size, pieces: planPieces(race.plan).length },
       ranges: { casual: casual.ranges.length, race: race.ranges.length },
     }).toEqual({
-      casual: { bytes: 642, pieces: 25 },
+      casual: { bytes: 897, pieces: 26 },
       race: { bytes: 2073, pieces: 26 },
-      ranges: { casual: 42, race: 41 },
+      ranges: { casual: 43, race: 41 },
     });
   });
 });

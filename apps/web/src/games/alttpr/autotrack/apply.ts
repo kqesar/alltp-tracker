@@ -453,7 +453,8 @@ const dungeonLocationsOf = (
  * stay inside (its map, compass, big key and small keys, as the run's
  * dungeon items leave them) are no items to the player: memory tells all
  * four, the small keys by the base patch's count of keys received as items
- * (a key an enemy or a pot drops is no location, and is not counted).
+ * (a key an enemy or a pot drops is no location, and is not counted, but
+ * in a Door Randomizer run that shuffles it: `drKeysAdded`).
  * Generic keys belong to no dungeon, so their count is no dungeon's: the
  * counter then lies between the chests' keys all found and none. Only a
  * hand-made config reaches that case (`rom.genericKeys` with keys kept in
@@ -499,7 +500,10 @@ const counterRanges = (
       ],
     ] as const) {
       if (wild) continue;
-      const held = item === null ? undefined : counts[item];
+      // The reading counts up to the most any run holds: this run's pool
+      // caps it
+      const read = item === null ? undefined : counts[item];
+      const held = read === undefined ? undefined : Math.min(read, inPool);
       ownLeast += held ?? 0;
       ownMost += held ?? inPool;
     }
@@ -747,6 +751,34 @@ const lay = (board: Board, view: GameView, how: Lay): Laid | null => {
     },
   };
 };
+
+/**
+ * Lay some of a view's dungeon counters alone on the board, each moved into
+ * the range the game bounds it to: a setting that moved what they hold (the
+ * locations a Door Randomizer run shuffles, the dungeon items), where a merge
+ * only lowers them. Any other counter keeps its value.
+ * @param counters - The counters to lay, by item id (`chest3`)
+ * @returns The slices it changes, or null when it changes nothing
+ */
+export const recountView = (
+  board: Board,
+  view: GameView,
+  counters: readonly string[],
+): Laid | null =>
+  lay(
+    board,
+    {
+      ...view,
+      checked: {},
+      counters: Object.fromEntries(
+        Object.entries(view.counters).filter(([id]) => counters.includes(id)),
+      ),
+      items: {},
+      medallions: {},
+      smallKeys: {},
+    },
+    SYNC,
+  );
 
 /**
  * Lay a view on the board towards progress only.

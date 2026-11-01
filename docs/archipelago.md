@@ -192,7 +192,9 @@ flowchart LR
   when a connection's Connected brings the list again (in its own frame,
   before the session says "connected") and it holds more items for the same
   run, the items past that count go to `away`, named with their sender and
-  where they were found. A slot's first item ever, which comes at index 0 in
+  where they were found. An item the server itself gave (a host's `/send`,
+  slot 0) reads "from the server (Cheat Console)": slot 0's places are the
+  room's `Archipelago` data package, loaded like any other game's. A slot's first item ever, which comes at index 0 in
   a later frame, is not "away".
 - **Run timer**: the shared `RunTimer` (`components/ui/RunTimer.tsx`) over
   `run.timer`. While `prefs.countdownTimer` (on by default, "Start at the
@@ -201,7 +203,13 @@ flowchart LR
   30 (`CLIENT_GOAL`, AP 0.6.8's NetUtils.py) stops a running one for good,
   at the moment its `SetReply` arrives. A status already at 30 when a
   connection reads it stops nothing: it says nothing of when. The stopped
-  time is the run's `timer`, saved with it, so a reload shows it.
+  time is the run's `timer`, saved with it, so a reload shows it. When
+  another run replaces the board, its timer goes back to idle (so this
+  room's countdown starts it), unless it is running and started after the
+  last room last changed the run (`updatedAt`, which a countdown that starts
+  the timer moves too): one the player started by hand before connecting is
+  this run's, one the last room's countdown started (a slot switched
+  mid-run) is not.
 - **Performance.** Feed lines poke the same 250 ms batch as the snapshot: a
   release of 1,000 sends, each its own `PrintJSON` and `ReceivedItems`,
   renders the items and the feed once and writes the run once

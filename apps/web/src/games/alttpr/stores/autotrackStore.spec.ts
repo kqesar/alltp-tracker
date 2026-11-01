@@ -19,8 +19,9 @@ import {
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
-import { setBonkDrops } from "@/games/alttpr/data/doorRando";
+import { doorLocationsOf, setBonkDrops } from "@/games/alttpr/data/doorRando";
 import { getPreset } from "@/games/alttpr/data/presets";
+import { COUNTER_INDICES, countersMoved } from "@/games/alttpr/logic/settings";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import {
   connectAutotrack,
@@ -122,6 +123,113 @@ describe("autotracking and the board", () => {
     });
     await h.advance(1000);
     expect(board().checked["pyramid-tree"]).toBe(true);
+  });
+
+  describe("a Door Randomizer location setting changed mid-run", () => {
+    /** WRAM bank $7F in the FX Pak Pro space, and the tables in it. */
+    const TABLES = { drop: 0xf6_0000 + 0x6268, pot: 0xf6_0000 + 0x6018 };
+    const run = (change: Record<string, string>) => ({
+      ...getPreset("door-randomizer").settings,
+      dropShuffle: "none" as const,
+      enemyShuffle: "none" as const,
+      pottery: "none" as const,
+      ...change,
+    });
+
+    /** A console that took each Eastern Palace item any of the runs shuffles. */
+    const taken = (...changes: Record<string, string>[]) => {
+      const h = harness();
+      for (const { dungeon, flag, kind } of changes.flatMap(
+        (change) => doorLocationsOf(run(change)).locations,
+      )) {
+        if (dungeon !== "eastern-palace" || kind === "keyDrop") continue;
+        if (flag.memory !== "pot" && flag.memory !== "drop") continue;
+        const mask = 0x8000 >> flag.bit;
+        const at = TABLES[flag.memory] + flag.room * 2;
+        h.memory[at] |= mask & 0xff;
+        h.memory[at + 1] |= mask >> 8;
+      }
+      return h;
+    };
+
+    it.each([
+      ["pots go off", { pottery: "dungeon" }, { pottery: "none" }],
+      ["pots go on", { pottery: "none" }, { pottery: "dungeon" }],
+      [
+        "enemy drops go off",
+        { dropShuffle: "underworld", enemyShuffle: "shuffled" },
+        { dropShuffle: "none" },
+      ],
+      [
+        "enemy drops go on",
+        { dropShuffle: "none" },
+        { dropShuffle: "underworld" },
+      ],
+    ] as const)(
+      "counts the dungeons again at once when the %s",
+      async (_, from, to) => {
+        const h = taken(from, { ...from, ...to });
+        act(() => board().applyRun("door-randomizer", run(from)));
+        await act(() => connectAutotrack());
+        await h.advance(1000);
+
+        act(() => board().updateDoorSettings(to));
+        await h.advance(1000);
+        const followed = board().items.chest0;
+
+        act(() => {
+          syncFromGame();
+        });
+        expect(followed).toBe(board().items.chest0);
+      },
+    );
+
+    it("leaves a counter lowered by hand when a setting moves none of the chests", async () => {
+      // The player skips Eastern Palace's chests; then the GT crystal cell
+      // changes a setting that moves no counter: the game would raise it
+      const h = taken({ pottery: "dungeon" });
+      act(() =>
+        board().applyRun("door-randomizer", run({ pottery: "dungeon" })),
+      );
+      await act(() => connectAutotrack());
+      await h.advance(1000);
+      act(() => board().setItem("chest0", 0));
+      expect(board().items.chest0).toBe(0);
+
+      act(() => board().updateSettings({ crystalsTower: 4 }));
+      await h.advance(1000);
+      expect(board().settings.crystalsTower).toBe(4);
+      expect(board().items.chest0).toBe(0);
+    });
+
+    it("counts again only the counters whose chests the setting moved", async () => {
+      // Key pots off: the dungeons that have one. The last reading read
+      // the pots, so it settles what the counters hold now
+      const from = { pottery: "keys" } as const;
+      const to = { pottery: "none" } as const;
+      const moved = countersMoved(run(from), run({ ...from, ...to }));
+      expect(moved).toContain("chest0");
+      const kept = COUNTER_INDICES.map((index) => `chest${index}`).find(
+        (id) => !moved.includes(id),
+      );
+      if (kept === undefined) throw new Error("every counter moved");
+      const h = taken(from, { ...from, ...to });
+      act(() => board().applyRun("door-randomizer", run(from)));
+      await act(() => connectAutotrack());
+      await h.advance(1000);
+      act(() => board().setItem(kept, 0));
+      act(() => board().setItem("chest0", 0));
+
+      act(() => board().updateDoorSettings(to));
+      await h.advance(1000);
+      expect(board().items[kept]).toBe(0);
+      const recounted = board().items.chest0;
+      act(() => {
+        syncFromGame();
+      });
+      expect(recounted).toBe(board().items.chest0);
+      expect(recounted).not.toBe(0);
+    });
   });
 
   it("syncs the board to the game on the player's word", async () => {

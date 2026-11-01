@@ -18,6 +18,7 @@ mod follow;
 #[cfg(target_os = "linux")]
 mod launcher;
 mod overlay;
+mod quit_signal;
 mod relay;
 mod retroarch;
 mod shortcuts;
@@ -236,6 +237,10 @@ pub fn run() {
                     Err(error) => eprintln!("could not start the stream: {error}"),
                 }
             });
+            // A signal asking the app to quit takes the normal exit, so the
+            // servers close their clients (4410) instead of dropping them
+            let handle = app.handle().clone();
+            quit_signal::listen(move || handle.exit(0));
             Ok(())
         })
         .on_page_load(shortcuts::on_page_load)
