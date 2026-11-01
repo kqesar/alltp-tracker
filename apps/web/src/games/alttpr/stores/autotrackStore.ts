@@ -660,18 +660,25 @@ export const useRomSeedCheck = (): RomSeedCheck | null => {
 
 /**
  * Start a new run from the ROM of another seed, the player's answer to the
- * notice: New game, one undo step. The new run knows no seed, so the game is
- * laid on it and names its seed, and its run type is the seed's on the
- * board left fresh.
+ * notice: one undo step, New game's or, for a seed of another run type
+ * (unless the player kept theirs for it), a new run of the seed's, as a
+ * fresh board takes it. Either resyncs the follower, which lays the ROM it
+ * held on the new run, whose seed it names.
  */
 export const startRunFromRom = () => {
-  const { reading } = useAutotrackStore.getState();
+  const { keptSeed, reading } = useAutotrackStore.getState();
   if (reading === null || !romSeedDiffers(reading)) return;
-  // New game resyncs the follower, which lays the ROM held
-  useGameStore.getState().reset();
-  if (!awaitsFile(reading)) {
-    followSeed(reading, follower?.holdsGameOnly() ?? true);
+  const check = awaitsFile(reading)
+    ? null
+    : checkSeed(reading.seed, useGameStore.getState());
+  if (check?.kind === "differs" && check.seed !== keptSeed) {
+    switched = check.seed;
+    useGameStore.getState().applyRun(check.presetId, check.settings);
+    set({ news: { repeated: false, text: switchedText(check) } });
+    return;
   }
+  useGameStore.getState().reset();
+  if (check !== null) followSeed(reading, follower?.holdsGameOnly() ?? true);
 };
 
 /**

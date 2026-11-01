@@ -19,7 +19,7 @@
 // whose shuffled entrances the assistant knows: the entrance tables load on
 // demand, as for the assistant, and the notes land as the game's news.
 
-import type { EntranceReading } from "@alltp/pack-alttpr";
+import { type EntranceReading, sameSeedId } from "@alltp/pack-alttpr";
 import {
   bossesShown,
   type GameView,
@@ -40,7 +40,7 @@ import {
   useGameStore,
   withNotes,
 } from "@/games/alttpr/stores/gameStore";
-import { recordSeed } from "@/games/seedId";
+import { onRomSeed, recordSeed } from "@/games/seedId";
 import { type GameClock, isRunning } from "@/utils/runTimer";
 
 /** The board's side of a session. */
@@ -163,7 +163,7 @@ export const createFollower = (): Follower => {
    * Note where the game shows Link went, once per change, in a run whose
    * entrances the assistant knows. A note it contradicts gives way.
    */
-  const noteEntrances = (links: EntranceReading) => {
+  const noteEntrances = (links: EntranceReading, seed: string | null) => {
     if (typeof links === "string" || links.length === 0) return;
     if (!entrancesKnown(useGameStore.getState().settings)) return;
     const key = JSON.stringify(links);
@@ -171,13 +171,19 @@ export const createFollower = (): Follower => {
     noted = key;
     void import("@/games/alttpr/logic/entrances").then(
       ({ gameNotes, poolOf }) =>
-        useGameStore.getState().applyGameNews((board) => {
-          const pool = poolOf(board.settings);
-          if (pool === null) return null;
-          const notes = gameNotes(pool, board.entrances, links);
-          const entrances = withNotes(board.entrances, notes);
-          return entrances === null ? null : { entrances };
-        }),
+        useGameStore.getState().applyGameNews(
+          onRomSeed(
+            seed,
+            (board) => {
+              const pool = poolOf(board.settings);
+              if (pool === null) return null;
+              const notes = gameNotes(pool, board.entrances, links);
+              const entrances = withNotes(board.entrances, notes);
+              return entrances === null ? null : { entrances };
+            },
+            sameSeedId,
+          ),
+        ),
     );
   };
 
@@ -189,7 +195,7 @@ export const createFollower = (): Follower => {
     const name = reading.seed.seed;
     if (seedName !== null && name !== null && name !== seedName) forget();
     if (name !== null) seedName = name;
-    noteEntrances(reading.entrances);
+    noteEntrances(reading.entrances, name);
     recordSeed(useGameStore, reading.seed.seed);
     const store = useGameStore.getState();
     if (reading.race) {
@@ -206,7 +212,14 @@ export const createFollower = (): Follower => {
     last = reading;
     shown = view;
     if (isEmptyView(news)) return;
-    store.applyGameNews((board) => mergeView(board, news)?.next ?? null);
+    // Nothing of this ROM reaches a run of another seed the history keeps
+    store.applyGameNews(
+      onRomSeed(
+        name,
+        (board) => mergeView(board, news)?.next ?? null,
+        sameSeedId,
+      ),
+    );
   };
 
   /**
@@ -292,7 +305,11 @@ export const createFollower = (): Follower => {
       const store = useGameStore.getState();
       const view = gameView(last, store, known, bombBought, bosses);
       store.applyGameNews(
-        (board) => recountView(board, view, counters)?.next ?? null,
+        onRomSeed(
+          last.seed.seed,
+          (board) => recountView(board, view, counters)?.next ?? null,
+          sameSeedId,
+        ),
       );
     },
     resume: () => {

@@ -11,6 +11,7 @@ import {
   type Progress,
   parseSave,
 } from "@/games/alttpr/stores/persistence";
+import { recordSeed } from "@/games/seedId";
 
 const STORAGE_KEY = "alltp-tracker-state";
 
@@ -1225,6 +1226,21 @@ describe("GameStore", () => {
       expect(store().items.hookshot).toBe(false);
       expect(store().settings.crystalsTower).toBe(3);
       expect(store().settings.hidden).not.toContain("crystalsTower");
+    });
+
+    it("never reveal a seed's settings to a run of another seed the history keeps", () => {
+      store().applyRun("mystery", getPreset("mystery").settings, () => ({
+        seed: "9MQ9gO1wMD",
+      }));
+      // New game, on which the ROM of another seed then names its own
+      store().reset();
+      recordSeed(useGameStore, "0yAObedRMV");
+      store().revealSettings({ crystalsTower: 3 });
+      expect(store().settings.crystalsTower).toBe(3);
+
+      store().undo();
+      expect(store().seed).toBe("9MQ9gO1wMD");
+      expect(store().settings.hidden).toContain("crystalsTower");
     });
 
     it("are saved and read back, and a damaged list is refused", () => {

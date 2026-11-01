@@ -481,6 +481,25 @@ describe("the run's seed", () => {
     expect(run().settings.towerCrystals).toBe(3);
   });
 
+  it("gives the run New game replaced back as it was, with nothing of the ROM", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    run().step("bow", 1);
+    const settings = run().settings;
+    const follower = createSmz3Follower();
+    follower.read(other());
+
+    run().reset();
+    follower.resync(true);
+    expect(run().items.hookshot).toBe(1);
+
+    run().undo();
+    expect(run().seed).toBe(GUID);
+    expect(run().items.bow).toBe(1);
+    expect(run().items.hookshot ?? 0).toBe(0);
+    expect(run().checked).toEqual([]);
+    expect(run().settings).toEqual(settings);
+  });
+
   it("checks nothing in Race Mode, which never reads the guid", () => {
     run().applyGameNews(() => ({ seed: GUID }));
     createSmz3Follower().read(other(true));

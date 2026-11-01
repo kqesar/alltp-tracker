@@ -22,9 +22,10 @@
 
 import { type Smz3Settings, smz3Ms } from "@alltp/pack-smz3";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
-import { recordSeed } from "@/games/seedId";
+import { onRomSeed, recordSeed } from "@/games/seedId";
 import type { Smz3Reading } from "@/games/smz3/autotrack/reading";
 import {
+  sameGuid,
   smz3RomSeedCheck,
   smz3RomSeedName,
 } from "@/games/smz3/autotrack/romSeed";
@@ -155,7 +156,8 @@ export const createSmz3Follower = () => {
 
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: Smz3Reading) => {
-    recordSeed(useSmz3Store, smz3RomSeedName(reading));
+    const seed = smz3RomSeedName(reading);
+    recordSeed(useSmz3Store, seed);
     const now = viewOf(reading);
     const before = shown;
     shown = now;
@@ -173,26 +175,33 @@ export const createSmz3Follower = () => {
     ) {
       return;
     }
-    useSmz3Store.getState().applyGameNews((run) => {
-      const change: Partial<Smz3Progress> = {};
-      if (itemNews.length > 0) {
-        const items = { ...run.items };
-        for (const [id, count] of itemNews) {
-          items[id] = Math.max(items[id] ?? 0, count ?? 0);
-        }
-        change.items = items;
-      }
-      if (checkNews.length > 0) {
-        change.checked = [...new Set([...run.checked, ...checkNews])];
-      }
-      if (Object.keys(settingNews).length > 0) {
-        change.settings = { ...run.settings, ...settingNews };
-      }
-      if (Object.keys(padNews).length > 0) {
-        change.pads = { ...run.pads, ...padNews };
-      }
-      return change;
-    });
+    // Nothing of this ROM reaches a run of another seed the history keeps
+    useSmz3Store.getState().applyGameNews(
+      onRomSeed(
+        seed,
+        (run) => {
+          const change: Partial<Smz3Progress> = {};
+          if (itemNews.length > 0) {
+            const items = { ...run.items };
+            for (const [id, count] of itemNews) {
+              items[id] = Math.max(items[id] ?? 0, count ?? 0);
+            }
+            change.items = items;
+          }
+          if (checkNews.length > 0) {
+            change.checked = [...new Set([...run.checked, ...checkNews])];
+          }
+          if (Object.keys(settingNews).length > 0) {
+            change.settings = { ...run.settings, ...settingNews };
+          }
+          if (Object.keys(padNews).length > 0) {
+            change.pads = { ...run.pads, ...padNews };
+          }
+          return change;
+        },
+        sameGuid,
+      ),
+    );
   };
 
   /** Lay a reading's news on the run. */

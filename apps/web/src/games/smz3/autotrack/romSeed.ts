@@ -11,7 +11,7 @@ export const smz3RomSeedName = (reading: Smz3Reading): string | null =>
   typeof reading.guid === "string" ? null : reading.guid.guid;
 
 /** A guid is hex: its case says nothing. */
-const sameGuid = (run: string, rom: string) =>
+export const sameGuid = (run: string, rom: string) =>
   run.toLowerCase() === rom.toLowerCase();
 
 /**

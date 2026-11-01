@@ -1031,6 +1031,23 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().items.hookshot).toBe(true);
   });
 
+  it("gives the run New game replaced back as it was, with nothing of the ROM", () => {
+    runOf();
+    store().setItem("flute", true);
+    const follower = createFollower();
+    follower.read(otherRom());
+
+    store().reset();
+    follower.resync(true);
+    expect(store().items.hookshot).toBe(true);
+
+    store().undo();
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.flute).toBe(true);
+    expect(store().items.hookshot).toBe(false);
+    expect(store().checked["links-house"]).toBeUndefined();
+  });
+
   it("lays it once the run takes its seed (Ignore)", () => {
     runOf();
     const follower = createFollower();

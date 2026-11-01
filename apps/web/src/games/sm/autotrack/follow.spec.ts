@@ -589,6 +589,28 @@ describe("the run's seed", () => {
     expect(run().items.morph).toBe(1);
   });
 
+  it("gives the run New game replaced back as it was, with nothing of the ROM", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().step("bombs", 1);
+    const before = run().objectives;
+    const follower = createSmFollower();
+    follower.read(
+      reading({ items: MORPH, name: "cHXhTSCB8", objectives: ["kraid"] }),
+    );
+
+    run().reset();
+    follower.resync(true);
+    expect(run().items.morph).toBe(1);
+    expect(run().objectives).toEqual(["kraid"]);
+
+    run().undo();
+    expect(run().seed).toBe("dsjF6gGsH");
+    expect(run().items.bombs).toBe(1);
+    expect(run().items.morph ?? 0).toBe(0);
+    expect(run().objectives).toEqual(before);
+    expect(run().found).toEqual({});
+  });
+
   it("checks nothing in Race Mode, which never reads the seed's name", () => {
     run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
     const raced = readSm(

@@ -34,7 +34,7 @@ import {
   type SmItemId,
 } from "@alltp/pack-sm";
 import { gameClockOf, timerNews } from "@/games/gameTimer";
-import { recordSeed } from "@/games/seedId";
+import { onRomSeed, recordSeed } from "@/games/seedId";
 import type { SmReading } from "@/games/sm/autotrack/reading";
 import { smRomSeedCheck, smRomSeedName } from "@/games/sm/autotrack/romSeed";
 import { clockBaseOf } from "@/games/sm/autotrack/timer";
@@ -164,7 +164,8 @@ export const createSmFollower = () => {
 
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: SmReading, at: number) => {
-    recordSeed(useSmStore, smRomSeedName(reading));
+    const seed = smRomSeedName(reading);
+    recordSeed(useSmStore, seed);
     const now = viewOf(reading, useSmStore.getState().objectives);
     const before = shown;
     shown = now;
@@ -196,37 +197,40 @@ export const createSmFollower = () => {
     }
     // One stamp for the reading, taken after the timer followed it
     const stamp = stampOf(useSmStore.getState().timer, at);
-    useSmStore.getState().applyGameNews((run) => {
-      const change: Partial<SmProgress> = {};
-      if (itemNews.length > 0) {
-        const items = { ...run.items };
-        for (const [id, count] of itemNews) {
-          items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
+    // Nothing of this ROM reaches a run of another seed the history keeps
+    useSmStore.getState().applyGameNews(
+      onRomSeed(seed, (run) => {
+        const change: Partial<SmProgress> = {};
+        if (itemNews.length > 0) {
+          const items = { ...run.items };
+          for (const [id, count] of itemNews) {
+            items[id as SmItemId] = Math.max(items[id as SmItemId] ?? 0, count);
+          }
+          change.items = items;
         }
-        change.items = items;
-      }
-      const objectives = objectivesNews
-        ? now.objectives.split(",")
-        : run.objectives;
-      if (objectivesNews) change.objectives = objectives;
-      if (objectivesNews || doneNews.length > 0) {
-        change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
-          objectives.includes(id),
-        );
-      }
-      // A location found keeps its first stamp, and is never taken back
-      const fresh = foundNews.filter((key) => run.found[key] === undefined);
-      if (fresh.length > 0) {
-        change.found = {
-          ...run.found,
-          ...Object.fromEntries(fresh.map((key) => [key, stamp])),
-        };
-      }
-      for (const option of options) {
-        change[option] = now[option] === true;
-      }
-      return change;
-    });
+        const objectives = objectivesNews
+          ? now.objectives.split(",")
+          : run.objectives;
+        if (objectivesNews) change.objectives = objectives;
+        if (objectivesNews || doneNews.length > 0) {
+          change.done = [...new Set([...run.done, ...doneNews])].filter((id) =>
+            objectives.includes(id),
+          );
+        }
+        // A location found keeps its first stamp, and is never taken back
+        const fresh = foundNews.filter((key) => run.found[key] === undefined);
+        if (fresh.length > 0) {
+          change.found = {
+            ...run.found,
+            ...Object.fromEntries(fresh.map((key) => [key, stamp])),
+          };
+        }
+        for (const option of options) {
+          change[option] = now[option] === true;
+        }
+        return change;
+      }),
+    );
   };
 
   /** Lay a reading's news on the run. */

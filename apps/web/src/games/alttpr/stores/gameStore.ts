@@ -869,9 +869,15 @@ export const useGameStore = create<GameState>()(
         },
         resetTimer: () => set({ timer: IDLE_TIMER }),
         revealSettings: (change) => {
-          const before = get().settings;
+          const { seed, settings: before } = get();
           const settings = retune(progressOf(get()), change)?.settings;
-          get().applyGameNews((progress) => retune(progress, change));
+          // The seed's settings, never laid on a run of another seed the
+          // history keeps (the run a New run replaced)
+          get().applyGameNews((progress) =>
+            seed !== null && progress.seed !== null && progress.seed !== seed
+              ? null
+              : retune(progress, change),
+          );
           if (settings) set((state) => keyCellsFor(state, settings));
           requestRecount("alttpr", countersMoved(before, get().settings));
         },

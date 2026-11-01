@@ -83,6 +83,25 @@ export const checkRomSeed = (
   return { kind: "differs", rom, run };
 };
 
+/**
+ * A game's news for the runs of the ROM's seed alone: laid on the run and on
+ * every snapshot of its seed or of none known, never on a snapshot of another
+ * seed (the run a New run replaced), which Undo then gives back as it was.
+ * @param rom - The seed the ROM names, null when it names none: news for all
+ * @param change - The news, as the store's `applyGameNews` takes it
+ * @param same - Whether two ids name the same seed (`checkRomSeed`'s)
+ */
+export const onRomSeed =
+  <Run extends { seed: string | null }>(
+    rom: string | null,
+    change: (run: Run) => Partial<Run> | null,
+    same: (run: string, rom: string) => boolean | null = equalIds,
+  ) =>
+  (run: Run): Partial<Run> | null =>
+    run.seed !== null && rom !== null && same(run.seed, rom) === false
+      ? null
+      : change(run);
+
 /** What the board and the autotracking dialog say of a check. */
 export const romSeedText = (check: RomSeedCheck): string =>
   check.kind === "race"
