@@ -59,7 +59,7 @@ import {
   type KeyRules,
   vanillaKeyLogic,
 } from "./key-analysis/analysis";
-import { portalsKnown } from "./key-analysis/dungeon";
+import { portalsKnown, prizeGatedDungeons } from "./key-analysis/dungeon";
 import { notedDoorKeyLogic } from "./key-analysis/noted";
 import {
   addKeyRules,
@@ -979,7 +979,38 @@ function notedKeyLogic(
     key,
     ...(screens === undefined ? {} : { screens }),
   });
-  return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
+  return withoutPrizeGated(data, mode, connections, logic, known, screens);
+}
+
+/**
+ * A noted world's analyses of the dungeons `kept`, less those a prize
+ * gates a start of (prizeGatedDungeons): each of those keeps the
+ * strict-safe rule.
+ */
+function withoutPrizeGated(
+  data: DrData,
+  mode: DrMode,
+  connections: DrConnections,
+  logic: ReadonlyMap<string, KeyLogic>,
+  kept: ReadonlySet<string> | undefined,
+  screens?: OwrScreens,
+): ReadonlyMap<string, KeyLogic> {
+  const found = [...logic].filter(
+    ([dungeon]) => kept === undefined || kept.has(dungeon),
+  );
+  const gated = prizeGatedDungeons(
+    data,
+    mode,
+    connections,
+    new Map(
+      found.map(([dungeon, l]) => [
+        dungeon,
+        l.layout.starts.map((r) => r.name),
+      ]),
+    ),
+    screens,
+  );
+  return new Map(found.filter(([dungeon]) => !gated.has(dungeon)));
 }
 
 /**
@@ -1001,12 +1032,19 @@ function owrNotedKeyLogic(
 ): ReadonlyMap<string, KeyLogic> {
   const key = JSON.stringify(["owr", notes, settings.drVersion]);
   if (owrNotesComplete(data, notes, screens))
-    return drKeyLogic(data, settings, { connections, key, screens });
+    return withoutPrizeGated(
+      data,
+      mode,
+      connections,
+      drKeyLogic(data, settings, { connections, key, screens }),
+      undefined,
+      screens,
+    );
   const known = portalsKnown(data, mode, connections, screens);
   if (mode === "standard") known.delete("Hyrule Castle");
   if (known.size === 0) return new Map();
   const logic = drKeyLogic(data, settings, { connections, key, screens });
-  return new Map([...logic].filter(([dungeon]) => known.has(dungeon)));
+  return withoutPrizeGated(data, mode, connections, logic, known, screens);
 }
 
 /** The probe's answers, by mode and release. */

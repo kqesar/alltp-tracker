@@ -16,12 +16,13 @@ import { DR_DATA } from "./dr-data";
 import {
   DR_DEFAULTS,
   type DrNotedEntrances,
+  drKeyLogic,
   drLocationId,
   drWorld,
   everySide,
   probeId,
 } from "./index";
-import { portalsKnown } from "./key-analysis/dungeon";
+import { portalsKnown, prizeGatedDungeons } from "./key-analysis/dungeon";
 
 type Mode = "open" | "standard" | "inverted";
 
@@ -255,6 +256,60 @@ describe("DR's world on noted entrances", () => {
       ),
     });
     expect(solve(noGT, 99)).toBe("no");
+  });
+
+  it("keeps strict-safe a prize dungeon entered by Ganon's Tower's door among its starts", () => {
+    // Ganon's Tower's door and Desert's east one traded: Desert, a pendant
+    // dungeon with four starts, one entered from the tower's spot, which
+    // DR keeps shut until its prize (prize_relevance)
+    const gatedBy = (mode: "open" | "inverted", tower: string) => {
+      const notes = vanillaNotes("dungeonssimple", mode);
+      const idOf = (name: string) =>
+        Object.keys(notes).find((id) => drEntranceName(id) === name) ?? "";
+      const [a, b] = [idOf(tower), idOf("Desert Palace Entrance (East)")];
+      const swapped = { ...notes, [a]: notes[b] ?? "", [b]: notes[a] ?? "" };
+      const { connections } = notedConnections(
+        DR_DATA,
+        mode,
+        noted("dungeonssimple", mode, swapped),
+      );
+      const known = portalsKnown(DR_DATA, mode, connections);
+      const logic = drKeyLogic(DR_DATA, settings(mode), {
+        connections,
+        key: `prize ${mode} ${tower}`,
+      });
+      const starts = new Map(
+        [...logic]
+          .filter(([dungeon]) => known.has(dungeon))
+          .map(([dungeon, l]) => [dungeon, l.layout.starts.map((r) => r.name)]),
+      );
+      expect(starts.get("Desert Palace")?.length, tower).toBeGreaterThan(1);
+      return prizeGatedDungeons(DR_DATA, mode, connections, starts);
+    };
+    expect(gatedBy("open", "Ganons Tower")).toEqual(new Set(["Desert Palace"]));
+    // Every door where it was: none
+    const { connections } = notedConnections(
+      DR_DATA,
+      "open",
+      noted("dungeonssimple", "open", vanillaNotes("dungeonssimple", "open")),
+    );
+    const logic = drKeyLogic(DR_DATA, settings("open"), {
+      connections,
+      key: "prize open vanilla",
+    });
+    expect(
+      prizeGatedDungeons(
+        DR_DATA,
+        "open",
+        connections,
+        new Map(
+          [...logic].map(([dungeon, l]) => [
+            dungeon,
+            l.layout.starts.map((r) => r.name),
+          ]),
+        ),
+      ).size,
+    ).toBe(0);
   });
 
   it("asks every key where a dungeon's ways in are not all known", () => {

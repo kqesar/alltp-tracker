@@ -555,6 +555,70 @@ function destinations(data: DrData): Map<string, string> {
 }
 
 /**
+ * prize_relevance (KeyDoorShuffle.py:1519-1525) on a world whose entrances
+ * the notes link: the dungeons with a prize and more than one start, one
+ * of them entered (find_outside_connection, :1824-1831: through its
+ * portal, from the overworld) by Ganon's Tower's door, Agahnim's where the
+ * towers trade (is_atgt_swapped: Inverted, the fork's once screens 0x03
+ * and 0x1b flip; both while not known), or the Pyramid Fairy's. DR keeps
+ * that start shut until the prize (create_key_counters, :1789-1797), a walk
+ * the port does not make: such a dungeon keeps the strict-safe rule, as a
+ * noted door layout does (noted.ts prizeRelevant).
+ * @param starts - Each analysed dungeon's start regions, by name
+ */
+export function prizeGatedDungeons(
+  data: DrData,
+  mode: DrMode,
+  connections: DrConnections,
+  starts: ReadonlyMap<string, readonly string[]>,
+  screens: OwrScreens = screensOf(mode),
+): Set<string> {
+  const swapped =
+    data.flavor === "owr"
+      ? screens.swapped(0x03) === undefined ||
+        screens.swapped(0x1b) === undefined
+        ? undefined
+        : screens.swapped(0x03) === true && screens.swapped(0x1b) === true
+      : mode === "inverted";
+  const gating = new Set([
+    "Pyramid Fairy",
+    ...(swapped !== true ? ["Ganons Tower"] : []),
+    ...(swapped !== false ? ["Agahnims Tower"] : []),
+  ]);
+  const typeOf = regionTypeOf(data, screens);
+  const into = new Map<string, { exit: string; from: string }[]>();
+  for (const [from, list] of exitsByRegion(data, mode, screens))
+    for (const exit of list) {
+      const to = connections.get(exit);
+      if (to !== undefined)
+        into.set(to, [...(into.get(to) ?? []), { exit, from }]);
+    }
+  const outdoors = (name: string) => {
+    const region = data.regionByName.get(name);
+    if (region === undefined) return false;
+    const type = typeOf(region);
+    return type === undefined || type === "lw" || type === "dw";
+  };
+  const gated = new Set<string>();
+  for (const [dungeon, regions] of starts) {
+    if (regions.length < 2) continue;
+    if ((data.dungeons.find((d) => d.name === dungeon)?.prize ?? null) === null)
+      continue;
+    const entered = regions.some((region) =>
+      (into.get(region) ?? [])
+        .filter(({ from }) => from.includes(" Portal"))
+        .some(({ from }) =>
+          (into.get(from) ?? []).some(
+            ({ exit, from: outside }) => outdoors(outside) && gating.has(exit),
+          ),
+        ),
+    );
+    if (entered) gated.add(dungeon);
+  }
+  return gated;
+}
+
+/**
  * The dungeons whose ways in a shuffled world's connections all tell, as
  * DR's key analysis would find them in the whole world: each portal and
  * each drop region (dungeon_portals, dungeon_drops) entered from a region

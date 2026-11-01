@@ -1178,7 +1178,11 @@ noted and stand in regions the walk from Link's House and Sanctuary reaches
 (`portalsKnown`): such a dungeon starts from all its portals and waits on no
 other, so its analysis is the whole world's; any other dungeon, Standard's
 castle and every dungeon of a decoupled world keep the strict-safe rule, as
-does a seed of the static key logic, whose Turtle Rock probe reads the
+does a dungeon with a prize and several starts, one entered from Ganon's
+Tower's door (Agahnim's where the towers trade) or the Pyramid Fairy's
+(`prizeGatedDungeons`, `prize_relevance`, `KeyDoorShuffle.py:1519-1525`:
+DR keeps that start shut until the prize, a walk the port does not make),
+and a seed of the static key logic, whose Turtle Rock probe reads the
 vanilla world. Desert Palace, Skull Woods and Turtle Rock keep it, by the
 owner's decision (2026-10-30), wherever one of their portals opens onto a
 ledge the walk reaches only through the dungeon itself
