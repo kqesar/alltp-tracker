@@ -24,6 +24,7 @@ import {
   medallionsShown,
   mergeView,
   newsOf,
+  recountView,
   syncView,
 } from "@/games/alttpr/autotrack/apply";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -68,6 +69,12 @@ export type Follower = {
    * connection dropped).
    */
   resume: () => void;
+  /**
+   * The run's settings changed under the session, and with them what its
+   * dungeon counters hold: count them again from the last reading, as Sync
+   * would, and nothing else.
+   */
+  recount: () => void;
   /**
    * The board was replaced by another run (New game, Import, a shared link, a
    * new run type): lay all the game says on it, as at the first reading.
@@ -247,6 +254,12 @@ export const createFollower = (): Follower => {
       playing = reading.progress.started === true;
       if (!playing) return;
       lay(reading);
+    },
+    recount: () => {
+      if (!playing || last === null) return;
+      const store = useGameStore.getState();
+      const view = gameView(last, store, known, bombBought, bosses);
+      store.applyGameNews((board) => recountView(board, view)?.next ?? null);
     },
     resume: () => {
       shown = null;

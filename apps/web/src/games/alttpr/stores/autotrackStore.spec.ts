@@ -19,7 +19,7 @@ import {
 import { checkSeed } from "@/games/alttpr/autotrack/seed";
 import { forgetSeedFiles } from "@/games/alttpr/autotrack/seedFile";
 import { DUNGEON_INDICES, MEDALLION_VALUES } from "@/games/alttpr/constants";
-import { setBonkDrops } from "@/games/alttpr/data/doorRando";
+import { doorLocationsOf, setBonkDrops } from "@/games/alttpr/data/doorRando";
 import { getPreset } from "@/games/alttpr/data/presets";
 import { solutionOf } from "@/games/alttpr/logic/solution";
 import {
@@ -122,6 +122,66 @@ describe("autotracking and the board", () => {
     });
     await h.advance(1000);
     expect(board().checked["pyramid-tree"]).toBe(true);
+  });
+
+  describe("a Door Randomizer location setting changed mid-run", () => {
+    /** WRAM bank $7F in the FX Pak Pro space, and the tables in it. */
+    const TABLES = { drop: 0xf6_0000 + 0x6268, pot: 0xf6_0000 + 0x6018 };
+    const run = (change: Record<string, string>) => ({
+      ...getPreset("door-randomizer").settings,
+      dropShuffle: "none" as const,
+      enemyShuffle: "none" as const,
+      pottery: "none" as const,
+      ...change,
+    });
+
+    /** A console that took each Eastern Palace item any of the runs shuffles. */
+    const taken = (...changes: Record<string, string>[]) => {
+      const h = harness();
+      for (const { dungeon, flag, kind } of changes.flatMap(
+        (change) => doorLocationsOf(run(change)).locations,
+      )) {
+        if (dungeon !== "eastern-palace" || kind === "keyDrop") continue;
+        if (flag.memory !== "pot" && flag.memory !== "drop") continue;
+        const mask = 0x8000 >> flag.bit;
+        const at = TABLES[flag.memory] + flag.room * 2;
+        h.memory[at] |= mask & 0xff;
+        h.memory[at + 1] |= mask >> 8;
+      }
+      return h;
+    };
+
+    it.each([
+      ["pots go off", { pottery: "dungeon" }, { pottery: "none" }],
+      ["pots go on", { pottery: "none" }, { pottery: "dungeon" }],
+      [
+        "enemy drops go off",
+        { dropShuffle: "underworld", enemyShuffle: "shuffled" },
+        { dropShuffle: "none" },
+      ],
+      [
+        "enemy drops go on",
+        { dropShuffle: "none" },
+        { dropShuffle: "underworld" },
+      ],
+    ] as const)(
+      "counts the dungeons again at once when the %s",
+      async (_, from, to) => {
+        const h = taken(from, { ...from, ...to });
+        act(() => board().applyRun("door-randomizer", run(from)));
+        await act(() => connectAutotrack());
+        await h.advance(1000);
+
+        act(() => board().updateDoorSettings(to));
+        await h.advance(1000);
+        const followed = board().items.chest0;
+
+        act(() => {
+          syncFromGame();
+        });
+        expect(followed).toBe(board().items.chest0);
+      },
+    );
   });
 
   it("syncs the board to the game on the player's word", async () => {

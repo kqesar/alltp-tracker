@@ -18,7 +18,7 @@ import {
   onRunReplaced,
   rememberRace,
 } from "@/autotrack/raceMode";
-import { onResync } from "@/autotrack/resync";
+import { onRecount, onResync } from "@/autotrack/resync";
 import { shownStatus } from "@/autotrack/status";
 import type { Follower } from "@/games/alttpr/autotrack/follow";
 import type { AutotrackReading } from "@/games/alttpr/autotrack/reading";
@@ -303,6 +303,13 @@ onResync((game) => {
   if (game === "alttpr") {
     follower?.resync(useAutotrackStore.getState().status.code === "connected");
   }
+});
+
+// A setting changed mid-run that moves what the counters hold (the locations
+// a Door Randomizer run shuffles, the dungeon items): the game counts them
+// again at once, not only when it next changes
+onRecount((game) => {
+  if (game === "alttpr") follower?.recount();
 });
 
 /**
