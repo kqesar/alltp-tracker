@@ -595,8 +595,8 @@
 /* Down each column, then across: the last column is the short one, never a
    lone entry on a last row */
 .ap-slot-data__list {
-  column-gap: var(--spacing-md);
   column-width: 14rem;
+  column-gap: var(--spacing-md);
   margin: 0;
   font-size: var(--font-size-sm);
 }

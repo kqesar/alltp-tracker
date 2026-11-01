@@ -12,7 +12,7 @@ import {
 } from "@/hooks/useGridNavigation";
 
 /** A cell's state in words: held or not, or how many of how many. */
-const describe = (id: SmItemId, value: number) => {
+const stateLabel = (id: SmItemId, value: number) => {
   const { max } = smItem(id);
   if (max === 1) return value > 0 ? "obtained" : "not obtained";
   return `${value} of ${max}`;
@@ -41,7 +41,7 @@ const SmCell = ({ id, row, col, places }: SmCellProps) => {
   return (
     <button
       {...focusable}
-      aria-label={`${smItem(id).name}, ${describe(id, value)}. Click to change state.${where === null ? "" : ` ${where}`}`}
+      aria-label={`${smItem(id).name}, ${stateLabel(id, value)}. Click to change state.${where === null ? "" : ` ${where}`}`}
       className={`griditem grid-item-base sm-cell${value === 0 ? " griditem--dimmed" : ""}`}
       data-testid={`sm-item-${id}`}
       onClick={() => step(id, 1)}

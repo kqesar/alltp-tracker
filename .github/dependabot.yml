@@ -19,16 +19,20 @@ multi-ecosystem-groups:
     # `build` is in the commitlint type-enum, and this is the prefix Dependabot
     # already picked by itself on the npm PRs.
     commit-message:
-      prefix: 'build(deps)'
+      prefix: "build(deps)"
 
 updates:
   # --------------------------------------------------------------------------
   # npm — runtime and dev dependencies
   # --------------------------------------------------------------------------
   - package-ecosystem: npm
-    directory: '/'
+    directory: "/"
     multi-ecosystem-group: all-dependencies
-    patterns: ['*']
+    patterns: ["*"]
+    # packs/smz3's fixtures are rendered with the exact `yaml` samus.link's site
+    # writes its spoiler files with (1.10.3); 2.x quotes keys differently
+    ignore:
+      - dependency-name: yaml
 
   # --------------------------------------------------------------------------
   # cargo — the desktop app's Rust crates
@@ -37,9 +41,9 @@ updates:
   # versions. In the same weekly pull request, the two sides move together;
   # as separate ones, either could be merged alone and let them drift apart.
   - package-ecosystem: cargo
-    directory: '/apps/desktop/src-tauri'
+    directory: "/apps/desktop/src-tauri"
     multi-ecosystem-group: all-dependencies
-    patterns: ['*']
+    patterns: ["*"]
 
   # A `docker` entry comes with the first Dockerfile, not before: with no image
   # to scan, its job failed every week from 2026-09 to 2026-10, and the group's
@@ -55,6 +59,6 @@ updates:
   # the only hint, and it lies as soon as it is stale. Dependabot rewrites both
   # the SHA and the comment, which is the only sustainable way to keep pinning.
   - package-ecosystem: github-actions
-    directory: '/'
+    directory: "/"
     multi-ecosystem-group: all-dependencies
-    patterns: ['*']
+    patterns: ["*"]

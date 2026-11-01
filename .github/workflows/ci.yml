@@ -7,7 +7,7 @@ on:
     branches: [master]
     # No job reads Markdown: a docs-only change has nothing to test or deploy
     paths-ignore: &docs-only
-      - '**.md'
+      - "**.md"
       - LICENSE
   pull_request:
     paths-ignore: *docs-only
@@ -17,7 +17,7 @@ on:
   # full run (plan): fresh property-test seeds and the runner's latest Chrome,
   # on trees master deployed without testing again (docs/ci.md).
   schedule:
-    - cron: '17 3 * * *'
+    - cron: "17 3 * * *"
 
 # A new push to a pull request makes its running checks obsolete: cancel them.
 # Pushes to master always run to the end, so deployments never overlap. The
@@ -184,9 +184,9 @@ jobs:
             } else if ('${{ steps.test.outcome }}' === 'success') {
               coverageSection = `
             ## 📊 Test Coverage
-            
+
             ⚠️ Coverage data not available
-            
+
             `;
             }
 

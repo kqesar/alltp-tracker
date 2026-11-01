@@ -355,8 +355,9 @@ test("the stream view shows the grid and nothing of where the room is", async ({
     await expect(stream.getByTestId("ap-item-keys-ip")).toContainText(
       "1 small key",
     );
-    const text = await stream.locator("body").innerText();
-    expect(text).not.toContain(String(room.port));
+    await expect(stream.locator("body")).not.toContainText(String(room.port), {
+      useInnerText: true,
+    });
     expect(
       await stream.evaluate(
         () => getComputedStyle(document.body).backgroundColor,
@@ -375,9 +376,9 @@ test("the stream view shows the grid and nothing of where the room is", async ({
     await expect(feed).toHaveCount(5);
     await expect(feed.last()).toHaveText("Quester released 4 items, 2 for you");
     await expect(stream.getByTestId("ap-obs-feed")).not.toContainText("is at");
-    expect(await stream.locator("body").innerText()).not.toContain(
-      String(room.port),
-    );
+    await expect(stream.locator("body")).not.toContainText(String(room.port), {
+      useInnerText: true,
+    });
     if (SHOTS) await stream.screenshot({ path: `${SHOTS}/obs-feed.png` });
 
     // &timer=1 too: the run timer on its row under the grid, the feed under it
@@ -606,8 +607,9 @@ for (const world of [
       await expect(
         stream.getByTestId("ap-skin").getByRole("listitem"),
       ).toHaveCount(world.rows * 7);
-      expect(await stream.locator("body").innerText()).not.toContain(
+      await expect(stream.locator("body")).not.toContainText(
         String(room.port),
+        { useInnerText: true },
       );
       if (SHOTS) {
         await stream.screenshot({ path: `${SHOTS}/${world.client}-obs.png` });

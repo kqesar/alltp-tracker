@@ -16,7 +16,7 @@ const MAX = new Map(ITEMS.map((item) => [item.id, item.max]));
 const asset = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`;
 
 /** A cell's state in words: held or not, its level, or how many of how many. */
-const describe = (id: string, value: number) => {
+const stateLabel = (id: string, value: number) => {
   const max = MAX.get(id) ?? 1;
   if (max === 1) return value > 0 ? "obtained" : "not obtained";
   return `${value} of ${max}`;
@@ -37,7 +37,7 @@ const useStepControl = (id: string, name: string, position: GridPosition) => {
   return {
     props: {
       ...focusable,
-      "aria-label": `${name}, ${describe(id, value)}${where}. Click to change state.`,
+      "aria-label": `${name}, ${stateLabel(id, value)}${where}. Click to change state.`,
       "data-testid": `smz3-item-${id}`,
       onClick: () => step(id, 1),
       onContextMenu: (event: MouseEvent) => {

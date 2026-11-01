@@ -148,13 +148,13 @@ export const ShortcutTable = <Refusal extends string>({
   }, [capturing, onCapturingChange]);
 
   const text = (chord: Chord) => chordText(chord, layout);
-  const describe = (action: ActionId) => {
+  const actionLabel = (action: ActionId) => {
     const { control, direction } = parseAction(action);
     return `${controlTitle(control)} ${DIRECTION_NAMES[direction]}`;
   };
   const bindingOf = (action: ActionId, map: Keymap) => {
     const chord = map[action];
-    return `${describe(action)}: ${chord ? text(chord) : "no shortcut"}`;
+    return `${actionLabel(action)}: ${chord ? text(chord) : "no shortcut"}`;
   };
   // Which key cell shortcuts wait: the cells hidden, or the map and compass
   // while they stay in their dungeons, where the cells do not show them
@@ -171,7 +171,7 @@ export const ShortcutTable = <Refusal extends string>({
   const startCapture = (action: ActionId) => {
     setCapturing(action);
     onStatus(
-      `Press the new key for ${describe(action)}. Delete removes it, Escape cancels.`,
+      `Press the new key for ${actionLabel(action)}. Delete removes it, Escape cancels.`,
     );
   };
 
@@ -262,7 +262,7 @@ export const ShortcutTable = <Refusal extends string>({
     return (
       <button
         aria-describedby={noteId?.(action)}
-        aria-label={`${describe(action)}: ${
+        aria-label={`${actionLabel(action)}: ${
           isCapturing ? "press a key" : chord ? text(chord) : "no shortcut"
         }`}
         className={`shortcut-key${isCapturing ? " shortcut-key--capturing" : ""}`}
@@ -394,7 +394,7 @@ export const ShortcutTable = <Refusal extends string>({
       >
         {conflict && (
           <p className="modal__message">
-            {text(conflict.chord)} steps {describe(conflict.holder)}.{" "}
+            {text(conflict.chord)} steps {actionLabel(conflict.holder)}.{" "}
             {conflictPrevious
               ? `Swap moves it to ${text(conflictPrevious)}; Replace leaves it without a shortcut.`
               : "Replace leaves it without a shortcut."}
