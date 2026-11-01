@@ -113,6 +113,7 @@ describe("parseSave", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
       dungeonItems: "keys",
+      enemyShuffle: "none" as const,
     };
     expect(
       parseSave(saveFile({ presetId: "door-randomizer", settings })),

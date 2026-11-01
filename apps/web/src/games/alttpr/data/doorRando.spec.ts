@@ -60,10 +60,15 @@ import {
 
 // The run types with the bomb bag off (not known, it reads as on with its
 // upgrade not known: a check that wants bombs is maybe)
-const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
+const DR = {
+  ...getPreset("door-randomizer").settings,
+  bombBag: false,
+  enemyShuffle: "none" as const,
+};
 const DR_CROSSKEYS = {
   ...getPreset("door-crosskeys").settings,
   bombBag: false,
+  enemyShuffle: "none" as const,
 };
 /**
  * An OWR run of the fork's pinned release whose overworld, prize and

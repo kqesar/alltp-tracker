@@ -210,6 +210,7 @@ describe("the entrance assistant", () => {
   it("lists an OWR run's every shuffle from the fork's pool, and asks for one not known yet", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
+      enemyShuffle: "none" as const,
       randomizer: "owr" as const,
     };
     for (const change of [
@@ -250,6 +251,7 @@ describe("the entrance assistant", () => {
         ...getPreset("door-randomizer").settings,
         customGoals: false,
         doorEntrances: "swapped",
+        enemyShuffle: "none" as const,
         nearbyItems: false,
         owCrossed: "none",
         owFluteShuffle: "vanilla",

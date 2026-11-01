@@ -863,6 +863,7 @@ describe("the doors Link goes through", () => {
       const owr = () => {
         store().applyRun("door-randomizer", {
           ...getPreset("door-randomizer").settings,
+          enemyShuffle: "none" as const,
           ...change,
           randomizer: "owr",
         });

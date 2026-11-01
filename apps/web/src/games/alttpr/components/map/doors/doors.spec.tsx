@@ -8,7 +8,11 @@ import { MapPanel } from "@/games/alttpr/components/map/MapPanel";
 import { getPreset, type RunSettings } from "@/games/alttpr/data/presets";
 import { useGameStore } from "@/games/alttpr/stores/gameStore";
 
-const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
+const DR = {
+  ...getPreset("door-randomizer").settings,
+  bombBag: false,
+  enemyShuffle: "none" as const,
+};
 const run = (change: Partial<RunSettings>) =>
   act(() =>
     useGameStore.getState().applyRun("door-randomizer", { ...DR, ...change }),

@@ -602,6 +602,7 @@ describe("describeRun", () => {
     expect(
       describeRun("door-crosskeys", {
         ...getPreset("door-crosskeys").settings,
+        enemyShuffle: "none" as const,
         entranceShuffle: "none",
       }),
     ).toMatch(/vanilla entrances/);

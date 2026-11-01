@@ -53,7 +53,11 @@ beforeAll(async () => {
 });
 
 describe("a Door Randomizer run's solve", () => {
-  const DR = { ...getPreset("door-randomizer").settings, bombBag: false };
+  const DR = {
+    ...getPreset("door-randomizer").settings,
+    bombBag: false,
+    enemyShuffle: "none" as const,
+  };
   it.each<[string, RunSettings]>([
     ["keys in their dungeons", DR],
     [
@@ -162,6 +166,7 @@ describe("a door-shuffled run's note", () => {
       ...getPreset("door-crosskeys").settings,
       decoupledDoors: false,
       doorShuffle: "crossed",
+      enemyShuffle: "none" as const,
       shuffleLinks: false,
       shuffleTavern: false,
     };

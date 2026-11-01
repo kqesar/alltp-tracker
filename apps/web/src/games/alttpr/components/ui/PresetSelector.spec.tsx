@@ -299,7 +299,11 @@ describe("PresetSelector", () => {
   it("offers a Door Randomizer run's own settings, changed in place", () => {
     Object.assign(fakeState, {
       presetId: "door-randomizer",
-      settings: { ...getPreset("door-randomizer").settings, pottery: "keys" },
+      settings: {
+        ...getPreset("door-randomizer").settings,
+        enemyShuffle: "none" as const,
+        pottery: "keys",
+      },
       updateDoorSettings,
     });
     render(<PresetSelector />);
@@ -369,6 +373,7 @@ describe("PresetSelector", () => {
       presetId: "door-randomizer",
       settings: {
         ...getPreset("door-randomizer").settings,
+        enemyShuffle: "none" as const,
         hidden: ["entranceShuffle"],
       },
     });
@@ -386,6 +391,7 @@ describe("PresetSelector", () => {
       presetId: "door-crosskeys",
       settings: {
         ...getPreset("door-crosskeys").settings,
+        enemyShuffle: "none" as const,
         shuffleLinks: false,
       },
       updateDoorSettings,

@@ -924,6 +924,7 @@ describe("a Door Randomizer run's checks, from the game", () => {
     useGameStore.getState().applyRun("door-randomizer", {
       ...getPreset("door-randomizer").settings,
       dropShuffle: "keys",
+      enemyShuffle: "none" as const,
       pottery: "keys",
     });
     const { checked, items, medallions, settings, smallKeys } =

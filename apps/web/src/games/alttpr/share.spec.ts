@@ -932,6 +932,7 @@ describe("the settings in a link (link 4)", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
       dropShuffle: "underworld",
+      enemyShuffle: "none" as const,
       pottery: "lottery",
       shopsanity: true,
     };
@@ -961,6 +962,7 @@ describe("the settings in a link (link 4)", () => {
       bombBag: false,
       bonkDrops: true,
       customGoals: true,
+      enemyShuffle: "none" as const,
       prizeShuffle: "nearby",
       randomizer: "owr",
       shuffleFollowers: true,
@@ -983,6 +985,7 @@ describe("the settings in a link (link 4)", () => {
       ...getPreset("door-randomizer").settings,
       doorIntensity: "3",
       doorShuffle: "crossed",
+      enemyShuffle: "none" as const,
     };
     const doors = {
       keys: { "Eastern Palace": 3 },
@@ -1002,6 +1005,7 @@ describe("the settings in a link (link 4)", () => {
   it("carries an OWR run's overworld notes as they are", () => {
     const settings = {
       ...getPreset("door-randomizer").settings,
+      enemyShuffle: "none" as const,
       owCrossed: "grouped",
       owFluteShuffle: "random",
       owMixed: true,
@@ -1031,6 +1035,7 @@ describe("the settings in a link (link 4)", () => {
       const settings = {
         ...getPreset("door-randomizer").settings,
         doorEntrances,
+        enemyShuffle: "none" as const,
         owMixed: true,
         randomizer: "owr",
         shuffleLinks: false,

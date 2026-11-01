@@ -20,7 +20,9 @@ describe("useDoorLogic", () => {
 
     act(() => {
       useGameStore.getState().applyPreset("door-randomizer");
-      useGameStore.getState().updateDoorSettings({ bombBag: false });
+      useGameStore
+        .getState()
+        .updateDoorSettings({ bombBag: false, enemyShuffle: "none" });
     });
     await waitFor(() => expect(doorSolverLoaded()).toBe(true));
     // And the run is solved by it at once
@@ -36,6 +38,7 @@ describe("useDoorLogic", () => {
       useGameStore.getState().updateDoorSettings({
         bombBag: false,
         customGoals: false,
+        enemyShuffle: "none",
         nearbyItems: false,
         owCrossed: "none",
         owFluteShuffle: "vanilla",

@@ -16,6 +16,10 @@ const openDoorRun = async (page: Page) => {
   const bag = dialog.getByRole("combobox", { name: "Bomb bag" });
   await expect(bag).toHaveValue("?");
   await bag.selectOption("false");
+  // The enemies not known until set: DR races roll Enemizer too
+  const enemies = dialog.getByRole("combobox", { name: "Enemies" });
+  await expect(enemies).toHaveValue("?");
+  await enemies.selectOption("none");
   await dialog.getByRole("combobox", { name: "Pottery" }).selectOption("keys");
   return dialog;
 };
@@ -286,6 +290,7 @@ test("a DR Crosskeys run notes its entrances in DR's own pool and logic", async 
   await expect(dialog.getByRole("combobox", { name: "Bomb bag" })).toHaveValue(
     "false",
   );
+  await dialog.getByRole("combobox", { name: "Enemies" }).selectOption("none");
   await auditPage(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
 

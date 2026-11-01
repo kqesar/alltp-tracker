@@ -258,6 +258,7 @@ describe("counterMax", () => {
     const dr = {
       ...getPreset("door-randomizer").settings,
       dungeonItems: "keys" as const,
+      enemyShuffle: "none" as const,
     };
     // DR's options are apart (args.json): its region flags, keys alone
     expect(packSettings(dr)).toMatchObject({

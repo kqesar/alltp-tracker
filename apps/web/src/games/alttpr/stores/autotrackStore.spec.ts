@@ -104,6 +104,7 @@ describe("autotracking and the board", () => {
       useGameStore.getState().applyRun("door-randomizer", {
         ...getPreset("door-randomizer").settings,
         bonkDrops: true,
+        enemyShuffle: "none" as const,
         randomizer: "owr",
       }),
     );

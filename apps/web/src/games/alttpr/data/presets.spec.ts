@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  isDoorRun,
+  RUN_SETTINGS_NOT_KNOWN,
+} from "@/games/alttpr/data/doorRando";
+import {
   crossedLogic,
   DEFAULT_PRESET_ID,
   describeSettings,
@@ -33,13 +37,15 @@ describe("presets", () => {
   });
 
   it("models every run type's logic", () => {
-    // Mystery's entrances are not known until set: no logic is missing
+    // Mystery's entrances are not known until set, DR's enemies too (its
+    // races roll Enemizer): no logic is missing
     expect(
       presets
         .filter(
           (preset) =>
             !logicModelled({
               ...preset.settings,
+              ...(isDoorRun(preset.settings) ? { enemyShuffle: "none" } : {}),
               hidden: preset.settings.hidden?.filter(
                 (key) => key !== "entranceShuffle",
               ),
@@ -48,9 +54,19 @@ describe("presets", () => {
         .map((preset) => preset.id),
     ).toEqual([]);
     // A DR seed's bomb bag not known reads as on, its upgrade not known:
-    // modelled (drSettingsOf); DR Crosskeys races have none
-    for (const id of ["door-randomizer", "door-crosskeys"])
-      expect(unmodelledReasons(getPreset(id).settings), id).toEqual([]);
+    // modelled (drSettingsOf); DR Crosskeys races have none. Its enemies not
+    // known are the one cause until set
+    for (const id of ["door-randomizer", "door-crosskeys"]) {
+      const { settings } = getPreset(id);
+      expect(settings.enemyShuffle, id).toBeUndefined();
+      expect(unmodelledReasons(settings), id).toEqual([
+        RUN_SETTINGS_NOT_KNOWN[0][1],
+      ]);
+      expect(
+        unmodelledReasons({ ...settings, enemyShuffle: "none" }),
+        id,
+      ).toEqual([]);
+    }
     expect(getPreset("door-randomizer").settings.bombBag).toBeUndefined();
     expect(getPreset("door-crosskeys").settings.bombBag).toBe(false);
     expect(unmodelledReasons(getPreset("mystery").settings)).toEqual([

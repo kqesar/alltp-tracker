@@ -348,6 +348,7 @@ describe("GameStore", () => {
       store().applyRun("door-randomizer", {
         ...getPreset("door-randomizer").settings,
         bombBag: true,
+        enemyShuffle: "none" as const,
       });
       expect(store().items.bombcapacity).toBe(0);
       store().handleItemClick("bombcapacity");
@@ -1131,6 +1132,7 @@ describe("GameStore", () => {
     it("are one undo step each, saved with the run, none in a new one", () => {
       store().applyRun("door-randomizer", {
         ...getPreset("door-randomizer").settings,
+        enemyShuffle: "none" as const,
         owWhirlpool: true,
         randomizer: "owr",
       });

@@ -197,6 +197,7 @@ describe("an OWR run's overworld notes", () => {
     for (const mode of ["open", "inverted"] as const) {
       const run = {
         ...getPreset("door-randomizer").settings,
+        enemyShuffle: "none" as const,
         mode,
         owCrossed: "none",
         owMixed: true,

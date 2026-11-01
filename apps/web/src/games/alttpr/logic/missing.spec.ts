@@ -518,7 +518,11 @@ describe("a Door Randomizer run", () => {
       { lantern: true },
       {
         preset: "door-randomizer",
-        settings: { ...getPreset("door-randomizer").settings, bombBag: false },
+        settings: {
+          ...getPreset("door-randomizer").settings,
+          bombBag: false,
+          enemyShuffle: "none" as const,
+        },
         smallKeys: Array(13).fill(0),
       },
     );
@@ -554,7 +558,11 @@ describe("a Door Randomizer run", () => {
         { lantern: true },
         {
           preset: "door-randomizer",
-          settings: { ...getPreset("door-randomizer").settings, bombBag },
+          settings: {
+            ...getPreset("door-randomizer").settings,
+            bombBag,
+            enemyShuffle: "none" as const,
+          },
           smallKeys: Array(13).fill(9),
         },
       );
@@ -582,7 +590,11 @@ describe("a Door Randomizer run", () => {
         { bombcapacity, lantern: true },
         {
           preset: "door-randomizer",
-          settings: { ...getPreset("door-randomizer").settings, bombBag: true },
+          settings: {
+            ...getPreset("door-randomizer").settings,
+            bombBag: true,
+            enemyShuffle: "none" as const,
+          },
           smallKeys: Array(13).fill(9),
         },
       );
@@ -600,7 +612,10 @@ describe("a Door Randomizer run", () => {
       { bombcapacity: 10, lantern: true },
       {
         preset: "door-randomizer",
-        settings: { ...getPreset("door-randomizer").settings },
+        settings: {
+          ...getPreset("door-randomizer").settings,
+          enemyShuffle: "none" as const,
+        },
         smallKeys: Array(13).fill(9),
       },
     );
@@ -624,6 +639,7 @@ describe("a Door Randomizer run", () => {
           settings: {
             ...getPreset("door-randomizer").settings,
             bombBag: false,
+            enemyShuffle: "none" as const,
             goal: "ganonhunt",
           },
           smallKeys: Array(13).fill(9),

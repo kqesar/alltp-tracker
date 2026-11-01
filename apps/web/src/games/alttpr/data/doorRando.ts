@@ -292,10 +292,12 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
 /**
  * DR's defaults (args.json) of the settings a seed must name to be known
  * (`DOOR_UNSET`): a DR run type starts from them, as DR's own command line
- * does; a seed lays its own.
+ * does; a seed lays its own. The enemy shuffle is not among them: DR races
+ * roll Enemizer too (Enemizer 2026), and a ROM in a race is never read, so
+ * it stays not known, as the bomb bag does, until the seed or the player
+ * sets it.
  */
 export const DOOR_RUN_DEFAULTS = {
-  enemyShuffle: "none",
   openPyramid: "auto",
   restrictBossItems: "none",
   takeAny: "none",
@@ -920,7 +922,7 @@ export const FOLLOWERS_NOT_KNOWN =
 
 /**
  * The causes `doorReasons` gives while a DR run leaves unset a setting a
- * seed must name (`DOOR_RUN_DEFAULTS`), by setting.
+ * seed must name (`DOOR_RUN_DEFAULTS` and the enemy shuffle), by setting.
  */
 export const RUN_SETTINGS_NOT_KNOWN = [
   ["enemyShuffle", "the enemy shuffle not known yet (set it in Mode)"],
@@ -928,7 +930,7 @@ export const RUN_SETTINGS_NOT_KNOWN = [
   ["restrictBossItems", "the boss items not known yet (set them in Mode)"],
   ["openPyramid", "the pyramid hole not known yet (set it in Mode)"],
 ] as const satisfies readonly (readonly [
-  keyof typeof DOOR_RUN_DEFAULTS,
+  keyof typeof DOOR_RUN_DEFAULTS | "enemyShuffle",
   string,
 ])[];
 

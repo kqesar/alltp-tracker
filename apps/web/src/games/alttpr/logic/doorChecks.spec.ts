@@ -24,6 +24,7 @@ const KEYDROP: RunSettings = {
   ...getPreset("door-randomizer").settings,
   bombBag: false,
   dropShuffle: "keys",
+  enemyShuffle: "none" as const,
   pottery: "cavekeys",
 };
 
@@ -120,6 +121,7 @@ describe("a Door Randomizer run's checks", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       bonkDrops: true,
+      enemyShuffle: "none" as const,
       randomizer: "owr",
     });
     const bonks = () =>
@@ -144,6 +146,7 @@ describe("a Door Randomizer run's checks", () => {
       bombBag: false,
       bonkDrops: true,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -178,6 +181,7 @@ describe("a Door Randomizer run's checks", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "random",
@@ -212,6 +216,7 @@ describe("a Door Randomizer run's checks", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "grouped",
       owFluteShuffle: "vanilla",
@@ -245,6 +250,7 @@ describe("a Door Randomizer run's checks", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -283,6 +289,7 @@ describe("a Door Randomizer run's checks", () => {
         ...getPreset("door-randomizer").settings,
         bombBag: false,
         bonkDrops: true,
+        enemyShuffle: "none" as const,
         mode,
         randomizer: "owr",
       };
@@ -324,7 +331,9 @@ describe("a Door Randomizer run's checks", () => {
 describe("a Door Randomizer run with shuffled entrances", () => {
   it("reads DR's world on the entrances noted, a door not noted leading nowhere", async () => {
     useGameStore.getState().applyPreset("door-crosskeys");
-    useGameStore.getState().updateDoorSettings({ bombBag: false });
+    useGameStore
+      .getState()
+      .updateDoorSettings({ bombBag: false, enemyShuffle: "none" });
     const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);
     // DR's world, not the entrance randomizer's
@@ -356,6 +365,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       bombBag: false,
       customGoals: false,
       doorEntrances: "district",
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -396,6 +406,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       bombBag: false,
       customGoals: false,
       doorEntrances: "swapped",
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -431,6 +442,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -475,6 +487,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       bombBag: false,
       customGoals: false,
       doorShuffle: "basic",
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -514,6 +527,7 @@ describe("a Door Randomizer run with shuffled entrances", () => {
       ...getPreset("door-randomizer").settings,
       bombBag: false,
       doorShuffle: "basic",
+      enemyShuffle: "none" as const,
     });
     const { solver } = await import("@/games/alttpr/logic/drSolver");
     setDoorSolver(solver);

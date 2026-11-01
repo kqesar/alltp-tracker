@@ -187,6 +187,7 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
@@ -361,6 +362,7 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      enemyShuffle: "none" as const,
       nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
