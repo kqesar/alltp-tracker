@@ -1059,9 +1059,13 @@ text or title, a spoiler's meta).
 **The ROM.** DR names its seeds `DR` and its version's first three digits,
 then team, player and seed (`DR156_1_1_367825107`, `Rom.py:1503-1507`); OWR
 `OR` and the same digits (OWR `Rom.py:1843-1848`), or a site's tag
-(`probes.ts`, `seedRomOf`). The race flag is vt's pair at the same address
-(`Rom.py:1156`, `1552-1553`; Mystery.py always asks for a race,
-`Mystery.py:70`), so the probe and its fail-closed answer are the same. The
+(`probes.ts`, `seedRomOf`). The title's id is cut with it to 21 bytes, and
+avianart's permalink names the seed without team and player, so
+`sameSeedId` holds two ids of one seed equal when their seeds after team
+and player are, or a title's id long enough to have been cut begins the
+other's: the app's check that the ROM connected is the run's seed. The
+race flag is vt's pair at the same address (`Rom.py:1156`, `1552-1553`;
+Mystery.py always asks for a race, `Mystery.py:70`), so the probe and its fail-closed answer are the same. The
 SRAM the decoders read is vt's for every range (the two patches'
 `%assertSRAM` lists differ only where DR moved `DungeonLocationsChecked`,
 which no decoder reads, and dropped the absorbed keys), and so are bank

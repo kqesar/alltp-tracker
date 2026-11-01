@@ -98,6 +98,38 @@ export function seedRomOf(title: string): SeedRom | null {
   };
 }
 
+/** A Door Randomizer title's id: team, player and seed (`seedRomOf`). */
+const TITLE_ID = /^\d+_\d+_(.+)$/;
+
+/**
+ * The shortest id a 21-byte Door Randomizer title may have cut: after "DR",
+ * three digits (or a site's tag of three characters) and "_", 15 bytes are
+ * left (DR 1.5.8 Rom.py:1503-1507; OWR 0.8.0.0 Rom.py:1836-1848).
+ */
+const CUT_ID_LENGTH = 15;
+
+/**
+ * Whether two seed ids of A Link to the Past name the same seed: alttpr.com's
+ * hash is the same everywhere, but a Door Randomizer seed has two forms, the
+ * title's ("1_1_myYPIp0RY", team and player first) and the site's
+ * (avianart's permalink names the seed by "myYPIp0RY" alone), and a title
+ * cut to its 21 bytes keeps only the start of the seed. So the seeds after
+ * team and player are held against each other, and a title's id long enough
+ * to have been cut matches any seed it begins. In doubt, the same seed: the
+ * tracker never says a ROM is another seed's on a guess.
+ * @param a - A seed id, as the run or a ROM holds it
+ * @param b - Another
+ */
+export function sameSeedId(a: string, b: string): boolean {
+  if (a === b) return true;
+  const tail = (id: string) => TITLE_ID.exec(id)?.[1] ?? id;
+  const [one, two] = [tail(a), tail(b)];
+  if (one === two) return true;
+  const cut = (id: string, seed: string, other: string) =>
+    TITLE_ID.test(id) && id.length >= CUT_ID_LENGTH && other.startsWith(seed);
+  return cut(a, one, two) || cut(b, two, one);
+}
+
 /**
  * The original game's title, which the base patch leaves alone
  * (LTTP_RND_GeneralBugfixes.asm:14, quoting Bank00.asm:9173).

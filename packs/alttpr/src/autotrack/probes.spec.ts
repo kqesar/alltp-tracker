@@ -8,6 +8,7 @@ import {
   DOOR_RANDOMIZER_SAME_LOCATIONS,
   DOOR_RANDOMIZER_VERSION,
   probeRaceFlag,
+  sameSeedId,
   seedRomOf,
 } from "./probes";
 import { ALTTPR_RACE_PROFILE } from "./race-profile";
@@ -250,5 +251,34 @@ describe("ALTTPR_RACE_FLAG", () => {
     expect(decode(0x00, 0x01)).toBe("open");
     expect(decode(0x00, 0x00)).toBe("unknown");
     expect(decode(0xff, 0xff)).toBe("unknown");
+  });
+});
+
+describe("sameSeedId", () => {
+  it("holds alttpr.com's hash to itself alone", () => {
+    expect(sameSeedId("9MQ9gO1wMD", "9MQ9gO1wMD")).toBe(true);
+    expect(sameSeedId("9MQ9gO1wMD", "0yAObedRMV")).toBe(false);
+    // A hash is case-sensitive
+    expect(sameSeedId("9MQ9gO1wMD", "9mq9go1wmd")).toBe(false);
+  });
+
+  it("matches a Door Randomizer title's id to the site's hash, either way", () => {
+    // avianart's permalink names the seed; the title adds team and player
+    expect(sameSeedId("myYPIp0RY", "1_1_myYPIp0RY")).toBe(true);
+    expect(sameSeedId("1_1_myYPIp0RY", "myYPIp0RY")).toBe(true);
+    // Another player's ROM of the same seed
+    expect(sameSeedId("1_2_367825107", "1_1_367825107")).toBe(true);
+    expect(sameSeedId("myYPIp0RY", "1_1_toInhuUYy")).toBe(false);
+    expect(sameSeedId("1_1_367825107", "1_1_367825108")).toBe(false);
+  });
+
+  it("matches a title cut to its 21 bytes to the seed it begins", () => {
+    // The ROM holds 21 bytes of "DR158_1_1_abcdefghijklmn"
+    const title = seedRomOf("DR158_1_1_abcdefghijklmn".slice(0, 21));
+    expect(title?.seed).toBe("1_1_abcdefghijk");
+    expect(sameSeedId("abcdefghijklmn", "1_1_abcdefghijk")).toBe(true);
+    expect(sameSeedId("1_1_abcdefghijk", "abcdefghijklmn")).toBe(true);
+    // An id too short to have been cut is held whole
+    expect(sameSeedId("abcdefghi", "1_1_abcdefgh")).toBe(false);
   });
 });
