@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { DR_DATA } from "../dr-data";
 import { keyDropsOf } from "../keys";
+import { OWR_DATA } from "../owr-data";
 import { findMaxCounter, type KeyLayout, keyLayout } from "./counters";
 import {
   DR_DUNGEON_ORDER,
@@ -262,5 +263,34 @@ describe("the key counters of each dungeon", () => {
     // Universal keys leave the dungeons none (make_dungeon, Dungeons.py:8)
     const universal = layouts(settingsOf("open", { keyShuffle: "universal" }));
     expect(universal.get("Desert Palace")?.maxChests).toBe(0);
+  });
+
+  it("reads the fork's boss kills as the events they are, never chests", () => {
+    // owr:Regions.py:1405-1441 location_events, which create_key_counter
+    // and the walk read (owr:KeyDoorShuffle.py:1885, DungeonGenerator.py:
+    // 888-894): each Spoils region holds its boss's item and its kill
+    const world = keyWorld({
+      ...settingsOf("open"),
+      data: OWR_DATA,
+      forcedDrops: new Set(keyDropsOf(OWR_DATA).map((d) => d.location)),
+    });
+    for (const dungeon of ["Eastern Palace", "Turtle Rock"]) {
+      const max = findMaxCounter(keyLayout(world, dungeon));
+      const names = (set: ReadonlySet<{ readonly name: string }>) =>
+        [...set].map((l) => l.name);
+      expect(names(max.freeLocations), dungeon).toContain(`${dungeon} - Boss`);
+      expect(names(max.freeLocations), dungeon).not.toContain(
+        `${dungeon} - Boss Kill`,
+      );
+      expect(names(max.otherLocations), dungeon).toContain(
+        `${dungeon} - Boss Kill`,
+      );
+    }
+    // DR's own world has no kill to count (its bosses' rooms hold none)
+    expect(
+      [...keyWorld(settingsOf("open")).regions.values()].some((r) =>
+        r.locations.some((l) => l.event && l.name.endsWith(" - Boss Kill")),
+      ),
+    ).toBe(false);
   });
 });
