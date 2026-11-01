@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.69.0](https://github.com/kqesar/alltp-tracker/compare/v2.68.1...v2.69.0) (2026-11-01)
+
+
+### ✨ Features
+
+* stop following a ROM of another seed than the run's ([#461](https://github.com/kqesar/alltp-tracker/issues/461)) ([058931c](https://github.com/kqesar/alltp-tracker/commit/058931ca54d2b2d24261f9806e85020ac9709e77))
+
 ## [2.68.1](https://github.com/kqesar/alltp-tracker/compare/v2.68.0...v2.68.1) (2026-11-01)
 
 
