@@ -3314,7 +3314,7 @@ are made in the specs by editing a fixture's parsed document, never stored.
 | Told by | its first line, `ALttP Dungeon Randomizer Version <v>  -  Seed: <n>` (`ALttP Overworld Randomizer  -  Seed:` for the fork) | a key only DR writes (`Doors`, `Lobbies`, `DoorTypes`, `Whirlpools`), its file name, or a `meta` with `door_shuffle` or `versions` |
 | Settings | one `Label:   value` line each (`meta_to_file`, `:2754-2848`); `Yes`/`No` are flags, labels matched in lower case since the fork words a few otherwise (OWR 0.8.0.0 `:3328-3453`) | `meta`, each setting keyed by player (`{ "1": "open" }`); avianart's is flat |
 | Locations | one flat `Locations:` list, `name: item` (`area` null) | a section per kind of region and per dungeon (`parse_data`, `:2627-2716`), kept as `area` |
-| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`) |
+| Playthrough | `n: { … }` blocks, `0` the starting items | `"0"` a list of the starting items, then `{ location: item }` by sphere (`Main.py:801-803`); avianart's is a list, sphere k at index k |
 
 Both are turned into the JSON's shape (`textDocument` for the text) and read by
 `readLog` with the `DR` shape:
