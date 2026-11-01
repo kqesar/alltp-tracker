@@ -108,6 +108,8 @@ export const createSmFollower = () => {
   let lastGame: GameClock | undefined;
   /** The last reading, of a ROM of another seed than the run's: not laid. */
   let held: SmReading | null = null;
+  /** Whether the reading before `held` was before play, for the timer. */
+  let heldBeforePlay: boolean | undefined;
 
   /**
    * The run timer follows the game: started and stopped by it if the player
@@ -239,12 +241,21 @@ export const createSmFollower = () => {
       smRomSeedCheck(reading, useSmStore.getState().seed)?.kind === "differs"
     ) {
       // Nothing of another seed's game is the run's: the next reading of
-      // its own starts over, as a first one
+      // its own starts over, as a first one. A timer on the game's clock
+      // stops at the run's last time; whether the game was before play is
+      // kept, so a new run of this ROM read into play starts its timer
+      const run = useSmStore.getState();
+      if (run.timerClock === "game" && lastGame?.status === "running") {
+        run.alignTimer({ ms: lastGame.ms, status: "paused" }, reading.at);
+      }
       held = reading;
       shown = null;
       last = null;
       playing = false;
-      beforePlay = undefined;
+      heldBeforePlay = beforePlay;
+      if (typeof reading.beforePlay === "boolean") {
+        beforePlay = reading.beforePlay;
+      }
       atGoal = false;
       lastClock = undefined;
       frames = undefined;
@@ -269,8 +280,10 @@ export const createSmFollower = () => {
     resync: (now: boolean) => {
       shown = null;
       // A ROM held for another seed: the new run may be its
-      if (now && held !== null) read(held);
-      else if (now && playing && last !== null) lay(last, Date.now());
+      if (now && held !== null) {
+        beforePlay = heldBeforePlay;
+        read(held);
+      } else if (now && playing && last !== null) lay(last, Date.now());
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

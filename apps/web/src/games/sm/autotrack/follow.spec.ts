@@ -365,6 +365,23 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("stops at the game's last time while a ROM of another seed is read", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    const follower = createSmFollower();
+    const own = { name: "dsjF6gGsH" };
+    follower.read(readingAt(T0, { ...own, state: FILE_SELECT }));
+    follower.read(at(1_000, 100_000, own));
+    follower.read(at(11_000, 100_601, own));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    follower.read(at(12_000, 500_000, { name: "cHXhTSCB8" }));
+    expect(run().timer).toEqual({
+      elapsedMs: rtaMs(601),
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("writes nothing for a reading that agrees with the timer", () => {
     const follower = start();
     follower.read(at(11_000, 100_601));
@@ -592,6 +609,19 @@ describe("the run's seed", () => {
     run().undo();
     expect(run().seed).toBe("dsjF6gGsH");
     expect(run().items.morph ?? 0).toBe(0);
+  });
+
+  it("starts the new run's timer when the ROM held went from its file select into play", () => {
+    run().applyGameNews(() => ({ seed: "dsjF6gGsH" }));
+    run().setAutoTimer(true);
+    const follower = createSmFollower();
+    follower.read(readingAt(T0, { name: "cHXhTSCB8", state: FILE_SELECT }));
+    follower.read(readingAt(T0 + 1000, { name: "cHXhTSCB8", state: PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+
+    run().reset();
+    follower.resync(true);
+    expect(run().timer.startedAt).not.toBeNull();
   });
 
   it("gives the run New game replaced back as it was, with nothing of the ROM", () => {

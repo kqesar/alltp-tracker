@@ -233,6 +233,23 @@ describe("the run timer, on the game's time", () => {
     });
   });
 
+  it("stops at the game's last time while a ROM of another seed is read", () => {
+    store().applyGameNews(() => ({ seed: "9MQ9gO1wMD" }));
+    const follower = createFollower();
+    const own = seedMemory({ name: "9MQ9gO1wMD", race: false });
+    const first = at(own, 0x07, 6_000, 0);
+    follower.read(first);
+    expect(store().timer.startedAt).toBe(first.at);
+
+    const other = seedMemory({ name: "0yAObedRMV", race: false });
+    follower.read(at(other, 0x07, 90_000, 5));
+    expect(store().timer).toEqual({
+      elapsedMs: playTimeMs(6_000),
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("leaves a timer alone that real time counts, or the game's clock does not set", () => {
     store().setTimerClock("real");
     const memory = seedMemory({ race: false });
@@ -992,6 +1009,18 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().timer.startedAt).toBeNull();
     // Nothing to sync from: the game read is not this run's
     expect(follower.sync()).toBeNull();
+  });
+
+  it("starts the new run's timer when the ROM held went from its title into play", () => {
+    runOf();
+    const follower = createFollower();
+    const memory = seedMemory({ name: "0yAObedRMV", race: false });
+    for (const reading of started(memory)) follower.read(reading);
+    expect(store().timer.startedAt).toBeNull();
+
+    store().reset();
+    follower.resync(true);
+    expect(store().timer.startedAt).not.toBeNull();
   });
 
   it("notes none of its entrances", async () => {

@@ -146,6 +146,8 @@ export const createFollower = (): Follower => {
   let seedName: string | null = null;
   /** The last reading, of a ROM of another seed than the run's: not laid. */
   let held: AutotrackReading | null = null;
+  /** Whether the reading before `held` was before play, for the timer. */
+  let heldBeforePlay: boolean | undefined;
 
   /**
    * Forget what the session kept of the run it followed: the medallions
@@ -228,11 +230,21 @@ export const createFollower = (): Follower => {
    * of the run's own seed starts over as at a first one.
    */
   const hold = (reading: AutotrackReading) => {
+    // A timer set on the game's clock stops at the run's last time: the
+    // other ROM's clock is not the run's
+    const game = useGameStore.getState();
+    if (game.timerClock === "game" && lastClock?.status === "running") {
+      game.alignTimer({ ms: lastClock.ms, status: "paused" }, reading.at);
+    }
     held = reading;
     last = null;
     shown = null;
     playing = false;
-    beforePlay = undefined;
+    // Whether the game was before play is kept, so a new run of this ROM,
+    // read from its file select into play, starts its timer
+    heldBeforePlay = beforePlay;
+    const { beforePlay: now } = reading.progress;
+    if (typeof now === "boolean") beforePlay = now;
     atGoal = false;
     frames = undefined;
     lastClock = undefined;
@@ -320,8 +332,10 @@ export const createFollower = (): Follower => {
       // Nothing the session kept belongs to the run replaced
       forget();
       // A ROM held for another seed: the new run may be its
-      if (now && held !== null) follower.read(held);
-      else if (now && playing && last !== null) lay(last);
+      if (now && held !== null) {
+        beforePlay = heldBeforePlay;
+        follower.read(held);
+      } else if (now && playing && last !== null) lay(last);
     },
     steady: (at) => {
       const game = useGameStore.getState();

@@ -179,6 +179,24 @@ describe("the run timer, on the game's time", () => {
 
   beforeEach(() => run().setTimerClock("game"));
 
+  it("stops at the game's last time while a ROM of another seed is read", () => {
+    const GUID = "8506bbef2c2b4432af378b571c6c9133";
+    run().applyGameNews(() => ({ seed: GUID }));
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: GUID, state: ZELDA.FILE_SELECT }));
+    follower.read(at(1_000, { sm: 0, zelda: 600 }, { guid: GUID }));
+    follower.read(at(11_000, { sm: 0, zelda: 1_200 }, { guid: GUID }));
+    expect(run().timer.startedAt).not.toBeNull();
+
+    const other = { guid: "c4538986b998477dbef480df8eb6eaec" };
+    follower.read(at(12_000, { sm: 9_000, zelda: 9_000 }, other));
+    expect(run().timer).toEqual({
+      elapsedMs: smz3Ms(1_200),
+      finished: false,
+      startedAt: null,
+    });
+  });
+
   it("is the sum of both games' counters: the running game's live one and the other's saved", () => {
     const follower = start({ sm: 6_000, zelda: 1_500 });
     expect(run().timer).toEqual({
@@ -513,6 +531,19 @@ describe("the run's seed", () => {
     expect(run().seed).toBe(GUID);
     expect(run().items.hookshot ?? 0).toBe(0);
     expect(run().settings.towerCrystals).not.toBe(3);
+  });
+
+  it("starts the new run's timer when the ROM held went from its file select into play", () => {
+    run().applyGameNews(() => ({ seed: GUID }));
+    run().setAutoTimer(true);
+    const follower = createSmz3Follower();
+    follower.read(readingAt(T0, { guid: OTHER, state: ZELDA.FILE_SELECT }));
+    follower.read(readingAt(T0 + 1000, { guid: OTHER, state: ZELDA.PLAY }));
+    expect(run().timer.startedAt).toBeNull();
+
+    run().reset();
+    follower.resync(true);
+    expect(run().timer.startedAt).not.toBeNull();
   });
 
   it("checks nothing in Race Mode, which never reads the guid", () => {
