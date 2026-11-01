@@ -4,6 +4,7 @@ import { FakeUsb2Snes } from "../../../packages/autotrack/test/fake-usb2snes";
 import { writeSmz3 } from "../../../packs/smz3/test/smz3-rom";
 import {
   auditDialog,
+  expectLastFocusClear,
   openOnGame,
   unreachableClickables,
   WCAG_AA,
@@ -167,6 +168,8 @@ test("follows nothing of an SMZ3 ROM of another seed than the run's, until told 
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(width);
+      // Nothing a keyboard reaches is left under it
+      await expectLastFocusClear(page);
       if (process.env.ROM_SEED_SHOTS) {
         // Once the dialog's closing and the notice's opening have ended
         await page.evaluate(() =>

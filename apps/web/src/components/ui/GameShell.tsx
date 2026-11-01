@@ -3,6 +3,7 @@ import { Header } from "@/components/ui/Header";
 import { SharedRunPrompt } from "@/components/ui/SharedRunPrompt";
 import { UpdatePrompt } from "@/components/ui/UpdatePrompt";
 import type { GameId } from "@/games/registry";
+import { useNoticesRoom } from "@/hooks/useNoticesRoom";
 import { useToolbarFit } from "@/hooks/useToolbarFit";
 
 // The desktop app's notice, a chunk of its own: the test is inline so the
@@ -19,7 +20,8 @@ const StreamMovedNotice =
 /**
  * The page around a game's board, the same for every game: the skip links,
  * the notices (an update, a shared run, and in the desktop app the
- * application menu entry and a moved stream port), the header, the toolbar (fitted to its row by
+ * application menu entry and a moved stream port), with room kept for them
+ * at the page's end (`useNoticesRoom`), the header, the toolbar (fitted to its row by
  * measurement, `useToolbarFit`) and the `main` landmark.
  * @param game - The game tracked, for the header and the shared-run notice
  * @param toolbar - The game's toolbar
@@ -41,14 +43,16 @@ export const GameShell = ({
   toolbar: ReactNode;
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const noticesRef = useRef<HTMLDivElement>(null);
   useToolbarFit(toolbarRef);
+  useNoticesRoom(noticesRef);
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
       {skipLinks}
-      <div className="notices">
+      <div className="notices" ref={noticesRef}>
         <UpdatePrompt />
         <SharedRunPrompt game={game} />
         {notices}

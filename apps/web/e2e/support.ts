@@ -143,6 +143,57 @@ export const smRaceModeOff = async (page: Page) => {
 };
 
 /**
+ * WCAG 2.4.11 (Focus Not Obscured) against the page's notices, which stay
+ * fixed over the bottom of the page: the board's lowest control a keyboard
+ * reaches, once Tab gives it focus, is drawn clear of every notice shown.
+ */
+export const expectLastFocusClear = async (page: Page) => {
+  const last = await page.evaluate(() => {
+    const focusable = [
+      ...document.querySelectorAll<HTMLElement>(
+        "#main-content :is(a[href], button, input, select, textarea, [tabindex])",
+      ),
+    ].filter(
+      (element) =>
+        element.tabIndex >= 0 &&
+        !element.matches(":disabled") &&
+        element.checkVisibility({ visibilityProperty: true }),
+    );
+    // The lowest on the page, where the notices sit
+    const bottom = (element: HTMLElement) =>
+      element.getBoundingClientRect().bottom + scrollY;
+    const target = focusable.reduce<HTMLElement | undefined>(
+      (low, element) =>
+        low === undefined || bottom(element) > bottom(low) ? element : low,
+      undefined,
+    );
+    if (target === undefined) return null;
+    // Focus comes to it by Tab, from the control before it
+    focusable[focusable.indexOf(target) - 1]?.focus();
+    target.setAttribute("data-e2e-last-focus", "");
+    return target.outerHTML.slice(0, 100);
+  });
+  expect(last).not.toBeNull();
+  await page.keyboard.press("Tab");
+  const target = page.locator("[data-e2e-last-focus]");
+  await expect(target).toBeFocused();
+  const overlap = await target.evaluate((element) => {
+    element.removeAttribute("data-e2e-last-focus");
+    const box = element.getBoundingClientRect();
+    return [...document.querySelectorAll(".notice__card")].some((card) => {
+      const cover = card.getBoundingClientRect();
+      return (
+        box.bottom > cover.top &&
+        box.top < cover.bottom &&
+        box.right > cover.left &&
+        box.left < cover.right
+      );
+    });
+  });
+  expect(overlap, `${last} is under a notice`).toBe(false);
+};
+
+/**
  * What every page state is held to: no axe violation, no sideways scroll,
  * and every clickable thing reachable by keyboard.
  * @param exclude - A selector axe leaves out, where a WCAG exception applies

@@ -15,6 +15,7 @@ import {
   auditDialog,
   auditPage,
   clickToolbarAction,
+  expectLastFocusClear,
   focusedTestId,
   focusRinged,
   tabTo,
@@ -375,6 +376,8 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
     const box = await notice.boundingBox();
     expect(box && box.x + box.width).toBeLessThanOrEqual(width);
     await expect(page.getByTestId("rom-seed-follow")).toBeInViewport();
+    // Nothing a keyboard reaches is left under it
+    await expectLastFocusClear(page);
     if (process.env.ROM_SEED_SHOTS) {
       await page.screenshot({
         path: `${process.env.ROM_SEED_SHOTS}/alttpr-notice-${width}.png`,

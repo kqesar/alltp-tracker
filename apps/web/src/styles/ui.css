@@ -368,7 +368,17 @@
 /* Notices (a new version, the seed's run type): fixed at the bottom, over
    the page, so showing one never shifts the board, stacked when both show.
    Each is a live region that stays in the page; empty, it has no box and
-   lets clicks through. */
+   lets clicks through. The page keeps their room at its end (useNoticesRoom
+   measures it), so its last controls scroll clear of them and a control
+   focused under them is scrolled above (WCAG 2.4.11). */
+:root {
+  scroll-padding-block-end: var(--notices-room, 0px);
+}
+
+body {
+  padding-block-end: var(--notices-room, 0px);
+}
+
 .notices {
   position: fixed;
   inset-inline: var(--spacing-md);
