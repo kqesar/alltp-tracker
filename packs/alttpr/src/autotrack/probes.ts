@@ -71,10 +71,20 @@ export type SeedRom =
       readonly seed: string;
     };
 
+/**
+ * The text without its trailing NULs, by a scan: `/\0+$/` retries from each
+ * NUL of a run that does not end the text, quadratic in its length.
+ */
+const withoutTrailingNuls = (text: string): string => {
+  let end = text.length;
+  while (end > 0 && text.charCodeAt(end - 1) === 0) end--;
+  return text.slice(0, end);
+};
+
 /** The randomizer and seed a 21-byte title names, or null. */
 export function seedRomOf(title: string): SeedRom | null {
   if (title.startsWith(SEED_TITLE_PREFIX)) {
-    const seed = title.slice(SEED_TITLE_PREFIX.length).replace(/\0+$/, "");
+    const seed = withoutTrailingNuls(title.slice(SEED_TITLE_PREFIX.length));
     return { randomizer: "vt", seed: seed.trim() };
   }
   const door = DOOR_RANDOMIZER_TITLE.exec(title);

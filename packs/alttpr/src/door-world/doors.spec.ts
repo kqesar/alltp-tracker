@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
   type DoorShuffleSettings,
@@ -5,6 +6,7 @@ import {
   doorId,
   doorNotesFromSpoiler,
   doorTargets,
+  doorTypeNames,
   isShuffledDoor,
   kindShuffled,
   lobbyDoors,
@@ -230,6 +232,33 @@ describe("the door shuffle's model (doors.ts)", () => {
         DR_DATA,
       ),
     ).toThrow(RangeError);
+  });
+
+  it("reads a DoorTypes entry's names as its expression would, in linear time", () => {
+    // The expression doorTypeNames replaces, kept as its oracle
+    const NAMES = /^(.+?)(?: <-> (.+?))? \(([^()]+)\)$/;
+    const text = fc
+      .array(fc.constantFrom("a", " ", " <-> ", " (", "(", ")", "-", "\n"), {
+        maxLength: 12,
+      })
+      .map((parts) => parts.join(""));
+    fc.assert(
+      fc.property(text, (doorNames) => {
+        const old = NAMES.exec(doorNames);
+        expect(doorTypeNames(doorNames)).toEqual(
+          old === null
+            ? null
+            : [old[1], old[2]].filter((name) => name !== undefined),
+        );
+      }),
+      { numRuns: 5000 },
+    );
+    const long = `a <-> ${"a <-> a".repeat(50_000)}`;
+    expect(doorTypeNames(long)).toBeNull();
+    expect(doorTypeNames(`${long} (X)`)).toEqual([
+      "a",
+      "a <-> a".repeat(50_000),
+    ]);
   });
 
   it("offers each vanilla link among a door's targets", () => {

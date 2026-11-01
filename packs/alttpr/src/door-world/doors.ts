@@ -366,6 +366,29 @@ const SPOILER_KINDS: Readonly<Record<string, DoorKindNote>> = {
   "Trap Door": "trap",
 };
 
+/** What `.` in a regular expression does not match. */
+const LINE_BREAK = /[\n\r\u2028\u2029]/;
+
+/**
+ * The door names of a DoorTypes entry, `A <-> B (Dungeon)` or
+ * `A (Dungeon)`, or null: the first ` <-> ` splits the two, the last ` (`
+ * opens the dungeon. Cut by index, as the spoiler is the player's file:
+ * `^(.+?)(?: <-> (.+?))? \(([^()]+)\)$`, which it reads alike (the spec
+ * holds it to it), backtracks in polynomial time.
+ */
+export function doorTypeNames(text: string): readonly string[] | null {
+  const open = text.lastIndexOf("(");
+  const dungeon = text.slice(open + 1, -1);
+  if (!text.endsWith(")") || open < 2 || text[open - 1] !== " ") return null;
+  if (dungeon === "" || dungeon.includes(")")) return null;
+  const names = text.slice(0, open - 1);
+  if (LINE_BREAK.test(names)) return null;
+  const arrow = names.indexOf(" <-> ", 1);
+  return arrow !== -1 && arrow + 5 < names.length
+    ? [names.slice(0, arrow), names.slice(arrow + 5)]
+    : [names];
+}
+
 /**
  * The notes a player who walked every door would have made, read off a
  * DR JSON spoiler: each pair of `Doors` both ways (`entrance`: the way in
@@ -407,10 +430,9 @@ export function doorNotesFromSpoiler(
   for (const { doorNames, type } of spoiler.DoorTypes ?? []) {
     const kind = SPOILER_KINDS[type];
     if (kind === undefined) throw new RangeError(`No door type "${type}"`);
-    const names = /^(.+?)(?: <-> (.+?))? \(([^()]+)\)$/.exec(doorNames);
+    const names = doorTypeNames(doorNames);
     if (names === null) throw new RangeError(`No doors in "${doorNames}"`);
-    for (const name of [names[1], names[2]])
-      if (name !== undefined) kinds[known(name)] = kind;
+    for (const name of names) kinds[known(name)] = kind;
   }
   return { kinds, links, lobbies };
 }

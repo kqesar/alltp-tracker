@@ -314,12 +314,44 @@ const textValue = (value: string): unknown =>
 
 const DR_FIRST = /^ALttP Dungeon Randomizer Version (\S+)\s+-\s+Seed: (\S*)/;
 const OWR_FIRST = /^ALttP Overworld Randomizer\s+-\s+Seed: (\S*)/;
-/** `Label:   value`; DR writes `Key Logic Algorithm:'` with a stray quote. */
-const LINE = /^([^:]+):'?\s+(.*?)\s*$/;
 const HEADING = /^([A-Z][^:]*):$/;
 const SPHERE = /^(\d+): \{$/;
-const SHOP = /^(.+) \[(.+)\]$/;
 const MEDALLION = /^(.+): (\S+) Medallion$/;
+/** What `.` in a regular expression does not match. */
+const LINE_BREAK = /[\n\r\u2028\u2029]/;
+
+// The two lines below are cut by index, not by a regular expression: on a
+// log's line, which the player supplies, `^([^:]+):'?\s+(.*?)\s*$` and
+// `^(.+) \[(.+)\]$` backtrack in polynomial time. Each reads what that
+// expression would, the spec holding them to it.
+
+/**
+ * `Label:   value`, the value trimmed, or null: the label up to the first
+ * colon, then whitespace (DR writes `Key Logic Algorithm:'` with a stray
+ * quote before it).
+ */
+export function settingLine(
+  line: string,
+): { readonly label: string; readonly value: string } | null {
+  const colon = line.indexOf(":");
+  if (colon < 1) return null;
+  let rest = line.slice(colon + 1);
+  if (rest.startsWith("'")) rest = rest.slice(1);
+  if (rest.trimStart() === rest) return null;
+  const value = rest.trim();
+  if (LINE_BREAK.test(value)) return null;
+  return { label: line.slice(0, colon), value };
+}
+
+/** `Name [Type]`, a shop's first line, or null: the last ` [` splits it. */
+export function shopLine(
+  line: string,
+): { readonly location: string; readonly type: string } | null {
+  if (!line.endsWith("]") || LINE_BREAK.test(line)) return null;
+  const open = line.lastIndexOf(" [", line.length - 4);
+  if (open < 1) return null;
+  return { location: line.slice(0, open), type: line.slice(open + 2, -1) };
+}
 
 /**
  * A text log as the JSON document `to_json` would have written, flat
@@ -347,9 +379,9 @@ export function textDocument(text: string): Doc | null {
       start.push(line.trim());
       continue;
     }
-    const setting = LINE.exec(line);
+    const setting = settingLine(line);
     if (setting === null) continue;
-    const [, label = "", value = ""] = setting;
+    const { label, value } = setting;
     const key = label.trim().toLowerCase();
     if (key === "hash") code = value;
     else if (key === "starting inventory") start.push(value);
@@ -384,18 +416,18 @@ export function textDocument(text: string): Doc | null {
       if (colon > 0) locations[line.slice(0, colon)] = line.slice(colon + 2);
     } else if (section === "Requirements") {
       const medallion = MEDALLION.exec(line);
-      const setting = LINE.exec(line);
+      const setting = settingLine(line);
       if (medallion !== null) {
         special[medallion[1] as string] = medallion[2] as string;
-      } else if (setting?.[1]?.startsWith("Crystals Required for GT")) {
-        meta.gt_crystals = setting[2];
-      } else if (setting?.[1]?.startsWith("Crystals Required for Ganon")) {
-        meta.ganon_crystals = setting[2];
+      } else if (setting?.label.startsWith("Crystals Required for GT")) {
+        meta.gt_crystals = setting.value;
+      } else if (setting?.label.startsWith("Crystals Required for Ganon")) {
+        meta.ganon_crystals = setting.value;
       }
     } else if (section === "Shops") {
-      const opened = SHOP.exec(line);
+      const opened = shopLine(line);
       if (opened !== null && !line.startsWith(" ")) {
-        shop = { location: opened[1], type: opened[2] };
+        shop = { location: opened.location, type: opened.type };
         shops.push(shop);
       } else if (shop !== null && line.startsWith(" ")) {
         const index = Object.keys(shop).length - 2;

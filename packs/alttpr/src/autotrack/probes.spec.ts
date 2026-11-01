@@ -132,6 +132,15 @@ describe("checkGame", () => {
       randomizer: "vt",
       seed: "7P4KZ0QW3B",
     });
+    // Only the NULs that end the title go, in linear time
+    expect(seedRomOf("VT 7P4KZ0QW3B\0\0\0")).toEqual({
+      randomizer: "vt",
+      seed: "7P4KZ0QW3B",
+    });
+    expect(seedRomOf(`VT a${"\0".repeat(50_000)}b\0`)).toEqual({
+      randomizer: "vt",
+      seed: `a${"\0".repeat(50_000)}b`,
+    });
     expect(seedRomOf("THE LEGEND OF ZELDA  ")).toBeNull();
     expect(DOOR_RANDOMIZER_VERSION).toBe("1.5.8");
     expect([...DOOR_RANDOMIZER_SAME_LOCATIONS]).toContain(
