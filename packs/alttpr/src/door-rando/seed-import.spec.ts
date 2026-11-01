@@ -218,6 +218,17 @@ describe("avianartReading", () => {
       avianartReading({ response: { spoiler: { meta: unnamed } } }, "4kxBlrWuP")
         ?.doorExact?.overworld,
     ).not.toHaveProperty("nearbyItems");
+    // One kind named nearby is enough, another kind left unnamed
+    expect(
+      avianartReading(
+        {
+          response: {
+            spoiler: { meta: { ...unnamed, bigkeyshuffle: "nearby" } },
+          },
+        },
+        "4kxBlrWuP",
+      )?.doorExact?.overworld,
+    ).toMatchObject({ nearbyItems: true });
   });
 
   it("reads OWR's custom goals: none while each is None", () => {

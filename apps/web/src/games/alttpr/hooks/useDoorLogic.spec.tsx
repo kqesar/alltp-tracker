@@ -36,6 +36,7 @@ describe("useDoorLogic", () => {
       useGameStore.getState().updateDoorSettings({
         bombBag: false,
         customGoals: false,
+        nearbyItems: false,
         owCrossed: "none",
         owFluteShuffle: "vanilla",
         owLayout: "vanilla",

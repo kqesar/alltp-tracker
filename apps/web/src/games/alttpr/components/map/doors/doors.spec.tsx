@@ -57,6 +57,7 @@ describe("the Doors tab", () => {
     run({
       customGoals: false,
       doorShuffle: "crossed",
+      nearbyItems: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,

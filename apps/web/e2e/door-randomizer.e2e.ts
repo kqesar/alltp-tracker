@@ -363,6 +363,7 @@ const openBonkRun = async (page: Page) => {
       ...saved.state.settings,
       bonkDrops: true,
       customGoals: false,
+      nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
       owLayout: "vanilla",
@@ -445,6 +446,7 @@ const openOverworldRun = async (page: Page, crossed = false, mixed = false) => {
       saved.state.settings = {
         ...saved.state.settings,
         customGoals: false,
+        nearbyItems: false,
         owCrossed: crossed ? "grouped" : "none",
         owFluteShuffle: "random",
         owLayout: "vanilla",
@@ -591,6 +593,7 @@ const openOwrEntranceRun = async (
     saved.state.settings = {
       ...saved.state.settings,
       customGoals: false,
+      nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
       owLayout: "vanilla",

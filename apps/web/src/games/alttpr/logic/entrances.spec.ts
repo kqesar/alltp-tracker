@@ -187,6 +187,7 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
       owLayout: "vanilla",
@@ -259,6 +260,7 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...preset,
       customGoals: false,
+      nearbyItems: false,
       prizeShuffle: "none",
       randomizer: "owr",
       shuffleFollowers: false,
@@ -359,6 +361,7 @@ describe("the entrance assistant's model", () => {
     const owr = {
       ...getPreset("door-randomizer").settings,
       customGoals: false,
+      nearbyItems: false,
       owCrossed: "none",
       owFluteShuffle: "vanilla",
       owLayout: "vanilla",

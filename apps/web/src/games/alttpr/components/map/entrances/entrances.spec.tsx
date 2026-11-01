@@ -250,6 +250,7 @@ describe("the entrance assistant", () => {
         ...getPreset("door-randomizer").settings,
         customGoals: false,
         doorEntrances: "swapped",
+        nearbyItems: false,
         owCrossed: "none",
         owFluteShuffle: "vanilla",
         owLayout: "vanilla",

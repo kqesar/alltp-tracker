@@ -246,9 +246,13 @@ const exactOf = (meta: Meta): DoorExactSettings | null => {
     meta.mapshuffle,
     meta.compassshuffle,
   ];
-  const nearbyItems = items.every((item) => typeof item === "string")
-    ? items.includes("nearby")
-    : null;
+  // One kind named nearby is enough; none named so, all four must be named
+  // for none to hold
+  const nearbyItems = items.includes("nearby")
+    ? true
+    : items.every((item) => typeof item === "string")
+      ? false
+      : null;
   // Each shuffle the fork's meta writes (BaseClasses.py:3122-3131 at
   // 0.8.0.2): one it does not name is not known, never off
   const bonkDrops = flagOf(meta.bonk_drops);

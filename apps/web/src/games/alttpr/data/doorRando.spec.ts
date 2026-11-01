@@ -30,6 +30,7 @@ import {
   forcedWhirlpoolOf,
   GOALS_NOT_KNOWN,
   isDoorSettings,
+  NEARBY_NOT_KNOWN,
   OVERWORLD_NOT_KNOWN,
   OWR_VERSION_NOT_KNOWN,
   overworldShufflesOf,
@@ -70,6 +71,7 @@ const DR_CROSSKEYS = {
  */
 const OWR = {
   customGoals: false,
+  nearbyItems: false,
   owCrossed: "none",
   owFluteShuffle: "vanilla",
   owLayout: "vanilla",
@@ -310,6 +312,7 @@ describe("a Door Randomizer run's logic", () => {
       OWR_VERSION_NOT_KNOWN,
       PRIZES_NOT_KNOWN,
       FOLLOWERS_NOT_KNOWN,
+      NEARBY_NOT_KNOWN,
       GOALS_NOT_KNOWN,
     ]);
     // A customizer goal replaces a goal's rule, which the fork's world
@@ -1128,7 +1131,7 @@ describe("doorFromSeed", () => {
       prizeShuffle: "wild",
     });
     // FreeItemText's $40: a dungeon item kind placed nearby, a cause the
-    // run then names; its absence none
+    // run then names; its absence none, stated
     const nearby = (value: boolean) =>
       doorFromSeed(
         {
@@ -1141,7 +1144,7 @@ describe("doorFromSeed", () => {
         {},
       );
     expect(nearby(true)).toMatchObject({ nearbyItems: true });
-    expect(nearby(false)).not.toHaveProperty("nearbyItems");
+    expect(nearby(false)).toMatchObject({ nearbyItems: false });
     expect(
       doorFromSeed(
         {

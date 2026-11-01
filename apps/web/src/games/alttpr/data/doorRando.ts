@@ -176,8 +176,9 @@ export type DoorRunSettings = {
    * `bigkeyshuffle`, `mapshuffle` or `compassshuffle` "nearby", args.json:
    * in a dungeon near its own), a placement the fork's world does not
    * read: a cause of `doorReasons`. A spoiler's meta names it, the ROM's
-   * FreeItemText tells it (Rom.py:1431); absent is none, the fork's
-   * default, the kinds then read as dungeon items do.
+   * FreeItemText tells it (Rom.py:1431). Unset, it is not known
+   * (`DOOR_UNSET`), a cause of `doorReasons` for an OWR run (DR itself
+   * places none nearby).
    */
   nearbyItems?: boolean;
   /**
@@ -237,7 +238,7 @@ export type DoorSetting = keyof DoorRunSettings;
  * a ROM may not state and a guess would make unsound. Unset, the entrance
  * shuffle may have moved the door (`doorPoolSettingsOf`), every lobby may
  * move, the doors read as decoupled, and the bomb bag, OWR's release, its
- * overworld shuffles, its prize and follower shuffles and custom goals are
+ * overworld shuffles, its prize and follower shuffles, nearby items and custom goals are
  * causes of `doorReasons` (OWR's bonk drops read as shuffled). So are the
  * enemy shuffle, the take-any caves, the boss items and the pyramid hole,
  * which every release's meta names (BaseClasses.py:2574-2597 at 1.5.8):
@@ -254,6 +255,7 @@ export const DOOR_UNSET = [
   "shuffleFollowers",
   "bombBag",
   "customGoals",
+  "nearbyItems",
   "owrVersion",
   "owLayout",
   "owCrossed",
@@ -282,7 +284,6 @@ export const DOOR_DEFAULTS: Omit<DoorSettings, "randomizer"> = {
   doorVersion: "1.5.6",
   dropShuffle: "none",
   keyLogic: "partial",
-  nearbyItems: false,
   potShuffle: false,
   pottery: "none",
   shopsanity: false,
@@ -874,7 +875,8 @@ export const doorReasons = (
     else if (door.shuffleFollowers) reasons.push("shuffled followers");
     // Keys or items in a dungeon near their own: the fork's fill, which
     // its world does not read (args.json `keyshuffle` … "nearby")
-    if (door.nearbyItems) reasons.push("dungeon items placed nearby");
+    if (door.nearbyItems === undefined) reasons.push(NEARBY_NOT_KNOWN);
+    else if (door.nearbyItems) reasons.push("dungeon items placed nearby");
     // A customizer goal replaces GT's entry, Ganon's, the pedestal's or
     // Murahdahla's rule (Rules.py:71-73, :93-95, :368-370, :536-538)
     if (door.customGoals === undefined) reasons.push(GOALS_NOT_KNOWN);
@@ -907,6 +909,10 @@ export const PRIZES_NOT_KNOWN =
 /** The cause `doorReasons` gives while an OWR run's custom goals are unset. */
 export const GOALS_NOT_KNOWN =
   "the custom goals not known yet (set them in Mode)";
+
+/** The cause `doorReasons` gives while an OWR run's nearby items are unset. */
+export const NEARBY_NOT_KNOWN =
+  "the nearby dungeon items not known yet (set them in Mode)";
 
 /** The cause `doorReasons` gives while an OWR run's followers are unset. */
 export const FOLLOWERS_NOT_KNOWN =
