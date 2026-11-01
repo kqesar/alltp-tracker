@@ -727,9 +727,12 @@ describe("decodeEntrances", () => {
     room = 0,
     entrance = 0,
     door = 0,
+    shops = [],
   }: {
     doors?: Record<number, number>;
     holes?: Record<number, number>;
+    /** The shop table's rows, as the randomizer writes them. */
+    shops?: readonly (readonly number[])[];
     mode?: number;
     room?: number;
     entrance?: number;
@@ -747,6 +750,7 @@ describe("decodeEntrances", () => {
       "hole-table": table("hole-table", holes),
       "overworld-door": Uint8Array.of(door),
       room: Uint8Array.of(room & 0xff, room >> 8),
+      "shop-table": table("shop-table", { ...shops.flat() }),
     };
     return {
       bytes: (id) => ranges[id as MemoryRangeId] ?? new Uint8Array(0),
@@ -836,12 +840,47 @@ describe("decodeEntrances", () => {
     expect(out(OLD_MAN_WEST, { 64: exit })).toHaveLength(1);
   });
 
+  it("reads the shopkeeper of the shop the table lists behind a door", () => {
+    // Retro crossed seed ry08p2d9y5's table (PC 0x184800, B5 bench,
+    // 2026-11-01): a Dark World shop behind door 16, then Take-Any #1
+    // behind Desert Palace Entrance (North), door 12, the last row
+    const shops = [
+      [0x04, 0x0f, 0x01, 0x10, 0x00, 0x03, 0xc1, 0x0c],
+      [0xff, 0x0f, 0x01, 0x0c, 0x00, 0x82, 0xe3, 0x1d],
+      // Past the last row: never read
+      [0x00, 0x0f, 0x01, 0x22, 0x00, 0x82, 0xe3, 0x1e],
+    ];
+    const through = (slot: number) =>
+      decodeEntrances(
+        game({
+          door: slot + 1,
+          doors: { [slot]: 0x60 },
+          entrance: 0x60,
+          shops,
+        }),
+        casual,
+      );
+    expect(through(11)).toEqual([
+      { entrance: 0x60, kind: "door", shopkeeper: 0xe3, slot: 11 },
+    ]);
+    expect(through(15)).toEqual([
+      { entrance: 0x60, kind: "door", shopkeeper: 0xc1, slot: 15 },
+    ]);
+    // No row behind it, or only one past the last
+    expect(through(0x21)).toEqual([
+      { entrance: 0x60, kind: "door", slot: 0x21 },
+    ]);
+    expect(through(0x21)[0]).not.toHaveProperty("shopkeeper");
+  });
+
   it("never reads in Race Mode, and waits for every range", () => {
     expect(
       decodeEntrances(new Image().view({ strict: true }), { race: true }),
     ).toBe("race-mode");
-    const view = new Image().view({ read: (id) => id !== "door-table" });
-    expect(decodeEntrances(view, casual)).toBe("not-read");
+    for (const range of ["door-table", "shop-table"]) {
+      const view = new Image().view({ read: (id) => id !== range });
+      expect(decodeEntrances(view, casual)).toBe("not-read");
+    }
   });
 
   it("sizes its tables as the importer found them", () => {

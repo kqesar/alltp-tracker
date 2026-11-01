@@ -2142,8 +2142,9 @@ pnpm --filter @alltp/pack-alttpr import-er <er-checkout> --rom <base.sfc>
     from `ItemList.py`'s `set_up_take_anys`: the old man's sword cave and
     four take-anys, and the caves whose doors it draws for them) join
     every door that may lead to such a cave. The game loads a take-any by
-    another place's entrance (a cave shop's), so autotracking cannot tell
-    one from that shop: noting it is left to the player.
+    another place's entrance (a cave shop's); autotracking tells the two
+    apart by the shop table's shopkeeper ([Where Link
+    went](#where-link-went-autotracking-the-entrances)).
   - The insanity shuffle parts a door from its way out (`:759-905`) and the
     Inverted world runs tables of its own (`link_inverted_entrances`):
     neither is ported.
@@ -2291,6 +2292,20 @@ facts: the entrance's id, and its target's, or a few alike that the game
 loads by one entrance (the healer fairies, some shops, the fortune
 tellers), and Link's House and the Tavern's back, which only DR's and
 its fork's pools shuffle (entrances 1 and 0x43; another pool drops them).
+A retro world's take-any cave and the old man's sword cave load a shop's
+entrance and room (`ItemList.py` `set_up_take_anys`: entrance 0x58, 0x60 or
+0x46), so the entrance alone would name that shop. The base patch tells
+them apart by its shop table (`ShopTable`, PC `0x184800`, `tables.asm:1563`),
+which the randomizer fills with each custom shop's room, its door's slot
+plus one and its shopkeeper (`Rom.py:1078-1103`, `BaseClasses.py:895-908`;
+vt's and DR's alike): the decoder hands a door's shopkeeper with its link
+when the table lists a shop behind that door, and `linksOf` reads 0xE3 as
+the four take-anys (alike) and 0xE2 as the sword cave (DR with shopsanity
+writes its take-anys as shops, but keeps their shopkeeper). Seen on retro
+crossed seed `ry08p2d9y5` (2026-11-01): door 12, Desert Palace Entrance
+(North), lists shopkeeper 0xE3 where the spoiler puts Take-Any #1, and each
+of the 15 rows names its spoiler's door. The table is ROM, an `entrances`
+range: Race Mode never reads it.
 Memory keeps only the last door each way: a door taken while the
 tracker is not connected is not caught up, but the last.
 

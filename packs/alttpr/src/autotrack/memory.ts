@@ -464,6 +464,23 @@ export const MEMORY_RANGES = [
   // The seed's settings in the base patch's tables, bank $30: read slowly,
   // and outside Race Mode only but for the seed type (seed-settings.ts).
   ...SEED_SETTINGS_RANGES,
+  // The base patch's shop table (tables.asm:1563-1564, PC 0x184800, 32
+  // rows of 8 bytes at most), which the randomizer fills with each custom
+  // shop's room, its door's slot plus one and its shopkeeper (er:Rom.py:
+  // 1078-1103, BaseClasses.py:895-908; vt's and DR's alike). The shopkeeper
+  // tells a retro world's take-any cave (0xE3) and the old man's sword cave
+  // (0xE2) from the shops whose room and entrance they load (ItemList.py:
+  // 251-279). A door's slot names the shop behind it: as the door table,
+  // an entrance range. The last row's SRAM index is left out, so the table
+  // is one usb2snes piece (255 bytes at most).
+  range({
+    at: 0x30_c800,
+    category: "entrances",
+    everyMs: SETTINGS_MS,
+    id: "shop-table",
+    size: 0xff,
+    source: "z3:tables.asm:1563-1564",
+  }),
   range({
     at: 0x7e_0010,
     category: "game-start",

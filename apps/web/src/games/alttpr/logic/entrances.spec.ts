@@ -145,6 +145,24 @@ describe("the entrance assistant's model", () => {
     });
   });
 
+  it("notes a take-any cave the shop table names, never the shop whose room it loads", () => {
+    // Retro crossed seed ry08p2d9y5 (B5 bench, 2026-11-01): Desert Palace
+    // Entrance (North), slot 11, leads to Take-Any #1, which loads the
+    // Dark World shops' entrance 0x60; the ROM's shop table lists door 12
+    // with the take-any's shopkeeper 0xE3 (ItemList.py:269-279)
+    const retro = poolOf({ ...crosskeys, mode: "retro" });
+    if (retro === null) throw new Error("no pool");
+    const door = (shopkeeper?: number) =>
+      gameNotes(retro, {}, [
+        { entrance: 0x60, kind: "door", shopkeeper, slot: 11 },
+      ])["desert-palace-entrance-north"];
+    expect(door(0xe3)).toBe("take-any-1");
+    // The old man's sword cave has its own shopkeeper, 0xE2 (:251-256)
+    expect(door(0xe2)).toBe("old-man-sword-cave");
+    // A shop of the table: one of the four alike
+    expect(door(0xc1)).toBe("village-of-outcasts-shop");
+  });
+
   it("has DR's own pool for a Door Randomizer run, in any world", () => {
     const dr = getPreset("door-crosskeys").settings;
     const pool = poolOf(dr);

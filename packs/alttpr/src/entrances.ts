@@ -332,14 +332,32 @@ export interface GameLink {
 }
 
 /**
+ * The retro world's caves by the shopkeeper the shop table gives them
+ * (ItemList.py:251-256, :269-279): the old man's sword cave 0xE2, the
+ * take-anys 0xE3. Each loads a shop's entrance and room, so the entrance
+ * alone would name that shop.
+ */
+const TAKE_ANYS_OF_SHOPKEEPER: ReadonlyMap<number, readonly string[]> = new Map(
+  [
+    [0xe2, ["old-man-sword-cave"]],
+    [0xe3, [...TAKE_ANYS].filter((id) => id !== "old-man-sword-cave")],
+  ],
+);
+
+/**
  * Where the game shows Link went (the autotracker's `decodeEntrances`), in
- * the shuffle's ids. A slot or an entrance the tables do not know gives
- * nothing.
+ * the shuffle's ids: what the entrance loaded is, or the take-any cave the
+ * shop table names behind the door. A slot or an entrance the tables do
+ * not know gives nothing.
  */
 export const linksOf = (links: readonly EntranceLink[]): GameLink[] =>
-  links.flatMap(({ entrance, kind, slot }) => {
+  links.flatMap(({ entrance, kind, shopkeeper, slot }) => {
     const id = (kind === "door" ? DOOR_OF_SLOT : HOLE_OF_SLOT).get(slot);
-    const targets = TARGETS_OF_ENTRANCE.get(entrance);
+    const targets =
+      (shopkeeper === undefined
+        ? undefined
+        : TAKE_ANYS_OF_SHOPKEEPER.get(shopkeeper)) ??
+      TARGETS_OF_ENTRANCE.get(entrance);
     return id === undefined || targets === undefined
       ? []
       : [{ entrance: id, targets }];

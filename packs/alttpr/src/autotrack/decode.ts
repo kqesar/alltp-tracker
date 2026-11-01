@@ -880,6 +880,13 @@ export interface EntranceLink {
   readonly slot: number;
   /** The entrance it loads, by the game's number for it. */
   readonly entrance: number;
+  /**
+   * A door's shop, when the base patch's shop table lists one behind it:
+   * its shopkeeper (ShopTable+6), which tells a retro world's take-any cave
+   * (0xE3) and the old man's sword cave (0xE2) from the shops whose
+   * entrance they load (ItemList.py:251-279).
+   */
+  readonly shopkeeper?: number;
 }
 
 /**
@@ -893,11 +900,30 @@ export type EntranceReading = readonly EntranceLink[] | Unsettled;
 const ENTRANCE_RANGES = [
   "hole-table",
   "door-table",
+  "shop-table",
   "game-mode",
   "room",
   "entrance",
   "overworld-door",
 ] as const satisfies readonly MemoryRangeId[];
+
+/** A row of the shop table: [id][room, 2][door][0][config][shopkeeper][sram]. */
+const SHOP_ROW = 8;
+
+/**
+ * The shopkeeper of the shop the table lists behind door `slot`, if any:
+ * the base patch matches a row's door (its slot plus one) with the door
+ * Link last took (shopkeeper.asm:81-94 at z3 dcb0a2b), and its last row's
+ * id is 0xFF.
+ */
+const shopkeeperBehind = (table: readonly number[], slot: number) => {
+  // A row's last byte, its SRAM index, is never read
+  for (let row = 0; row + SHOP_ROW - 1 <= table.length; row += SHOP_ROW) {
+    if (table[row + 3] === slot + 1) return table[row + 6];
+    if (table[row] === 0xff) return undefined;
+  }
+  return undefined;
+};
 
 /** The overworld's game modes, plain and special (ram.asm:41). */
 const OUTDOORS: readonly number[] = [0x09, 0x0b];
@@ -916,6 +942,8 @@ const EXIT_ROOMS: Readonly<Record<string, number>> = ENTRANCE_TABLES.exitRooms;
  * - Out by a door: outdoors, the room Link left is the one he came out of;
  *   its exit is an entrance one door loads, unless several do (the fairies
  *   and shops whose rooms are alike).
+ * - A door with a custom shop behind it, by the shop table: its shopkeeper,
+ *   which tells a take-any cave from the shop whose entrance it loads.
  *
  * Entrance 0 is none: the tables hold no door or hole that loads it.
  */
@@ -928,19 +956,27 @@ export function decodeEntrances(
   const read = ENTRANCE_RANGES.map((id) => reader.range(id));
   const unsettled = read.find((bytes) => typeof bytes === "string");
   if (unsettled !== undefined) return unsettled as Unsettled;
-  const [holes, doors, mode, room, entrance, overworldDoor] = read as Bytes[];
+  const [holes, doors, shops, mode, room, entrance, overworldDoor] =
+    read as Bytes[];
   const table = (bytes: Bytes, id: MemoryRangeId) =>
     Array.from({ length: MEMORY_RANGE[id].size }, (_, i) =>
       bytes.byte(MEMORY_RANGE[id].bus + i),
     );
   const holeTable = table(holes, "hole-table");
   const doorTable = table(doors, "door-table");
+  const shopTable = table(shops, "shop-table");
+  const door = (entrance: number, slot: number): EntranceLink => {
+    const shopkeeper = shopkeeperBehind(shopTable, slot);
+    return shopkeeper === undefined
+      ? { entrance, kind: "door", slot }
+      : { entrance, kind: "door", shopkeeper, slot };
+  };
   const loaded = entrance.byte();
   const links: EntranceLink[] = [];
-  const door = overworldDoor.byte() - 1;
+  const last = overworldDoor.byte() - 1;
   const hole = holeTable.indexOf(loaded);
-  if (loaded !== 0 && door >= 0 && doorTable[door] === loaded) {
-    links.push({ entrance: loaded, kind: "door", slot: door });
+  if (loaded !== 0 && last >= 0 && doorTable[last] === loaded) {
+    links.push(door(loaded, last));
   } else if (loaded !== 0 && hole >= 0) {
     links.push({ entrance: loaded, kind: "hole", slot: hole });
   }
@@ -956,7 +992,7 @@ export function decodeEntrances(
       slots.length === 1 &&
       !links.some((link) => link.kind === "door" && link.slot === out)
     ) {
-      links.push({ entrance: exit, kind: "door", slot: out });
+      links.push(door(exit, out));
     }
   }
   return links;

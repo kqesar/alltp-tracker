@@ -642,6 +642,23 @@ describe("where the game shows Link went", () => {
       ).toEqual([target]);
   });
 
+  it("names the take-any cave the shop table puts behind a door", () => {
+    // A take-any loads a shop's entrance (ItemList.py:269-279): 0x60 is the
+    // four Dark World shops' alike; the shopkeeper tells them apart
+    const through = (shopkeeper?: number) =>
+      linksOf([{ entrance: 0x60, kind: "door", shopkeeper, slot: 11 }])[0]
+        ?.targets;
+    expect(through()).toContain("village-of-outcasts-shop");
+    expect(through(0xc1)).toEqual(through());
+    expect(through(0xe3)).toEqual([
+      "take-any-1",
+      "take-any-2",
+      "take-any-3",
+      "take-any-4",
+    ]);
+    expect(through(0xe2)).toEqual(["old-man-sword-cave"]);
+  });
+
   it("names nothing for a slot or an entrance the tables do not know", () => {
     expect(
       linksOf([
