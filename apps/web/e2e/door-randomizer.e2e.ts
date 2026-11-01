@@ -441,16 +441,22 @@ for (const width of WIDTHS) {
  * An OWR run whose whirlpools are shuffled and flute spots moved, and with
  * `crossed`, its edges crossed, with `mixed`, its screens flipped by Mixed.
  */
-const openOverworldRun = async (page: Page, crossed = false, mixed = false) => {
+const openOverworldRun = async (
+  page: Page,
+  crossed = false,
+  mixed = false,
+  entrances = false,
+) => {
   const dialog = await openDoorRun(page);
   await dialog.getByRole("button", { name: "Close" }).first().click();
   await page.evaluate(
-    ([crossed, mixed]) => {
+    ([crossed, mixed, entrances]) => {
       const key = "alltp-tracker-state";
       const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
       saved.state.settings = {
         ...saved.state.settings,
         customGoals: false,
+        doorEntrances: entrances ? "district" : "vanilla",
         nearbyItems: false,
         owCrossed: crossed ? "grouped" : "none",
         owFluteShuffle: "random",
@@ -464,7 +470,7 @@ const openOverworldRun = async (page: Page, crossed = false, mixed = false) => {
       };
       localStorage.setItem(key, JSON.stringify(saved));
     },
-    [crossed, mixed],
+    [crossed, mixed, entrances],
   );
   await page.reload();
   await expect(page.getByTestId("item-grid")).toBeVisible();
@@ -553,7 +559,7 @@ test("a mixed OWR run's screens are noted by hand, a group at a time, from the k
 for (const width of WIDTHS) {
   test(`the Overworld tab fits at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ height: 900, width });
-    await openOverworldRun(page, true, true);
+    await openOverworldRun(page, true, true, true);
     await page
       .getByRole("combobox", { name: "Link's House: flipped" })
       .selectOption("stands");
@@ -569,10 +575,22 @@ for (const width of WIDTHS) {
       await page.getByTestId(`flute-screen-${id}`).check();
     await expect(page.getByTestId("flute-screen-3f")).toBeDisabled();
     await auditPage(page);
+    // Five tabs in the map bar (Map, Checks, Entrances, Overworld, Run): none clips its label
+    const bar = page.locator(".map-panel__bar").getByRole("tab");
+    await expect(bar).toHaveCount(5);
+    const clipped = await bar.evaluateAll((tabs) =>
+      tabs
+        .filter((tab) => tab.scrollWidth > tab.clientWidth)
+        .map((tab) => tab.textContent),
+    );
+    expect(clipped).toEqual([]);
     if (process.env.DOOR_SHOTS !== undefined) {
       await page.screenshot({
         fullPage: false,
         path: `${process.env.DOOR_SHOTS}/overworld-${width}.png`,
+      });
+      await page.locator(".map-panel__bar").screenshot({
+        path: `${process.env.DOOR_SHOTS}/overworld-bar-${width}.png`,
       });
       await page.getByTestId("overworld-panel").screenshot({
         path: `${process.env.DOOR_SHOTS}/overworld-panel-${width}.png`,
