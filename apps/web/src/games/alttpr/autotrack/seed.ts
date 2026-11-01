@@ -25,6 +25,7 @@ import {
   type DoorRunSettings,
   type DoorSetting,
   doorEntranceOf,
+  doorEntrancesUnknown,
   doorEntranceText,
   doorFromSeed,
   doorOf,
@@ -542,6 +543,10 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
       delete settings[key];
     }
     Object.assign(settings, door);
+    // An entrance shuffle this version does not know: its entrances may
+    // have moved, so the shuffle is hidden (every check maybe until set),
+    // never the run's own
+    if (doorEntrancesUnknown(seed)) settings.hidden = ["entranceShuffle"];
   }
   // Only the file states it; none is said by its absence, as every preset
   const bossShuffle = fromFile(seed.bossShuffle, bossShuffleOf(run.settings));
@@ -567,8 +572,12 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   // A Mystery run takes what the seed reveals, in place, in its own world
   // and logic, and its entrance shuffle and glitches while they are hidden
   const entrancesHidden = isHidden(run.settings, "entranceShuffle");
+  // Entrances the seed leaves not known stay so in the run
+  const entrancesKept =
+    entrancesHidden || !isHidden(settings, "entranceShuffle");
   if (
     run.presetId === "mystery" &&
+    entrancesKept &&
     settings.mode === run.settings.mode &&
     (settings.entranceShuffle === run.settings.entranceShuffle ||
       (entrancesHidden && seed.entrances?.known === true)) &&
@@ -623,6 +632,7 @@ export const checkSeed = (seed: SeedSettingsReading, run: Run): SeedCheck => {
   }
   if (
     sameLogic &&
+    entrancesKept &&
     COMPARED.every((key) => settings[key] === run.settings[key]) &&
     bossShuffle === bossShuffleOf(run.settings) &&
     swordsOf(settings) === swordsOf(run.settings) &&

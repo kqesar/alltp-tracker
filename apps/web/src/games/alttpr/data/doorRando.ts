@@ -1286,9 +1286,7 @@ export const doorFromSeed = (
     const ow = exact.overworld;
     return withoutDefaults({
       ...own,
-      ...(exact.doorEntrances !== undefined &&
-      option("doorEntrances", exact.doorEntrances) !== undefined &&
-      (exact.doorEntrances !== "district" || own.randomizer === "owr")
+      ...(exact.doorEntrances !== undefined && !doorEntrancesUnknown(seed)
         ? { doorEntrances: exact.doorEntrances as DoorEntrances }
         : {}),
       doorShuffle: exact.doorShuffle,
@@ -1428,6 +1426,21 @@ export const doorFromSeed = (
           : prizes;
   }
   return withoutDefaults(door);
+};
+
+/**
+ * Whether a spoiler's meta names an entrance shuffle this version does not
+ * hold for the seed's generator: a newer release's word, or District on a
+ * seed of DR itself (OWR's EntranceShuffle2.py alone has it). Its entrances
+ * may have moved, so the run's entrance shuffle is not known
+ * (`autotrack/seed.ts` hides it), never vanilla by default.
+ */
+export const doorEntrancesUnknown = (seed: SeedSettingsReading): boolean => {
+  const word = seed.doorExact?.doorEntrances;
+  if (word === undefined) return false;
+  if (word === "district")
+    return seed.randomizer?.kind !== "door" || !seed.randomizer.overworld;
+  return !DOOR_OPTIONS.doorEntrances.some(([known]) => known === word);
 };
 
 /**
