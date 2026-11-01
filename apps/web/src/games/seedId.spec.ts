@@ -54,6 +54,21 @@ describe("recordSeed", () => {
     expect(history.map((run) => run.seed)).toEqual(["9MQ9gO1wMD", "OLD"]);
   });
 
+  it("never replaces a known seed with another, but in Race Mode", () => {
+    const history: Run[] = [{ label: "then", seed: "A" }];
+    const store = storeOf({ label: "now", seed: "A" }, history);
+
+    recordSeed(store, "B");
+    expect(store.getState().seed).toBe("A");
+
+    // The same seed in another form, or a race's ROM, which the board follows
+    recordSeed(store, "a", { same: (x, y) => x.toLowerCase() === y });
+    expect(store.getState().seed).toBe("a");
+    recordSeed(store, "C", { race: true });
+    expect(store.getState().seed).toBe("C");
+    expect(history[0].seed).toBe("C");
+  });
+
   it("does nothing for no seed or the run's own", () => {
     const history: Run[] = [{ label: "then", seed: "A" }];
     const store = storeOf({ label: "now", seed: "A" }, history);

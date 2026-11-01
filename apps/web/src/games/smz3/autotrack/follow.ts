@@ -159,7 +159,7 @@ export const createSmz3Follower = () => {
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: Smz3Reading) => {
     const seed = smz3RomSeedName(reading);
-    recordSeed(useSmz3Store, seed);
+    recordSeed(useSmz3Store, seed, { race: reading.race, same: sameGuid });
     const now = viewOf(reading);
     const before = shown;
     shown = now;
@@ -253,7 +253,18 @@ export const createSmz3Follower = () => {
       if (now && held !== null) {
         armed = heldArmed;
         read(held);
-      } else if (now && playing && last !== null) lay(last);
+      } else if (now && playing && last !== null) {
+        // The new run may be another seed's (an Import, a shared link): the
+        // game read last is then held, as any reading of it. Its clock was
+        // the run replaced's
+        if (
+          smz3RomSeedCheck(last, useSmz3Store.getState().seed)?.kind ===
+          "differs"
+        ) {
+          lastGame = undefined;
+          read(last);
+        } else lay(last);
+      }
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

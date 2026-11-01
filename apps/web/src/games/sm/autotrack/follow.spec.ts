@@ -2,7 +2,7 @@ import { rtaMs } from "@alltp/pack-sm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createSmFollower } from "@/games/sm/autotrack/follow";
 import { readSm } from "@/games/sm/autotrack/reading";
-import { useSmStore } from "@/games/sm/store";
+import { freshProgress, useSmStore } from "@/games/sm/store";
 import { timerMs } from "@/utils/runTimer";
 import {
   MEMORY_RANGE,
@@ -622,6 +622,21 @@ describe("the run's seed", () => {
     run().reset();
     follower.resync(true);
     expect(run().timer.startedAt).not.toBeNull();
+  });
+
+  it("keeps a run imported of another seed while the old ROM is followed, then follows its own", () => {
+    const follower = createSmFollower();
+    follower.read(reading({ items: MORPH, name: "dsjF6gGsH" }));
+    expect(run().seed).toBe("dsjF6gGsH");
+
+    // Import: a save of cHXhTSCB8 replaces the run, the old ROM still read
+    run().load({ ...freshProgress(), seed: "cHXhTSCB8" });
+    follower.resync(true);
+    expect(run().seed).toBe("cHXhTSCB8");
+    expect(run().items.morph ?? 0).toBe(0);
+
+    follower.read(reading({ items: MORPH, name: "cHXhTSCB8" }));
+    expect(run().items.morph).toBe(1);
   });
 
   it("gives the run New game replaced back as it was, with nothing of the ROM", () => {

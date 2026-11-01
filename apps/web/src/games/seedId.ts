@@ -12,6 +12,9 @@ export const SEED_ID = /^[\x20-\x7e]{1,64}$/;
 export const isSeedId = (value: unknown): value is string =>
   typeof value === "string" && SEED_ID.test(value);
 
+/** Two ids name the same seed when equal, unless the game knows better. */
+const equalIds = (a: string, b: string) => a === b;
+
 /** A run's store, as far as recording its seed goes. */
 type SeedStore<Run extends { seed: string | null }> = {
   getState: () => Run & {
@@ -23,16 +26,30 @@ type SeedStore<Run extends { seed: string | null }> = {
  * Record the seed the game says it is on as the run's, when that differs from
  * the run's: news of the game's, so no undo step. The history gets it too, but
  * for the snapshots of another seed (a run before a seed switch, which undoing
- * gives back as it was).
+ * gives back as it was). A known seed is replaced only by the same seed in
+ * another form (`same`), or in Race Mode, where the board follows any ROM:
+ * outside it, a ROM of another seed is the player's to answer
+ * (`checkRomSeed`), never a silent rename.
  * @param store - The game's run store
  * @param seed - The seed the ROM names, or null when it names none
+ * @param options - `same`, whether two ids name the same seed (null when
+ * their forms cannot be compared, which proves no other seed), and `race`,
+ * whether the reading was in Race Mode
  */
 export const recordSeed = <Run extends { seed: string | null }>(
   store: SeedStore<Run>,
   seed: string | null,
+  {
+    race = false,
+    same = equalIds,
+  }: {
+    race?: boolean;
+    same?: (run: string, rom: string) => boolean | null;
+  } = {},
 ): void => {
   const before = store.getState().seed;
   if (seed === null || seed === before) return;
+  if (before !== null && !race && same(before, seed) === false) return;
   store
     .getState()
     .applyGameNews((run) =>
@@ -55,9 +72,6 @@ export type RomSeedCheck =
    * race rules v2.0 let a tracker show only what they list).
    */
   | { readonly kind: "race" };
-
-/** Two ids name the same seed when equal, unless the game knows better. */
-const equalIds = (a: string, b: string) => a === b;
 
 /**
  * Hold the seed the ROM names against the run's. Nothing is said while either

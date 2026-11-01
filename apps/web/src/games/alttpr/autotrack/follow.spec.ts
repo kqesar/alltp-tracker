@@ -1093,6 +1093,23 @@ describe("a ROM of another seed than the run's", () => {
     expect(store().checked["links-house"]).toBeUndefined();
   });
 
+  it("keeps a run started from another seed while the old ROM is followed, then follows its own", () => {
+    runOf("0yAObedRMV");
+    const follower = createFollower();
+    follower.read(otherRom());
+    expect(store().items.hookshot).toBe(true);
+
+    // Start from a seed: a run of 9MQ9gO1wMD replaces it, the old ROM still read
+    runOf("9MQ9gO1wMD");
+    follower.resync(true);
+    expect(store().seed).toBe("9MQ9gO1wMD");
+    expect(store().items.hookshot).toBe(false);
+
+    // Its own ROM: followed
+    follower.read(readingOf(seedMemory({ name: "9MQ9gO1wMD", race: false })));
+    expect(store().items.hookshot).toBe(true);
+  });
+
   it("starts over on the run's own ROM, whatever the other one showed", () => {
     runOf();
     const follower = createFollower();

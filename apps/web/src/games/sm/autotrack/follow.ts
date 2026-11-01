@@ -167,7 +167,7 @@ export const createSmFollower = () => {
   /** Lay a reading in play on the run: the news against the view shown. */
   const lay = (reading: SmReading, at: number) => {
     const seed = smRomSeedName(reading);
-    recordSeed(useSmStore, seed);
+    recordSeed(useSmStore, seed, { race: reading.race });
     const now = viewOf(reading, useSmStore.getState().objectives);
     const before = shown;
     shown = now;
@@ -283,7 +283,17 @@ export const createSmFollower = () => {
       if (now && held !== null) {
         beforePlay = heldBeforePlay;
         read(held);
-      } else if (now && playing && last !== null) lay(last, Date.now());
+      } else if (now && playing && last !== null) {
+        // The new run may be another seed's (an Import, a shared link): the
+        // game read last is then held, as any reading of it. Its clock was
+        // the run replaced's
+        if (
+          smRomSeedCheck(last, useSmStore.getState().seed)?.kind === "differs"
+        ) {
+          lastGame = undefined;
+          read(last);
+        } else lay(last, Date.now());
+      }
     },
     /**
      * A poll read memory and found it unchanged at `at`: the game stands

@@ -2,7 +2,7 @@ import { smz3Ms } from "@alltp/pack-smz3";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createSmz3Follower } from "@/games/smz3/autotrack/follow";
 import { readSmz3 } from "@/games/smz3/autotrack/reading";
-import { useSmz3Store } from "@/games/smz3/store";
+import { freshProgress, useSmz3Store } from "@/games/smz3/store";
 import { timerMs } from "@/utils/runTimer";
 import type { MemoryRangeId } from "../../../../../../packs/smz3/src/autotrack/memory";
 import {
@@ -544,6 +544,21 @@ describe("the run's seed", () => {
     run().reset();
     follower.resync(true);
     expect(run().timer.startedAt).not.toBeNull();
+  });
+
+  it("keeps a run imported of another seed while the old ROM is followed, then follows its own", () => {
+    const follower = createSmz3Follower();
+    follower.read(other());
+    expect(run().seed).toBe(OTHER);
+
+    // Import: a save of GUID replaces the run, the old ROM still read
+    run().load({ ...freshProgress(run().settings), seed: GUID });
+    follower.resync(true);
+    expect(run().seed).toBe(GUID);
+    expect(run().items.hookshot ?? 0).toBe(0);
+
+    follower.read(readingAt(T0, { guid: GUID, zelda: { 834: 0x01 } }));
+    expect(run().items.hookshot).toBe(1);
   });
 
   it("checks nothing in Race Mode, which never reads the guid", () => {

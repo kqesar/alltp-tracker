@@ -422,6 +422,64 @@ test("follows nothing of a ROM of another seed than the run's, until told to", a
   await expect(hammer).toHaveAccessibleName(cell("Hammer", "not obtained"));
 });
 
+test("keeps a run started from another seed while the old ROM runs, then follows its own", async ({
+  page,
+}) => {
+  // alttpr.com's bucket: the Daily of Oct 16 (Inverted), and none other
+  await page.route(
+    "https://alttpr-patch-data.s3.us-east-2.amazonaws.com/*",
+    (route) =>
+      route.request().url().endsWith("/eM43RgZ4Gj.json")
+        ? route.fulfill({
+            body: readFileSync(
+              new URL(
+                "../../../packs/alttpr/test/seed-files/eM43RgZ4Gj.json",
+                import.meta.url,
+              ),
+              "utf8",
+            ),
+            contentType: "application/json",
+            headers: { "Access-Control-Allow-Origin": "*" },
+          })
+        : route.fulfill({
+            headers: { "Access-Control-Allow-Origin": "*" },
+            status: 403,
+          }),
+  );
+  bootSeed(bridge, { name: "OLDSEED", race: false });
+  await openTracker(page);
+  await connect(page);
+  const hookshot = page.getByTestId("item-hookshot");
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "obtained"));
+
+  // Start from a seed, the old ROM still connected
+  await page.getByRole("button", { name: /^Mode/ }).click();
+  await page
+    .getByTestId("seed-import-input")
+    .fill("https://alttpr.com/en/h/eM43RgZ4Gj");
+  await page.getByTestId("seed-import-load").click();
+  await page
+    .getByRole("dialog", { name: "Switch run type?" })
+    .getByRole("button", { name: "Switch & reset" })
+    .click();
+
+  // The new run keeps its seed, and nothing of the old ROM
+  const notice = page.getByTestId("rom-seed-notice");
+  await expect(notice).toHaveText(
+    /^The game runs seed OLDSEED, not this run's seed eM43RgZ4Gj:/,
+  );
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "not obtained"));
+
+  // Its own ROM loaded: followed
+  await openDialog(page);
+  await dialog(page).getByTestId("autotrack-disconnect").click();
+  await page.keyboard.press("Escape");
+  bootSeed(bridge, { name: "eM43RgZ4Gj", race: false });
+  await connect(page);
+  await expect(hookshot).toHaveAccessibleName(cell("Hookshot", "obtained"));
+  await expect(notice).toBeEmpty();
+});
+
 test("starts the run timer as the game starts, and stops it at the goal", async ({
   page,
 }) => {

@@ -198,7 +198,7 @@ export const createFollower = (): Follower => {
     if (seedName !== null && name !== null && name !== seedName) forget();
     if (name !== null) seedName = name;
     noteEntrances(reading.entrances, name);
-    recordSeed(useGameStore, reading.seed.seed);
+    recordSeed(useGameStore, name, { race: reading.race, same: sameSeedId });
     const store = useGameStore.getState();
     if (reading.race) {
       for (const slot of Object.keys(known)) delete known[Number(slot)];
@@ -335,7 +335,18 @@ export const createFollower = (): Follower => {
       if (now && held !== null) {
         beforePlay = heldBeforePlay;
         follower.read(held);
-      } else if (now && playing && last !== null) lay(last);
+      } else if (now && playing && last !== null) {
+        // The new run may be another seed's (Start from a seed, an Import):
+        // the game read last is then held, as any reading of it, and none
+        // of its seed or progress reaches the new run. Its clock was the
+        // run replaced's
+        if (
+          romSeedCheckOf(last, useGameStore.getState().seed)?.kind === "differs"
+        ) {
+          lastClock = undefined;
+          follower.read(last);
+        } else lay(last);
+      }
     },
     steady: (at) => {
       const game = useGameStore.getState();
