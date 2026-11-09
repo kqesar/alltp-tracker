@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file. [release-please](https://github.com/googleapis/release-please) writes it from the [Conventional Commits](https://conventionalcommits.org/) merged since the previous release.
 
+## [2.70.0](https://github.com/kqesar/alltp-tracker/compare/v2.69.0...v2.70.0) (2026-11-09)
+
+
+### ✨ Features
+
+* **web:** title games as trackers, ALttPR with its acronym, and count each apart ([#465](https://github.com/kqesar/alltp-tracker/issues/465)) ([439ef58](https://github.com/kqesar/alltp-tracker/commit/439ef584a76baa2bc2fd35298e8beaa23f741da8))
+
 ## [2.69.0](https://github.com/kqesar/alltp-tracker/compare/v2.68.1...v2.69.0) (2026-11-01)
 
 
