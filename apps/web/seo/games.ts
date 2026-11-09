@@ -15,6 +15,8 @@ export type SeoGame = {
   id: string;
   /** The game's name, as `GAMES[id].name` has it. */
   name: string;
+  /** The acronym players search for, as `GAMES[id].abbreviation` has it. */
+  abbreviation?: string;
   /** The meta description: one sentence, under 160 characters. */
   description: string;
   /** What the tracker does for this game, as a short list. */
@@ -25,8 +27,9 @@ export type SeoGame = {
 
 export const SEO_GAMES: readonly SeoGame[] = [
   {
+    abbreviation: "ALttPR",
     description:
-      "Free item and map tracker for A Link to the Past randomizer runs: what you can reach, live, with autotracking. Works offline.",
+      "Free ALttPR item and map tracker for A Link to the Past randomizer runs: what you can reach, live, with autotracking. Works offline.",
     features: [
       "Works out in real time which chests you can reach and which dungeons you can clear, with the randomizer's own logic.",
       "Open, Inverted and Crosskeys runs, with an assistant for shuffled entrances.",

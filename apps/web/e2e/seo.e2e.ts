@@ -1,10 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { SEO_GAMES, SITE } from "../seo/games";
+import { SEO_GAMES, type SeoGame, SITE } from "../seo/games";
 import { WCAG_AA, WIDTHS } from "./support";
 
 /** The page's title for a game, as the tracker sets it once it runs (`pageTitle`). */
-const titleOf = (name: string) => `Rando Atlas · ${name} Randomizer`;
+const titleOf = ({ abbreviation, name }: SeoGame) =>
+  `Rando Atlas · ${name} Randomizer Tracker${abbreviation ? ` (${abbreviation})` : ""}`;
 
 /** An address of the published site, as the host under test serves it. */
 const local = (url: string) => url.replace(SITE, "./");
@@ -29,18 +30,20 @@ test.describe("what a crawler reads without running the page", () => {
     }) => {
       const html = await fetchHtml(page, `./${game.id}/`);
 
-      expect(html).toContain(`<title>${titleOf(game.name)}</title>`);
-      expect(html).toContain(`<h1>${game.name} randomizer tracker</h1>`);
+      expect(html).toContain(`<title>${titleOf(game)}</title>`);
+      expect(html).toContain(
+        `<h1>${game.name} randomizer tracker${game.abbreviation ? ` (${game.abbreviation})` : ""}</h1>`,
+      );
       expect(metaOf(html, "description")).toBe(game.description);
       expect(game.description.length).toBeLessThanOrEqual(160);
       expect(html).toContain(
         `<link href="${SITE}${game.id}/" rel="canonical" />`,
       );
-      expect(metaOf(html, "og:title")).toBe(titleOf(game.name));
+      expect(metaOf(html, "og:title")).toBe(titleOf(game));
       expect(metaOf(html, "og:description")).toBe(game.description);
       expect(metaOf(html, "og:url")).toBe(`${SITE}${game.id}/`);
       expect(metaOf(html, "twitter:card")).toBe("summary_large_image");
-      expect(metaOf(html, "twitter:title")).toBe(titleOf(game.name));
+      expect(metaOf(html, "twitter:title")).toBe(titleOf(game));
 
       // The card is a 1200 x 630 PNG, and a light one
       const card = metaOf(html, "og:image");
@@ -70,12 +73,12 @@ test.describe("what a crawler reads without running the page", () => {
       await page.getByRole("link", { name: "Open the tracker" }).click();
 
       await expect(page.getByTestId("toolbar")).toBeVisible();
-      await expect(page).toHaveTitle(titleOf(game.name));
+      await expect(page).toHaveTitle(titleOf(game));
       expect(new URL(page.url()).search).toBe("");
       await expect(page.getByTestId("header-game")).toHaveText(game.name);
       // Kept by a reload, as a game picked in the run type dialog is
       await page.reload();
-      await expect(page).toHaveTitle(titleOf(game.name));
+      await expect(page).toHaveTitle(titleOf(game));
     });
   }
 

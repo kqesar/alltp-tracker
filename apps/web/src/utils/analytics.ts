@@ -8,6 +8,9 @@ export const GOATCOUNTER_CODE = "rando-atlas";
 /** The one host whose visits count: a fork or a local copy never reports. */
 export const COUNTED_HOST = "kqesar.github.io";
 
+/** Where a game's visits are counted: this, then the game's id. */
+const COUNTED_PATH = "/alltp-tracker/";
+
 /** GoatCounter's script: about 3.3 kB gzip, no cookie, no storage. */
 const COUNT_SCRIPT = "https://gc.zgo.at/count.js";
 
@@ -29,9 +32,15 @@ export const asksNotToBeTracked = (browser: PrivacySignals): boolean =>
  * blocking anything. Nothing is loaded off the site's host or for a visitor
  * who asked not to be tracked. The caller keeps it out of the desktop app and
  * the stream view (`main.tsx`).
+ *
+ * The visit is counted under the game's own path, `/alltp-tracker/<id>`: the
+ * script would otherwise read the page's canonical address, the same for every
+ * game (`?game=` is already gone), and the games could not be told apart.
+ * @param game - The game this device tracks (`GameId`)
  * @returns whether the script was added
  */
 export const startAnalytics = (
+  game: string,
   page: Pick<Document, "createElement" | "head"> = document,
   browser: PrivacySignals = navigator,
   host: string = window.location.hostname,
@@ -42,7 +51,10 @@ export const startAnalytics = (
   script.src = COUNT_SCRIPT;
   script.dataset.goatcounter = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`;
   // Visits only: no click events counted
-  script.dataset.goatcounterSettings = JSON.stringify({ no_events: true });
+  script.dataset.goatcounterSettings = JSON.stringify({
+    no_events: true,
+    path: `${COUNTED_PATH}${game}`,
+  });
   page.head.append(script);
   return true;
 };

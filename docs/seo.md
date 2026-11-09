@@ -34,6 +34,16 @@ Why a page per game rather than the app at an address per game: the app picks it
 - **Not in the service worker's install.** The game pages, the cards, `robots.txt` and the sitemap are in `uncached` (`vite.config.ts`): no player's offline copy needs them. The desktop build drops the cards, `robots.txt` and the sitemap (`SITE_ONLY`) and has no game pages.
 - **The title is not a version marker.** The tracker sets `document.title` for its game, so the update e2e test tells versions apart by the `application-name` meta instead.
 
+## Titles
+
+Every game's title is `Rando Atlas · <name> Randomizer Tracker`: "tracker" is the word most searches that reach the site contain (Search Console), so the title says it. `pageTitle` (`src/games/registry.ts`) sets it once the tracker runs and `titleOf` (`seo/landing.ts`) writes it in the static page; `e2e/seo.e2e.ts` holds the two together.
+
+A game may carry an `abbreviation`, the acronym players type, in `GAMES` and in `SEO_GAMES` (`seo/games.ts` stays import-free, so each holds its own copy). A Link to the Past has one, `ALttPR`: its page is titled `Rando Atlas · A Link to the Past Randomizer Tracker (ALttPR)`, its `h1` is `A Link to the Past randomizer tracker (ALttPR)` and its description leads with it, as the only mention of "alttpr" otherwise was the domain of the randomizer's site. The tracker's `document.title` carries it too, so the title does not change when the button opens the tracker.
+
+## How visits are counted
+
+Static pages run no script, so GoatCounter counts only the tracker (`utils/analytics.ts`). Left alone, its script counts the page's canonical address, the same for every game (`takeGameFromAddress` has already dropped `?game=`), and the games could not be told apart. `startAnalytics` is given the game and sets `path` in `data-goatcounter-settings` (`count.js` copies it to `goatcounter.path`, which `get_data` sends in place of the canonical): a visit is counted under `/alltp-tracker/<id>`, for example `/alltp-tracker/sm`. A visit to a game's static page is not counted at all.
+
 ## Link preview images
 
 `apps/web/scripts/social-cards.mjs` draws them: it opens the production build in Chromium, clicks a few items so the board shows a run in progress, takes a 1200 x 630 screenshot, and cuts it to 128 colours with ImageMagick (about 500 kB down to 170 kB; the board has fewer colours, so nothing visible changes). Run it again when a board's look changes:
@@ -51,4 +61,4 @@ The same run also draws the repository's social preview on GitHub, `.github/soci
 
 ## Adding a game
 
-Its entry in `GAMES` (`src/games/registry.ts`), its page in `SEO_GAMES` (`seo/games.ts`: name, description of at most 160 characters, features), its address in `public/sitemap.xml`, its link in `index.html`'s body, its `uncached` pattern in `vite.config.ts`, and its card in `social-cards.mjs`. The e2e test covers each of them.
+Its entry in `GAMES` (`src/games/registry.ts`), its page in `SEO_GAMES` (`seo/games.ts`: name, the acronym players search for if there is one, description of at most 160 characters, features), its address in `public/sitemap.xml`, its link in `index.html`'s body, its `uncached` pattern in `vite.config.ts`, and its card in `social-cards.mjs`. The e2e test covers each of them.
