@@ -113,7 +113,9 @@ const startTracker = (root: HTMLElement) => {
   // desktop app, nor in the stream view, an OBS source that reloads all day.
   // After the page has loaded, so the count never competes with its downloads.
   if (!isDesktopApp && import.meta.env.PROD && !isObsView()) {
-    window.addEventListener("load", () => startAnalytics(), { once: true });
+    window.addEventListener("load", () => startAnalytics(active), {
+      once: true,
+    });
   }
 
   loadGame(active).then(

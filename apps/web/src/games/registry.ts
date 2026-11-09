@@ -71,11 +71,26 @@ export type GameModule = {
 export const GAME_IDS = ["alttpr", "sm", "smz3", "archipelago"] as const;
 export type GameId = (typeof GAME_IDS)[number];
 
-/** Each game's name, and the randomizer the tracker follows for it. */
+/**
+ * Each game's name, the randomizer the tracker follows for it and, when
+ * players search for it by an acronym, that acronym (`seo/games.ts` holds the
+ * same, and an e2e test holds the two together).
+ */
 export const GAMES: Readonly<
-  Record<GameId, { readonly name: string; readonly randomizer: string }>
+  Record<
+    GameId,
+    {
+      readonly name: string;
+      readonly abbreviation?: string;
+      readonly randomizer: string;
+    }
+  >
 > = {
-  alttpr: { name: "A Link to the Past", randomizer: "alttpr.com" },
+  alttpr: {
+    abbreviation: "ALttPR",
+    name: "A Link to the Past",
+    randomizer: "alttpr.com",
+  },
   archipelago: { name: "Archipelago", randomizer: "archipelago.gg" },
   sm: { name: "Super Metroid", randomizer: "Map Rando" },
   smz3: { name: "SMZ3", randomizer: "samus.link" },
@@ -97,8 +112,10 @@ const LOADERS: Readonly<Record<GameId, () => Promise<GameModule>>> = {
 };
 
 /** The page's title for a game: the product's name, then the game's. */
-export const pageTitle = (id: GameId): string =>
-  `${PRODUCT_NAME} \u00b7 ${GAMES[id].name} Randomizer`;
+export const pageTitle = (id: GameId): string => {
+  const { abbreviation, name } = GAMES[id];
+  return `${PRODUCT_NAME} \u00b7 ${name} Randomizer Tracker${abbreviation ? ` (${abbreviation})` : ""}`;
+};
 
 /** Where this device keeps the game it tracks. */
 export const ACTIVE_GAME_KEY = "alltp-tracker-game";

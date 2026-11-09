@@ -26,10 +26,28 @@ describe("asksNotToBeTracked", () => {
 });
 
 describe("startAnalytics", () => {
+  it.each(["alttpr", "sm", "smz3", "archipelago"])(
+    "counts %s's visits under its own path, with no click events",
+    (game) => {
+      document.head.replaceChildren();
+
+      startAnalytics(game, document, browser, COUNTED_HOST);
+
+      const settings =
+        document.head.querySelector("script")?.dataset.goatcounterSettings;
+      expect(JSON.parse(settings ?? "")).toEqual({
+        no_events: true,
+        path: `/alltp-tracker/${game}`,
+      });
+    },
+  );
+
   it("adds GoatCounter's script once, async, aimed at the site's counter", () => {
     document.head.replaceChildren();
 
-    expect(startAnalytics(document, browser, COUNTED_HOST)).toBe(true);
+    expect(startAnalytics("alttpr", document, browser, COUNTED_HOST)).toBe(
+      true,
+    );
 
     const scripts = document.head.querySelectorAll("script");
     expect(scripts).toHaveLength(1);
@@ -48,7 +66,7 @@ describe("startAnalytics", () => {
     (host) => {
       document.head.replaceChildren();
 
-      expect(startAnalytics(document, browser, host)).toBe(false);
+      expect(startAnalytics("alttpr", document, browser, host)).toBe(false);
 
       expect(document.head.querySelector("script")).toBeNull();
     },
@@ -57,11 +75,12 @@ describe("startAnalytics", () => {
   it("adds nothing for a visitor who asked not to be tracked", () => {
     document.head.replaceChildren();
 
-    expect(startAnalytics(document, { doNotTrack: "1" }, COUNTED_HOST)).toBe(
-      false,
-    );
+    expect(
+      startAnalytics("alttpr", document, { doNotTrack: "1" }, COUNTED_HOST),
+    ).toBe(false);
     expect(
       startAnalytics(
+        "alttpr",
         document,
         { doNotTrack: null, globalPrivacyControl: true },
         COUNTED_HOST,

@@ -83,10 +83,17 @@ describe("takeGameFromAddress", () => {
 describe("pageTitle", () => {
   it("names the product, then the game", () => {
     expect(pageTitle("alttpr")).toBe(
-      "Rando Atlas \u00b7 A Link to the Past Randomizer",
+      "Rando Atlas \u00b7 A Link to the Past Randomizer Tracker (ALttPR)",
     );
-    expect(pageTitle("sm")).toBe("Rando Atlas \u00b7 Super Metroid Randomizer");
-    expect(pageTitle("smz3")).toBe("Rando Atlas \u00b7 SMZ3 Randomizer");
+    expect(pageTitle("sm")).toBe(
+      "Rando Atlas \u00b7 Super Metroid Randomizer Tracker",
+    );
+    expect(pageTitle("smz3")).toBe(
+      "Rando Atlas \u00b7 SMZ3 Randomizer Tracker",
+    );
+    expect(pageTitle("archipelago")).toBe(
+      "Rando Atlas \u00b7 Archipelago Randomizer Tracker",
+    );
   });
 });
 

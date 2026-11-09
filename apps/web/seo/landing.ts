@@ -18,7 +18,7 @@ const listOf = (items: string[]) =>
 
 /** The title of a game's page, as `pageTitle` has it in src/games/registry.ts. */
 export const titleOf = (game: SeoGame) =>
-  `${PRODUCT} · ${game.name} Randomizer`;
+  `${PRODUCT} · ${game.name} Randomizer Tracker${game.abbreviation ? ` (${game.abbreviation})` : ""}`;
 
 /** The address a game's page is served at, and its link preview image's. */
 export const pageUrl = (game: SeoGame) => `${SITE}${game.id}/`;
@@ -90,7 +90,7 @@ ${icons.map((tag) => `    ${tag}`).join("\n")}
   <body>
     <main>
       <p class="brand">${esc(PRODUCT)}</p>
-      <h1>${esc(game.name)} randomizer tracker</h1>
+      <h1>${esc(game.name)} randomizer tracker${game.abbreviation ? ` (${esc(game.abbreviation)})` : ""}</h1>
       <p>${esc(game.description)}</p>
       <a class="cta" href="../?game=${game.id}">Open the tracker</a>
       <img alt="The tracker's board for ${esc(game.name)}, with items found" height="${CARD.height}" src="../social/${game.id}.png" width="${CARD.width}" />
