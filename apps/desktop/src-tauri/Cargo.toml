@@ -55,7 +55,7 @@ libc = "0.2.191"
 [target.'cfg(target_os = "linux")'.dependencies]
 # The GlobalShortcuts portal (Wayland). async-io, as tauri-plugin-opener's zbus
 # already runs: no second zbus runtime
-ashpd = { version = "0.13.13", default-features = false, features = ["async-io", "global_shortcuts"] }
+ashpd = { version = "0.14.0", default-features = false, features = ["async-io", "global_shortcuts"] }
 # Deliberately not the latest major: it must be Tauri's own gtk-rs 0.18, since
 # gdk-sys declares `links = "gdk-3"` and Cargo allows one copy of it
 gdk = "0.18.2"
