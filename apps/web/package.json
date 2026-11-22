@@ -23,29 +23,29 @@
     "@alltp/pack-smz3": "workspace:*",
     "@alltp/spoiler": "workspace:*",
     "@lichess-org/vosk-browser": "0.0.3",
-    "@tauri-apps/api": "^2.12.4",
-    "@tauri-apps/plugin-opener": "^2.7.2",
+    "@tauri-apps/api": "^2.12.5",
+    "@tauri-apps/plugin-opener": "^2.7.3",
     "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-updater": "^2.14.1",
     "lean-qr": "^2.7.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "zod": "^4.6.7",
-    "zustand": "^5.0.16"
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
-    "@playwright/test": "^1.64.1",
-    "@testing-library/jest-dom": "^7.0.1",
+    "@playwright/test": "^1.65.1",
+    "@testing-library/jest-dom": "^8.0.0",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.13",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/ws": "^8.18.2",
-    "@vitejs/plugin-react": "^6.2.1",
-    "axe-core": "^4.14.0",
-    "fake-indexeddb": "^6.2.7",
-    "vite": "^8.3.6",
-    "ws": "^8.22.1"
+    "@vitejs/plugin-react": "^6.3.0",
+    "axe-core": "^4.14.1",
+    "fake-indexeddb": "^6.2.8",
+    "vite": "^8.3.8",
+    "ws": "^8.23.0"
   }
 }
